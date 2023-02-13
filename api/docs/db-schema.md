@@ -25,7 +25,7 @@ Holds all users with their login, name, password hash, and admin flag.
 
 `password_hash` = UNHEX(SHA2(`login` + ":" + `password`, 512)).
 
-_Definition_:
+__Definition__:
 
 ```sql
 CREATE TABLE Users (
@@ -43,14 +43,14 @@ Holds all users' _canonical names_.
 
 _Canonical name_ - user's in-game nickname. One user can have multiple of them.
 
-_Definition_:
+__Definition__:
 
 ```sql
 CREATE TABLE CNames (
     user_id BIGINT       PRIMARY KEY,
     cname   VARCHAR(255) NOT NULL,
 
-    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCASE
+    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
 )
 ```
 
@@ -60,7 +60,7 @@ Holds all users' access and refresh tokens with expiration date and time.
 
 `id` = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP()))).
 
-_Definition_:
+__Definition__:
 
 ```sql
 CREATE TABLE Tokens (
@@ -69,7 +69,7 @@ CREATE TABLE Tokens (
     exp     TIMESTAMP                 NOT NULL,
     type    ENUM("access", "refresh") NOT NULL,
 
-    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCASE
+    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
 )
 ```
 
@@ -81,7 +81,7 @@ The following is a complete list of all events with their detailed description.
 
 Dayly cleans up all expired events.
 
-Definition:
+__Definition__:
 
 ```sql
 CREATE EVENT clean_up
