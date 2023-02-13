@@ -10,7 +10,7 @@
 
 ## About
 
-This is complete solution for creation and administration of private offline-mode Minecraft server.
+This is all-in-one solution for creation and administration of private offline-mode Minecraft server.
 It consists of Bukkit-plugin for Minecraft server, back-end REST API, front-end Web-based administration
 panel, and "glue" for running back-end and front-end as signle web-server.
 
