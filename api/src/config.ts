@@ -1,4 +1,5 @@
 import { promises as fsp              } from "fs"
+import { normalize                    } from "path"
 import { Logger                       } from "winston"
 import { Connection, createConnection } from "mysql"
 
@@ -92,17 +93,17 @@ export class Config {
         Config.validateConfigJSON(json)
 
         this.api = json.api != null ? {
-            prefix:     json.api.prefix,
+            prefix:     Config.normalizePath(json.api.prefix),
             host:       json.api.host,
             port:       json.api.port,
-            socketPath: json.api.socketPath
+            socketPath: Config.normalizePath(json.api.socketPath)
         } : undefined
 
         this.mysql = {
             database:   json.mysql.database,
             host:       json.mysql.host,
             port:       json.mysql.port,
-            socketPath: json.mysql.socketPath,
+            socketPath: Config.normalizePath(json.mysql.socketPath),
             login:      json.mysql.logic,
             password:   json.mysql.password,
 
@@ -120,6 +121,10 @@ export class Config {
         this.logic = json.logic != null ? {
             createAdmin: json.logic.createAdmin
         } : undefined
+    }
+
+    private static normalizePath(path: string | undefined): string | undefined {
+        return path != null ? normalize(path) : undefined
     }
 
     private static validateConfigJSON(json: any) {
