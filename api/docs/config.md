@@ -4,7 +4,8 @@
 
 - [Index](#index);
 - [About](#about);
-- [Schema](#schema).
+- [Schema](#schema);
+- [Minimal Config](#minimal-config).
 
 ## About
 
@@ -43,3 +44,16 @@ option is considered an error):
     - `mysql.serve.password`.
 
  2) Are required if `mysql.login` and `mysql.password` are omitted.
+
+## Minimal Config
+
+Minimal valid config is following:
+
+```json
+{
+    "mysql": {
+        "login":    "your MySQL user login",
+        "password": "your MySQL user password"
+    }
+}
+```
