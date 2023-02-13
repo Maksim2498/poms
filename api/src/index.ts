@@ -1,8 +1,8 @@
 import winston from "winston"
 
-import { readConfig, configToURL } from "./config"
-import { initDatabase            } from "./init"
-import { runServer               } from "./server"
+import { Config } from "./config"
+//import { initDatabase            } from "./init"
+//import { runServer               } from "./server"
 
 const logger = winston.createLogger({
     format: winston.format.cli(),
@@ -15,13 +15,12 @@ main()
     .catch(error => logger.error(error instanceof Error ? error.message : error))
 
 async function main() {
-    logger.info("Reading config...")
-    const config = await readConfig()
-    logger.info("Done")
+    const config = await Config.readFromFile({ logger });
 
-    const connection = await initDatabase({ config, logger })
+    /*const connection = await initDatabase({ config, logger })
+    connection.destroy()
 
-    logger.info(`Serving API at ${configToURL(config)}...`)
+    logger.info(`Serving API at ${configToAPIAddress(config)}...`)
     await runServer()
-    logger.info("Server is closed")
+    logger.info("Server is closed")*/
 }
