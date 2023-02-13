@@ -104,7 +104,7 @@ export class Config {
             host:       json.mysql.host,
             port:       json.mysql.port,
             socketPath: Config.normalizePath(json.mysql.socketPath),
-            login:      json.mysql.logic,
+            login:      json.mysql.login,
             password:   json.mysql.password,
 
             init:       json.mysql.init != null ? {
