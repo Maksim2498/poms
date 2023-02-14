@@ -43,8 +43,9 @@ export class Config {
     }
 
     readonly logic?: {
-        readonly createAdmin?:    boolean
-        readonly validateTables?: boolean
+        readonly createAdmin?:           boolean
+        readonly validateTables?:        boolean
+        readonly recreateInvalidTables?: boolean
     }
 
     static async readFromFile(options?: { path?: string, logger?: Logger }): Promise<Config> {
@@ -120,7 +121,9 @@ export class Config {
         }
 
         this.logic = json.logic != null ? {
-            createAdmin: json.logic.createAdmin
+            createAdmin:           json.logic.createAdmin,
+            validateTables:        json.logic.validateTables,
+            recreateInvalidTables: json.logic.recreateInvalidTables
         } : undefined
     }
 
@@ -215,6 +218,10 @@ export class Config {
             },
             {
                 path: "logic.validateTables",
+                type: "boolean"
+            },
+            {
+                path: "logic.recreateInvalidTables",
                 type: "boolean"
             }
         ]
@@ -411,5 +418,9 @@ export class Config {
 
     get logicValidateTables(): boolean {
         return this.logic?.validateTables ?? true 
+    }
+
+    get logicRecreateInvalidTables(): boolean {
+        return this.logic?.recreateInvalidTables ?? false
     }
 }
