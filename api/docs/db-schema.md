@@ -30,7 +30,7 @@ __Definition__:
 ```sql
 CREATE TABLE Users (
     id            BIGINT       AUTO_INCREMENT PRIMARY KEY,
-    login         VARCHAR(255) NOT NULL,
+    login         VARCHAR(255) NOT NULL UNIQUE,
     name          VARCHAR(255),
     password_hash BINARY(64)   NOT NULL,
     is_admin      BOOLEAN      NOT NULL DEFAULT FALSE

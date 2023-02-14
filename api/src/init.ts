@@ -175,7 +175,7 @@ async function validateUsersTable(options: SetupOptions) {
         name: "Users",
         fields: [
             { name: "id",            type: "bigint",       key: "PRI", extra: "auto_increment" },
-            { name: "login",         type: "varchar(255)",                                     },
+            { name: "login",         type: "varchar(255)", key: "UNI"                          },
             { name: "name",          type: "varchar(255)", nullable: true                      },
             { name: "password_hash", type: "binary(64)"                                        },
             { name: "is_admin",      type: "tinyint(1)",   defaultValue: '0'                   }
@@ -245,7 +245,7 @@ async function validateTable(options: ValidateTableOptions) {
         return
     }
 
-    throw new Error(`Invalid`)
+    throw new Error(`Invalid. If you're sure there is no error disable table validation`)
 }
 
 async function createTablesAndEvents(options: SetupOptions) {
@@ -260,7 +260,7 @@ async function createUsersTable(options: SetupOptions) {
         name: "Users",
         args: [
             "id            BIGINT       AUTO_INCREMENT PRIMARY KEY",
-            "login         VARCHAR(255) NOT NULL",
+            "login         VARCHAR(255) NOT NULL UNIQUE",
             "name          VARCHAR(255)",
             "password_hash BINARY(64)   NOT NULL",
             "is_admin      BOOLEAN      NOT NULL DEFAULT FALSE"
