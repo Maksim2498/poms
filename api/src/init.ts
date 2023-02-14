@@ -30,8 +30,17 @@ interface CreateTabelOptions extends SetupOptions {
     args: string[]
 }
 
+interface DropTableOptions extends SetupOptions {
+    name: string
+}
+
+interface ValidateSpecificTableOptions extends SetupOptions {
+    recreateOnInvalid: boolean
+}
+
 interface ValidateTableOptions extends SetupOptions {
-    name:   string
+    name:           string
+    throwOnInvalid: boolean
     fields: {
         name:          string
         type:          string
@@ -89,11 +98,12 @@ async function init(options: InitOptionsEx) {
     if (!exists)
         await createTablesAndEvents(options) 
     else if (config.logicValidateTables) {
-        const tables = await getTableList(options)
+        const validateOptions = { recreateOnInvalid: config.logicRecreateInvalidTables, ...options}
+        const tables          = await getTableList(options)
 
         if (tables.includes("users")) {
             logger?.info("Found Users table")
-            await validateUsersTable(options)
+            await validateUsersTable(validateOptions)
         } else {
             logger?.info("Missing Users table")
             await createUsersTable(options)
@@ -101,7 +111,7 @@ async function init(options: InitOptionsEx) {
 
         if (tables.includes("cnames")) {
             logger?.info("Found CNames table")
-            await validateCNamesTable(options)
+            await validateCNamesTable(validateOptions)
         } else {
             logger?.info("Missing CNames table")
             await createCNamesTable(options)
@@ -109,7 +119,7 @@ async function init(options: InitOptionsEx) {
 
         if (tables.includes("tokens")) {
             logger?.info("Found Tokens table")
-            await validateTokensTable(options)
+            await validateTokensTable(validateOptions)
         } else {
             logger?.info("Missing Tokens table")
             await createTokensTable(options)
@@ -171,9 +181,10 @@ async function getTableList(options: SetupOptions): Promise<string[]> {
     return result
 }
 
-async function validateUsersTable(options: SetupOptions) {
-    await validateTable({
-        name: "Users",
+async function validateUsersTable(options: ValidateSpecificTableOptions) {
+    const valid = await validateTable({
+        name:           "Users",
+        throwOnInvalid: !options.recreateOnInvalid,
         fields: [
             { name: "id",            type: "bigint",       key: "PRI", extra: "auto_increment" },
             { name: "login",         type: "varchar(255)", key: "UNI"                          },
@@ -183,11 +194,22 @@ async function validateUsersTable(options: SetupOptions) {
         ],
         ...options
     })
+
+    if (!valid) {
+        await dropTable({ 
+            name:       "Users", 
+            connection: options.connection, 
+            logger:     options.logger
+        })
+
+        createUsersTable(options)
+    }
 }
 
-async function validateCNamesTable(options: SetupOptions) {
-    await validateTable({
-        name: "CNames",
+async function validateCNamesTable(options: ValidateSpecificTableOptions) {
+    const valid = await validateTable({
+        name:           "CNames",
+        throwOnInvalid: !options.recreateOnInvalid,
         fields: [
             { name: "id",      type: "bigint",       key: "PRI", extra: "auto_increment" },
             { name: "user_id", type: "bigint",       key: "MUL"                          },
@@ -195,11 +217,22 @@ async function validateCNamesTable(options: SetupOptions) {
         ],
         ...options
     })
+
+    if (!valid) {
+        await dropTable({ 
+            name:       "CNames", 
+            connection: options.connection, 
+            logger:     options.logger
+        })
+
+        createCNamesTable(options)
+    }
 }
 
-async function validateTokensTable(options: SetupOptions) {
-    await validateTable({
-        name: "Tokens",
+async function validateTokensTable(options: ValidateSpecificTableOptions) {
+    const valid = await validateTable({
+        name:           "Tokens",
+        throwOnInvalid: !options.recreateOnInvalid,
         fields: [
             { name: "id",      type: "binary(64)",               key: "PRI"   },
             { name: "user_id", type: "bigint",                   key: "MUL"   },
@@ -208,10 +241,20 @@ async function validateTokensTable(options: SetupOptions) {
         ],
         ...options
     })
+
+    if (!valid) {
+        await dropTable({ 
+            name:       "Tokens", 
+            connection: options.connection, 
+            logger:     options.logger
+        })
+
+        createTokensTable(options)
+    }
 }
 
-async function validateTable(options: ValidateTableOptions) {
-    const { connection, logger, name, fields } = options
+async function validateTable(options: ValidateTableOptions): Promise<boolean> {
+    const { connection, logger, name, fields, throwOnInvalid } = options
 
     logger?.info(`Validating ${name} table...`)
 
@@ -243,10 +286,32 @@ async function validateTable(options: ValidateTableOptions) {
 
     if (valid) {
         logger?.info("Valid")
-        return
+        return true
     }
 
-    throw new Error(`Invalid. If you're sure there is no error disable table validation`)
+    if (throwOnInvalid)
+        throw new Error("Invalid. "
+                    + "You can turn off validation or enable automatic fixing of invalid tables. "
+                    + "See documentation on configuration for more info")
+
+    logger?.info("Invalid")
+
+    return false
+}
+
+async function dropTable(options: DropTableOptions) {
+    const { connection, logger, name } = options
+
+    logger?.info(`Dropping ${name} table...`)
+
+    await am.query({
+        connection,
+        logger,
+        sql:    "DROP TABLE ??",
+        values: [name]
+    })
+
+    logger?.info("Done")
 }
 
 async function createTablesAndEvents(options: SetupOptions) {
