@@ -29,6 +29,18 @@ interface CreateTabelOptions extends SetupOptions {
     args: string[]
 }
 
+interface ValidateTableOptions extends SetupOptions {
+    name:   string
+    fields: {
+        name:          string
+        type:          string
+        nullable?:     boolean
+        key?:          string
+        defaultValue?: string
+        extra?:        string
+    }[]
+}
+
 export async function initDatabase(options: InitOptions) {
     const { config, logger } = options
 
@@ -37,8 +49,18 @@ export async function initDatabase(options: InitOptions) {
     const connection  = await connect(options)
     const deepOptions = { connection, config, logger }
 
-    await init(deepOptions)
-    await disconnect(deepOptions)
+    try {
+        await init(deepOptions)
+    } catch (error) {
+        if (error instanceof Error) {
+            logger?.error(error.message)
+            throw new Error()
+        }
+
+        throw error
+    } finally {
+        await disconnect(deepOptions)
+    }
 
     logger?.info("Database initialization is done")
 }
@@ -68,7 +90,7 @@ async function init(options: InitOptionsEx) {
 
         if (tables.includes("users")) {
             logger?.info("Found Users table")
-
+            await validateUsersTable(options)
         } else {
             logger?.info("Missing Users table")
             await createUsersTable(options)
@@ -76,7 +98,7 @@ async function init(options: InitOptionsEx) {
 
         if (tables.includes("cnames")) {
             logger?.info("Found CNames table")
-
+            await validateCNamesTable(options)
         } else {
             logger?.info("Missing CNames table")
             await createCNamesTable(options)
@@ -84,7 +106,7 @@ async function init(options: InitOptionsEx) {
 
         if (tables.includes("tokens")) {
             logger?.info("Found Tokens table")
-
+            await validateTokensTable(options)
         } else {
             logger?.info("Missing Tokens table")
             await createTokensTable(options)
@@ -145,6 +167,84 @@ async function getTableList(options: SetupOptions): Promise<string[]> {
     return result
 }
 
+async function validateUsersTable(options: SetupOptions) {
+    await validateTable({
+        name: "Users",
+        fields: [
+            { name: "id",            type: "bigint",       key: "PRI", extra: "auto_increment" },
+            { name: "login",         type: "varchar(255)",                                     },
+            { name: "name",          type: "varchar(255)", nullable: true                      },
+            { name: "password_hash", type: "binary(64)"                                        },
+            { name: "is_admin",      type: "tinyint(1)",   defaultValue: '0'                   }
+        ],
+        ...options
+    })
+}
+
+async function validateCNamesTable(options: SetupOptions) {
+    await validateTable({
+        name: "CNames",
+        fields: [
+            { name: "id",      type: "bigint",       key: "PRI", extra: "auto_increment" },
+            { name: "user_id", type: "bigint",       key: "MUL"                          },
+            { name: "cname",   type: "varchar(255)"                                     }
+        ],
+        ...options
+    })
+}
+
+async function validateTokensTable(options: SetupOptions) {
+    await validateTable({
+        name: "Tokens",
+        fields: [
+            { name: "id",      type: "binary(64)",               key: "PRI"   },
+            { name: "user_id", type: "bigint",                   key: "MUL"   },
+            { name: "exp",     type: "timestamp"                              },
+            { name: "type",    type: "enum('access','refresh')"               }
+        ],
+        ...options
+    })
+}
+
+async function validateTable(options: ValidateTableOptions) {
+    const { connection, logger, name, fields } = options
+
+    logger?.info(`Validating ${name} table...`)
+
+    const valid = await am.query({
+        connection,
+        logger,
+        sql:       "DESC ??",
+        values:    [name],
+        onSuccess: results => {
+            if (results.length != fields.length)
+                return false
+
+            for (let i = 0; i < results.length; ++i) {
+                const { Field, Type, Null,     Key, Default,      Extra } = results[i]
+                const { name,  type, nullable, key, defaultValue, extra } = fields[i]
+
+                if (Field            !== name
+                 || Type             !== type
+                 || (Null === "YES") !=  (nullable ?? false)
+                 || Key              !=  (key      ?? "")
+                 || Default          !=  defaultValue
+                 || Extra            !=  (extra    ?? ""))
+                 return false
+            }
+            
+            return true;
+        }
+    })
+
+    if (valid) {
+        logger?.info("Valid")
+        return
+    }
+
+    throw new Error(`Invalid`)
+}
+
 async function createTablesAndEvents(options: SetupOptions) {
     await createUsersTable(options)
     await createCNamesTable(options)
@@ -170,7 +270,8 @@ async function createCNamesTable(options: SetupOptions) {
     await createTable({ 
         name: "CNames",
         args: [
-            "user_id BIGINT       PRIMARY KEY",
+            "id      BIGINT       AUTO_INCREMENT PRIMARY KEY",
+            "user_id BIGINT       NOT NULL",
             "cname   VARCHAR(255) NOT NULL",
 
             "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"

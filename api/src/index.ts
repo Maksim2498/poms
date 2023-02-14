@@ -12,7 +12,19 @@ const logger = winston.createLogger({
 })
 
 main()
-    .catch(error => logger.error(error instanceof Error ? error.message : error))
+    .catch(error => {
+        if (!error)
+            return
+
+        if (error instanceof Error) {
+            if (error.message)
+                logger.error(error.message)
+
+            return
+        }
+
+        logger.error(error)
+    })
 
 async function main() {
     const config = await Config.readFromFile({ logger });
