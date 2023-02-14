@@ -30,7 +30,7 @@ __API__:
 
 - [Configuration](/api/docs/config.md);
 - [Database Schema](/api/docs/db-schema.md);
-- [Methods](/api/docs/methods.md).
+- [API Schema](/api/docs/api-schema.md).
 
 __Site__:
 
