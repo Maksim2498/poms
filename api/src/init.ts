@@ -1,10 +1,35 @@
-import { Logger                 } from "winston"
-import { Connection, MysqlError } from "mysql"
+import { Logger     } from "winston"
+import { Connection } from "mysql"
 
 import { Config } from "./config"
 import * as am    from "./async_mysql"
 
-export async function initDatabase(options: { config: Config, logger?: Logger }) {
+export interface InitOptions {
+    config:  Config
+    logger?: Logger 
+}
+
+interface InitOptionsEx extends InitOptions {
+    connection: Connection
+}
+
+interface SetupOptions {
+    connection: Connection
+    logger?:    Logger
+}
+
+interface SetupDatabaseOptions {
+    connection: Connection
+    database:   string
+    logger?:    Logger
+}
+
+interface CreateTabelOptions extends SetupOptions {
+    name: string
+    args: string[]
+}
+
+export async function initDatabase(options: InitOptions) {
     const { config, logger } = options
 
     logger?.info("Starting initializing database...")
@@ -18,7 +43,7 @@ export async function initDatabase(options: { config: Config, logger?: Logger })
     logger?.info("Database initialization is done")
 }
 
-async function connect(options: { config: Config, logger?: Logger }): Promise<Connection> {
+async function connect(options: InitOptions): Promise<Connection> {
     const { config, logger } = options
     const connection         = config.createInitDBConnection()
 
@@ -29,43 +54,58 @@ async function connect(options: { config: Config, logger?: Logger }): Promise<Co
     return connection
 }
 
-async function init(options: { connection: Connection, config: Config, logger?: Logger }) {
+async function init(options: InitOptionsEx) {
     const { connection, config, logger } = options
     const database                       = config.mysqlDatabase
 
-    const deepOptions = { connection, database, logger }
-    const exists      = await createDatabase(deepOptions)
+    const extraOptions = { connection, database, logger }
+    const exists       = await createDatabase(extraOptions)
+
+    await useDatabase(extraOptions)
 
     if (exists) {
+        const tables = await getTableList(options)
 
+        if (tables.includes("users")) {
+            logger?.info("Found Users table")
+
+        } else {
+            logger?.info("Missing Users table")
+            await createUsersTable(options)
+        }
+
+        if (tables.includes("cnames")) {
+            logger?.info("Found CNames table")
+
+        } else {
+            logger?.info("Missing CNames table")
+            await createCNamesTable(options)
+        }
+
+        if (tables.includes("tokens")) {
+            logger?.info("Found Tokens table")
+
+        } else {
+            logger?.info("Missing Tokens table")
+            await createTokensTable(options)
+        }
     } else {
-        await createTablesAndEvents(deepOptions) 
+        await createTablesAndEvents(options) 
     }
 }
 
-async function createDatabase(options: { connection: Connection, database: string, logger?: Logger }): Promise<boolean> {
+async function createDatabase(options: SetupDatabaseOptions): Promise<boolean> {
     const { connection, database, logger } = options
 
     logger?.info(`Creating database "${database}"...`)
 
-    const exists = await new Promise<boolean>((resolve, reject) => {
-        connection.query("CREATE DATABASE ??", database, error => {
-            if (error) {
-                if (error.fatal) {
-                    reject(new Error(error.sqlMessage ?? error.message ?? am.DEFAULT_FATAL_ERROR_MESSAGE))
-                    return
-                }
-
-                if (error.code === "ER_DB_CREATE_EXISTS") {
-                    resolve(true)
-                    return
-                }
-
-                logger?.warn(error.sqlMessage ?? error.message ?? am.DEFAULT_ERROR_MESSAGE)
-            }
-
-            resolve(false)
-        })
+    const exists = await am.query({
+        connection,
+        logger,
+        sql:       "CREATE DATABASE ??",
+        values:    [database],
+        onError:   error => error.code === "ER_DB_CREATE_EXISTS" ? true : undefined,
+        onSuccess: () => false
     })
 
     logger?.info(exists ? "Already exits" : "Done")
@@ -73,30 +113,46 @@ async function createDatabase(options: { connection: Connection, database: strin
     return exists
 }
 
-async function createTablesAndEvents(options: { connection: Connection, database: string, logger?: Logger }) {
-    await useDatabase(options)
-    await createUsersTable(options)
-    await createCNamesTable(options)
-    await createTokensTable(options)
-    await createCleanUpEvent(options)
-}
-
-async function useDatabase(options: { connection: Connection, database: string, logger?: Logger }) {
+async function useDatabase(options: SetupDatabaseOptions) {
     const { connection, database, logger } = options
 
     logger?.info("Selecting database...")
 
     await am.query({ 
         connection,
+        logger,
         sql:    "USE ??",
-        values: [database],
-        logger
+        values: [database]
     })
 
     logger?.info("Done")
 }
 
-async function createUsersTable(options: { connection: Connection, logger?: Logger }) {
+async function getTableList(options: SetupOptions): Promise<string[]> {
+    const { connection, logger } = options
+
+    logger?.info("Getting table list...")
+    
+    const result = await am.query({
+        connection,
+        logger,
+        sql:       "SHOW TABLES",
+        onSuccess: (result, fields) => result.map((r: any) => r[fields![0].name].toLowerCase()) as string[]
+    })
+    
+    logger?.info("Done")
+
+    return result
+}
+
+async function createTablesAndEvents(options: SetupOptions) {
+    await createUsersTable(options)
+    await createCNamesTable(options)
+    await createTokensTable(options)
+    await createCleanUpEvent(options)
+}
+
+async function createUsersTable(options: SetupOptions) {
     await createTable({ 
         name: "Users",
         args: [
@@ -110,7 +166,7 @@ async function createUsersTable(options: { connection: Connection, logger?: Logg
     })
 }
 
-async function createCNamesTable(options: { connection: Connection, logger?: Logger }) {
+async function createCNamesTable(options: SetupOptions) {
     await createTable({ 
         name: "CNames",
         args: [
@@ -123,7 +179,7 @@ async function createCNamesTable(options: { connection: Connection, logger?: Log
     })
 }
 
-async function createTokensTable(options: { connection: Connection, logger?: Logger }) {
+async function createTokensTable(options: SetupOptions) {
     await createTable({ 
         name: "Tokens",
         args: [
@@ -138,37 +194,37 @@ async function createTokensTable(options: { connection: Connection, logger?: Log
     })
 }
 
-async function createTable(options: { name: string, args: string[], connection: Connection, logger?: Logger }) {
+async function createTable(options: CreateTabelOptions) {
     const { name, args, connection, logger } = options
 
     logger?.info(`Creating ${name} table...`)
 
     await am.query({
         connection,
-        sql: `CREATE TABLE ${name} (${args.join(",")})`,
-        logger
+        logger,
+        sql: `CREATE TABLE ${name} (${args.join(",")})`
     })
 
     logger?.info("Done")
 }
 
-async function createCleanUpEvent(options: { connection: Connection, logger?: Logger }) {
+async function createCleanUpEvent(options: SetupOptions) {
     const { connection, logger } = options
 
     logger?.info(`Creating CleanUp event...`)
 
     await am.query({
         connection,
+        logger,
         sql: "CREATE EVENT clean_up "
            + "ON SCHEDULE EVERY 1 DAY "
-           + "DO DELETE FROM tokens WHERE exp >= now()",
-        logger
+           + "DO DELETE FROM tokens WHERE exp >= now()"
     })
 
     logger?.info("Done")
 }
 
-async function disconnect(options: { connection: Connection, logger?: Logger }) {
+async function disconnect(options: SetupOptions) {
     const { logger } = options
 
     logger?.info("Disconnecting from the database...")

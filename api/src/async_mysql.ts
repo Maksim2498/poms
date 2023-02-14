@@ -1,5 +1,5 @@
-import { Connection } from "mysql"
-import { Logger     } from "winston"
+import { Connection, FieldInfo, MysqlError } from "mysql"
+import { Logger                            } from "winston"
 
 export const DEFAULT_FATAL_ERROR_MESSAGE = "Fatal MySQL error"
 export const DEFAULT_ERROR_MESSAGE       = "Non-fatal MySQL error"
@@ -50,31 +50,47 @@ export async function disconnect(options: AsyncDisconnectOptions) {
     })
 }
 
-export interface AsyncQueryOptions {
+export interface AsyncQueryOptions<T> {
     connection: Connection
     sql:        string
     values?:    any[]
     logger?:    Logger
+    onError?:   (error: MysqlError) => T | undefined
+    onSuccess?: (result: any, fields: FieldInfo[] | undefined) => T
 }
 
-export async function query(options: AsyncQueryOptions) {
-    await new Promise<void>((resolve, reject) => {
-        const { connection, sql, values, logger } = options
+export async function query<T> (options: AsyncQueryOptions<T>): Promise<T>  {
+    return await new Promise<T>((resolve, reject) => {
+        const { connection, sql, values, logger, onError, onSuccess } = options
 
         connection.query(
             sql, 
             values ?? [], 
-            (error) => {
+            (error, result, fields) => {
                 if (error) {
                     if (error.fatal) {
                         reject(new Error(error.sqlMessage ?? error.message ?? "Fatal MySQL error"))
                         return
                     }
 
+                    if (onError) {
+                        const result = onError(error)
+
+                        if (result !== undefined) {
+                            resolve(result)
+                            return
+                        }
+                    }
+
                     logger?.warn(error.sqlMessage ?? error.message ?? "Non-fatal MySQL error")
                 }
 
-                resolve()
+                if (onSuccess !== undefined) {
+                    resolve(onSuccess(result, fields))
+                    return
+                }
+
+                resolve(undefined as T)
             }
         )
     })
