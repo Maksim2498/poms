@@ -1,5 +1,7 @@
 # POMS - Personal Offline Minecraft Server
 
+\<There will be an image>
+
 ## Index
 
 - [Index](#index);
