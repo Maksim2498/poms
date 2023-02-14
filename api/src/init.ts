@@ -85,7 +85,9 @@ async function init(options: InitOptionsEx) {
 
     await useDatabase(extraOptions)
 
-    if (exists) {
+    if (!exists)
+        await createTablesAndEvents(options) 
+    else if (config.logicValidateTables) {
         const tables = await getTableList(options)
 
         if (tables.includes("users")) {
@@ -111,9 +113,10 @@ async function init(options: InitOptionsEx) {
             logger?.info("Missing Tokens table")
             await createTokensTable(options)
         }
-    } else {
-        await createTablesAndEvents(options) 
     }
+
+    if (config.logicCreateAdmin)
+        await createAdmin(options)
 }
 
 async function createDatabase(options: SetupDatabaseOptions): Promise<boolean> {
@@ -323,6 +326,10 @@ async function createCleanUpEvent(options: SetupOptions) {
     })
 
     logger?.info("Done")
+}
+
+async function createAdmin(options: { connection: Connection, logger?: Logger }) {
+
 }
 
 async function disconnect(options: SetupOptions) {

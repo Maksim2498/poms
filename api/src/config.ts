@@ -43,7 +43,8 @@ export class Config {
     }
 
     readonly logic?: {
-        readonly createAdmin?: boolean
+        readonly createAdmin?:    boolean
+        readonly validateTables?: boolean
     }
 
     static async readFromFile(options?: { path?: string, logger?: Logger }): Promise<Config> {
@@ -93,7 +94,7 @@ export class Config {
         Config.validateConfigJSON(json)
 
         this.api = json.api != null ? {
-            prefix:     Config.normalizePath(json.api.prefix),
+            prefix:     Config.normalizePath("/" + (json.api.prefix ?? "")),
             host:       json.api.host,
             port:       json.api.port,
             socketPath: Config.normalizePath(json.api.socketPath)
@@ -210,6 +211,10 @@ export class Config {
             },
             {
                 path: "logic.createAdmin",
+                type: "boolean"
+            },
+            {
+                path: "logic.validateTables",
                 type: "boolean"
             }
         ]
@@ -402,5 +407,9 @@ export class Config {
 
     get logicCreateAdmin(): boolean {
         return this.logic?.createAdmin ?? true
+    }
+
+    get logicValidateTables(): boolean {
+        return this.logic?.validateTables ?? true 
     }
 }
