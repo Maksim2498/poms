@@ -3,6 +3,7 @@ import { Connection } from "mysql"
 
 import { Config } from "./config"
 import * as am    from "./async_mysql"
+import * as logic from "./logic"
 
 export interface InitOptions {
     config:  Config
@@ -329,7 +330,30 @@ async function createCleanUpEvent(options: SetupOptions) {
 }
 
 async function createAdmin(options: { connection: Connection, logger?: Logger }) {
+    const { logger, connection } = options
 
+    logger?.info('Checking if user "admin" exists...')
+
+    const info = await logic.getUserInfo({ login: "admin", logger, connection })
+
+    if (info == null) {
+        logger?.info('There is no user "admin". Creating...')
+
+        await logic.createUser({
+            connection,
+            logger,
+            login:    "admin",
+            password: "admin",
+            isAdmin:  true
+         })
+
+        logger?.info("Done")
+    } else {
+        logger?.info(`User "admin" already exists`)
+
+        if (!info.isAdmin)
+            logger?.warn('User "admin" doesn\'t have admin rights')
+    }
 }
 
 async function disconnect(options: SetupOptions) {

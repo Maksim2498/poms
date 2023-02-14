@@ -56,7 +56,7 @@ export interface AsyncQueryOptions<T> {
     values?:    any[]
     logger?:    Logger
     onError?:   (error: MysqlError) => T | undefined
-    onSuccess?: (result: any, fields: FieldInfo[] | undefined) => T
+    onSuccess?: (results: any, fields: FieldInfo[] | undefined) => T
 }
 
 export async function query<T> (options: AsyncQueryOptions<T>): Promise<T>  {
@@ -66,7 +66,7 @@ export async function query<T> (options: AsyncQueryOptions<T>): Promise<T>  {
         connection.query(
             sql, 
             values ?? [], 
-            (error, result, fields) => {
+            (error, results, fields) => {
                 if (error) {
                     if (error.fatal) {
                         reject(new Error(error.sqlMessage ?? error.message ?? "Fatal MySQL error"))
@@ -86,7 +86,7 @@ export async function query<T> (options: AsyncQueryOptions<T>): Promise<T>  {
                 }
 
                 if (onSuccess !== undefined) {
-                    resolve(onSuccess(result, fields))
+                    resolve(onSuccess(results, fields))
                     return
                 }
 
