@@ -20,7 +20,7 @@ export class Server {
 
     private runPromise?:        Promise<void>
     private resolveRunPromise?: () => void
-    private rejectRunPromise?:  (value: any) => void
+    private rejectRunPromise?:  (value: any) => void // For critical errors only
 
     readonly config:  Config
     readonly logger?: Logger
