@@ -211,9 +211,8 @@ async function validateCNamesTable(options: ValidateSpecificTableOptions) {
         name:           "CNames",
         throwOnInvalid: !options.recreateOnInvalid,
         fields: [
-            { name: "id",      type: "bigint",       key: "PRI", extra: "auto_increment" },
-            { name: "user_id", type: "bigint",       key: "MUL"                          },
-            { name: "cname",   type: "varchar(255)"                                     }
+            { name: "user_id", type: "bigint",       key: "PRI" },
+            { name: "cname",   type: "varchar(255)", key: "PRI" }
         ],
         ...options
     })
@@ -339,10 +338,10 @@ async function createCNamesTable(options: SetupOptions) {
     await createTable({ 
         name: "CNames",
         args: [
-            "id      BIGINT       AUTO_INCREMENT PRIMARY KEY",
             "user_id BIGINT       NOT NULL",
-            "cname   VARCHAR(255) NOT NULL",
+            "cname   VARCHAR(255) NOT NULL UNIQUE",
 
+            "PRIMARY KEY (user_id, cname)",
             "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"
         ],
         ...options
