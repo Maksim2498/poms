@@ -312,7 +312,7 @@ export class Config {
 
         const port = this.api?.port ?? Config.DEFAULT_API_PORT
 
-        return `http://${host}${port}/${prefix}/`
+        return `http://${host}:${port}/${prefix}/`
     }
 
     get mysqlUseInitUser(): boolean {

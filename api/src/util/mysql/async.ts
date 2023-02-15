@@ -42,7 +42,7 @@ export async function disconnect(options: AsyncDisconnectOptions) {
 
         connection.end(error => {
             if (error) {
-                logger?.warn(error.sqlMessage ?? error.message ?? DEFAULT_ERROR_MESSAGE)
+                logger?.error(error.sqlMessage ?? error.message ?? DEFAULT_ERROR_MESSAGE)
             
                 if (!error.fatal)
                     connection.destroy()
