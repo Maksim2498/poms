@@ -1,9 +1,12 @@
-import { Server as HTTPServer } from "http"
-import { Application          } from "express"
-import { Logger               } from "winston"
-import { Config               } from "./config"
+import { Server as HttpServer   } from "http"
+import { Application            } from "express"
+import { Logger                 } from "winston"
+import { Connection, MysqlError } from "mysql"
+import { Config                 } from "./config"
 
 import express from "express"
+import * as am from "./util/mysql/async"
+import sleep   from "util/sleep"
 
 export interface ServerOptions {
     config:  Config
@@ -11,8 +14,9 @@ export interface ServerOptions {
 }
 
 export class Server {
-    private readonly expressApp:  Application
-    private          httpServer?: HTTPServer
+    private readonly expressApp:       Application
+    private          httpServer?:      HttpServer
+    private          mysqlConnection?: Connection
 
     private runPromise?:        Promise<void>
     private resolveRunPromise?: () => void
@@ -29,24 +33,75 @@ export class Server {
         this.logger     = logger
     }
 
+    get available(): boolean {
+        return this.runPromise != null && this.mysqlConnection != null
+    }
+
     async start() {
         if (this.runPromise)
             return
 
-        this.runPromise = new Promise<void>((resolve, reject) => {
-            this.resolveRunPromise = resolve
-            this.rejectRunPromise  = reject
-        })
-
         this.logger?.info(`Starting listening at ${this.config.apiAddress}...`)
 
-        const socketPath = this.config.api?.socketPath
-        const listening  = () => this.logger?.info("Listening...")
+        initRunPromise.call(this)
+        await setupMysqlConnection.call(this)
+        listen.call(this)
 
-        this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
-                                             : this.expressApp.listen(this.config.apiPort, this.config.apiHost, listening)
+        return await (this.runPromise as unknown as Promise<void>)
 
-        await this.runPromise
+        function initRunPromise(this: Server) {
+            this.runPromise = new Promise<void>((resolve, reject) => {
+                this.resolveRunPromise = resolve
+                this.rejectRunPromise  = reject
+            })
+        }
+
+        async function setupMysqlConnection(this: Server) {
+            this.mysqlConnection = this.config.createServeDBConnection()
+
+            await am.connect({ 
+                connection: this.mysqlConnection,
+                logger:     this.logger,
+                address:    this.config.mysqlAddress
+            })
+
+            this.mysqlConnection.on("error", async (error: MysqlError) => {
+                if (error.fatal) {
+                    this.logger?.error("Lost connection with database")
+
+                    this.mysqlConnection?.destroy()
+                    this.mysqlConnection = undefined
+
+                    while (true) {
+                        this.logger?.info(`Trying to reconnect in ${this.config.logicReconnectInterval} seconds...`)
+
+                        await sleep(1000 * this.config.logicReconnectInterval)
+
+                        try {
+                            const connection = this.config.createServeDBConnection() 
+
+                            await am.connect({ 
+                                connection,
+                                logger:  this.logger,
+                                address: this.config.mysqlAddress
+                            })
+
+                            this.mysqlConnection = connection
+
+                            break
+                        } catch {}
+                    }
+                }
+            })
+        }
+
+        function listen(this: Server) {
+            const socketPath = this.config.api?.socketPath
+            const listening  = () => this.logger?.info("Listening...")
+
+            this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
+                                                 : this.expressApp.listen(this.config.apiPort, this.config.apiHost, listening)
+        }
     }
 
     async stop() {
@@ -54,6 +109,9 @@ export class Server {
             return
 
         this.logger?.info("Stopping...")
+
+        if (this.mysqlConnection)
+            await am.disconnect({ connection: this.mysqlConnection, logger: this.logger })
 
         this.httpServer?.close(error => {
             if (error)
