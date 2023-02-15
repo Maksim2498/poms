@@ -47,7 +47,12 @@ __Definition__:
 
 ```sql
 CREATE TABLE CNames (
-    E
+    user_id BIGINT       NOT NULL,
+    cname   VARCHAR(255) NOT NULL UNIQUE,
+
+    PRIMARY KEY (user_id, cname),
+    FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
+
 )
 ```
 
