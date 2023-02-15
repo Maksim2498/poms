@@ -85,10 +85,14 @@ export async function deleteUser(options: DeleteUserOptions) {
     // TODO
 }
 
-export interface GetUserInfoOptions {
+export type GetUserInfoOptions = {
     connection: Connection
     logger?:    Logger
     login:      string
+} | {
+    connection: Connection
+    logger?:    Logger
+    id:         number
 }
 
 export interface UserInfo {
@@ -100,15 +104,24 @@ export interface UserInfo {
 }
 
 export async function getUserInfo(options: GetUserInfoOptions): Promise<UserInfo | undefined> {
-    let { connection, logger, login } = options
+    const { connection, logger } = options
 
-    login = normalizeLogin(login)
+    let sql
+    let values
+
+    if ("id" in options) {
+        sql    = "SELECT * FROM Users WHERE id = ?",
+        values = [options.id]
+    } else {
+        sql    = "SELECT * FROM Users WHERE login = ?",
+        values = [normalizeLogin(options.login)]
+    }
 
     return await am.query({
         connection,
         logger,
-        sql:       "SELECT * FROM Users WHERE login = ?",
-        values:    [login],
+        values,
+        sql,
         onSuccess: (results: any[]) => {
             if (!results.length)
                 return
