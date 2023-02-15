@@ -21,6 +21,7 @@ export async function connect(options: AsyncConnectOptions) {
             if (error) {
                 logger?.error(error.sqlMessage ?? error.message ?? DEFAULT_ERROR_MESSAGE) 
                 reject(e.forward(error, logger))
+                return
             }
 
             logger?.info("Connected")
