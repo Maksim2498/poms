@@ -50,22 +50,46 @@ export interface CreateUserOptions {
     password:   string
     name?:      string
     isAdmin?:   boolean
-}
+    creator?:   string | number
+} 
 
 export async function createUser(options: CreateUserOptions): Promise<boolean> {
-    const { connection, logger, password, name, isAdmin } = options
-    const login                                           = normalizeLogin(options.login)
+    const { connection, logger, password, name, isAdmin, creator } = options
+    const login                                                    = normalizeLogin(options.login)
 
     logger?.info(`Creaing user "${login}"...`)
 
     if (!isLoginValid(login))
         throw e.fromMessage(`Login "${login}" is invalid`, logger)
 
+    let creatorId: number | undefined
+
+    switch (typeof creator) {
+        case "string":
+            if (!isLoginValid(creator))
+                throw e.fromMessage(`Creator login "${creator}" is invalid`, logger)
+
+            const creatorInfo = await getUserInfo({ connection, logger, login: creator })
+
+            if (!creatorInfo)
+                throw e.fromMessage(`Cannot find creator. There is no user "${creator}"`)
+
+            if (!creatorInfo.isAdmin)
+                throw e.fromMessage(`Only admin can be a creator of another user. "${creator}" isn't an admin`)
+
+            creatorId = creatorInfo.id
+
+            break
+
+        case "number":
+            creatorId = creator
+    }
+
     const created = await am.query({
         connection,
         logger,
-        sql:       'INSERT INTO Users (login, name, password_hash, is_admin) VALUES (?, ?, UNHEX(SHA2(?, 512)), ?)',
-        values:    [login, name, `${login}:${password}`, isAdmin],
+        sql:       'INSERT INTO Users (login, name, cr_id, password_hash, is_admin) VALUES (?, ?, ?, UNHEX(SHA2(?, 512)), ?)',
+        values:    [login, name, creatorId, `${login}:${password}`, isAdmin],
         onError:   () => false,
         onSuccess: () => true
     })
