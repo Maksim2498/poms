@@ -2,7 +2,7 @@ import { Logger     } from "winston"
 import { Connection } from "mysql"
 
 import { Config } from "./config"
-import * as am    from "./async_mysql"
+import * as am    from "./util/mysql/async"
 import * as logic from "./logic"
 
 export interface InitOptions {

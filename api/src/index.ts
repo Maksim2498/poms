@@ -1,34 +1,27 @@
 import winston from "winston"
 
+import { LoggedError  } from "./util/error"
 import { Config       } from "./config"
 import { initDatabase } from "./init"
 import { runServer    } from "./server"
 
 const logger = winston.createLogger({
-    format: winston.format.cli(),
-    transports: [
-        new winston.transports.Console()
-    ]
+    format:     winston.format.cli(),
+    transports: [new winston.transports.Console()]
 })
 
 main()
     .catch(error => {
-        if (!error)
+        if (!error || error instanceof LoggedError)
             return
 
-        if (error instanceof Error) {
-            if (error.message)
-                logger.error(error.message)
-
-            return
-        }
-
-        logger.error(error)
+        logger.error(error instanceof Error ? error.message : error)
     })
 
 async function main() {
-    const config = await Config.readFromFile({ logger });
+    const config  = await Config.readFromFile({ logger });
+    const options = { config, logger }
 
-    await initDatabase({ config, logger })
-    await runServer({ config, logger })
+    await initDatabase(options)
+    await runServer(options)
 }

@@ -15,7 +15,7 @@ This document contains detailed description of configuration schema.
 
 API configuration is stored in `config.json` file in `/api` folder.
 By default this file doesn't exist and you have to create it on your
-own. It has the following available options (use of not supported any
+own. It has the following available options (use of any unsupported
 option is considered an error):
 
 | Field Path                    | Type          | Default Value | Required | Description                                                                        |

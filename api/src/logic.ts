@@ -1,6 +1,6 @@
 import { Connection } from "mysql"
 import { Logger     } from "winston"
-import * as am        from "./async_mysql"
+import * as am        from "./util/mysql/async"
 
 export interface CreateUserOptions {
     connection: Connection
