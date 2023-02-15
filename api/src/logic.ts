@@ -1,6 +1,47 @@
 import { Connection } from "mysql"
 import { Logger     } from "winston"
-import * as am        from "./util/mysql/async"
+
+import * as am from "./util/mysql/async"
+import * as e  from "./util/error"
+
+export const DEFAULT_ADMIN_LOGIN    = "admin"
+export const DEFAULT_ADMIN_PASSWORD = "admin"
+
+export interface CreateAdminOptions {
+    connection: Connection
+    logger?:    Logger
+    login?:     string
+    password?:  string
+}
+
+export async function createAdmin(options: CreateAdminOptions): Promise<boolean> {
+    const { logger, connection } = options
+    const login                  = options.login    ?? DEFAULT_ADMIN_LOGIN
+    const password               = options.password ?? DEFAULT_ADMIN_PASSWORD
+
+    logger?.info(`Trying creating administrator "${login}"...`)
+    logger?.info(`Checking if user "${login}" exists...`)
+
+    const info = await getUserInfo({ login, logger, connection })
+
+    if (info == null) {
+        logger?.info(`There is no user "${login}"`)
+
+        await createUser({
+            connection,
+            logger,
+            login,
+            password,
+            isAdmin:  true
+         })
+    } else {
+        logger?.info(`User "${login}" already exists`)
+
+        if (!info.isAdmin)
+            logger?.warn(`User "${login}" doesn\'t have admin rights`)
+    }
+    return false
+}
 
 export interface CreateUserOptions {
     connection: Connection
@@ -15,10 +56,12 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
     const { connection, logger, password, name, isAdmin } = options
     const login                                           = normalizeLogin(options.login)
 
-    if (!isLoginValid(login))
-        throw new Error(`Login "${login}" is invalid`)
+    logger?.info(`Creaing user "${login}"...`)
 
-    return await am.query({
+    if (!isLoginValid(login))
+        throw e.fromMessage(`Login "${login}" is invalid`, logger)
+
+    const created = await am.query({
         connection,
         logger,
         sql:       'INSERT INTO Users (login, name, password_hash, is_admin) VALUES (?, ?, UNHEX(SHA2(?, 512)), ?)',
@@ -26,6 +69,10 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
         onError:   () => false,
         onSuccess: () => true
     })
+
+    logger?.info("Created")
+
+    return created
 }
 
 export interface DeleteUserOptions {

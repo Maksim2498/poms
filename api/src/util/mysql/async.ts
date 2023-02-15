@@ -1,17 +1,21 @@
 import { Connection, FieldInfo, MysqlError } from "mysql"
 import { Logger                            } from "winston"
-import * as e                                from "util/error"
+
+import * as e from "util/error"
 
 export const DEFAULT_ERROR_MESSAGE = "MySQL error"
 
 export interface AsyncConnectOptions {
     connection: Connection
+    address?:   string
     logger?:    Logger
 }
 
 export async function connect(options: AsyncConnectOptions) {
     await new Promise<void>((resolve, reject) => {
-        const { connection, logger } = options
+        const { connection, logger, address } = options
+
+        logger?.info(address ? `Connecting to the database at ${address}...` : "Connecting to the database...")
 
         connection.connect(error => {
             if (error) {
@@ -19,6 +23,7 @@ export async function connect(options: AsyncConnectOptions) {
                 reject(e.forward(error, logger))
             }
 
+            logger?.info("Connected")
             resolve()
         })
     })
@@ -30,9 +35,11 @@ export interface AsyncDisconnectOptions {
 }
 
 export async function disconnect(options: AsyncDisconnectOptions) {
-    const { connection, logger } = options
-
     await new Promise<void>(resolve => {
+        const { connection, logger } = options
+
+        logger?.info("Disconnecting from the database...")
+
         connection.end(error => {
             if (error) {
                 logger?.warn(error.sqlMessage ?? error.message ?? DEFAULT_ERROR_MESSAGE)
@@ -41,6 +48,7 @@ export async function disconnect(options: AsyncDisconnectOptions) {
                     connection.destroy()
             }
 
+            logger?.info("Disconnected")
             resolve()
         })
     })

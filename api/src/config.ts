@@ -2,8 +2,9 @@ import { promises as fsp              } from "fs"
 import { normalize                    } from "path"
 import { Logger                       } from "winston"
 import { Connection, createConnection } from "mysql"
-import * as e                           from "./util/error"
-import * as o                           from "./util/object"
+
+import * as e from "./util/error"
+import * as o from "./util/object"
 
 export interface ConfigJSON {
     api?: {

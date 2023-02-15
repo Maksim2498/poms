@@ -29,7 +29,7 @@ __Definition__:
 
 ```sql
 CREATE TABLE Users (
-    id            BIGINT       AUTO_INCREMENT PRIMARY KEY,
+    id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
     login         VARCHAR(255) NOT NULL UNIQUE,
     name          VARCHAR(255),
     password_hash BINARY(64)   NOT NULL,
@@ -61,7 +61,7 @@ __Definition__:
 
 ```sql
 CREATE TABLE Tokens (
-    id      BINARY(64)                PRIMARY KEY,
+    id      BINARY(64)                NOT NULL PRIMARY KEY,
     user_id BIGINT                    NOT NULL,
     exp     TIMESTAMP                 NOT NULL,
     type    ENUM("access", "refresh") NOT NULL,
@@ -81,7 +81,7 @@ Dayly cleans up all expired events.
 __Definition__:
 
 ```sql
-CREATE EVENT clean_up
+CREATE EVENT CleanUp
 ON SCHEDULE EVERY 1 DAY
 DO
     DELETE FROM tokens WHERE exp >= now()
