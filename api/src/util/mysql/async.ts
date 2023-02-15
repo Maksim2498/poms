@@ -1,8 +1,8 @@
 import { Connection, FieldInfo, MysqlError } from "mysql"
 import { Logger                            } from "winston"
+import * as e                                from "util/error"
 
-export const DEFAULT_FATAL_ERROR_MESSAGE = "Fatal MySQL error"
-export const DEFAULT_ERROR_MESSAGE       = "Non-fatal MySQL error"
+export const DEFAULT_ERROR_MESSAGE = "MySQL error"
 
 export interface AsyncConnectOptions {
     connection: Connection
@@ -15,12 +15,8 @@ export async function connect(options: AsyncConnectOptions) {
 
         connection.connect(error => {
             if (error) {
-                if (error.fatal) {
-                    reject(new Error(error.sqlMessage ?? error.message ?? DEFAULT_FATAL_ERROR_MESSAGE))
-                    return
-                }
-
-                logger?.warn(error.sqlMessage ?? error.message ?? DEFAULT_ERROR_MESSAGE)
+                logger?.error(error.sqlMessage ?? error.message ?? DEFAULT_ERROR_MESSAGE) 
+                reject(e.forward(error, logger))
             }
 
             resolve()
@@ -50,28 +46,41 @@ export async function disconnect(options: AsyncDisconnectOptions) {
     })
 }
 
-export interface AsyncQueryOptions<T> {
+export interface AsyncQueryWithoutReturnValueOptions {
     connection: Connection
     sql:        string
     values?:    any[]
     logger?:    Logger
-    onError?:   (error: MysqlError) => T | undefined
-    onSuccess?: (results: any, fields: FieldInfo[] | undefined) => T
 }
 
-export async function query<T> (options: AsyncQueryOptions<T>): Promise<T>  {
-    return await new Promise<T>((resolve, reject) => {
-        const { connection, sql, values, logger, onError, onSuccess } = options
+export interface AsyncQueryWithReturnValueOptions<T> {
+    connection: Connection
+    sql:        string
+    values?:    any[]
+    logger?:    Logger
+    onError?:   AsyncQueryOnError<T>
+    onSuccess:  AsyncQueryOnSuccess<T>
+}
+
+export type AsyncQueryOnError<T>   = (error: MysqlError) => T | undefined
+export type AsyncQueryOnSuccess<T> = (results: any, fields: FieldInfo[] | undefined) => T
+
+export type AsyncQueryOptions<T> = AsyncQueryWithoutReturnValueOptions | AsyncQueryWithReturnValueOptions<T>
+
+export async function query(options: AsyncQueryWithoutReturnValueOptions): Promise<void>
+
+export async function query<T>(options: AsyncQueryWithReturnValueOptions<T>): Promise<T>
+
+export async function query<T> (options: AsyncQueryOptions<T>): Promise<T | void>  {
+    return await new Promise<T | void>((resolve, reject) => {
+        const { connection, sql, values, logger } = options
 
         connection.query(
             sql, 
             values ?? [], 
             (error, results, fields) => {
                 if (error) {
-                    if (error.fatal) {
-                        reject(new Error(error.sqlMessage ?? error.message ?? "Fatal MySQL error"))
-                        return
-                    }
+                    const onError = "onError"in options ? options.onError : null
 
                     if (onError) {
                         const result = onError(error)
@@ -82,15 +91,19 @@ export async function query<T> (options: AsyncQueryOptions<T>): Promise<T>  {
                         }
                     }
 
-                    logger?.warn(error.sqlMessage ?? error.message ?? "Non-fatal MySQL error")
+                    logger?.error(error.sqlMessage ?? error.message ?? DEFAULT_ERROR_MESSAGE)
+                    reject(e.forward(error, logger))
+                    return
                 }
 
-                if (onSuccess !== undefined) {
+                const onSuccess = "onSuccess" in options ? options.onSuccess : null
+
+                if (onSuccess) {
                     resolve(onSuccess(results, fields))
                     return
                 }
 
-                resolve(undefined as T)
+                resolve()
             }
         )
     })

@@ -1,5 +1,5 @@
-import { Logger     } from "winston"
-import { Connection } from "mysql"
+import { Connection, FieldInfo, MysqlError } from "mysql"
+import { Logger                            } from "winston"
 
 import { Config } from "./config"
 import * as am    from "./util/mysql/async"
@@ -140,7 +140,7 @@ async function createDatabase(options: SetupDatabaseOptions): Promise<boolean> {
         logger,
         sql:       "CREATE DATABASE ??",
         values:    [database],
-        onError:   error => error.code === "ER_DB_CREATE_EXISTS" ? true : undefined,
+        onError:   (error: MysqlError) => error.code === "ER_DB_CREATE_EXISTS" ? true : undefined,
         onSuccess: () => false
     })
 
@@ -173,7 +173,7 @@ async function getTableList(options: SetupOptions): Promise<string[]> {
         connection,
         logger,
         sql:       "SHOW TABLES",
-        onSuccess: (result, fields) => result.map((r: any) => r[fields![0].name].toLowerCase()) as string[]
+        onSuccess: (result: any[], fields: FieldInfo[] | undefined) => result.map((r: any) => r[fields![0].name].toLowerCase()) as string[]
     })
     
     logger?.info("Done")
@@ -263,7 +263,7 @@ async function validateTable(options: ValidateTableOptions): Promise<boolean> {
         logger,
         sql:       "DESC ??",
         values:    [name],
-        onSuccess: results => {
+        onSuccess: (results: any[]) => {
             if (results.length != fields.length)
                 return false
 

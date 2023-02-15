@@ -39,6 +39,11 @@ export interface ConfigJSON {
     }
 }
 
+export interface ReadConfigFromFileOptions {
+    path?:   string
+    logger?: Logger
+}
+
 export class Config {
     static readonly DEFAULT_PATH                          = "config.json"
 
@@ -86,7 +91,7 @@ export class Config {
         readonly recreateInvalidTables?: boolean
     }
 
-    static async readFromFile(options?: { path?: string, logger?: Logger }): Promise<Config> {
+    static async readFromFile(options?: ReadConfigFromFileOptions): Promise<Config> {
         const path   = options?.path ?? Config.DEFAULT_PATH
         const logger = options?.logger
 

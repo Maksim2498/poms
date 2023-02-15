@@ -23,7 +23,7 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
         logger,
         sql:       'INSERT INTO Users (login, name, password_hash, is_admin) VALUES (?, ?, UNHEX(SHA2(?, 512)), ?)',
         values:    [login, name, `${login}:${password}`, isAdmin],
-        onError:   error => { console.log(error.sqlMessage); return false },
+        onError:   () => false,
         onSuccess: () => true
     })
 }
@@ -62,7 +62,7 @@ export async function getUserInfo(options: GetUserInfoOptions): Promise<UserInfo
         logger,
         sql:       "SELECT * FROM Users WHERE login = ?",
         values:    [login],
-        onSuccess: results => {
+        onSuccess: (results: any[]) => {
             if (!results.length)
                 return
 
