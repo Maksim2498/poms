@@ -26,7 +26,13 @@ async function main() {
 
     const server = new Server(options)
 
+    let stopping = false
+
     process.on("SIGINT", async () => {
+        if (stopping)
+            return
+
+        stopping = true
         console.log()
         await server.stop()
         process.exit()
