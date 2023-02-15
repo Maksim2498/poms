@@ -37,6 +37,7 @@ option is considered an error):
 | `logic.createAdmin`           | `boolean`     | `true`        | No       | Create default admin account on database initialization                            |
 | `logic.validateTables`        | `boolean`     | `true`        | No       | Enables database tables validation                                                 |
 | `logic.recreateInvalidTables` | `boolean`     | `false`       | No       | Enables dropping of invalid tables and their recreation                            |
+| `logic.reconnectInterval`     | `number`      | `5`           | No       | Number of seconds between automatic reconnections to the database                  |
 
  1) Are required if any of the following options are omitted:
 

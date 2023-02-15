@@ -37,6 +37,7 @@ export interface ConfigJSON {
         createAdmin?:           boolean
         validateTables?:        boolean
         recreateInvalidTables?: boolean
+        reconnectInterval?:     number
     }
 }
 
@@ -59,6 +60,7 @@ export class Config {
     static readonly DEFAULT_LOGIC_CREATE_ADMIN            = true
     static readonly DEFAULT_LOGIC_VALIDATE_TABLES         = true 
     static readonly DEFAULT_LOGIC_RECREATE_INVALID_TABLES = false
+    static readonly DEFAULT_LOGIC_RECONNECT_INTERVAL      = 5
 
     readonly api?: {
         readonly prefix?:     string
@@ -90,6 +92,7 @@ export class Config {
         readonly createAdmin?:           boolean
         readonly validateTables?:        boolean
         readonly recreateInvalidTables?: boolean
+        readonly reconnectInterval?:     number
     }
 
     static async readFromFile(options?: ReadConfigFromFileOptions): Promise<Config> {
@@ -245,7 +248,8 @@ export class Config {
         this.logic = json.logic != null ? {
             createAdmin:           json.logic.createAdmin,
             validateTables:        json.logic.validateTables,
-            recreateInvalidTables: json.logic.recreateInvalidTables
+            recreateInvalidTables: json.logic.recreateInvalidTables,
+            reconnectInterval:     json.logic.reconnectInterval
         } : undefined
 
         function normalizePath(path: string | undefined): string | undefined {
@@ -345,5 +349,9 @@ export class Config {
 
     get logicRecreateInvalidTables(): boolean {
         return this.logic?.recreateInvalidTables ?? Config.DEFAULT_LOGIC_RECREATE_INVALID_TABLES
+    }
+
+    get logicReconnectInterval(): number {
+        return this.logic?.reconnectInterval ?? Config.DEFAULT_LOGIC_RECONNECT_INTERVAL
     }
 }
