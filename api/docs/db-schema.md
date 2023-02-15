@@ -32,6 +32,8 @@ CREATE TABLE Users (
     id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
     login         VARCHAR(255) NOT NULL UNIQUE,
     name          VARCHAR(255),
+    cr_id         BIGINT,
+    cr_time       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     password_hash BINARY(64)   NOT NULL,
     is_admin      BOOLEAN      NOT NULL DEFAULT FALSE
 )
@@ -68,6 +70,7 @@ __Definition__:
 CREATE TABLE Tokens (
     id      BINARY(64)                NOT NULL PRIMARY KEY,
     user_id BIGINT                    NOT NULL,
+    cr_time TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     exp     TIMESTAMP                 NOT NULL,
     type    ENUM("access", "refresh") NOT NULL,
 

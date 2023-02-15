@@ -46,7 +46,7 @@ export async function createDatabase(options: CreateDatabaseOptions): Promise<bo
         onSuccess: () => true
     })
 
-    logger?.info("Created")
+    logger?.info(created ? "Created" : "Already exists")
 
     if (use)
         await useDatabase(options)

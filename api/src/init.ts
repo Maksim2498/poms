@@ -51,21 +51,24 @@ async function init(options: InitOptions) {
     else if (config.logicValidateTables) {
         const validateOptions = { recreateOnInvalid: config.logicRecreateInvalidTables, ...options}
         const tables          = await s.showTables(options)
+        let   recreatedAll    = false
 
         if (tables.includes("users"))
-            await validateUsersTable(validateOptions)
+            recreatedAll = !await validateUsersTable(validateOptions)
         else
             await createUsersTable(options)
 
-        if (tables.includes("cnames"))
-            await validateCNamesTable(validateOptions)
-        else
-            await createCNamesTable(options)
+        if (!recreatedAll) {
+            if (tables.includes("cnames"))
+                await validateCNamesTable(validateOptions)
+            else
+                await createCNamesTable(options)
 
-        if (tables.includes("tokens"))
-            await validateTokensTable(validateOptions)
-        else
-            await createTokensTable(options)
+            if (tables.includes("tokens"))
+                await validateTokensTable(validateOptions)
+            else
+                await createTokensTable(options)
+        }
     }
 
     if (config.logicCreateAdmin)
@@ -78,29 +81,36 @@ interface ValidateSpecificTableOptions {
     recreateOnInvalid: boolean
 }
 
-async function validateUsersTable(options: ValidateSpecificTableOptions) {
+async function validateUsersTable(options: ValidateSpecificTableOptions): Promise<boolean> {
     const valid = await validateTable({
         name:           "Users",
         throwOnInvalid: !options.recreateOnInvalid,
         fields: [
-            { name: "id",            type: "bigint",       key: "PRI", extra: "auto_increment" },
-            { name: "login",         type: "varchar(255)", key: "UNI"                          },
-            { name: "name",          type: "varchar(255)", nullable: true                      },
-            { name: "password_hash", type: "binary(64)"                                        },
-            { name: "is_admin",      type: "tinyint(1)",   defaultValue: '0'                   }
+            { name: "id",            type: "bigint",       key: "PRI",                        extra: "auto_increment"    },
+            { name: "login",         type: "varchar(255)", key: "UNI"                                                    },
+            { name: "name",          type: "varchar(255)", nullable: true                                                },
+            { name: "cr_id",         type: "bigint",       nullable: true                                                },
+            { name: "cr_time",       type: "timestamp",    defaultValue: "CURRENT_TIMESTAMP", extra: "DEFAULT_GENERATED" },
+            { name: "password_hash", type: "binary(64)"                                                                  },
+            { name: "is_admin",      type: "tinyint(1)",   defaultValue: '0'                                             }
         ],
         ...options
     })
 
-    if (!valid) {
-        await s.dropTable({ 
-            name:       "Users", 
-            connection: options.connection, 
-            logger:     options.logger
-        })
+    if (valid)
+        return true
 
-        await createUsersTable(options)
-    }
+    const { connection, logger } = options
+
+    await s.dropTable({  connection, logger, name: "Tokens" })
+    await s.dropTable({  connection, logger, name: "CNames" })
+    await s.dropTable({  connection, logger, name: "Users"  })
+
+    await createUsersTable(options)
+    await createCNamesTable(options)
+    await createTokensTable(options)
+
+    return false
 }
 
 async function validateCNamesTable(options: ValidateSpecificTableOptions) {
@@ -130,10 +140,11 @@ async function validateTokensTable(options: ValidateSpecificTableOptions) {
         name:           "Tokens",
         throwOnInvalid: !options.recreateOnInvalid,
         fields: [
-            { name: "id",      type: "binary(64)",               key: "PRI"   },
-            { name: "user_id", type: "bigint",                   key: "MUL"   },
-            { name: "exp",     type: "timestamp"                              },
-            { name: "type",    type: "enum('access','refresh')"               }
+            { name: "id",      type: "binary(64)",               key: "PRI"                                                    },
+            { name: "user_id", type: "bigint",                   key: "MUL"                                                    },
+            { name: "exp",     type: "timestamp"                                                                               },
+            { name: "cr_time", type: "timestamp",                defaultValue: "CURRENT_TIMESTAMP", extra: "DEFAULT_GENERATED" },
+            { name: "type",    type: "enum('access','refresh')"                                                                }
         ],
         ...options
     })
@@ -234,6 +245,8 @@ async function createUsersTable(options: CreateSpecificTableOptions) {
             "id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY",
             "login         VARCHAR(255) NOT NULL UNIQUE",
             "name          VARCHAR(255)",
+            "cr_id         BIGINT",
+            "cr_time       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "password_hash BINARY(64)   NOT NULL",
             "is_admin      BOOLEAN      NOT NULL DEFAULT FALSE"
         ],
@@ -262,6 +275,7 @@ async function createTokensTable(options: CreateSpecificTableOptions) {
             "id      BINARY(64)                NOT NULL PRIMARY KEY",
             "user_id BIGINT                    NOT NULL",
             "exp     TIMESTAMP                 NOT NULL",
+            "cr_time TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP",
             'type    ENUM("access", "refresh") NOT NULL',
 
             "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"
