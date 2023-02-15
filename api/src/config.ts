@@ -308,7 +308,7 @@ export class Config {
         const prefix = this.api?.prefix ?? Config.DEFAULT_API_PREFIX
 
         if (this.api?.socketPath != null)
-            return `http://${host}/${prefix}/`
+            return `http://unix:/${this.api.socketPath}/${prefix}/`
 
         const port = this.api?.port ?? Config.DEFAULT_API_PORT
 
