@@ -20,7 +20,7 @@ export async function showTables(options: ShowTablesOptions): Promise<string[]> 
         onSuccess: (results: any[], fields: FieldInfo[] | undefined) => results.map(r => r[fields![0].name].toLowerCase()) as string[]
     })
 
-    logger?.info(`Got: ${tables.map(t => `"${t}"`).join(", ")}`)
+    logger?.info(tables.length ? `Got: ${tables.map(t => `"${t}"`).join(", ")}` : "There is no tables")
 
     return tables
 }

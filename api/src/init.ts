@@ -88,8 +88,8 @@ async function validateUsersTable(options: ValidateSpecificTableOptions): Promis
         fields: [
             { name: "id",            type: "bigint",       key: "PRI",                        extra: "auto_increment"    },
             { name: "login",         type: "varchar(255)", key: "UNI"                                                    },
-            { name: "name",          type: "varchar(255)", nullable: true                                                },
-            { name: "cr_id",         type: "bigint",       nullable: true                                                },
+            { name: "name",          type: "varchar(255)",                                    nullable: true             },
+            { name: "cr_id",         type: "bigint",       key: "MUL",                        nullable: true             },
             { name: "cr_time",       type: "timestamp",    defaultValue: "CURRENT_TIMESTAMP", extra: "DEFAULT_GENERATED" },
             { name: "password_hash", type: "binary(64)"                                                                  },
             { name: "is_admin",      type: "tinyint(1)",   defaultValue: '0'                                             }
@@ -248,7 +248,9 @@ async function createUsersTable(options: CreateSpecificTableOptions) {
             "cr_id         BIGINT",
             "cr_time       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "password_hash BINARY(64)   NOT NULL",
-            "is_admin      BOOLEAN      NOT NULL DEFAULT FALSE"
+            "is_admin      BOOLEAN      NOT NULL DEFAULT FALSE",
+
+            "FOREIGN KEY (cr_id) REFERENCES Users (id) ON DELETE SET NULL"
         ],
         ...options
     })
