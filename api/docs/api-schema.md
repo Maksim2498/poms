@@ -4,9 +4,8 @@
 
 - [Index](#index);
 - [About](#about);
-- [Format](#format);
 - [Methods](#methods);
-  - [Authenticate](#authenticate);
+  - [Authentication](#authentication);
   - [Get All Users Info](#get-all-users-info);
   - [Get User Info](#get-user-info);
   - [Get User Registration Info](#get-user-registration-info);
@@ -27,20 +26,30 @@
 
 This document contains detailed description on all supported API methods and their format.
 
-## Format
-
 ## Methods
 
 The following is a complete API method list.
 
-### Authenticate
+### Authentication
 
 Used for initial token reception and for it's refreshing.
 
 __Request__:
 
+For initial token reception:
+
 ```http
 POST /auth
+
+Authorization: Bacic <login>:<password>
+```
+
+For token refreshing:
+
+```http
+POST /auth
+
+Authorization: Bearer <refresh token>
 ```
 
 __Response__:
@@ -67,6 +76,8 @@ __Request__:
 
 ```http
 GET /users
+
+Authorization: Bearer <access token>
 ```
 
 __Response__:
@@ -90,7 +101,9 @@ Returns full information on specified user.
 __Request__:
 
 ```http
-GET /users/`login`
+GET /users/<login>
+
+Authorization: Bearer <access token>
 ```
 
 __Response__:
@@ -114,7 +127,9 @@ Returns full registration information on specified user.
 __Request__:
 
 ```http
-GET /users/`login`/reg
+GET /users/<login>/reg
+
+Authorization: Bearer <access token>
 ```
 
 __Responese__:
@@ -133,7 +148,9 @@ Returns user registration time.
 __Request__:
 
 ```http
-GET /users/`login`/reg/time
+GET /users/<login>/reg/time
+
+Authorization: Bearer <access token>
 ```
 
 __Responese__:
@@ -151,7 +168,9 @@ Returns user registrar or null if user was registered by the system.
 __Request__:
 
 ```http
-GET /users/`login`/reg/user
+GET /users/<login>/reg/user
+
+Authorization: Bearer <access token>
 ```
 
 __Responese__:
@@ -169,7 +188,9 @@ Returns name of specified user.
 __Request__:
 
 ```http
-GET /users/`login`/name
+GET /users/<login>/name
+
+Authorization: Bearer <access token>
 ```
 
 __Response__:
@@ -187,7 +208,9 @@ Returns list of user canonical names.
 __Request__:
 
 ```http
-GET /users/`login`/cnames/
+GET /users/<login>/cnames/
+
+Authorization: Bearer <access token>
 ```
 
 __Response__:
@@ -198,128 +221,102 @@ string[]
 
 ### Delete All Users
 
-Deletes all users!
+Deletes all users! This method is for administators only.
 
 __Request__:
 
 ```http
 DELETE /users
-```
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
 
 ### Delete User
 
-Deletes specified user.
+Deletes specified user. If issued with administator's access token
+`user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-DELETE /users/`user`
-```
+DELETE /users/<user>
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
 
 ### Delete All User Canonical Names
 
-Deletes all canonical names of specified user.
+Deletes all canonical names of specified user. If issued with administator's access token
+`user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-DELETE /users/`user`/cnames
-```
+DELETE /users/<user>/cnames
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
 
 ### Delete User Canonical Name
 
-Deletes specified canonical name of given user.
+Deletes specified canonical name of given user. If issued with administator's access token
+`user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-DELETE /users/`user`/cnames/`cname`
-```
+DELETE /users/<user>/cnames/<cname>
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
 
 ### Update User Name
 
-Updates specified user name.
+Updates specified user name. If issued with administator's access token
+`user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-PUT /users/`user`/name
-```
+PUT /users/<user>/name
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
 
 ### Update User Password
 
-Updates specified user password.
+Updates specified user password. If issued with administator's access token
+`user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-PUT /users/`user`/password
-```
+PUT /users/<user>/password
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
 
 ### Add User Canonical Name
 
-Adds canonical name to the user.
+Adds canonical name to the user. If issued with administator's access token
+`user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-POST /users/`user`/cnames/`cname`
-```
+POST /users/<user>/cnames/<cname>
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
 
 ### Add User
 
-Adds new user.
+Adds new user. This method is for administators only.
 
 __Request__:
 
 ```http
-POST /users/`user`
-```
+POST /users/<user>
 
-__Response__:
-
-```ts
-
+Authorization: Bearer <access token>
 ```
