@@ -1,17 +1,10 @@
 .Header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: thin black solid;
     padding: 1rem 2rem;
     background-color: #151515
-}
-
-.Header, .Header .right {
-    display: flex;
-    justify-content: space-between;
-    align-items: center
-}
-
-.Header .right {
-    width: 10rem
 }
 
 .Header .github {
