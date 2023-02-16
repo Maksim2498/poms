@@ -1,11 +1,14 @@
-import { Connection } from "mysql"
-import { Logger     } from "winston"
+import { Connection, MysqlError } from "mysql"
+import { Logger                 } from "winston"
 
 import * as am from "./util/mysql/async"
+import * as s  from "./util/mysql/statement"
 import * as e  from "./util/error"
 
 export const DEFAULT_ADMIN_LOGIN    = "admin"
 export const DEFAULT_ADMIN_PASSWORD = "admin"
+
+export type User = string | number
 
 export interface CreateAdminOptions {
     connection: Connection
@@ -22,25 +25,26 @@ export async function createAdmin(options: CreateAdminOptions): Promise<boolean>
     logger?.info(`Trying creating administrator "${login}"...`)
     logger?.info(`Checking if user "${login}" exists...`)
 
-    const info = await getUserInfo({ login, logger, connection })
+    const info = await getUserInfo({ user: login, logger, connection })
 
     if (info == null) {
         logger?.info(`There is no user "${login}"`)
 
-        await createUser({
+        return await createUser({
             connection,
             logger,
             login,
             password,
-            isAdmin:  true
+            isAdmin: true
          })
     } else {
         logger?.info(`User "${login}" already exists`)
 
         if (!info.isAdmin)
             logger?.warn(`User "${login}" doesn\'t have admin rights`)
+
+        return false
     }
-    return false
 }
 
 export interface CreateUserOptions {
@@ -50,7 +54,7 @@ export interface CreateUserOptions {
     password:   string
     name?:      string
     isAdmin?:   boolean
-    creator?:   string | number
+    creator?:   User
 } 
 
 export async function createUser(options: CreateUserOptions): Promise<boolean> {
@@ -69,7 +73,7 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
             if (!isLoginValid(creator))
                 throw e.fromMessage(`Creator login "${creator}" is invalid`, logger)
 
-            const creatorInfo = await getUserInfo({ connection, logger, login: creator })
+            const creatorInfo = await getUserInfo({ connection, logger, user: creator })
 
             if (!creatorInfo)
                 throw e.fromMessage(`Cannot find creator. There is no user "${creator}"`)
@@ -90,34 +94,148 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
         logger,
         sql:       'INSERT INTO Users (login, name, cr_id, password_hash, is_admin) VALUES (?, ?, ?, UNHEX(SHA2(?, 512)), ?)',
         values:    [login, name, creatorId, `${login}:${password}`, isAdmin],
-        onError:   () => false,
+        onError:   (error: MysqlError) => error.code === "ER_DUP_ENTRY" ? false : undefined,
         onSuccess: () => true
     })
 
-    logger?.info("Created")
+    logger?.info(created ? "Created" : "Already exists")
 
     return created
 }
 
-export interface DeleteUserOptions {
+export interface DeleteAllUsersOptions {
+    connection: Connection
+    logger?:    Logger
+}
+
+export async function deleteAllUser(options: DeleteAllUsersOptions) {
+    await s.clearTable({ name: "Users", ...options })
+}
+
+export interface DeleteAllCNamesOptions {
+    connection: Connection
+    logger?:    Logger
+    user?:      User
+}
+
+export async function deleteAllCNames(options: DeleteAllCNamesOptions): Promise<boolean> {
+    const { user } = options
+
+    if (user == null) {
+        await s.clearTable({ name: "CNames", ...options })
+        return true
+    }
+
+    const { connection, logger } = options
+
+    let id
+
+    switch (typeof user) {
+        case "string":
+            logger?.info(`Deleting all canonical names of user "${user}"...`)
+
+            if (!isLoginValid(user))
+                throw e.fromMessage(`User login "${user}" is invalid`, logger)
+
+            const info = await getUserInfo({ connection, logger, user })
+
+            if (!info)
+                throw e.fromMessage(`There is no user "${user}"`)
+
+            id = info.id
+
+            break
+
+        case "number":
+            logger?.info(`Deleting all canonical names of user with id "${user}"...`)
+            id = user
+    }
+
+    const deleted = await am.query({
+        connection,
+        logger,
+        sql:    "DELETE FROM CNames WHERE user_id = ?",
+        values: [id],
+        onSuccess: (results: any[]) => results.length != 0
+    })
+
+    logger?.info(deleted ? "Deleted" : "Canonical names not found")
+
+    return deleted
+
+}
+
+export interface DeleteAllTokensOptions {
+    connection: Connection
+    logger?:    Logger
+    user?:      User
+}
+
+export async function deleteAllTokens(options: DeleteAllTokensOptions): Promise<boolean> {
+    const { user } = options
+
+    if (user == null) {
+        await s.clearTable({ name: "Tokens", ...options })
+        return true
+    }
+
+    const { connection, logger } = options
+
+    let id
+
+    switch (typeof user) {
+        case "string":
+            logger?.info(`Deleting all tokens of user "${user}"...`)
+
+            if (!isLoginValid(user))
+                throw e.fromMessage(`User login "${user}" is invalid`, logger)
+
+            const info = await getUserInfo({ connection, logger, user })
+
+            if (!info)
+                throw e.fromMessage(`There is no user "${user}"`)
+
+            id = info.id
+
+            break
+
+        case "number":
+            logger?.info(`Deleting all tokens of user with id "${user}"...`)
+            id = user
+    }
+
+    const deleted = await am.query({
+        connection,
+        logger,
+        sql:    "DELETE FROM Tokens WHERE user_id = ?",
+        values: [id],
+        onSuccess: (results: any[]) => results.length != 0
+    })
+
+    logger?.info(deleted ? "Deleted" : "Tokens not found")
+
+    return deleted
+}
+
+export type DeleteUserOptions = {
     connection: Connection
     logger?:    Logger
     login:      string
+} | {
+    conneciton: Connection
+    logger?:    Logger
+    id:         number
 }
 
 export async function deleteUser(options: DeleteUserOptions) {
     // TODO
 }
 
-export type GetUserInfoOptions = {
+export interface GetUserInfoOptions {
     connection: Connection
     logger?:    Logger
-    login:      string
-} | {
-    connection: Connection
-    logger?:    Logger
-    id:         number
-}
+    user:       User
+} 
 
 export interface UserInfo {
     id:           number
@@ -128,24 +246,14 @@ export interface UserInfo {
 }
 
 export async function getUserInfo(options: GetUserInfoOptions): Promise<UserInfo | undefined> {
-    const { connection, logger } = options
-
-    let sql
-    let values
-
-    if ("id" in options) {
-        sql    = "SELECT * FROM Users WHERE id = ?",
-        values = [options.id]
-    } else {
-        sql    = "SELECT * FROM Users WHERE login = ?",
-        values = [normalizeLogin(options.login)]
-    }
+    const { connection, logger, user } = options
 
     return await am.query({
         connection,
         logger,
-        values,
-        sql,
+        sql: typeof user === "string" ? "SELECT * FROM Users WHERE login = ?" 
+                                      : "SELECT * FROM Users WHERE id = ?",
+        values: [user],
         onSuccess: (results: any[]) => {
             if (!results.length)
                 return

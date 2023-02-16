@@ -3,6 +3,27 @@ import { Logger                            } from "winston"
 
 import * as am from "./async"
 
+export interface ClearTableOptions {
+    connection: Connection
+    logger?:    Logger
+    name:       string
+}
+
+export async function clearTable(options: ClearTableOptions) {
+    const { connection, logger, name } = options
+
+    logger?.warn(`Clearing table "${name}"...`)
+
+    await am.query({
+        connection,
+        logger,
+        sql:    "DELETE FROM ??",
+        values: [name]
+    })
+
+    logger?.warn("Cleared")
+}
+
 export interface ShowTablesOptions {
     connection: Connection
     logger?:    Logger

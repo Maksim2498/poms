@@ -38,6 +38,7 @@ export class Server {
 
         function setupExpressApp(this: Server) {
             const router = createRouter.call(this)
+
             this.expressApp.use(this.config.apiPrefix, router)
             this.expressApp.use((req, res) => res.status(404).send("Not Found"))
         }
