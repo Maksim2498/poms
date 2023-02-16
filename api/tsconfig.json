@@ -1,16 +1,16 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "commonjs",
-    "baseUrl": "./src",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "alwaysStrict": true,
-    "noImplicitReturns": true,
-    "noImplicitOverride": true,
-    "skipLibCheck": true
-  }
+    "compilerOptions": {
+        "target":                           "ESNext",
+        "module":                           "commonjs",
+        "baseUrl":                          "./src",
+        "esModuleInterop":                  true,
+        "forceConsistentCasingInFileNames": true,
+        "strict":                           true,
+        "noImplicitAny":                    true,
+        "strictNullChecks":                 true,
+        "alwaysStrict":                     true,
+        "noImplicitReturns":                true,
+        "noImplicitOverride":               true,
+        "skipLibCheck":                     true
+    }
 }

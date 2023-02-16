@@ -1,0 +1,40 @@
+.Header {
+    border-bottom: thin black solid;
+    padding: 1rem 2rem;
+    background-color: #151515
+}
+
+.Header, .Header .right {
+    display: flex;
+    justify-content: space-between;
+    align-items: center
+}
+
+.Header .right {
+    width: 10rem
+}
+
+.Header .github {
+    text-decoration: none
+}
+
+.Header .logo {
+    font-size: 2rem
+}
+
+.Header .sign-in {
+    width: 4rem;
+    height: 2rem;
+    background-color: dimgray;
+    border: none;
+    border-radius: 4px;
+    transition: all 100ms
+}
+
+.Header .sign-in:hover {
+    transform: scale(1.05)
+}
+
+.Header .sign-in:active {
+    transform: scale(.95)
+}
