@@ -16,6 +16,13 @@ This is all-in-one solution for creation and administration of private offline-m
 It consists of Bukkit plugin for Minecraft server, back-end REST API, front-end Web-based administration
 panel, and "glue" for running back-end and front-end as signle web-server.
 
+You can get detailed information on project components in the following files:
+
+- [API](/api/README.md);
+- [Site](/site/README.md);
+- [Glue](/glue/README.md);
+- [Bukkit Plugin](/plugin/README.md).
+
 ## Requirements
 
 Comming soon...
