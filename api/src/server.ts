@@ -1,5 +1,5 @@
 import { Server as HttpServer   } from "http"
-import { Application            } from "express"
+import { Application, Router    } from "express"
 import { Logger                 } from "winston"
 import { Connection, MysqlError } from "mysql"
 import { Config                 } from "./config"
@@ -31,6 +31,24 @@ export class Server {
         this.expressApp = express()
         this.config     = config
         this.logger     = logger
+
+        setupExpressApp.call(this)
+
+        return
+
+        function setupExpressApp(this: Server) {
+            const router = createRouter.call(this)
+            this.expressApp.use(this.config.apiPrefix, router)
+            this.expressApp.use((req, res) => res.status(404).send("Not Found"))
+        }
+
+        function createRouter(this: Server): Router {
+            const router = Router()
+
+            router.get("/test", (req, res) => res.send("API is active\n"))
+
+            return router
+        }
     }
 
     get available(): boolean {
