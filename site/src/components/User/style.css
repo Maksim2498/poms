@@ -1,0 +1,63 @@
+.User {
+    position: relative
+}
+
+.User * {
+    border: none;
+    text-align: center
+}
+
+.User > * {
+    width: 8rem;
+}
+
+.User .login, .User .sign-in {
+    padding: .5rem;
+    background-color: dimgray;
+    border-radius: .5rem;
+    cursor:pointer;
+}
+
+.User:hover .sign-in {
+    background-color: #555
+}
+
+.User:active .sign-in {
+    background-color: #444
+}
+
+.User:hover .login {
+    border-radius: .5rem .5rem 0 0
+}
+
+.User .actions {
+    display: none
+}
+
+.User:hover .actions {
+    display: block;
+    position: absolute;
+    top: 2rem;
+    list-style: none;
+    background-color: #EEE;
+    border-radius: 0 0 .5rem .5rem
+}
+
+.User .actions button {
+    width: 100%;
+    border: none;
+    padding: .5rem 0;
+    color: black
+}
+
+.User .actions button:hover {
+    background-color: #CCC
+}
+
+.User .actions button:active {
+    background-color: #BBB;
+}
+
+.User .actions li:last-child button {
+    border-radius: 0 0 .5rem .5rem
+}
