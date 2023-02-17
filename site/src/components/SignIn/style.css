@@ -44,10 +44,6 @@
     border: thin solid red
 }
 
-.SignIn .error-message:empty {
-    display: none
-}
-
 .SignIn .error-message {
     width: 10rem;
     font-size: .8rem;

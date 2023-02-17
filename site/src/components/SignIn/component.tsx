@@ -24,15 +24,22 @@ export default function SignIn() {
         <fieldset> 
             <legend>Sign In</legend>
             <input className={className("login",    loginError   )} type="text"     placeholder="Login"    onInput={onLoginInput}    />
-            <p className="error-message">{loginError}</p>
+            {errorMessge(loginError)}
             <input className={className("password", passwordError)} type="password" placeholder="Password" onInput={onPasswordInput} />
-            <p className="error-message">{passwordError}</p>
+            {errorMessge(passwordError)}
             <input className="submit"                               type="submit"   value="Sign In"                                  />
         </fieldset>
     </form>
 
     function className(base: string, error: any): string {
         return error == null ? base : base + " error"
+    }
+
+    function errorMessge(message?: string) {
+        if (!message)
+            return
+
+        return <p className="error-message">{message}</p>
     }
 
     function validateLogin(login: string): string | undefined {

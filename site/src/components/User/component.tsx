@@ -16,7 +16,7 @@ export default function User(props: Props) {
     return <div className="User">
         <div className="login">{props.user.login}</div>
         <ul className="actions">
-            {props.user.isAdmin ? <li><button className="admin-panel">Admin Panel</button></li> : null}
+            {props.user.isAdmin && <li><button className="admin-panel">Admin Panel</button></li>}
             <li><button className="options">Options</button></li>
             <li><button className="sign-out">Sign Out</button></li>
         </ul>
