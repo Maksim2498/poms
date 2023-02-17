@@ -36,6 +36,7 @@ CREATE TABLE Users (
     cr_time       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     password_hash BINARY(64)   NOT NULL,
     is_admin      BOOLEAN      NOT NULL DEFAULT FALSE,
+    is_online     BOOLEAN      NOT NULL DEFAULT FALSE,
 
     FOREIGN KEY (cr_id) REFERENCES Users (id) ON DELETE SET NULL
 )

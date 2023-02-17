@@ -243,6 +243,7 @@ export interface UserInfo {
     name?:        string
     passwordHash: Buffer
     isAdmin:      boolean
+    isOnline:     boolean
 }
 
 export async function getUserInfo(options: GetUserInfoOptions): Promise<UserInfo | undefined> {
@@ -258,11 +259,11 @@ export async function getUserInfo(options: GetUserInfoOptions): Promise<UserInfo
             if (!results.length)
                 return
 
-            let { id, login, name, password_hash: passwordHash, is_admin: isAdmin } = results[0]
+            let { id, login, name, password_hash: passwordHash, is_admin: isAdmin, is_online: isOnline } = results[0]
 
             isAdmin = !!isAdmin
 
-            return { id, login, name, passwordHash, isAdmin } as UserInfo
+            return { id, login, name, passwordHash, isAdmin, isOnline } as UserInfo
         }
     })
 }
