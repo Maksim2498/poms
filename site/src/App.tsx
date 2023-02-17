@@ -3,7 +3,7 @@ import Main   from "./components/Main/component"
 
 export default function App() {
     return <div className="App">
-        <Header show="sign-in"/>
-        <Main />
+        <Header show="sign-in" />
+        <Main   show="welcome" />
     </div>
 }

@@ -5,9 +5,9 @@ import AppearingMessage from "components/AppearingMessage/component"
 import Options           from "components/Options/component"
 import SignIn           from "components/SignIn/component"
 
-export const DEFAULT_SHOW = "main"
+export const DEFAULT_SHOW = "none"
 
-export type Show = "welcome" | "sign-in" | "admin-panel" | "options"
+export type Show = "none" | "welcome" | "sign-in" | "admin-panel" | "options"
 
 export interface Props {
     show?: Show
@@ -19,7 +19,10 @@ export default function Main(props: Props) {
     </main>
 
     function component() {
-        switch (props.show ?? "welcome") {
+        switch (props.show ?? DEFAULT_SHOW) {
+            case "none":
+                    return null
+
             case "welcome":
                 return <AppearingMessage text="Welcome to the POMS!" />
 
