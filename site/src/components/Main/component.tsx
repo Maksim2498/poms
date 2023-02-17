@@ -7,10 +7,11 @@ import SignIn           from "components/SignIn/component"
 
 export const DEFAULT_SHOW = "none"
 
-export type Show = "none" | "welcome" | "sign-in" | "admin-panel" | "options"
-
-export interface Props {
-    show?: Show
+export type Props = {
+    show?: "none" | "sign-in" | "admin-panel" | "options"
+} | {
+    show:   "welcome"
+    login?: string
 }
 
 export default function Main(props: Props) {
@@ -21,10 +22,14 @@ export default function Main(props: Props) {
     function component() {
         switch (props.show ?? DEFAULT_SHOW) {
             case "none":
-                    return null
+                return null
 
             case "welcome":
-                return <AppearingMessage text="Welcome to the POMS!" />
+                const login = (props as any).login
+                const text  = login != null ? `Welcome to the POMS, ${login}!` 
+                                            : "Welcome to the POMS!"
+
+                return <AppearingMessage text={text} />
 
             case "sign-in":
                 return <SignIn />
