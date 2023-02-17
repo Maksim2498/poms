@@ -38,6 +38,8 @@ option is considered an error):
 | `logic.validateTables`        | `boolean`     | `true`        | No       | Enables database tables validation                                                 |
 | `logic.recreateInvalidTables` | `boolean`     | `false`       | No       | Enables dropping of invalid tables and their recreation                            |
 | `logic.reconnectInterval`     | `number`      | `5`           | No       | Number of seconds between automatic reconnections to the database                  |
+| `logic.maxTokens`             | `number`      | `10`          | No       | Maximum number of tokens per user                                                  |
+| `logic.maxCNames`             | `number`      | `5`           | No       | Maximum number of canonical names per user                                         |
 
  1) Are required if any of the following options are omitted:
 

@@ -38,6 +38,8 @@ export interface ConfigJSON {
         validateTables?:        boolean
         recreateInvalidTables?: boolean
         reconnectInterval?:     number
+        maxTokens?:             number
+        maxCNames?:             number
     }
 }
 
@@ -61,6 +63,8 @@ export class Config {
     static readonly DEFAULT_LOGIC_VALIDATE_TABLES         = true 
     static readonly DEFAULT_LOGIC_RECREATE_INVALID_TABLES = false
     static readonly DEFAULT_LOGIC_RECONNECT_INTERVAL      = 5
+    static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
+    static readonly DEFAULT_LOGIC_MAX_CNAMES              = 5
 
     readonly api?: {
         readonly prefix?:     string
@@ -93,6 +97,8 @@ export class Config {
         readonly validateTables?:        boolean
         readonly recreateInvalidTables?: boolean
         readonly reconnectInterval?:     number
+        readonly maxTokens?:             number
+        readonly maxCNames?:             number
     }
 
     static async readFromFile(options?: ReadConfigFromFileOptions): Promise<Config> {
@@ -218,12 +224,12 @@ export class Config {
             throw e.fromMessage(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`, logger)
     }
 
-    private constructor(json: ConfigJSON) {
+    constructor(json: ConfigJSON) {
         this.api = json.api != null ? {
             prefix:     normalizePath("/" + (json.api.prefix ?? "")),
             host:       json.api.host,
             port:       json.api.port,
-            socketPath: normalizePath(json.api.socketPath)
+            socketPath: normalizePath(json.api.socketPath),
         } : undefined
 
         this.mysql = {
@@ -236,12 +242,12 @@ export class Config {
 
             init:       json.mysql.init != null ? {
                 login:    json.mysql.init.login,
-                password: json.mysql.init.password
+                password: json.mysql.init.password,
             } : undefined,
 
             serve:      json.mysql.serve != null ? {
                 login:    json.mysql.serve.login,
-                password: json.mysql.serve.password
+                password: json.mysql.serve.password,
             } : undefined
         }
 
@@ -249,7 +255,9 @@ export class Config {
             createAdmin:           json.logic.createAdmin,
             validateTables:        json.logic.validateTables,
             recreateInvalidTables: json.logic.recreateInvalidTables,
-            reconnectInterval:     json.logic.reconnectInterval
+            reconnectInterval:     json.logic.reconnectInterval,
+            maxTokens:             json.logic.maxTokens,
+            maxCNames:             json.logic.maxCNames,
         } : undefined
 
         function normalizePath(path: string | undefined): string | undefined {
@@ -353,5 +361,13 @@ export class Config {
 
     get logicReconnectInterval(): number {
         return this.logic?.reconnectInterval ?? Config.DEFAULT_LOGIC_RECONNECT_INTERVAL
+    }
+
+    get logicMaxTokens(): number {
+        return this.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_TOKENS
+    }
+
+    get logicMaxCNames(): number {
+        return this.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_CNAMES
     }
 }
