@@ -1,0 +1,56 @@
+.SignIn {
+    width: 12rem;
+    background-color: #151515;
+    border-radius: .5rem
+}
+
+.SignIn legend {
+    font-size: 1.5rem;
+    margin: 1rem 0 0 0;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.SignIn fieldset {
+    border: none
+}
+
+.SignIn input {
+    display: block;
+    margin: 1rem;
+    padding: .5rem
+}
+
+.SignIn input[type=submit] {
+    margin: 1rem auto;
+    color: white;
+    background-color: #555
+}
+
+.SignIn input[type=submit]:active {
+    background-color: #444
+}
+
+.SignIn input {
+    width: 10rem;
+    color: black;
+    border-radius: .25rem;
+    border: none;
+    border: thin solid #151515
+}
+
+.SignIn input.error {
+    border: thin solid red
+}
+
+.SignIn .error-message:empty {
+    display: none
+}
+
+.SignIn .error-message {
+    width: 10rem;
+    font-size: .8rem;
+    margin: 0 1rem;
+    color: red
+}
