@@ -13,7 +13,7 @@
 
 ## About
 
-This is a server with REST API for [POMS](../README.md). It can work as stand-alone
+This is a server with REST API for [POMS](../README.md). It can work whether as stand-alone
 application or as back-end behind some front-end Web-server like [nginx](https://nginx.org/).
 This API is an essential part of POMS project, site and plugin are both completely built upon it.
 
