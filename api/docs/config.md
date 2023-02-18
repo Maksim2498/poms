@@ -20,10 +20,10 @@ option is considered an error):
 
 | Field Path                    | Type          | Default Value | Required | Description                                                                        |
 |-------------------------------|---------------|---------------|----------|------------------------------------------------------------------------------------|
-| `api.prefix`                  | Path `string` | `"/api"`      | No       | Path prefix of all API-requests                                                    |
-| `api.host`                    | `string`      | `"localhost"` | No       | HTTP server address                                                                |
-| `api.port`                    | Port `number` | `8000`        | No       | HTTP server port                                                                   |
-| `api.socketPath`              | Path `string` | -             | No       | HTTP server Unix-socket path. When used `api.port` and `api.host` is ignored       |
+| `http.prefix`                 | Path `string` | `"/api"`      | No       | HTTP path prefix of all API-requests                                               |
+| `http.host`                   | `string`      | `"localhost"` | No       | HTTP server address                                                                |
+| `http.port`                   | Port `number` | `8000`        | No       | HTTP server port                                                                   |
+| `http.socketPath`             | Path `string` | -             | No       | HTTP server Unix-socket path. When used `api.port` and `api.host` is ignored       |
 | `mysql.database`              | `string`      | `poms`        | No       | Name of database to use                                                            |
 | `mysql.host`                  | `string`      | `"localhost"` | No       | MySQL server address                                                               |
 | `mysql.port`                  | Port `number` | `3306`        | No       | MySQL server port                                                                  |

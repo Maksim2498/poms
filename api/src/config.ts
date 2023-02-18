@@ -9,7 +9,7 @@ import * as e from "./util/error"
 import * as o from "./util/object"
 
 export interface ConfigJSON {
-    api?: {
+    http?: {
         prefix?:     string
         host?:       string
         port?:       number
@@ -122,10 +122,10 @@ export class Config {
         const result = o.validate(json, {
             fields: [
                 // API
-                { path: "api.prefix",                  type: "string" },
-                { path: "api.host",                    type: "string" },
-                { path: "api.port",                    type: "number" },
-                { path: "api.socketPath",              type: "string" },
+                { path: "http.prefix",                 type: "string" },
+                { path: "http.host",                   type: "string" },
+                { path: "http.port",                   type: "number" },
+                { path: "http.socketPath",             type: "string" },
 
                 // MySQL
                 { path: "mysql.database",              type: "string" },
@@ -143,6 +143,9 @@ export class Config {
                 { path: "logic.createAdmin",           type: "boolean" },
                 { path: "logic.validateTables",        type: "boolean" },
                 { path: "logic.recreateInvalidTables", type: "boolean" },
+                { path: "logic.reconnectInterval",     type: "number"  },
+                { path: "maxTokens",                   type: "number"  },
+                { path: "maxCNames",                   type: "number"  },
             ]
         })
 
@@ -196,9 +199,9 @@ export class Config {
     constructor(json: ConfigJSON) {
         const read = deepAssign({}, json)
 
-        if (read.api != null) {
-            read.api.prefix     = normalize(`/${read.api.prefix ?? ""}`)
-            read.api.socketPath = normalizeNullable(read.api.socketPath)
+        if (read.http != null) {
+            read.http.prefix     = normalize(`/${read.http.prefix ?? ""}`)
+            read.http.socketPath = normalizeNullable(read.http.socketPath)
         }
 
         read.mysql.socketPath = normalizeNullable(read.mysql.socketPath)
@@ -227,7 +230,7 @@ export class Config {
 
     createServeDBConnection(): Connection {
         const useServeUser = this.mysqlUseServeUser
-        const mysql       = this.read.mysql
+        const mysql        = this.read.mysql
         const login        = useServeUser ? mysql?.serve!.login!    : mysql?.login!
         const password     = useServeUser ? mysql?.serve!.password! : mysql?.password!
 
@@ -265,7 +268,7 @@ export class Config {
     }
 
     get apiAddress(): string {
-        const api    = this.read.api
+        const api    = this.read.http
         const host   = api?.host   ?? Config.DEFAULT_API_HOST
         const prefix = api?.prefix ?? Config.DEFAULT_API_PREFIX
 
@@ -292,15 +295,15 @@ export class Config {
     }
 
     get apiPrefix(): string {
-        return this.read.api?.prefix ?? Config.DEFAULT_API_PREFIX
+        return this.read.http?.prefix ?? Config.DEFAULT_API_PREFIX
     }
 
     get apiHost(): string {
-        return this.read.api?.host ?? Config.DEFAULT_API_HOST
+        return this.read.http?.host ?? Config.DEFAULT_API_HOST
     }
 
     get apiPort(): number {
-        return this.read.api?.port ?? Config.DEFAULT_API_PORT
+        return this.read.http?.port ?? Config.DEFAULT_API_PORT
     }
 
     get logicCreateAdmin(): boolean {

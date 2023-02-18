@@ -115,7 +115,7 @@ export class Server {
         }
 
         function listen(this: Server) {
-            const socketPath = this.config.read.api?.socketPath
+            const socketPath = this.config.read.http?.socketPath
             const listening  = () => this.logger?.info("Listening...")
 
             this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
