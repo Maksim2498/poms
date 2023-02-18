@@ -10,10 +10,12 @@ import * as o from "./util/object"
 
 export interface ConfigJSON {
     http?: {
-        prefix?:     string
-        host?:       string
-        port?:       number
-        socketPath?: string
+        prefix?:      string
+        host?:        string
+        port?:        number
+        socketPath?:  string
+        serveStatic?: boolean
+        staticPath?:  string
     }
 
     mysql: {
@@ -53,9 +55,11 @@ export interface ReadConfigFromFileOptions {
 export class Config {
     static readonly DEFAULT_PATH                          = "config.json"
 
-    static readonly DEFAULT_API_HOST                      = "localhost"
-    static readonly DEFAULT_API_PORT                      = 8000
-    static readonly DEFAULT_API_PREFIX                    = "/api"
+    static readonly DEFAULT_HTTP_PREFIX                   = "/api"
+    static readonly DEFAULT_HTTP_HOST                     = "localhost"
+    static readonly DEFAULT_HTTP_PORT                     = 8000
+    static readonly DEFAULT_HTTP_SERVE_STATIC             = true
+    static readonly DEFAULT_HTTP_STATIC_PATH              = "../site/build"
 
     static readonly DEFAULT_MYSQL_DATABASE                = "poms"
     static readonly DEFAULT_MYSQL_HOST                    = "localhost"
@@ -122,22 +126,24 @@ export class Config {
         const result = o.validate(json, {
             fields: [
                 // API
-                { path: "http.prefix",                 type: "string" },
-                { path: "http.host",                   type: "string" },
-                { path: "http.port",                   type: "number" },
-                { path: "http.socketPath",             type: "string" },
+                { path: "http.prefix",                 type: "string"  },
+                { path: "http.host",                   type: "string"  },
+                { path: "http.port",                   type: "number"  },
+                { path: "http.socketPath",             type: "string"  },
+                { path: "http.serveStatic",            type: "boolean" },
+                { path: "http.staticPath",             type: "string"  },
 
                 // MySQL
-                { path: "mysql.database",              type: "string" },
-                { path: "mysql.host",                  type: "string" },
-                { path: "mysql.port",                  type: "number" },
-                { path: "mysql.socketPath",            type: "string" },
-                { path: "mysql.login",                 type: "string" },
-                { path: "mysql.password",              type: "string" },
-                { path: "mysql.init.login",            type: "string" },
-                { path: "mysql.init.password",         type: "string" },
-                { path: "mysql.serve.login",           type: "string" },
-                { path: "mysql.serve.password",        type: "string" },
+                { path: "mysql.database",              type: "string"  },
+                { path: "mysql.host",                  type: "string"  },
+                { path: "mysql.port",                  type: "number"  },
+                { path: "mysql.socketPath",            type: "string"  },
+                { path: "mysql.login",                 type: "string"  },
+                { path: "mysql.password",              type: "string"  },
+                { path: "mysql.init.login",            type: "string"  },
+                { path: "mysql.init.password",         type: "string"  },
+                { path: "mysql.serve.login",           type: "string"  },
+                { path: "mysql.serve.password",        type: "string"  },
 
                 // Logic
                 { path: "logic.createAdmin",           type: "boolean" },
@@ -202,6 +208,7 @@ export class Config {
         if (read.http != null) {
             read.http.prefix     = normalize(`/${read.http.prefix ?? ""}`)
             read.http.socketPath = normalizeNullable(read.http.socketPath)
+            read.http.staticPath = normalizeNullable(read.http.staticPath)
         }
 
         read.mysql.socketPath = normalizeNullable(read.mysql.socketPath)
@@ -267,15 +274,15 @@ export class Config {
         return `${host}:${port}`
     }
 
-    get apiAddress(): string {
+    get httpAddress(): string {
         const api    = this.read.http
-        const host   = api?.host   ?? Config.DEFAULT_API_HOST
-        const prefix = api?.prefix ?? Config.DEFAULT_API_PREFIX
+        const host   = api?.host   ?? Config.DEFAULT_HTTP_HOST
+        const prefix = api?.prefix ?? Config.DEFAULT_HTTP_PREFIX
 
         if (api?.socketPath != null)
             return `http://unix:/${api.socketPath}/${prefix}/`
 
-        const port = api?.port ?? Config.DEFAULT_API_PORT
+        const port = api?.port ?? Config.DEFAULT_HTTP_PORT
 
         return `http://${host}:${port}/${prefix}/`
     }
@@ -294,16 +301,24 @@ export class Config {
             && mysql?.serve?.password != null
     }
 
-    get apiPrefix(): string {
-        return this.read.http?.prefix ?? Config.DEFAULT_API_PREFIX
+    get httpPrefix(): string {
+        return this.read.http?.prefix ?? Config.DEFAULT_HTTP_PREFIX
     }
 
-    get apiHost(): string {
-        return this.read.http?.host ?? Config.DEFAULT_API_HOST
+    get httpHost(): string {
+        return this.read.http?.host ?? Config.DEFAULT_HTTP_HOST
     }
 
-    get apiPort(): number {
-        return this.read.http?.port ?? Config.DEFAULT_API_PORT
+    get httpPort(): number {
+        return this.read.http?.port ?? Config.DEFAULT_HTTP_PORT
+    }
+
+    get httpServeStatic(): boolean {
+        return this.read.http?.serveStatic ?? Config.DEFAULT_HTTP_SERVE_STATIC
+    }
+
+    get httpStaticPath(): string {   
+        return this.read.http?.staticPath ?? Config.DEFAULT_HTTP_STATIC_PATH
     }
 
     get logicCreateAdmin(): boolean {

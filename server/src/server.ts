@@ -37,18 +37,33 @@ export class Server {
         return
 
         function setupExpressApp(this: Server) {
-            const router = createRouter.call(this)
+            setupAPI.call(this)
+            setupStatic.call(this)
+            setup404.call(this)
 
-            this.expressApp.use(this.config.apiPrefix, router)
-            this.expressApp.use((req, res) => res.status(404).send("Not Found"))
-        }
+            function setupAPI(this: Server) {
+                const router = createRouter.call(this)
+                this.expressApp.use(this.config.httpPrefix, router)
 
-        function createRouter(this: Server): Router {
-            const router = Router()
+                function createRouter(this: Server): Router {
+                    const router = Router()
 
-            router.get("/test", (req, res) => res.send("API is active\n"))
+                    router.get("/test", (req, res) => res.send("API is working loud and sound!\n"))
 
-            return router
+                    return router
+                }
+            }
+
+            function setupStatic(this: Server) {
+                if (!this.config.httpServeStatic)
+                    return
+
+                this.expressApp.use(express.static(this.config.httpStaticPath))
+            }
+        
+            function setup404(this:Server) {
+                this.expressApp.use((req, res) => res.status(404).send("Not Found"))
+            }
         }
     }
 
@@ -60,7 +75,10 @@ export class Server {
         if (this.runPromise)
             return
 
-        this.logger?.info(`Starting listening at ${this.config.apiAddress}...`)
+        this.logger?.info(
+            this.config.httpServeStatic ? `Starting listening at ${this.config.httpAddress} and serving static content from ${this.config.httpStaticPath}...`
+                                        : `Starting listening at ${this.config.httpAddress}...`
+        )
 
         initRunPromise.call(this)
         await setupMysqlConnection.call(this)
@@ -116,10 +134,13 @@ export class Server {
 
         function listen(this: Server) {
             const socketPath = this.config.read.http?.socketPath
-            const listening  = () => this.logger?.info("Listening...")
+            const listening  = () => this.logger?.info(
+                this.config.httpServeStatic ? "Listening and serving static content..."
+                                            : "Listening..."
+            )
 
             this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
-                                                 : this.expressApp.listen(this.config.apiPort, this.config.apiHost, listening)
+                                                 : this.expressApp.listen(this.config.httpPort, this.config.httpHost, listening)
         }
     }
 
