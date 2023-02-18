@@ -3,6 +3,7 @@ import { normalize                    } from "path"
 import { Logger                       } from "winston"
 import { Connection, createConnection } from "mysql"
 import { DeepReadonly                 } from "util/type"
+import { deepAssign                   } from "./util/object"
 
 import * as e from "./util/error"
 import * as o from "./util/object"
@@ -15,7 +16,7 @@ export interface ConfigJSON {
         socketPath?: string
     }
 
-    mysql?: {
+    mysql: {
         database?:   string
         host?:       string
         port?:       number
@@ -193,44 +194,18 @@ export class Config {
     }
 
     constructor(json: ConfigJSON) {
-        this.read = {
-            api: json.api != null ? {
-                prefix:     normalizePath("/" + (json.api.prefix ?? "")),
-                host:       json.api.host,
-                port:       json.api.port,
-                socketPath: normalizePath(json.api.socketPath),
-            } : undefined,
+        const read = deepAssign({}, json)
 
-            mysql: json.mysql != null ? {
-                database:   json.mysql.database,
-                host:       json.mysql.host,
-                port:       json.mysql.port,
-                socketPath: normalizePath(json.mysql.socketPath),
-                login:      json.mysql.login,
-                password:   json.mysql.password,
-
-                init:       json.mysql.init != null ? {
-                    login:    json.mysql.init.login,
-                    password: json.mysql.init.password,
-                } : undefined,
-
-                serve:      json.mysql.serve != null ? {
-                    login:    json.mysql.serve.login,
-                    password: json.mysql.serve.password,
-                } : undefined
-            } : undefined,
-
-            logic: json.logic != null ? {
-                createAdmin:           json.logic.createAdmin,
-                validateTables:        json.logic.validateTables,
-                recreateInvalidTables: json.logic.recreateInvalidTables,
-                reconnectInterval:     json.logic.reconnectInterval,
-                maxTokens:             json.logic.maxTokens,
-                maxCNames:             json.logic.maxCNames,
-            } : undefined
+        if (read.api != null) {
+            read.api.prefix     = normalize(`/${read.api.prefix ?? ""}`)
+            read.api.socketPath = normalizeNullable(read.api.socketPath)
         }
 
-        function normalizePath(path: string | undefined): string | undefined {
+        read.mysql.socketPath = normalizeNullable(read.mysql.socketPath)
+
+        this.read = read
+
+        function normalizeNullable(path: string | undefined): string | undefined {
             return path != null ? normalize(path) : undefined
         }
     }
