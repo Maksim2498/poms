@@ -2,12 +2,12 @@ import { Server as HttpServer   } from "http"
 import { Application, Router    } from "express"
 import { Logger                 } from "winston"
 import { Connection, MysqlError } from "mysql"
-import { v4 as uuid             } from "uuid"
 import { Config                 } from "./config"
 
-import express from "express"
-import * as am from "./util/mysql/async"
-import sleep   from "util/sleep"
+import shortUUID from "short-uuid"
+import express  from "express"
+import * as am  from "./util/mysql/async"
+import sleep    from "util/sleep"
 
 export interface ServerOptions {
     config:  Config
@@ -49,7 +49,7 @@ export class Server {
 
             function setupLogger(this: Server) {
                 app.use((req, res, next) => {
-                    (req as any).id = uuid()
+                    (req as any).id = shortUUID.generate()
                     next()
                 })
 
