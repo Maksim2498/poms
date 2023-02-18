@@ -190,3 +190,15 @@ export function getField(object: any, path: string): any {
 function splitPath(path: string): string[] {
     return path.split(/(?<!\\)\./)
 }
+
+export function deepAssign<T, F>(to: T, from: F): T & F {
+    for (const field in from) {
+        const val   = from[field]
+        const anyTo = to as any
+
+        anyTo[field] = typeof val === "object" ? deepAssign(anyTo[field] ?? {}, val)
+                                               : val
+    }
+
+    return to as T & F
+}
