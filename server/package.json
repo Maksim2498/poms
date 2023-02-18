@@ -5,8 +5,8 @@
   "main": "src/index.ts",
   "private": true,
   "scripts": {
-    "server": "ts-node -r tsconfig-paths/register src/index.ts",
-    "server:prod": "cross-env NODE_ENV=production ts-node -r tsconfig-paths/register src/index.ts",
+    "start": "cross-env NODE_ENV=production ts-node -r tsconfig-paths/register src/index.ts",
+    "start:dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

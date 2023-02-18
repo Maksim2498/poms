@@ -58,13 +58,13 @@ After finishing all the steps described above you have application setup and rea
 After [setup](#setup) simply run the following command in your terminal:
 
 ```sh
-npm run server
+npm start
 ```
 
-Or the following to make Node.js working in the production environment:
+Or the following to make Node.js working in the development environment for debug purposes:
 
 ```sh
-npm run server:prod
+npm run start:dev
 ```
 
 ## Documentation
