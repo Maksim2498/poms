@@ -58,12 +58,15 @@ is considered an error):
 
 ## Placeholders
 
-Configuration options representing filesystem paths can contain following placeholders:
+Configuration options representing filesystem paths can contain placeholders
+starting with `<` and ending with `>`. You can escape `<` using `\` like this: `\<'.
 
-- `POM_PATH_PATH` - path to the POMS root directory;
-- `PLUGIN_PATH`   - path to the Bukkit plugin directory;
-- `SERVER_PATH`   - path to the server directory;
-- `SITE_PATH`     - path to the site directory.
+Those are all available placeholders:
+
+- `<POM_PATH_PATH>` - path to the POMS root directory;
+- `<PLUGIN_PATH>`   - path to the Bukkit plugin directory;
+- `<SERVER_PATH>`   - path to the server directory;
+- `<SITE_PATH>`     - path to the site directory.
 
 ## Minimal Config
 
