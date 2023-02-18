@@ -1,9 +1,9 @@
 import winston from "winston"
 
-import { LoggedError  } from "./util/error"
-import { Config       } from "./config"
-import { initDatabase } from "./init"
-import { Server       } from "./server"
+import { LoggedError } from "./util/error"
+import { Config      } from "./config"
+import { init        } from "./init"
+import { Server      } from "./server"
 
 const logger = winston.createLogger({
     format:     winston.format.cli(),
@@ -22,7 +22,7 @@ async function main() {
     const config  = await Config.readFromFile({ logger });
     const options = { config, logger }
 
-    await initDatabase(options)
+    await init(options)
 
     const server = new Server(options)
 

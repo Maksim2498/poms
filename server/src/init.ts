@@ -1,28 +1,71 @@
-import { Connection, FieldInfo } from "mysql"
-import { Logger                } from "winston"
-import { Config                } from "./config"
+import { promises as fsp } from "fs"
+import { Connection      } from "mysql"
+import { Logger          } from "winston"
+import { Config          } from "./config"
+
+import cp from "child_process"
 
 import * as am    from "./util/mysql/async"
 import * as s     from "./util/mysql/statement"
 import * as e     from "./util/error"
 import * as logic from "./logic"
 
-export interface InitDatabaseOptions {
+export interface InitOptions {
     config:  Config
-    logger?: Logger 
+    logger?: Logger
 }
 
-export async function initDatabase(options: InitDatabaseOptions) {
+export async function init(options: InitOptions) {
+    await initStatic(options)
+    await initDatabase(options)
+}
+
+async function initStatic(options: InitOptions) {
     const { config, logger } = options
 
-    logger?.info("Starting initializing database...")
+    if (!config.logicBuildStatic)
+        return
+
+    logger?.info("Initializing static content...")
+
+    const path = config.httpStaticPath
+
+    logger?.info(`Cheking if static content at ${path} alreading already exists...`)
+
+    let exits = false
+
+    try {
+        const files = await fsp.readdir(path)
+
+        if (files.length !== 0)
+            exits = true
+    } catch (error) {
+        if ((error as any).code !== "ENOENT")
+            throw error
+    }
+
+    if (exits)
+        logger?.info("Exits")
+    else {
+        logger?.info("Doesn't exist. Creating...")
+        cp.execSync("npm run build", { cwd: config.logicBuildStaticPath })
+        logger?.info("Created")
+    }
+
+    logger?.info("Static content is successfully initilized")
+}
+
+async function initDatabase(options: InitOptions) {
+    const { config, logger } = options
+
+    logger?.info("Initializing database...")
 
     const connection = config.createInitDBConnection()
 
     await am.connect({ connection, logger, address: config.mysqlAddress })
 
     try {
-        await init({ connection, config, logger })
+        await initDatabaseObjects({ connection, config, logger })
     } finally {
         await am.disconnect({ connection, logger })
     }
@@ -30,13 +73,13 @@ export async function initDatabase(options: InitDatabaseOptions) {
     logger?.info("Database is successfully initialized")
 }
 
-interface InitOptions {
+interface InitDatabaseObjectsOptions {
     connection: Connection
     logger?:    Logger
     config:     Config
 }
 
-async function init(options: InitOptions) {
+async function initDatabaseObjects(options: InitDatabaseObjectsOptions) {
     const { connection, config, logger } = options
 
     const created = await s.createDatabase({ 
@@ -222,24 +265,19 @@ async function validateTable(options: ValidateTableOptions): Promise<boolean> {
     return false
 }
 
-interface CreateTablesAndEventsOptions {
+interface SetupDatabaseObjectOptions {
     connection: Connection
     logger?:    Logger
 }
 
-async function createTablesAndEvents(options: CreateTablesAndEventsOptions) {
+async function createTablesAndEvents(options: SetupDatabaseObjectOptions) {
     await createUsersTable(options)
     await createNicknamesTable(options)
     await createTokensTable(options)
     await createCleanUpEvent(options)
 }
 
-interface CreateSpecificTableOptions {
-    connection: Connection
-    logger?:    Logger
-}
-
-async function createUsersTable(options: CreateSpecificTableOptions) {
+async function createUsersTable(options: SetupDatabaseObjectOptions) {
     await createTable({ 
         name: "Users",
         args: [
@@ -258,7 +296,7 @@ async function createUsersTable(options: CreateSpecificTableOptions) {
     })
 }
 
-async function createNicknamesTable(options: CreateSpecificTableOptions) {
+async function createNicknamesTable(options: SetupDatabaseObjectOptions) {
     await createTable({ 
         name: "Nicknames",
         args: [
@@ -272,7 +310,7 @@ async function createNicknamesTable(options: CreateSpecificTableOptions) {
     })
 }
 
-async function createTokensTable(options: CreateSpecificTableOptions) {
+async function createTokensTable(options: SetupDatabaseObjectOptions) {
     await createTable({ 
         name: "Tokens",
         args: [
@@ -309,12 +347,7 @@ async function createTable(options: CreateTabelOptions) {
     logger?.info("Created")
 }
 
-interface CreateCleanUpEventOptions {
-    connection: Connection
-    logger?:    Logger
-}
-
-async function createCleanUpEvent(options: CreateCleanUpEventOptions) {
+async function createCleanUpEvent(options: SetupDatabaseObjectOptions) {
     const { connection, logger } = options
 
     logger?.info(`Creating event "CleanUp"...`)

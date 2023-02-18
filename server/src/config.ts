@@ -44,6 +44,8 @@ export interface ConfigJSON {
         reconnectInterval?:     number
         maxTokens?:             number
         maxNicknames?:          number
+        buildStatic?:           boolean
+        buildStaticPath?:       string
     }
 }
 
@@ -71,6 +73,8 @@ export class Config {
     static readonly DEFAULT_LOGIC_RECONNECT_INTERVAL      = 5
     static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
+    static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
+    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = "../site"
 
     readonly read: DeepReadonly<ConfigJSON>
 
@@ -152,6 +156,8 @@ export class Config {
                 { path: "logic.reconnectInterval",     type: "number"  },
                 { path: "maxTokens",                   type: "number"  },
                 { path: "maxNicknames",                type: "number"  },
+                { path: "buildStatic",                 type: "boolean" },
+                { path: "buildStaticPath",             type: "string"  },
             ]
         })
 
@@ -212,6 +218,9 @@ export class Config {
         }
 
         read.mysql.socketPath = normalizeNullable(read.mysql.socketPath)
+
+        if (read.logic != null)
+            read.logic.buildStaticPath = normalizeNullable(read.logic.buildStaticPath)
 
         this.read = read
 
@@ -343,5 +352,13 @@ export class Config {
 
     get logicMaxCNames(): number {
         return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_NICKNAMES
+    }
+
+    get logicBuildStatic(): boolean {
+        return this.read.logic?.buildStatic ?? Config.DEFAULT_LOGIC_BUILD_STAITC
+    }
+
+    get logicBuildStaticPath(): string {
+        return this.read.logic?.buildStaticPath ?? Config.DEFAULT_LOGIC_BUILD_STAITC_PATH
     }
 }
