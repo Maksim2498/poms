@@ -2,6 +2,7 @@ import { promises as fsp              } from "fs"
 import { normalize                    } from "path"
 import { Logger                       } from "winston"
 import { Connection, createConnection } from "mysql"
+import { DeepReadonly                 } from "util/type"
 
 import * as e from "./util/error"
 import * as o from "./util/object"
@@ -14,7 +15,7 @@ export interface ConfigJSON {
         socketPath?: string
     }
 
-    mysql: {
+    mysql?: {
         database?:   string
         host?:       string
         port?:       number
@@ -66,40 +67,7 @@ export class Config {
     static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
     static readonly DEFAULT_LOGIC_MAX_CNAMES              = 5
 
-    readonly api?: {
-        readonly prefix?:     string
-        readonly host?:       string
-        readonly port?:       number
-        readonly socketPath?: string
-    }
-
-    readonly mysql: {
-        readonly database?:   string
-        readonly host?:       string
-        readonly port?:       number
-        readonly socketPath?: string
-        readonly login?:      string
-        readonly password?:   string
-
-        readonly init?: {
-            readonly login?:    string
-            readonly password?: string
-        }
-
-        readonly serve?: {
-            readonly login?:    string
-            readonly password?: string
-        }
-    }
-
-    readonly logic?: {
-        readonly createAdmin?:           boolean
-        readonly validateTables?:        boolean
-        readonly recreateInvalidTables?: boolean
-        readonly reconnectInterval?:     number
-        readonly maxTokens?:             number
-        readonly maxCNames?:             number
-    }
+    readonly read: DeepReadonly<ConfigJSON>
 
     static async readFromFile(options?: ReadConfigFromFileOptions): Promise<Config> {
         const path   = options?.path ?? Config.DEFAULT_PATH
@@ -225,40 +193,42 @@ export class Config {
     }
 
     constructor(json: ConfigJSON) {
-        this.api = json.api != null ? {
-            prefix:     normalizePath("/" + (json.api.prefix ?? "")),
-            host:       json.api.host,
-            port:       json.api.port,
-            socketPath: normalizePath(json.api.socketPath),
-        } : undefined
-
-        this.mysql = {
-            database:   json.mysql.database,
-            host:       json.mysql.host,
-            port:       json.mysql.port,
-            socketPath: normalizePath(json.mysql.socketPath),
-            login:      json.mysql.login,
-            password:   json.mysql.password,
-
-            init:       json.mysql.init != null ? {
-                login:    json.mysql.init.login,
-                password: json.mysql.init.password,
+        this.read = {
+            api: json.api != null ? {
+                prefix:     normalizePath("/" + (json.api.prefix ?? "")),
+                host:       json.api.host,
+                port:       json.api.port,
+                socketPath: normalizePath(json.api.socketPath),
             } : undefined,
 
-            serve:      json.mysql.serve != null ? {
-                login:    json.mysql.serve.login,
-                password: json.mysql.serve.password,
+            mysql: json.mysql != null ? {
+                database:   json.mysql.database,
+                host:       json.mysql.host,
+                port:       json.mysql.port,
+                socketPath: normalizePath(json.mysql.socketPath),
+                login:      json.mysql.login,
+                password:   json.mysql.password,
+
+                init:       json.mysql.init != null ? {
+                    login:    json.mysql.init.login,
+                    password: json.mysql.init.password,
+                } : undefined,
+
+                serve:      json.mysql.serve != null ? {
+                    login:    json.mysql.serve.login,
+                    password: json.mysql.serve.password,
+                } : undefined
+            } : undefined,
+
+            logic: json.logic != null ? {
+                createAdmin:           json.logic.createAdmin,
+                validateTables:        json.logic.validateTables,
+                recreateInvalidTables: json.logic.recreateInvalidTables,
+                reconnectInterval:     json.logic.reconnectInterval,
+                maxTokens:             json.logic.maxTokens,
+                maxCNames:             json.logic.maxCNames,
             } : undefined
         }
-
-        this.logic = json.logic != null ? {
-            createAdmin:           json.logic.createAdmin,
-            validateTables:        json.logic.validateTables,
-            recreateInvalidTables: json.logic.recreateInvalidTables,
-            reconnectInterval:     json.logic.reconnectInterval,
-            maxTokens:             json.logic.maxTokens,
-            maxCNames:             json.logic.maxCNames,
-        } : undefined
 
         function normalizePath(path: string | undefined): string | undefined {
             return path != null ? normalize(path) : undefined
@@ -267,13 +237,14 @@ export class Config {
 
     createInitDBConnection(): Connection {
         const useInitUser = this.mysqlUseInitUser
-        const login       = useInitUser ? this.mysql.init!.login!    : this.mysql.login!
-        const password    = useInitUser ? this.mysql.init!.password! : this.mysql.password!
+        const mysql       = this.read.mysql
+        const login       = useInitUser ? mysql?.init!.login!    : mysql?.login!
+        const password    = useInitUser ? mysql?.init!.password! : mysql?.password!
 
         return createConnection({
             host:       this.mysqlHost,
             port:       this.mysqlPort,
-            socketPath: this.mysql.socketPath,
+            socketPath: mysql?.socketPath,
             user:       login,
             password,
         })
@@ -281,93 +252,103 @@ export class Config {
 
     createServeDBConnection(): Connection {
         const useServeUser = this.mysqlUseServeUser
-        const login        = useServeUser ? this.mysql.serve!.login!    : this.mysql.login!
-        const password     = useServeUser ? this.mysql.serve!.password! : this.mysql.password!
+        const mysql       = this.read.mysql
+        const login        = useServeUser ? mysql?.serve!.login!    : mysql?.login!
+        const password     = useServeUser ? mysql?.serve!.password! : mysql?.password!
 
         return createConnection({
             host:       this.mysqlHost,
             port:       this.mysqlPort,
-            socketPath: this.mysql.socketPath,
+            socketPath: mysql?.socketPath,
             user:       login,
             password,
         })
     }
 
     get mysqlHost() {
-        return this.mysql.host ?? Config.DEFAULT_MYSQL_HOST
+        return this.read.mysql?.host ?? Config.DEFAULT_MYSQL_HOST
     }
 
     get mysqlPort() {
-        return this.mysql.port ?? Config.DEFAULT_MYSQL_PORT
+        return this.read.mysql?.port ?? Config.DEFAULT_MYSQL_PORT
     }
 
     get mysqlDatabase(): string {
-        return this.mysql.database ?? Config.DEFAULT_MYSQL_DATABASE
+        return this.read.mysql?.database ?? Config.DEFAULT_MYSQL_DATABASE
     }
 
     get mysqlAddress(): string {
-        if (this.mysql.socketPath != null)
-            return this.mysql.socketPath
+        const mysql = this.read.mysql
 
-        const host = this.mysql.host ?? Config.DEFAULT_MYSQL_HOST
-        const port = this.mysql.port ?? Config.DEFAULT_MYSQL_PORT
+        if (mysql?.socketPath != null)
+            return mysql?.socketPath
+
+        const host = mysql?.host ?? Config.DEFAULT_MYSQL_HOST
+        const port = mysql?.port ?? Config.DEFAULT_MYSQL_PORT
 
         return `${host}:${port}`
     }
 
     get apiAddress(): string {
-        const host   = this.api?.host   ?? Config.DEFAULT_API_HOST
-        const prefix = this.api?.prefix ?? Config.DEFAULT_API_PREFIX
+        const api    = this.read.api
+        const host   = api?.host   ?? Config.DEFAULT_API_HOST
+        const prefix = api?.prefix ?? Config.DEFAULT_API_PREFIX
 
-        if (this.api?.socketPath != null)
-            return `http://unix:/${this.api.socketPath}/${prefix}/`
+        if (api?.socketPath != null)
+            return `http://unix:/${api.socketPath}/${prefix}/`
 
-        const port = this.api?.port ?? Config.DEFAULT_API_PORT
+        const port = api?.port ?? Config.DEFAULT_API_PORT
 
         return `http://${host}:${port}/${prefix}/`
     }
 
     get mysqlUseInitUser(): boolean {
-        return this.mysql.init?.login != null && this.mysql.init?.password != null
+        const mysql = this.read.mysql
+
+        return mysql?.init?.login    != null 
+            && mysql?.init?.password != null
     }
 
     get mysqlUseServeUser(): boolean {
-        return this.mysql.serve?.login != null && this.mysql.serve?.password != null
+        const mysql = this.read.mysql
+
+        return mysql?.serve?.login    != null 
+            && mysql?.serve?.password != null
     }
 
     get apiPrefix(): string {
-        return this.api?.prefix ?? Config.DEFAULT_API_PREFIX
+        return this.read.api?.prefix ?? Config.DEFAULT_API_PREFIX
     }
 
     get apiHost(): string {
-        return this.api?.host ?? Config.DEFAULT_API_HOST
+        return this.read.api?.host ?? Config.DEFAULT_API_HOST
     }
 
     get apiPort(): number {
-        return this.api?.port ?? Config.DEFAULT_API_PORT
+        return this.read.api?.port ?? Config.DEFAULT_API_PORT
     }
 
     get logicCreateAdmin(): boolean {
-        return this.logic?.createAdmin ?? Config.DEFAULT_LOGIC_CREATE_ADMIN
+        return this.read.logic?.createAdmin ?? Config.DEFAULT_LOGIC_CREATE_ADMIN
     }
 
     get logicValidateTables(): boolean {
-        return this.logic?.validateTables ?? Config.DEFAULT_LOGIC_VALIDATE_TABLES
+        return this.read.logic?.validateTables ?? Config.DEFAULT_LOGIC_VALIDATE_TABLES
     }
 
     get logicRecreateInvalidTables(): boolean {
-        return this.logic?.recreateInvalidTables ?? Config.DEFAULT_LOGIC_RECREATE_INVALID_TABLES
+        return this.read.logic?.recreateInvalidTables ?? Config.DEFAULT_LOGIC_RECREATE_INVALID_TABLES
     }
 
     get logicReconnectInterval(): number {
-        return this.logic?.reconnectInterval ?? Config.DEFAULT_LOGIC_RECONNECT_INTERVAL
+        return this.read.logic?.reconnectInterval ?? Config.DEFAULT_LOGIC_RECONNECT_INTERVAL
     }
 
     get logicMaxTokens(): number {
-        return this.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_TOKENS
+        return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_TOKENS
     }
 
     get logicMaxCNames(): number {
-        return this.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_CNAMES
+        return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_CNAMES
     }
 }
