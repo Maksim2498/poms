@@ -462,5 +462,3 @@ export class Config {
         return this.read.logic?.buildStaticPath ?? Config.DEFAULT_LOGIC_BUILD_STAITC_PATH
     }
 }
-
-console.log(Config.placehold("<POMS_PATH> \n<SITE_PATH> \n\\<<SERVER_PATH>\n <FEF> \n<PLUGIN_PATH>\n<>"))
