@@ -5,6 +5,7 @@ import "./style.css"
 export default function SignIn() {
     const [loginError,    setLoginError   ] = useState(undefined as undefined | string)
     const [passwordError, setPasswordError] = useState(undefined as undefined | string)
+    const [typed,         setTyped        ] = useState(false)
 
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -13,12 +14,16 @@ export default function SignIn() {
     const onLoginInput = (e: FormEvent<HTMLInputElement>) => {
         const error = validateLogin(e.currentTarget.value)
         setLoginError(error)
+        setTyped(true)
     }
 
     const onPasswordInput = (e: FormEvent<HTMLInputElement>) => {
         const error = validatePassword(e.currentTarget.value)
         setPasswordError(error)
+        setTyped(true)
     }
+
+    const disabled = !typed || loginError != null || passwordError != null
 
     return <form className="SignIn" onSubmit={onSubmit}>
         <fieldset> 
@@ -27,7 +32,7 @@ export default function SignIn() {
             {errorMessge(loginError)}
             <input className={className("password", passwordError)} type="password" placeholder="Password" onInput={onPasswordInput} />
             {errorMessge(passwordError)}
-            <input className="submit"                               type="submit"   value="Sign In"                                  />
+            <input className="submit"                               type="submit"   value="Sign In"        disabled={disabled}       />
         </fieldset>
     </form>
 

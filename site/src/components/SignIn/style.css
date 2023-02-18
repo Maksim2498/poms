@@ -32,6 +32,10 @@
     background-color: #444
 }
 
+.SignIn input[type=submit]:disabled {
+    background-color: #333;
+}
+
 .SignIn input {
     width: 10rem;
     color: black;
