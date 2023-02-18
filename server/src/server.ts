@@ -2,6 +2,7 @@ import { Server as HttpServer   } from "http"
 import { Application, Router    } from "express"
 import { Logger                 } from "winston"
 import { Connection, MysqlError } from "mysql"
+import { v4 as uuid             } from "uuid"
 import { Config                 } from "./config"
 
 import express from "express"
@@ -37,13 +38,37 @@ export class Server {
         return
 
         function setupExpressApp(this: Server) {
+            const app = this.expressApp
+
+            if (this.logger)
+                setupLogger.call(this)
+
             setupAPI.call(this)
             setupStatic.call(this)
             setup404.call(this)
 
+            function setupLogger(this: Server) {
+                app.use((req, res, next) => {
+                    (req as any).id = uuid()
+                    next()
+                })
+
+                app.use((req, res, next) => {
+                    const id     = (req as any).id
+                    const method = req.method
+                    const url    = req.url
+
+                    this.logger!.info(`[${id}] - ${method} ${url}`)
+                    res.on("close", () => this.logger!.info(`[${id}] - ${res.statusCode}`))
+
+                    next()
+                })
+            }
+
             function setupAPI(this: Server) {
                 const router = createRouter.call(this)
-                this.expressApp.use(this.config.httpPrefix, router)
+
+                app.use(this.config.httpPrefix, router)
 
                 function createRouter(this: Server): Router {
                     const router = Router()
@@ -58,11 +83,11 @@ export class Server {
                 if (!this.config.httpServeStatic)
                     return
 
-                this.expressApp.use(express.static(this.config.httpStaticPath))
+                app.use(express.static(this.config.httpStaticPath))
             }
         
             function setup404(this:Server) {
-                this.expressApp.use((req, res) => res.status(404).send("Not Found"))
+                app.use((req, res) => res.status(404).send("Not Found"))
             }
         }
     }
