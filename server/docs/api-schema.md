@@ -12,14 +12,14 @@
   - [Get User Registration Time](#get-user-registration-time);
   - [Get User Registrar](#get-user-registrar);
   - [Get User Name](#get-user-name);
-  - [Get User Canonical Names](#get-user-canonical-names);
+  - [Get User Nicknames](#get-user-nicknames);
   - [Delete All Users](#delete-all-users);
   - [Delete User](#delete-user);
-  - [Delete All User Canonical Names](#delete-all-user-canonical-names);
-  - [Delete User Canonical Name](#delete-user-canonical-name);
+  - [Delete All User Nickname](#delete-all-user-nicknames);
+  - [Delete User Nickname](#delete-user-nickname);
   - [Update User Name](#update-user-name);
   - [Update User Password](#update-user-password);
-  - [Add User Canonical Name](#add-user-canonical-name);
+  - [Add User Canonical Name](#add-user-nickname);
   - [Add User](#add-user).
 
 ## About
@@ -84,8 +84,8 @@ __Response__:
 
 ```ts
 {
-    name:   string
-    cnames: string[]
+    name:      string
+    nicknames: string[]
 
     reg: {
         time:  string
@@ -110,8 +110,8 @@ __Response__:
 
 ```ts
 {
-    name:   string
-    cnames: string[]
+    name:      string
+    nicknames: string[]
 
     reg: {
         time:  string
@@ -201,14 +201,14 @@ __Response__:
 }
 ```
 
-### Get User Canonical Names
+### Get User Nicknames
 
-Returns list of user canonical names.
+Returns list of user nicknames.
 
 __Request__:
 
 ```http
-GET /users/<login>/cnames/
+GET /users/<login>/nicknames/
 
 Authorization: Bearer <access token>
 ```
@@ -244,28 +244,28 @@ DELETE /users/<user>
 Authorization: Bearer <access token>
 ```
 
-### Delete All User Canonical Names
+### Delete All User nicknames
 
-Deletes all canonical names of specified user. If issued with administator's access token
+Deletes all nicknames of specified user. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-DELETE /users/<user>/cnames
+DELETE /users/<user>/nicknames
 
 Authorization: Bearer <access token>
 ```
 
-### Delete User Canonical Name
+### Delete User Nickname
 
-Deletes specified canonical name of given user. If issued with administator's access token
+Deletes specified nickname of given user. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-DELETE /users/<user>/cnames/<cname>
+DELETE /users/<user>/nicknames/<nickname>
 
 Authorization: Bearer <access token>
 ```
@@ -296,15 +296,15 @@ PUT /users/<user>/password
 Authorization: Bearer <access token>
 ```
 
-### Add User Canonical Name
+### Add User Nickname
 
-Adds canonical name to the user. If issued with administator's access token
+Adds nickname to the user. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
 
 __Request__:
 
 ```http
-POST /users/<user>/cnames/<cname>
+POST /users/<user>/cnames/<nickname>
 
 Authorization: Bearer <access token>
 ```

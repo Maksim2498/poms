@@ -59,10 +59,10 @@ async function init(options: InitOptions) {
             await createUsersTable(options)
 
         if (!recreatedAll) {
-            if (tables.includes("cnames"))
-                await validateCNamesTable(validateOptions)
+            if (tables.includes("nicknames"))
+                await validateNicknamesTable(validateOptions)
             else
-                await createCNamesTable(options)
+                await createNicknamesTable(options)
 
             if (tables.includes("tokens"))
                 await validateTokensTable(validateOptions)
@@ -108,31 +108,31 @@ async function validateUsersTable(options: ValidateSpecificTableOptions): Promis
     await s.dropTable({  connection, logger, name: "Users"  })
 
     await createUsersTable(options)
-    await createCNamesTable(options)
+    await createNicknamesTable(options)
     await createTokensTable(options)
 
     return false
 }
 
-async function validateCNamesTable(options: ValidateSpecificTableOptions) {
+async function validateNicknamesTable(options: ValidateSpecificTableOptions) {
     const valid = await validateTable({
-        name:           "CNames",
+        name:           "Nicknames",
         throwOnInvalid: !options.recreateOnInvalid,
         fields: [
-            { name: "user_id", type: "bigint",       key: "PRI" },
-            { name: "cname",   type: "varchar(255)", key: "PRI" }
+            { name: "user_id",  type: "bigint",       key: "PRI" },
+            { name: "nickname", type: "varchar(255)", key: "PRI" }
         ],
         ...options
     })
 
     if (!valid) {
         await s.dropTable({ 
-            name:       "CNames", 
+            name:       "Nicknames", 
             connection: options.connection, 
             logger:     options.logger
         })
 
-        await createCNamesTable(options)
+        await createNicknamesTable(options)
     }
 }
 
@@ -229,7 +229,7 @@ interface CreateTablesAndEventsOptions {
 
 async function createTablesAndEvents(options: CreateTablesAndEventsOptions) {
     await createUsersTable(options)
-    await createCNamesTable(options)
+    await createNicknamesTable(options)
     await createTokensTable(options)
     await createCleanUpEvent(options)
 }
@@ -258,14 +258,14 @@ async function createUsersTable(options: CreateSpecificTableOptions) {
     })
 }
 
-async function createCNamesTable(options: CreateSpecificTableOptions) {
+async function createNicknamesTable(options: CreateSpecificTableOptions) {
     await createTable({ 
-        name: "CNames",
+        name: "Nicknames",
         args: [
-            "user_id BIGINT       NOT NULL",
-            "cname   VARCHAR(255) NOT NULL UNIQUE",
+            "user_id  BIGINT       NOT NULL",
+            "nickname VARCHAR(255) NOT NULL UNIQUE",
 
-            "PRIMARY KEY (user_id, cname)",
+            "PRIMARY KEY (user_id, nickname)",
             "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"
         ],
         ...options

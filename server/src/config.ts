@@ -41,7 +41,7 @@ export interface ConfigJSON {
         recreateInvalidTables?: boolean
         reconnectInterval?:     number
         maxTokens?:             number
-        maxCNames?:             number
+        maxNicknames?:          number
     }
 }
 
@@ -66,7 +66,7 @@ export class Config {
     static readonly DEFAULT_LOGIC_RECREATE_INVALID_TABLES = false
     static readonly DEFAULT_LOGIC_RECONNECT_INTERVAL      = 5
     static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
-    static readonly DEFAULT_LOGIC_MAX_CNAMES              = 5
+    static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
 
     readonly read: DeepReadonly<ConfigJSON>
 
@@ -145,7 +145,7 @@ export class Config {
                 { path: "logic.recreateInvalidTables", type: "boolean" },
                 { path: "logic.reconnectInterval",     type: "number"  },
                 { path: "maxTokens",                   type: "number"  },
-                { path: "maxCNames",                   type: "number"  },
+                { path: "maxNicknames",                type: "number"  },
             ]
         })
 
@@ -327,6 +327,6 @@ export class Config {
     }
 
     get logicMaxCNames(): number {
-        return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_CNAMES
+        return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_NICKNAMES
     }
 }

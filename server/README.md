@@ -1,4 +1,4 @@
-# API
+# Server
 
 \<There will be an image>
 

@@ -6,7 +6,7 @@
 - [About](#about);
 - [Tables](#tables);
   - [Users](#users);
-  - [CNames](#cnames);
+  - [Nicknames](#nicknames);
   - [Tokens](#tokens);
 - [Events](#events);
   - [Clean Up](#clean-up).
@@ -42,20 +42,18 @@ CREATE TABLE Users (
 )
 ```
 
-### CNames
+### Nicknames
 
-Holds all users' _canonical names_.
-
-_Canonical name_ - user's in-game nickname. One user can have multiple of them.
+Holds all users' nicknames.
 
 __Definition__:
 
 ```sql
-CREATE TABLE CNames (
-    user_id BIGINT       NOT NULL,
-    cname   VARCHAR(255) NOT NULL UNIQUE,
+CREATE TABLE Nicknames (
+    user_id  BIGINT       NOT NULL,
+    nickname VARCHAR(255) NOT NULL UNIQUE,
 
-    PRIMARY KEY (user_id, cname),
+    PRIMARY KEY (user_id, nickname),
     FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
 
 )

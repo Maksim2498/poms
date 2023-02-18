@@ -17,7 +17,7 @@ It consists of Bukkit plugin for Minecraft server, back-end server with REST API
 
 You can get detailed information on project components in the following files:
 
-- [API](/api/README.md);
+- [Server](/server/README.md);
 - [Site](/site/README.md);
 - [Bukkit Plugin](/plugin/README.md).
 
@@ -33,9 +33,9 @@ Comming soon...
 
 __API__:
 
-- [Configuration](/api/docs/config.md);
-- [Database Schema](/api/docs/db-schema.md);
-- [API Schema](/api/docs/api-schema.md).
+- [Configuration](/server/docs/config.md);
+- [Database Schema](/server/docs/db-schema.md);
+- [API Schema](/server/docs/api-schema.md).
 
 __Site__:
 

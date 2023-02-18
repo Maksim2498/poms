@@ -112,17 +112,17 @@ export async function deleteAllUser(options: DeleteAllUsersOptions) {
     await s.clearTable({ name: "Users", ...options })
 }
 
-export interface DeleteAllCNamesOptions {
+export interface DeleteAllNicknamesOptions {
     connection: Connection
     logger?:    Logger
     user?:      User
 }
 
-export async function deleteAllCNames(options: DeleteAllCNamesOptions): Promise<boolean> {
+export async function deleteAllNicknames(options: DeleteAllNicknamesOptions): Promise<boolean> {
     const { user } = options
 
     if (user == null) {
-        await s.clearTable({ name: "CNames", ...options })
+        await s.clearTable({ name: "Nicknames", ...options })
         return true
     }
 
@@ -132,7 +132,7 @@ export async function deleteAllCNames(options: DeleteAllCNamesOptions): Promise<
 
     switch (typeof user) {
         case "string":
-            logger?.info(`Deleting all canonical names of user "${user}"...`)
+            logger?.info(`Deleting all nicknames of user "${user}"...`)
 
             if (!isLoginValid(user))
                 throw e.fromMessage(`User login "${user}" is invalid`, logger)
@@ -147,19 +147,19 @@ export async function deleteAllCNames(options: DeleteAllCNamesOptions): Promise<
             break
 
         case "number":
-            logger?.info(`Deleting all canonical names of user with id "${user}"...`)
+            logger?.info(`Deleting all nicknames of user with id "${user}"...`)
             id = user
     }
 
     const deleted = await am.query({
         connection,
         logger,
-        sql:    "DELETE FROM CNames WHERE user_id = ?",
+        sql:    "DELETE FROM Nicknames WHERE user_id = ?",
         values: [id],
         onSuccess: (results: any[]) => results.length != 0
     })
 
-    logger?.info(deleted ? "Deleted" : "Canonical names not found")
+    logger?.info(deleted ? "Deleted" : "Nicknames not found")
 
     return deleted
 
@@ -273,5 +273,6 @@ export function normalizeLogin(login: string) {
 }
 
 export function isLoginValid(login: string): boolean {
-    return login.length >= 4;
+    return login.length >= 4
+        && !login.match(/\s/)
 }
