@@ -55,6 +55,11 @@ export interface ReadConfigFromFileOptions {
 }
 
 export class Config {
+    static readonly POMS_PATH                             = dirname(dirname(__dirname)) // this file is in /server/src/
+    static readonly PLUGIN_PATH                           = join(this.POMS_PATH, "plugin")
+    static readonly SERVER_PATH                           = join(this.POMS_PATH, "server")
+    static readonly SITE_PATH                             = join(this.POMS_PATH, "site")
+
     static readonly FILE_NAME                             = "poms-config.json"
 
     static readonly DEFAULT_PATH                          = this.FILE_NAME
@@ -63,7 +68,7 @@ export class Config {
     static readonly DEFAULT_HTTP_HOST                     = "localhost"
     static readonly DEFAULT_HTTP_PORT                     = 8000
     static readonly DEFAULT_HTTP_SERVE_STATIC             = true
-    static readonly DEFAULT_HTTP_STATIC_PATH              = "site/build"
+    static readonly DEFAULT_HTTP_STATIC_PATH              = this.placehold("<SITE_PATH>/build")
 
     static readonly DEFAULT_MYSQL_DATABASE                = "poms"
     static readonly DEFAULT_MYSQL_HOST                    = "localhost"
@@ -76,10 +81,73 @@ export class Config {
     static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
     static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
-    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = "site"
+    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = this.placehold("<SITE_PATH>")
 
     readonly read: DeepReadonly<ConfigJSON>
     readonly path: string
+
+    static placehold(path: string): string {
+        const splits = split(path)
+
+        return splits.map(s => {
+            if (!s.isPlaceholder)
+                return s.text
+
+            switch (s.text) {
+                case "POMS_PATH":
+                    return this.POMS_PATH
+
+                case "PLUGIN_PATH":
+                    return this.PLUGIN_PATH
+
+                case "SERVER_PATH":
+                    return this.SERVER_PATH
+
+                case "SITE_PATH":
+                    return this.SITE_PATH
+
+                default:
+                    return `<${s.text}>`
+            }
+        }).join("")
+
+        type Split = {
+            text:           string
+            isPlaceholder?: boolean
+        }
+
+        function split(path: string): Split[] {
+            const rawSplits = path.split(/(?<!\\)</)
+            const splits    = [] as Split[]
+
+            splits.push({ text: rawSplits[0] })
+
+            for (let i = 1; i < rawSplits.length; ) {
+                const rawSplit = rawSplits[i]
+
+                if (rawSplit.includes(">")) {
+                    const endIndex = rawSplit.indexOf(">")
+
+                    splits.push({
+                        text:          rawSplit.slice(0, endIndex),
+                        isPlaceholder: true
+                    })
+
+                    splits.push({ text: rawSplit.slice(endIndex + 1) })
+
+                    i += 2
+
+                    continue
+                }
+
+                splits.push({ text: rawSplit })
+
+                ++i
+            }
+
+            return splits
+        }
+    }
 
     static async readFromFile(options?: ReadConfigFromFileOptions): Promise<Config> {
         const logger = options?.logger
@@ -222,8 +290,8 @@ export class Config {
     }
 
     private static validateJSONPortFields(json: any, logger?: Logger) {
-        this.validateJSONPortField(json, "api.port")
-        this.validateJSONPortField(json, "mysql.port")
+        this.validateJSONPortField(json, "api.port",   logger)
+        this.validateJSONPortField(json, "mysql.port", logger)
     }
 
     private static validateJSONPortField(json: any, path: string, logger?: Logger) {
@@ -241,20 +309,23 @@ export class Config {
 
         if (read.http != null) {
             read.http.prefix     = normalize(`/${read.http.prefix ?? ""}`)
-            read.http.socketPath = normalizeNullable(read.http.socketPath)
-            read.http.staticPath = normalizeNullable(read.http.staticPath)
+            read.http.socketPath = preparePath(read.http.socketPath)
+            read.http.staticPath = preparePath(read.http.staticPath)
         }
 
-        read.mysql.socketPath = normalizeNullable(read.mysql.socketPath)
+        read.mysql.socketPath = preparePath(read.mysql.socketPath)
 
         if (read.logic != null)
-            read.logic.buildStaticPath = normalizeNullable(read.logic.buildStaticPath)
+            read.logic.buildStaticPath = preparePath(read.logic.buildStaticPath)
 
         this.read = read
         this.path = path ?? Config.DEFAULT_PATH
 
-        function normalizeNullable(path: string | undefined): string | undefined {
-            return path != null ? normalize(path) : undefined
+        function preparePath(path: string | undefined): typeof path {
+            if (path == null)
+                return undefined
+
+            return Config.placehold(normalize(path))
         }
     }
 
@@ -391,3 +462,5 @@ export class Config {
         return this.read.logic?.buildStaticPath ?? Config.DEFAULT_LOGIC_BUILD_STAITC_PATH
     }
 }
+
+console.log(Config.placehold("<POMS_PATH> \n<SITE_PATH> \n\\<<SERVER_PATH>\n <FEF> \n<PLUGIN_PATH>\n<>"))
