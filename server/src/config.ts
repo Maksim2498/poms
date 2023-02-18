@@ -1,5 +1,5 @@
 import { promises as fsp              } from "fs"
-import { normalize                    } from "path"
+import { normalize, join, dirname     } from "path"
 import { Logger                       } from "winston"
 import { Connection, createConnection } from "mysql"
 import { DeepReadonly                 } from "util/type"
@@ -55,13 +55,15 @@ export interface ReadConfigFromFileOptions {
 }
 
 export class Config {
-    static readonly DEFAULT_PATH                          = "config.json"
+    static readonly FILE_NAME                             = "poms-config.json"
+
+    static readonly DEFAULT_PATH                          = this.FILE_NAME
 
     static readonly DEFAULT_HTTP_PREFIX                   = "/api"
     static readonly DEFAULT_HTTP_HOST                     = "localhost"
     static readonly DEFAULT_HTTP_PORT                     = 8000
     static readonly DEFAULT_HTTP_SERVE_STATIC             = true
-    static readonly DEFAULT_HTTP_STATIC_PATH              = "../site/build"
+    static readonly DEFAULT_HTTP_STATIC_PATH              = "site/build"
 
     static readonly DEFAULT_MYSQL_DATABASE                = "poms"
     static readonly DEFAULT_MYSQL_HOST                    = "localhost"
@@ -74,13 +76,14 @@ export class Config {
     static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
     static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
-    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = "../site"
+    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = "site"
 
     readonly read: DeepReadonly<ConfigJSON>
+    readonly path: string
 
     static async readFromFile(options?: ReadConfigFromFileOptions): Promise<Config> {
-        const path   = options?.path ?? Config.DEFAULT_PATH
         const logger = options?.logger
+        const path   = options?.path ?? await this.findConfig(logger)
 
         logger?.info("Reading config...")
 
@@ -88,11 +91,36 @@ export class Config {
 
         this.validateJSON(json, logger)
 
-        const config = new Config(json)
+        const config = new Config(json, path)
 
         logger?.info("Done")
 
         return config
+    }
+
+    static async findConfig(logger?: Logger): Promise<string> {
+        logger?.info("Searching for configuration file...")
+
+        let dir = process.cwd()
+
+        while (true) {
+            try {
+                const files = await fsp.readdir(dir)
+
+                if (files.includes(this.FILE_NAME)) {
+                    const path = join(dir, this.FILE_NAME)
+                    logger?.info(`Configuration file found at ${path}`)
+                    return path
+                }
+            } catch {}
+
+            const newDir = dirname(dir)
+
+            if (dir === newDir)
+                throw new Error("Configuration file not found")
+
+            dir = newDir
+        }
     }
 
     private static async readJSON(path: string, logger?: Logger): Promise<any> {
@@ -208,7 +236,7 @@ export class Config {
             throw e.fromMessage(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`, logger)
     }
 
-    constructor(json: ConfigJSON) {
+    constructor(json: ConfigJSON, path?: string) {
         const read = deepAssign({}, json)
 
         if (read.http != null) {
@@ -223,6 +251,7 @@ export class Config {
             read.logic.buildStaticPath = normalizeNullable(read.logic.buildStaticPath)
 
         this.read = read
+        this.path = path ?? Config.DEFAULT_PATH
 
         function normalizeNullable(path: string | undefined): string | undefined {
             return path != null ? normalize(path) : undefined
@@ -289,11 +318,11 @@ export class Config {
         const prefix = api?.prefix ?? Config.DEFAULT_HTTP_PREFIX
 
         if (api?.socketPath != null)
-            return `http://unix:/${api.socketPath}/${prefix}/`
+            return `http://unix:/${api.socketPath}${prefix}/`
 
         const port = api?.port ?? Config.DEFAULT_HTTP_PORT
 
-        return `http://${host}:${port}/${prefix}/`
+        return `http://${host}:${port}${prefix}/`
     }
 
     get mysqlUseInitUser(): boolean {

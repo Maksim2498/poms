@@ -1,5 +1,6 @@
 import winston from "winston"
 
+import { dirname     } from "path"
 import { LoggedError } from "./util/error"
 import { Config      } from "./config"
 import { init        } from "./init"
@@ -21,6 +22,12 @@ main()
 async function main() {
     const config  = await Config.readFromFile({ logger });
     const options = { config, logger }
+
+    const wd = dirname(config.path)
+
+    logger.info(`Setting working directory to ${wd}...`)
+    process.chdir(wd)
+    logger.info("Set")
 
     await init(options)
 

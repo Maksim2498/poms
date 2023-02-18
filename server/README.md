@@ -38,9 +38,12 @@ npm i
 
 If nothing went wrong you now have all required packages installed and you can
 proceed to the second setup step - configuration. All configuration is done
-through `config.json` file in the subproject root directory (the directory where
-this README.md is situated). Create this file and provide minumum set of options:
-MySQL user login and password. Here is an example:
+through `poms-config.json` file. This file can be created in any directory up
+the filesystem trea relative to server launch directory but it's highly recomended
+to create it in the POMS root directory (one directory up relative to this file).
+Create this file and provide minumum set of options: MySQL user login and password.
+
+Here is an example:
 
 ```json
 {
