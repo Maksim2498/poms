@@ -41,7 +41,7 @@ For initial token reception:
 ```http
 POST /auth
 
-Authorization: Bacic <login>:<password>
+Authorization: Bacic <base64 encoded login>:<base64 encoded password>
 ```
 
 For token refreshing:
@@ -75,7 +75,7 @@ Returns full information on all users.
 __Request__:
 
 ```http
-GET /users
+GET /users?[nicknames]
 
 Authorization: Bearer <access token>
 ```
@@ -85,7 +85,7 @@ __Response__:
 ```ts
 {
     name:      string
-    nicknames: string[]
+    nicknames: string[] // if <nicknames> option is set
 
     reg: {
         time:  string
@@ -101,7 +101,7 @@ Returns full information on specified user.
 __Request__:
 
 ```http
-GET /users/<login>
+GET /users/<login>?[nicknames]
 
 Authorization: Bearer <access token>
 ```
@@ -111,7 +111,7 @@ __Response__:
 ```ts
 {
     name:      string
-    nicknames: string[]
+    nicknames: string[] // if <nicknames> option is set
 
     reg: {
         time:  string
