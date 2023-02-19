@@ -304,7 +304,7 @@ Adds nickname to the user. If issued with administator's access token
 __Request__:
 
 ```http
-POST /users/<user>/cnames/<nickname>
+POST /users/<user>/nicknames/<nickname>
 
 Authorization: Bearer <access token>
 ```
