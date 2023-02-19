@@ -1,7 +1,103 @@
 import { Connection, FieldInfo, MysqlError } from "mysql"
 import { Logger                            } from "winston"
+import { DeepReadonly                      } from "util/type"
 
 import * as am from "./async"
+import * as t  from "./type"
+
+export interface IsTableValidOptions {
+    connection:         Connection
+    logger?:            Logger
+    table:              DeepReadonly<t.Table>
+    logInvalidAsError?: boolean
+}
+
+export async function isTableValid(options: IsTableValidOptions): Promise<boolean> {
+    const { connection, logger, table, logInvalidAsError } = options
+
+    logger?.info(`Validating table "${table.name}"...`)
+
+    const valid = await am.query({
+        connection,
+        logger,
+        sql:    "DESC ??",
+        values: [table.name],
+        onSuccess: (results: any[]) => {
+            if (results.length != table.columns.length)
+                return false
+
+            for (let i = 0; i < results.length; ++i) {
+                const { Field, Type, Null,     Key,          Default,      Extra } = results[i]
+                const { name, type,  nullable, defaultValue, autoIncement        } =  table.columns[i]
+
+                if (Field !== name.trim())
+                    return false
+
+                if (Type !== t.typeToSQL(type, "lower"))
+                    return false
+
+                if ((Null == "YES") != (nullable ?? false))
+                    return false
+
+                if (Key !== t.tableFieldToSQLKey(table, name))
+                    return false
+
+                if (Default != normalizedDefaultValue())
+                    return false
+
+                if (autoIncement && Extra !== "auto_increment")
+                    return false
+
+                function normalizedDefaultValue() {
+                    switch (typeof defaultValue) {
+                        case "boolean":
+                            return Number(defaultValue)
+                        
+                        case "object":
+                            if (defaultValue == null)
+                                return null
+                            
+                            return "CURRENT_TIMESTAMP"
+
+                        default:
+                            return defaultValue
+                    }
+                }
+            }
+
+            return true
+        }
+    })
+
+    if (valid)
+        logger?.info("Valid")
+    else if (logInvalidAsError)
+        logger?.error("Invalid")
+    else
+        logger?.info("Invalid")
+
+    return valid
+}
+
+export interface CreateTableOptions {
+    connection: Connection
+    logger?:    Logger
+    table:      DeepReadonly<t.Table>
+}
+
+export async function createTable(options: CreateTableOptions) {
+    const { connection, logger, table } = options
+
+    logger?.info(`Creating table "${table.name}"...`)
+
+    await am.query({
+        connection,
+        logger,
+        sql: t.tableToSQL(table)
+    })
+
+    logger?.info("Created")
+}
 
 export interface ClearTableOptions {
     connection: Connection

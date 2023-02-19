@@ -69,11 +69,11 @@ __Definition__:
 
 ```sql
 CREATE TABLE Tokens (
-    id      BINARY(64)                NOT NULL PRIMARY KEY,
-    user_id BIGINT                    NOT NULL,
-    cr_time TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    exp     TIMESTAMP                 NOT NULL,
-    type    ENUM("access", "refresh") NOT NULL,
+    id       BINARY(64)                NOT NULL PRIMARY KEY,
+    user_id  BIGINT                    NOT NULL,
+    cr_time  TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    exp_time TIMESTAMP                 NOT NULL,
+    type     ENUM("access", "refresh") NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
 )

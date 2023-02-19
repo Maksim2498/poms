@@ -1,14 +1,65 @@
 import { promises as fsp } from "fs"
 import { Connection      } from "mysql"
 import { Logger          } from "winston"
+import { DeepReadonly    } from "util/type"
 import { Config          } from "./config"
 
 import cp from "child_process"
 
 import * as am    from "./util/mysql/async"
 import * as s     from "./util/mysql/statement"
+import * as t     from "./util/mysql/type"
 import * as e     from "./util/error"
 import * as logic from "./logic"
+
+const USERS_TABLE: DeepReadonly<t.Table> = {
+    name: "Users",
+
+    columns: [
+        { name: "id",            type: t.bigint,         primaryKey: true,                  autoIncement: true },
+        { name: "login",         type: t.mkVarchar(255), unique:     true                                      },
+        { name: "name",          type: t.mkVarchar(255), nullable:   true                                      },
+        { name: "cr_id",         type: t.bigint,         nullable:   true                                      },
+        { name: "cr_time",       type: t.timestamp,      defaultValue: t.current_timestamp                     },
+        { name: "password_hash", type: t.mkBinary(64)                                                          },
+        { name: "is_admin",      type: t.boolean,        defaultValue: false                                   },
+        { name: "is_online",     type: t.boolean,        defaultValue: false                                   }
+    ],
+    
+    constraints: [
+        { type: "foreign_key", field: "cr_id", refTable: "Users", refField: "id", onDelete: "null" }
+    ]
+}
+
+const NICKNAMES_TABLE: DeepReadonly<t.Table> = {
+    name: "Nicknames",
+
+    columns: [
+        { name: "user_id",  type: t.bigint                       },
+        { name: "nickname", type: t.mkVarchar(255), unique: true }
+    ],
+
+    constraints: [
+        { type: "primary_key", fields: ["user_id", "nickname"]                     },
+        { type: "foreign_key", field: "user_id", refTable: "Users", refField: "id" }
+    ]
+}
+
+const TOKENS_TABLE: DeepReadonly<t.Table> = {
+    name: "Tokens",
+
+    columns: [
+        { name: "id",       type: t.mkBinary(64),                primaryKey: true                  },
+        { name: "user_id",  type: t.bigint                                                         },
+        { name: "exp_time", type: t.timestamp                                                      },
+        { name: "cr_time",  type: t.timestamp,                   defaultValue: t.current_timestamp },
+        { name: "type",     type: t.mkEnum("access", "refresh")                                    }
+    ],
+
+    constraints: [
+        { type: "foreign_key", field: "user_id", refTable: "Users", refField: "id" }
+    ]
+}
 
 export interface InitOptions {
     config:  Config
@@ -125,30 +176,21 @@ interface ValidateSpecificTableOptions {
 }
 
 async function validateUsersTable(options: ValidateSpecificTableOptions): Promise<boolean> {
-    const valid = await validateTable({
-        name:           "Users",
-        throwOnInvalid: !options.recreateOnInvalid,
-        fields: [
-            { name: "id",            type: "bigint",       key: "PRI",                        extra: "auto_increment"    },
-            { name: "login",         type: "varchar(255)", key: "UNI"                                                    },
-            { name: "name",          type: "varchar(255)",                                    nullable: true             },
-            { name: "cr_id",         type: "bigint",       key: "MUL",                        nullable: true             },
-            { name: "cr_time",       type: "timestamp",    defaultValue: "CURRENT_TIMESTAMP", extra: "DEFAULT_GENERATED" },
-            { name: "password_hash", type: "binary(64)"                                                                  },
-            { name: "is_admin",      type: "tinyint(1)",   defaultValue: '0'                                             },
-            { name: "is_online",     type: "tinyint(1)",   defaultValue: '0'                                             }
-        ],
-        ...options
+    const { connection, logger, recreateOnInvalid } = options
+
+    const valid = await validateTable({ 
+        connection,
+        logger,
+        table:           USERS_TABLE,
+        throwOnInvalid: !recreateOnInvalid
     })
 
     if (valid)
         return true
 
-    const { connection, logger } = options
-
-    await s.dropTable({  connection, logger, name: "Tokens" })
-    await s.dropTable({  connection, logger, name: "CNames" })
-    await s.dropTable({  connection, logger, name: "Users"  })
+    await dropTokensTable(options)
+    await dropNicknamesTable(options)
+    await dropUsersTable(options)
 
     await createUsersTable(options)
     await createNicknamesTable(options)
@@ -158,48 +200,33 @@ async function validateUsersTable(options: ValidateSpecificTableOptions): Promis
 }
 
 async function validateNicknamesTable(options: ValidateSpecificTableOptions) {
-    const valid = await validateTable({
-        name:           "Nicknames",
-        throwOnInvalid: !options.recreateOnInvalid,
-        fields: [
-            { name: "user_id",  type: "bigint",       key: "PRI" },
-            { name: "nickname", type: "varchar(255)", key: "PRI" }
-        ],
-        ...options
+    const { connection, logger, recreateOnInvalid } = options
+
+    const valid = await validateTable({ 
+        connection,
+        logger,
+        table:           NICKNAMES_TABLE,
+        throwOnInvalid: !recreateOnInvalid
     })
 
     if (!valid) {
-        await s.dropTable({ 
-            name:       "Nicknames", 
-            connection: options.connection, 
-            logger:     options.logger
-        })
-
+        await dropNicknamesTable(options)
         await createNicknamesTable(options)
     }
 }
 
 async function validateTokensTable(options: ValidateSpecificTableOptions) {
-    const valid = await validateTable({
-        name:           "Tokens",
-        throwOnInvalid: !options.recreateOnInvalid,
-        fields: [
-            { name: "id",      type: "binary(64)",               key: "PRI"                                                    },
-            { name: "user_id", type: "bigint",                   key: "MUL"                                                    },
-            { name: "exp",     type: "timestamp"                                                                               },
-            { name: "cr_time", type: "timestamp",                defaultValue: "CURRENT_TIMESTAMP", extra: "DEFAULT_GENERATED" },
-            { name: "type",    type: "enum('access','refresh')"                                                                }
-        ],
-        ...options
+    const { connection, logger, recreateOnInvalid } = options
+
+    const valid = await validateTable({ 
+        connection,
+        logger,
+        table:           TOKENS_TABLE,
+        throwOnInvalid: !recreateOnInvalid
     })
 
     if (!valid) {
-        await s.dropTable({ 
-            name:       "Tokens", 
-            connection: options.connection, 
-            logger:     options.logger
-        })
-
+        await dropTokensTable(options)
         await createTokensTable(options)
     }
 }
@@ -207,60 +234,20 @@ async function validateTokensTable(options: ValidateSpecificTableOptions) {
 interface ValidateTableOptions {
     connection:     Connection
     logger?:        Logger
-    name:           string
+    table:          DeepReadonly<t.Table>
     throwOnInvalid: boolean
-    fields: {
-        name:          string
-        type:          string
-        nullable?:     boolean
-        key?:          string
-        defaultValue?: string
-        extra?:        string
-    }[]
 }
 
 async function validateTable(options: ValidateTableOptions): Promise<boolean> {
-    const { connection, logger, name, fields, throwOnInvalid } = options
+    const valid = await s.isTableValid({ ...options, logInvalidAsError: options.throwOnInvalid })
 
-    logger?.info(`Validating table "${name}"...`)
-
-    const valid = await am.query({
-        connection,
-        logger,
-        sql:       "DESC ??",
-        values:    [name],
-        onSuccess: (results: any[]) => {
-            if (results.length != fields.length)
-                return false
-
-            for (let i = 0; i < results.length; ++i) {
-                const { Field, Type, Null,     Key, Default,      Extra } = results[i]
-                const { name,  type, nullable, key, defaultValue, extra } = fields[i]
-
-                if (Field            !== name
-                 || Type             !== type
-                 || (Null === "YES") !=  (nullable ?? false)
-                 || Key              !=  (key      ?? "")
-                 || Default          !=  defaultValue
-                 || Extra            !=  (extra    ?? ""))
-                 return false
-            }
-            
-            return true;
-        }
-    })
-
-    if (valid) {
-        logger?.info("Valid")
+    if (valid)
         return true
-    }
 
-    if (throwOnInvalid)
-        throw e.fromMessage("Invalid. "
+    if (options.throwOnInvalid)
+        throw e.fromMessage("Aborting. "
                           + "You can turn off validation or enable automatic fixing of invalid tables. "
-                          + "See documentation on configuration for more info", logger)
-
-    logger?.info("Invalid")
+                          + "See documentation on configuration for more info", options.logger)
 
     return false
 }
@@ -268,6 +255,18 @@ async function validateTable(options: ValidateTableOptions): Promise<boolean> {
 interface SetupDatabaseObjectOptions {
     connection: Connection
     logger?:    Logger
+}
+
+async function dropUsersTable(options: SetupDatabaseObjectOptions) {
+    await s.dropTable({ ...options, name: "Users" })
+}
+
+async function dropNicknamesTable(options: SetupDatabaseObjectOptions) {
+    await s.dropTable({ ...options, name: "Nicknames" })
+}
+
+async function dropTokensTable(options: SetupDatabaseObjectOptions) {
+    await s.dropTable({ ...options, name: "Tokens" })
 }
 
 async function createTablesAndEvents(options: SetupDatabaseObjectOptions) {
@@ -278,73 +277,15 @@ async function createTablesAndEvents(options: SetupDatabaseObjectOptions) {
 }
 
 async function createUsersTable(options: SetupDatabaseObjectOptions) {
-    await createTable({ 
-        name: "Users",
-        args: [
-            "id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY",
-            "login         VARCHAR(255) NOT NULL UNIQUE",
-            "name          VARCHAR(255)",
-            "cr_id         BIGINT",
-            "cr_time       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP",
-            "password_hash BINARY(64)   NOT NULL",
-            "is_admin      BOOLEAN      NOT NULL DEFAULT FALSE",
-            "is_online     BOOLEAN      NOT NULL DEFAULT FALSE",
-
-            "FOREIGN KEY (cr_id) REFERENCES Users (id) ON DELETE SET NULL"
-        ],
-        ...options
-    })
+    await s.createTable({ ...options, table: USERS_TABLE     })
 }
 
 async function createNicknamesTable(options: SetupDatabaseObjectOptions) {
-    await createTable({ 
-        name: "Nicknames",
-        args: [
-            "user_id  BIGINT       NOT NULL",
-            "nickname VARCHAR(255) NOT NULL UNIQUE",
-
-            "PRIMARY KEY (user_id, nickname)",
-            "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"
-        ],
-        ...options
-    })
+    await s.createTable({ ...options, table: NICKNAMES_TABLE })
 }
 
 async function createTokensTable(options: SetupDatabaseObjectOptions) {
-    await createTable({ 
-        name: "Tokens",
-        args: [
-            "id      BINARY(64)                NOT NULL PRIMARY KEY",
-            "user_id BIGINT                    NOT NULL",
-            "exp     TIMESTAMP                 NOT NULL",
-            "cr_time TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP",
-            'type    ENUM("access", "refresh") NOT NULL',
-
-            "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"
-        ],
-        ...options
-    })
-}
-
-interface CreateTabelOptions {
-    connection: Connection
-    logger?:    Logger
-    name:       string
-    args:       string[]
-}
-
-async function createTable(options: CreateTabelOptions) {
-    const { name, args, connection, logger } = options
-
-    logger?.info(`Creating table "${name}"...`)
-
-    await am.query({
-        connection,
-        logger,
-        sql: `CREATE TABLE ${name} (${args.join(",")})`
-    })
-
-    logger?.info("Created")
+    await s.createTable({ ...options, table: TOKENS_TABLE })
 }
 
 async function createCleanUpEvent(options: SetupDatabaseObjectOptions) {
