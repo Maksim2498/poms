@@ -6,14 +6,15 @@
 
 - [Index](#index);
 - [About](#about);
-- [Requirements](#requirements);
-- [How to Use?](#how-to-use);
+- [Prerequisites](#prerequisites);
+- [Installation](#installation);
+- [Running](#running);
 - [Documentation](#documentation).
 
 ## About
 
 This is all-in-one solution for creation and administration of private offline-mode Minecraft server.
-It consists of Bukkit plugin for Minecraft server, back-end server with REST API and front-end Web-based administration panel.
+It consists of Bukkit plugin for Minecraft server, back-end server with REST API and front-end Web-based interface.
 
 You can get detailed information on project components in the following files:
 
@@ -21,11 +22,15 @@ You can get detailed information on project components in the following files:
 - [Site](/site/README.md);
 - [Bukkit Plugin](/plugin/README.md).
 
-## Requirements
+## Prerequisites
 
 Comming soon...
 
-## How to Use?
+## Installation
+
+Comming soon...
+
+## Running
 
 Comming soon...
 

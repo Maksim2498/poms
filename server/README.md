@@ -6,7 +6,7 @@
 
 - [Index](#index);
 - [About](#about);
-- [Requirements](#requirements);
+- [Prerequisites](#prerequisites);
 - [Setup](#setup);
 - [Running](#running);
 - [Documentation](#documentation).
@@ -17,15 +17,14 @@ This is a server with REST API for [POMS](../README.md). It can work whether as 
 application or as back-end behind some front-end Web-server like [nginx](https://nginx.org/).
 This API is an essential part of POMS project, site and plugin are both completely built upon it.
 
-## Requirements
+## Prerequisites
 
-To run this application you need the following software:
+To run this application you need the following software installed on your machine:
 
 - [Node.js](https://nodejs.org/);
-- [npm](https://www.npmjs.com/);
 - [MySQL](https://www.mysql.com/).
 
-Install all of them if you don't have them already installed on your machine.
+Install all of them if you don't have them already installed.
 
 ## Setup
 
