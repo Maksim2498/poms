@@ -58,7 +58,7 @@ export class Server {
                     const method = req.method
                     const url    = req.url
 
-                    this.logger!.info(`[${id}] - ${method} ${url}`)
+                    this.logger!.info(`[${id}] - ${method} ${decodeURI(url)}`)
                     res.on("close", () => this.logger!.info(`[${id}] - ${res.statusCode}`))
 
                     next()
