@@ -16,7 +16,25 @@ This is Bukkit plugin used to connect your Minecraft server to POSM system and s
 
 ## Building
 
-Simply run the following command in your terminal:
+__Windows__:
+
+Double click on `build.bat` file or run the following command in your terminal:
+
+```sh
+build.bat
+```
+
+__Unix-Like__:
+
+Run the following command in your terminal:
+
+```sh
+./build.sh
+```
+
+__Other__:
+
+This method is universal. Run the following command in your terminal:
 
 ```sh
 mvn verify
