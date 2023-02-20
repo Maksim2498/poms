@@ -1,0 +1,7 @@
+name: POMS
+version: "${project.version}"
+description: Connects server to POMS system
+author: maksim2498
+
+main: ru.fominmv.poms.Poms
+api-version: 1.13
