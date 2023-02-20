@@ -10,12 +10,13 @@ import * as o from "./util/object"
 
 export interface ConfigJSON {
     http?: {
-        prefix?:      string
-        host?:        string
-        port?:        number
-        socketPath?:  string
-        serveStatic?: boolean
-        staticPath?:  string
+        prefix?:       string
+        host?:         string
+        port?:         number
+        socketPath?:   string
+        serveStatic?:  boolean
+        staticPath?:   string
+        error404Path?: string
     }
 
     mysql: {
@@ -69,6 +70,7 @@ export class Config {
     static readonly DEFAULT_HTTP_PORT                     = 8000
     static readonly DEFAULT_HTTP_SERVE_STATIC             = true
     static readonly DEFAULT_HTTP_STATIC_PATH              = this.placehold("<SITE_PATH>/build")
+    static readonly DEFAULT_HTTP_ERROR_404_PATH           = this.placehold("<SITE_PATH>/public/404.html")
 
     static readonly DEFAULT_MYSQL_DATABASE                = "poms"
     static readonly DEFAULT_MYSQL_HOST                    = "localhost"
@@ -232,6 +234,7 @@ export class Config {
                 { path: "http.socketPath",             type: "string"  },
                 { path: "http.serveStatic",            type: "boolean" },
                 { path: "http.staticPath",             type: "string"  },
+                { path: "http.error404Path",           type: "string"  },
 
                 // MySQL
                 { path: "mysql.database",              type: "string"  },
@@ -308,9 +311,10 @@ export class Config {
         const read = deepAssign({}, json)
 
         if (read.http != null) {
-            read.http.prefix     = normalize(`/${read.http.prefix ?? ""}`)
-            read.http.socketPath = preparePath(read.http.socketPath)
-            read.http.staticPath = preparePath(read.http.staticPath)
+            read.http.prefix       = normalize(`/${read.http.prefix ?? ""}`)
+            read.http.socketPath   = preparePath(read.http.socketPath)
+            read.http.staticPath   = preparePath(read.http.staticPath)
+            read.http.error404Path = preparePath(read.http.error404Path)
         }
 
         read.mysql.socketPath = preparePath(read.mysql.socketPath)
@@ -460,5 +464,9 @@ export class Config {
 
     get logicBuildStaticPath(): string {
         return this.read.logic?.buildStaticPath ?? Config.DEFAULT_LOGIC_BUILD_STAITC_PATH
+    }
+
+    get httpError404Path(): string {
+        return this.read.http?.error404Path ?? Config.DEFAULT_HTTP_ERROR_404_PATH
     }
 }

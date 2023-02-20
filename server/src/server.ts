@@ -87,7 +87,15 @@ export class Server {
             }
         
             function setup404(this:Server) {
-                app.use((req, res) => res.status(404).send("Not Found"))
+                app.use((req, res) => {
+                    res.status(404).sendFile(config.httpError404Path, error => {
+                        if (!error)
+                            return
+
+                        this.logger?.error(error)
+                        res.end("Page Not Found")
+                    })
+                })
             }
         }
     }
