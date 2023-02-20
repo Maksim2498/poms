@@ -29,6 +29,7 @@ is considered an error):
 | `http.serveStatic`            | `boolean`     | `true`                        | No       | If `true` HTTP server will serve static content from `http.staticPath`             |
 | `http.staticPath`             | Path `string` | `<SITE_PATH>/build`           | No       | Path to static content HTTP server to serve                                        |
 | `http.error404Path`           | Path `string` | `<SITE_PATH>/public/404.html` | No       | Path to 404-error page                                                             |
+| `http.error500Path`           | Path `string` | `<SITE_PATH>/public/500.html` | No       | Path to 500-error page                                                             |
 | `mysql.database`              | `string`      | `poms`                        | No       | Name of database to use                                                            |
 | `mysql.host`                  | `string`      | `"localhost"`                 | No       | MySQL server address                                                               |
 | `mysql.port`                  | Port `number` | `3306`                        | No       | MySQL server port                                                                  |

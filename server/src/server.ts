@@ -1,5 +1,5 @@
 import { Server as HttpServer   } from "http"
-import { Application, Router    } from "express"
+import { Application, Router, Request, Response } from "express"
 import { Logger                 } from "winston"
 import { Connection, MysqlError } from "mysql"
 import { Config                 } from "./config"
@@ -46,6 +46,7 @@ export class Server {
             setupAPI.call(this)
             setupStatic.call(this)
             setup404.call(this)
+            setup500.call(this)
 
             function setupLogger(this: Server) {
                 app.use((req, res, next) => {
@@ -94,6 +95,20 @@ export class Server {
 
                         this.logger?.error(error)
                         res.end("Page Not Found")
+                    })
+                })
+            }
+
+            function setup500(this: Server) {
+                app.use((error: Error, req: Request, res: Response, next: () => void) => {
+                    logger?.error(error.message)
+
+                    res.status(500).sendFile(config.httpError500Path, error => {
+                        if (!error)
+                            return
+
+                        this.logger?.error(error)
+                        res.end("Internal Server Error")
                     })
                 })
             }

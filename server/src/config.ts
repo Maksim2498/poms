@@ -17,6 +17,7 @@ export interface ConfigJSON {
         serveStatic?:  boolean
         staticPath?:   string
         error404Path?: string
+        error500Path?: string
     }
 
     mysql: {
@@ -71,6 +72,7 @@ export class Config {
     static readonly DEFAULT_HTTP_SERVE_STATIC             = true
     static readonly DEFAULT_HTTP_STATIC_PATH              = this.placehold("<SITE_PATH>/build")
     static readonly DEFAULT_HTTP_ERROR_404_PATH           = this.placehold("<SITE_PATH>/public/404.html")
+    static readonly DEFAULT_HTTP_ERROR_500_PATH           = this.placehold("<SITE_PATH>/public/500.html")
 
     static readonly DEFAULT_MYSQL_DATABASE                = "poms"
     static readonly DEFAULT_MYSQL_HOST                    = "localhost"
@@ -235,6 +237,7 @@ export class Config {
                 { path: "http.serveStatic",            type: "boolean" },
                 { path: "http.staticPath",             type: "string"  },
                 { path: "http.error404Path",           type: "string"  },
+                { path: "http.error500Path",           type: "string"  },
 
                 // MySQL
                 { path: "mysql.database",              type: "string"  },
@@ -468,5 +471,9 @@ export class Config {
 
     get httpError404Path(): string {
         return this.read.http?.error404Path ?? Config.DEFAULT_HTTP_ERROR_404_PATH
+    }
+
+    get httpError500Path(): string {
+        return this.read.http?.error500Path ?? Config.DEFAULT_HTTP_ERROR_500_PATH
     }
 }
