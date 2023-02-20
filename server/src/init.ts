@@ -142,8 +142,8 @@ async function initDatabaseObjects(options: InitDatabaseObjectsOptions) {
 
     if (created)
         await createTablesAndEvents(options) 
-    else if (config.logicValidateTables) {
-        const validateOptions = { recreateOnInvalid: config.logicRecreateInvalidTables, ...options}
+    else if (config.mysqlValidateTables) {
+        const validateOptions = { recreateOnInvalid: config.mysqlRecreateInvalidTables, ...options}
         const tables          = await s.showTables(options)
         let   recreatedAll    = false
 

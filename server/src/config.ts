@@ -19,12 +19,15 @@ export interface ConfigJSON {
     }
 
     mysql: {
-        database?:   string
-        host?:       string
-        port?:       number
-        socketPath?: string
-        login?:      string
-        password?:   string
+        database?:              string
+        host?:                  string
+        port?:                  number
+        socketPath?:            string
+        login?:                 string
+        password?:              string
+        validateTables?:        boolean
+        recreateInvalidTables?: boolean
+        reconnectInterval?:     number
 
         init?: {
             login?:    string
@@ -39,9 +42,6 @@ export interface ConfigJSON {
 
     logic?: {
         createAdmin?:           boolean
-        validateTables?:        boolean
-        recreateInvalidTables?: boolean
-        reconnectInterval?:     number
         maxTokens?:             number
         maxNicknames?:          number
         buildStatic?:           boolean
@@ -73,11 +73,11 @@ export class Config {
     static readonly DEFAULT_MYSQL_DATABASE                = "poms"
     static readonly DEFAULT_MYSQL_HOST                    = "localhost"
     static readonly DEFAULT_MYSQL_PORT                    = 3306
+    static readonly DEFAULT_MYSQL_VALIDATE_TABLES         = true 
+    static readonly DEFAULT_MYSQL_RECREATE_INVALID_TABLES = false
+    static readonly DEFAULT_MYSQL_RECONNECT_INTERVAL      = 5
 
     static readonly DEFAULT_LOGIC_CREATE_ADMIN            = true
-    static readonly DEFAULT_LOGIC_VALIDATE_TABLES         = true 
-    static readonly DEFAULT_LOGIC_RECREATE_INVALID_TABLES = false
-    static readonly DEFAULT_LOGIC_RECONNECT_INTERVAL      = 5
     static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
     static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
@@ -240,6 +240,9 @@ export class Config {
                 { path: "mysql.socketPath",            type: "string"  },
                 { path: "mysql.login",                 type: "string"  },
                 { path: "mysql.password",              type: "string"  },
+                { path: "mysql.validateTables",        type: "boolean" },
+                { path: "mysql.recreateInvalidTables", type: "boolean" },
+                { path: "mysql.reconnectInterval",     type: "number"  },
                 { path: "mysql.init.login",            type: "string"  },
                 { path: "mysql.init.password",         type: "string"  },
                 { path: "mysql.serve.login",           type: "string"  },
@@ -247,9 +250,6 @@ export class Config {
 
                 // Logic
                 { path: "logic.createAdmin",           type: "boolean" },
-                { path: "logic.validateTables",        type: "boolean" },
-                { path: "logic.recreateInvalidTables", type: "boolean" },
-                { path: "logic.reconnectInterval",     type: "number"  },
                 { path: "maxTokens",                   type: "number"  },
                 { path: "maxNicknames",                type: "number"  },
                 { path: "buildStatic",                 type: "boolean" },
@@ -434,16 +434,16 @@ export class Config {
         return this.read.logic?.createAdmin ?? Config.DEFAULT_LOGIC_CREATE_ADMIN
     }
 
-    get logicValidateTables(): boolean {
-        return this.read.logic?.validateTables ?? Config.DEFAULT_LOGIC_VALIDATE_TABLES
+    get mysqlValidateTables(): boolean {
+        return this.read.mysql?.validateTables ?? Config.DEFAULT_MYSQL_VALIDATE_TABLES
     }
 
-    get logicRecreateInvalidTables(): boolean {
-        return this.read.logic?.recreateInvalidTables ?? Config.DEFAULT_LOGIC_RECREATE_INVALID_TABLES
+    get mysqlRecreateInvalidTables(): boolean {
+        return this.read.mysql?.recreateInvalidTables ?? Config.DEFAULT_MYSQL_RECREATE_INVALID_TABLES
     }
 
-    get logicReconnectInterval(): number {
-        return this.read.logic?.reconnectInterval ?? Config.DEFAULT_LOGIC_RECONNECT_INTERVAL
+    get mysqlReconnectInterval(): number {
+        return this.read.mysql?.reconnectInterval ?? Config.DEFAULT_MYSQL_RECONNECT_INTERVAL
     }
 
     get logicMaxTokens(): number {

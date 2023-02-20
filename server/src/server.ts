@@ -135,9 +135,9 @@ export class Server {
                     this.mysqlConnection = undefined
 
                     while (true) {
-                        this.logger?.info(`Trying to reconnect in ${this.config.logicReconnectInterval} seconds...`)
+                        this.logger?.info(`Trying to reconnect in ${this.config.mysqlReconnectInterval} seconds...`)
 
-                        await sleep(1000 * this.config.logicReconnectInterval)
+                        await sleep(1000 * this.config.mysqlReconnectInterval)
 
                         try {
                             const connection = this.config.createServeDBConnection() 

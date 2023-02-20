@@ -38,10 +38,10 @@ is considered an error):
 | `mysql.init.password`         | `string`      | -                   | No  (2)  | MySQL initialization user password                                                 |
 | `mysql.serve.login`           | `string`      | -                   | No  (2)  | MySQL serving user login                                                           |
 | `mysql.serve.password`        | `string`      | -                   | No  (2)  | MySQL serving user password                                                        |
+| `mysql.validateTables`        | `boolean`     | `true`              | No       | Enables database tables validation                                                 |
+| `mysql.recreateInvalidTables` | `boolean`     | `false`             | No       | Enables dropping of invalid tables and their recreation                            |
+| `mysql.reconnectInterval`     | `number`      | `5`                 | No       | Number of seconds between automatic reconnections to the database                  |
 | `logic.createAdmin`           | `boolean`     | `true`              | No       | Create default admin account on database initialization                            |
-| `logic.validateTables`        | `boolean`     | `true`              | No       | Enables database tables validation                                                 |
-| `logic.recreateInvalidTables` | `boolean`     | `false`             | No       | Enables dropping of invalid tables and their recreation                            |
-| `logic.reconnectInterval`     | `number`      | `5`                 | No       | Number of seconds between automatic reconnections to the database                  |
 | `logic.maxTokens`             | `number`      | `10`                | No       | Maximum number of tokens per user                                                  |
 | `logic.maxNicknames`          | `number`      | `5`                 | No       | Maximum number of nicknames per user                                               |
 | `logic.buildStatic`           | `boolean`     | `true`              | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |
