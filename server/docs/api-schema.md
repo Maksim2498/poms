@@ -6,6 +6,7 @@
 - [About](#about);
 - [Methods](#methods);
   - [Authentication](#authentication);
+  - [Deauthentication](#deauthentication);
   - [Get All Users Info](#get-all-users-info);
   - [Get User Info](#get-user-info);
   - [Get User Registration Info](#get-user-registration-info);
@@ -66,6 +67,18 @@ __Response__:
         exp:   number // number of seconds before token expiration
     }
 }
+```
+
+### Deauthentication
+
+Used for token deactivation.
+
+__Request__:
+
+```http
+POST /deauth
+
+Authorization Bearer <token>
 ```
 
 ### Get All Users Info
