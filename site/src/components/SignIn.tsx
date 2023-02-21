@@ -1,4 +1,5 @@
 import Button from "./Button"
+import Input  from "./Input"
 
 import { FormEvent, useState } from "react"
 
@@ -10,37 +11,38 @@ export type Props = {
 }
 
 export default function SignIn(props: Props) {
-    const [login,         setLogin         ] = useState("")
-    const [password,      setPassword      ] = useState("")
-    const [loginError,    setLoginError    ] = useState(undefined as undefined | string)
-    const [passwordError, setPasswordError ] = useState(undefined as undefined | string)
-    const [typedLogin,    setTypedLogin    ] = useState(false)
-    const [typedPassword, setTypedPassword ] = useState(false)
+    const [login,           setLogin           ] = useState("")
+    const [password,        setPassword        ] = useState("")
+    const [loginError,      setLoginError      ] = useState(undefined as undefined | string)
+    const [passwordError,   setPasswordError   ] = useState(undefined as undefined | string)
+    const [loginChanged,    setLoginChanged    ] = useState(false)
+    const [passwordChanged, setPasswordChanged ] = useState(false)
 
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+        props.onSignIn?.(login, password)
     }
 
-    const onLoginInput = (e: FormEvent<HTMLInputElement>) => {
+    const onLoginChange = (e: FormEvent<HTMLInputElement>) => {
         const login = e.currentTarget.value
         const error = validateLogin(login)
 
         setLoginError(error)
-        setTypedLogin(true)
+        setLoginChanged(true)
         setLogin(login)
     }
 
-    const onPasswordInput = (e: FormEvent<HTMLInputElement>) => {
+    const onPasswordChange = (e: FormEvent<HTMLInputElement>) => {
         const password = e.currentTarget.value
         const error    = validatePassword(password)
 
         setPasswordError(error)
-        setTypedPassword(true)
+        setPasswordChanged(true)
         setPassword(password)
     }
 
-    const disabled = !typedLogin
-                  || !typedPassword
+    const disabled = !loginChanged
+                  || !passwordChanged
                   || loginError    != null
                   || passwordError != null
 
@@ -48,38 +50,28 @@ export default function SignIn(props: Props) {
         <fieldset> 
             <legend>Sign In</legend>
 
-            <input className   = {className("login", loginError)}
-                   type        = "text"
-                   placeholder = "Login"
+            <Input type        = "text"
+                   invalid     = {loginError != null}
                    value       = {login}
-                   onInput     = {onLoginInput} />
+                   onChange    = {onLoginChange}
+                   placeholder = "Login" />
 
             {errorMessge(loginError)}
 
-            <input className   = {className("password", passwordError)}
-                   type        = "password"
-                   placeholder = "Password"
+            <Input type        = "password"
+                   invalid     = {passwordError != null}
                    value       = {password}
-                   onInput     = {onPasswordInput} />
+                   onChange    = {onPasswordChange}
+                   placeholder = "Password" />
 
             {errorMessge(passwordError)}
 
             <div className="buttons">
                 <Button type="cancel" onClick={props.onCancel}>Cancel</Button>
-
-                <Button type      = "submit"
-                        makeInput = {true}
-                        disabled  = {disabled}
-                        onClick   = {() => props.onSignIn?.(login, password)}>
-                    Sign In
-                </Button>
+                <Input type="submit" value="Sign In" disabled={disabled} />
             </div>
         </fieldset>
     </form>
-
-    function className(base: string, error: any): string {
-        return error == null ? base : base + " error"
-    }
 
     function errorMessge(message?: string) {
         if (!message)

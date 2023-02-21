@@ -1,0 +1,32 @@
+.Input {
+    padding: .75rem;
+    font-size: .9rem;
+    border-radius: .2rem;
+    border: thin solid #666;
+    color: black
+}
+
+.error.Input {
+    border: thin solid red
+}
+
+.Input[type=submit] {
+    background-color: #484848;
+    color: #18E818
+}
+
+.Input[type=submit]:hover {
+    background-color: #555;
+    color: #2F2
+}
+
+.Input[type=submit]:active {
+    background-color: #444;
+    color: #1E1
+}
+
+.Input[type=submit]:disabled {
+    border: thin solid #444;
+    background-color: #333;
+    color: #0D0
+}
