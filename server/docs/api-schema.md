@@ -78,7 +78,7 @@ __Request__:
 ```http
 POST /deauth
 
-Authorization Bearer <token>
+Authorization: Bearer <token>
 ```
 
 ### Get All Users Info
