@@ -18,9 +18,16 @@ export default function SignIn(props: Props) {
     const [loginChanged,    setLoginChanged    ] = useState(false)
     const [passwordChanged, setPasswordChanged ] = useState(false)
 
+    const disabled = !loginChanged
+                  || !passwordChanged
+                  || loginError    != null
+                  || passwordError != null
+
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        props.onSignIn?.(login, password)
+
+        if (!disabled)
+            props.onSignIn?.(login, password)
     }
 
     const onLoginChange = (e: FormEvent<HTMLInputElement>) => {
@@ -40,11 +47,6 @@ export default function SignIn(props: Props) {
         setPasswordChanged(true)
         setPassword(password)
     }
-
-    const disabled = !loginChanged
-                  || !passwordChanged
-                  || loginError    != null
-                  || passwordError != null
 
     return <form className="SignIn" onSubmit={onSubmit}>
         <fieldset> 
@@ -68,7 +70,7 @@ export default function SignIn(props: Props) {
 
             <div className="buttons">
                 <Button type="cancel" onClick={props.onCancel}>Cancel</Button>
-                <Input type="submit" value="Sign In" disabled={disabled} />
+                <Button type="submit" disabled={disabled}>Sign In</Button>
             </div>
         </fieldset>
     </form>

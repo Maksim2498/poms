@@ -10,9 +10,12 @@ export type Props = {
 }
 
 export default function Button(props: Props) {
-    return <button className = {`${props.type ?? DEFAULT_TYPE} Button`}
-                   onClick   = {props.onClick}
-                   disabled  = {props.disabled}>
+    const type = props.type ?? DEFAULT_TYPE
+
+    return <button className = {`${type} Button`                             }
+                   type      = {props.type === "submit" ? "submit" : "button"}
+                   onClick   = {props.onClick                                }
+                   disabled  = {props.disabled                               }>
         {props.children}
     </button>
 }
