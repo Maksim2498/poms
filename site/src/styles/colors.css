@@ -1,0 +1,10 @@
+:root {
+    --background-color: black;
+    --color: white;
+    --header-background-color: #151515;
+    --button-background-color: dimgray;
+    --button-color: white;
+    --button-hover-background-color: #555;
+    --button-active-background-color: #444;
+    --button-disabled-background-color: #333
+}

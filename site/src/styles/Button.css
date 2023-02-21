@@ -1,0 +1,76 @@
+/* Common */
+
+.Button {
+    background-color: #484848;
+    border: thin solid #666;
+    padding: .75rem;
+    font-size: .9rem;
+    border-radius: .2rem
+}
+
+.Button:hover {
+    background-color: #555
+}
+
+.regular.Button:active {
+    background-color: #444
+}
+
+.Button:disabled {
+    border: thin solid #444;
+    background-color: #333
+}
+
+/* Regular */
+
+.regular.Button {
+    color: #E8E8E8
+}
+
+.regular.Button:hover {
+    color: #FFF
+}
+
+.regular.Button:active {
+    color: #EEE
+}
+
+.regular.Button:disabled {
+    color: #DDD
+}
+
+/* Submit */
+
+.submit.Button {
+    color: #18E818
+}
+
+.submit.Button:hover {
+    color: #2F2
+}
+
+.submit.Button:active {
+    color: #1E1
+}
+
+.submit.Button:disabled {
+    color: #0D0
+}
+
+/* Cancel */
+
+.cancel.Button {
+    color: #E81818
+}
+
+.cancel.Button:hover {
+    color: #F22
+}
+
+.cancel.Button:active {
+    color: #E11
+}
+
+.cancel.Button {
+    color: #D00
+}

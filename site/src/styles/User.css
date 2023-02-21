@@ -1,0 +1,8 @@
+.signed-in.User {
+    display: flex;
+    align-items: center;
+}
+
+.signed-in.User > * {
+    margin: 0 1rem;
+}

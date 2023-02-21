@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react"
 
-import "./style.css"
+import "styles/AppearingMessage.css"
 
 export const DEFAULT_TICK        = 80
 export const DEFAULT_CURSOR      = "_"
 export const DEFUALT_CURSOR_TICK = 500
 
-export interface Props {
+export type Props = {
     text:        string
     tick?:       number
     cursor?:     string
@@ -35,7 +35,7 @@ export default function AppearingMessage(props: Props) {
     })
 
     const [showCursor, setShowCursor] = useState(true)
-    const cursorStub                  = cursor.replaceAll(/./g, " ")
+    const cursorStub                  = " ".repeat(cursor.length)
 
     useEffect(() => {
         const interval = setInterval(() => setShowCursor(!showCursor), cursorTick)

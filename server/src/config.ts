@@ -71,8 +71,8 @@ export class Config {
     static readonly DEFAULT_HTTP_PORT                     = 8000
     static readonly DEFAULT_HTTP_SERVE_STATIC             = true
     static readonly DEFAULT_HTTP_STATIC_PATH              = this.placehold("<SITE_PATH>/build")
-    static readonly DEFAULT_HTTP_ERROR_404_PATH           = this.placehold("<SITE_PATH>/public/404.html")
-    static readonly DEFAULT_HTTP_ERROR_500_PATH           = this.placehold("<SITE_PATH>/public/500.html")
+    static readonly DEFAULT_HTTP_ERROR_404_PATH           = this.placehold("<SITE_PATH>/build/404.html")
+    static readonly DEFAULT_HTTP_ERROR_500_PATH           = this.placehold("<SITE_PATH>/build/500.html")
 
     static readonly DEFAULT_MYSQL_DATABASE                = "poms"
     static readonly DEFAULT_MYSQL_HOST                    = "localhost"
