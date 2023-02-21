@@ -5,6 +5,8 @@ import { useState           } from "react"
 import { Show as ShowMain   } from "components/Main"
 import { Show as ShowHeader } from "components/Header"
 
+import "./App.css"
+
 export default function App() {
     const [name,       setName      ] = useState("Anonymous")
     const [showMain,   setShowMain  ] = useState("greeting" as ShowMain  )

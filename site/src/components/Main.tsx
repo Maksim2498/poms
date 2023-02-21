@@ -32,7 +32,7 @@ export default function Main(props: Props) {
                 return <SignIn onSignIn={anyProps.onSignIn} onCancel={anyProps.onCancel} />
 
             case "user-panel":
-                return <UserPanel />
+                return <UserPanel isAdmin={true}/>
         }
     }
 }

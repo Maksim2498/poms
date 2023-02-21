@@ -1,0 +1,16 @@
+.UserPanel {
+    height: 100%
+}
+
+.UserPanel .content-selector {
+    background-color: #202020;
+    width: 10rem;
+    height: 100%;
+}
+
+.UserPanel .content-selector .Button {
+    width: 100%;
+    border: none;
+    border-bottom: thin solid black;
+    border-radius: 0
+}

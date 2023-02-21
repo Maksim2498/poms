@@ -1,3 +1,7 @@
+.Main {
+    height: 100%
+}
+
 .Main > .SignIn {
     position: absolute;
     left: 50%;
