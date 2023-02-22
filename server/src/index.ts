@@ -1,10 +1,10 @@
-import winston from "winston"
-
 import { dirname     } from "path"
 import { LoggedError } from "./util/error"
-import { Config      } from "./config"
-import { init        } from "./init"
-import { Server      } from "./server"
+
+import winston from "winston"
+import Config  from "./Config"
+import init    from "./init"
+import Server  from "./Server"
 
 const logger = winston.createLogger({
     format:     winston.format.cli(),

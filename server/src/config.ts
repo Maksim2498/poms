@@ -56,7 +56,7 @@ export interface ReadConfigFromFileOptions {
     logger?: Logger
 }
 
-export class Config {
+export default class Config {
     static readonly POMS_PATH                             = dirname(dirname(__dirname)) // this file is in /server/src/
     static readonly PLUGIN_PATH                           = join(this.POMS_PATH, "plugin")
     static readonly SERVER_PATH                           = join(this.POMS_PATH, "server")

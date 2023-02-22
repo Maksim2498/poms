@@ -2,9 +2,9 @@ import { promises as fsp } from "fs"
 import { Connection      } from "mysql"
 import { Logger          } from "winston"
 import { DeepReadonly    } from "util/type"
-import { Config          } from "./config"
 
-import cp from "child_process"
+import cp     from "child_process"
+import Config from "./Config"
 
 import * as am    from "./util/mysql/async"
 import * as s     from "./util/mysql/statement"
@@ -66,7 +66,7 @@ export interface InitOptions {
     logger?: Logger
 }
 
-export async function init(options: InitOptions) {
+export default async function init(options: InitOptions) {
     await initStatic(options)
     await initDatabase(options)
 }

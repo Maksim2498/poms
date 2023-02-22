@@ -1,20 +1,21 @@
-import { Server as HttpServer   } from "http"
+import { Server as HttpServer                   } from "http"
 import { Application, Router, Request, Response } from "express"
-import { Logger                 } from "winston"
-import { Connection, MysqlError } from "mysql"
-import { Config                 } from "./config"
+import { Logger                                 } from "winston"
+import { Connection, MysqlError                 } from "mysql"
 
 import shortUUID from "short-uuid"
-import express  from "express"
+import express   from "express"
+import sleep     from "util/sleep"
+import Config    from "./Config"
+
 import * as am  from "./util/mysql/async"
-import sleep    from "util/sleep"
 
 export interface ServerOptions {
     config:  Config
     logger?: Logger
 }
 
-export class Server {
+export default class Server {
     private readonly expressApp:       Application
     private          httpServer?:      HttpServer
     private          mysqlConnection?: Connection
