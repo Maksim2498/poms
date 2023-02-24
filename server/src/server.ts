@@ -168,7 +168,6 @@ export default class Server {
         initRunPromise.call(this)
         await this.mysqlConnection.connect()
         await listen.call(this)
-
         await onStarted(this)
 
         return await this.runPromise
