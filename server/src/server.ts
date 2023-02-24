@@ -2,6 +2,7 @@ import { Server as HttpServer                   } from "http"
 import { Application, Router, Request, Response } from "express"
 import { Logger                                 } from "winston"
 
+import open             from "open"
 import shortUuid       from "short-uuid"
 import express         from "express"
 import AsyncConnection from "util/mysql/AsyncConnection"
@@ -143,7 +144,7 @@ export default class Server {
             && this.mysqlConnection.state === "online"
     }
 
-    async start() {
+    async start(started: () => void = () => open(this.config.httpAddress)) {
         if (this.running)
             return
 
@@ -155,6 +156,8 @@ export default class Server {
         initRunPromise.call(this)
         await this.mysqlConnection.connect()
         listen.call(this)
+
+        started()
 
         return await this.runPromise
 

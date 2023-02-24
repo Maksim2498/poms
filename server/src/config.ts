@@ -359,7 +359,7 @@ export default class Config {
         return `${host}:${port}`
     }
 
-    get httpAddress(): string {
+    get httpApiAddress(): string {
         const api    = this.read.http
         const host   = api?.host   ?? Config.DEFAULT_HTTP_HOST
         const prefix = api?.prefix ?? Config.DEFAULT_HTTP_PREFIX
@@ -370,6 +370,18 @@ export default class Config {
         const port = api?.port ?? Config.DEFAULT_HTTP_PORT
 
         return `http://${host}:${port}${prefix}/`
+    }
+
+    get httpAddress(): string {
+        const api    = this.read.http
+        const host   = api?.host ?? Config.DEFAULT_HTTP_HOST
+
+        if (api?.socketPath != null)
+            return `http://unix:${api.socketPath}/`
+
+        const port = api?.port ?? Config.DEFAULT_HTTP_PORT
+
+        return `http://${host}:${port}/`
     }
 
     get mysqlUseInitUser(): boolean {
