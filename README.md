@@ -1,6 +1,6 @@
 # POMS - Personal Offline Minecraft Server
 
-\<There will be an image>
+![Logo](/images/logo.png)
 
 ## Index
 
