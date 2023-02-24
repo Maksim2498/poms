@@ -79,34 +79,10 @@ export default class Server {
                 function createRouter(this: Server): Router {
                     const router = Router()
 
-                    // POST
-
-                    router.post("/auth",                  api.auth.bind(this))
-                    router.post("/deauth",                api.deauth.bind(this))
-                    router.post("/users/:user/:nickname", api.addUserNickname.bind(this))
-                    router.post("/users/:user",           api.addUser.bind(this))
-
-                    // GET
-
-                    router.get("/users",                 api.getAllUsers.bind(this))
-                    router.get("/users/:user",           api.getUser.bind(this))
-                    router.get("/users/:user/reg",       api.getUserReg.bind(this))
-                    router.get("/users/:user/reg/time",  api.getUserRegTime.bind(this))
-                    router.get("/users/:user/reg/user",  api.getUserRegUser.bind(this))
-                    router.get("/users/:user/name",      api.getUserName.bind(this))
-                    router.get("/users/:user/nicknames", api.getUserNicknames.bind(this))
-
-                    // DELETE
-
-                    router.delete("/users",                           api.deleteAllUsers.bind(this))
-                    router.delete("/users/:user",                     api.deleteUser.bind(this))
-                    router.delete("/users/:user/nicknames",           api.deleteAllUserNicknames.bind(this))
-                    router.delete("/users/:user/nicknames/:nickname", api.deleteUserNickname.bind(this))
-
-                    // PUT
-
-                    router.put("/users/:user/name",     api.updateUserName.bind(this))
-                    router.put("/users/:user/password", api.updateUserPassword.bind(this))
+                    for (const unitName in api) {
+                        const unit = (api as any)[unitName] as api.Unit
+                        router[unit.method](unit.path, unit.handler.bind(this))
+                    }
 
                     return router
                 }
