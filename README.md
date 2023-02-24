@@ -92,7 +92,8 @@ This method is universal and isn't dependent on your operating system.
 Run the following commands in your terminal:
 
 ```sh
-cd server; node start
+cd server
+node start
 ```
 
 ## Documentation
