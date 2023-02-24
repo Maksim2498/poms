@@ -1,79 +1,33 @@
-import { promises as fsp } from "fs"
-import { Connection      } from "mysql"
-import { Logger          } from "winston"
-import { DeepReadonly    } from "util/type"
+import { promises as fsp                            } from "fs"
+import { dirname                                    } from "path"
+import { Logger                                     } from "winston"
+import { USERS_TABLE, NICKNAMES_TABLE, TOKENS_TABLE } from "./db-schema"
 
-import cp     from "child_process"
-import Config from "./Config"
+import cp              from "child_process"
+import AsyncConnection from "./util/mysql/AsyncConnection"
+import LoggedError     from "./util/LoggedError"
+import Config          from "./Config"
 
-import * as am    from "./util/mysql/async"
-import * as s     from "./util/mysql/statement"
-import * as t     from "./util/mysql/type"
-import * as e     from "./util/error"
-import * as logic from "./logic"
+import * as s from "./util/mysql/statement"
+import * as t from "./util/mysql/Table"
+import * as l from "./logic"
 
-const USERS_TABLE: DeepReadonly<t.Table> = {
-    name: "Users",
 
-    columns: [
-        { name: "id",            type: t.bigint,         primaryKey: true,                  autoIncement: true },
-        { name: "login",         type: t.mkVarchar(255), unique:     true                                      },
-        { name: "name",          type: t.mkVarchar(255), nullable:   true                                      },
-        { name: "cr_id",         type: t.bigint,         nullable:   true                                      },
-        { name: "cr_time",       type: t.timestamp,      defaultValue: t.current_timestamp                     },
-        { name: "password_hash", type: t.mkBinary(64)                                                          },
-        { name: "is_admin",      type: t.boolean,        defaultValue: false                                   },
-        { name: "is_online",     type: t.boolean,        defaultValue: false                                   }
-    ],
-    
-    constraints: [
-        { type: "foreign_key", field: "cr_id", refTable: "Users", refField: "id", onDelete: "null" }
-    ]
+export default async function init(config: Config, logger?: Logger) {
+    initWorkingDirectory(config, logger)
+    await initStatic(config, logger)
+    await initDatabase(config, logger)
 }
 
-const NICKNAMES_TABLE: DeepReadonly<t.Table> = {
-    name: "Nicknames",
+function initWorkingDirectory(config: Config, logger?: Logger) {
+    const wd = dirname(config.path)
 
-    columns: [
-        { name: "user_id",  type: t.bigint                       },
-        { name: "nickname", type: t.mkVarchar(255), unique: true }
-    ],
-
-    constraints: [
-        { type: "primary_key", fields: ["user_id", "nickname"]                     },
-        { type: "foreign_key", field: "user_id", refTable: "Users", refField: "id" }
-    ]
+    logger?.info(`Setting working directory to ${wd}...`)
+    process.chdir(wd)
+    logger?.info("Set")
 }
 
-const TOKENS_TABLE: DeepReadonly<t.Table> = {
-    name: "Tokens",
-
-    columns: [
-        { name: "id",       type: t.mkBinary(64),                primaryKey: true                  },
-        { name: "user_id",  type: t.bigint                                                         },
-        { name: "exp_time", type: t.timestamp                                                      },
-        { name: "cr_time",  type: t.timestamp,                   defaultValue: t.current_timestamp },
-        { name: "type",     type: t.mkEnum("access", "refresh")                                    }
-    ],
-
-    constraints: [
-        { type: "foreign_key", field: "user_id", refTable: "Users", refField: "id" }
-    ]
-}
-
-export interface InitOptions {
-    config:  Config
-    logger?: Logger
-}
-
-export default async function init(options: InitOptions) {
-    await initStatic(options)
-    await initDatabase(options)
-}
-
-async function initStatic(options: InitOptions) {
-    const { config, logger } = options
-
+async function initStatic(config: Config, logger?: Logger) {
     if (!config.logicBuildStatic)
         return
 
@@ -106,200 +60,81 @@ async function initStatic(options: InitOptions) {
     logger?.info("Static content is successfully initilized")
 }
 
-async function initDatabase(options: InitOptions) {
-    const { config, logger } = options
-
+async function initDatabase(config: Config, logger?: Logger) {
     logger?.info("Initializing database...")
 
-    const connection = config.createInitDBConnection()
+    const connection = AsyncConnection.fromConfigInitUser(config, logger)
 
-    await am.connect({ connection, logger, address: config.mysqlAddress })
+    await connection.connect()
 
     try {
-        await initDatabaseObjects({ connection, config, logger })
+        await initDatabaseObjects(connection, config)
     } finally {
-        await am.disconnect({ connection, logger })
+        await connection.disconnect()
     }
 
     logger?.info("Database is successfully initialized")
 }
 
-interface InitDatabaseObjectsOptions {
-    connection: Connection
-    logger?:    Logger
-    config:     Config
-}
-
-async function initDatabaseObjects(options: InitDatabaseObjectsOptions) {
-    const { connection, config, logger } = options
-
-    const created = await s.createDatabase({ 
-        connection,
-        logger,
-        name: config.mysqlDatabase,
-        use:  true
-    })
+async function initDatabaseObjects(connection: AsyncConnection, config: Config) {
+    const created = await s.createDatabase(connection, config.mysqlDatabase, true)
 
     if (created)
-        await createTablesAndEvents(options) 
-    else if (config.mysqlValidateTables) {
-        const validateOptions = { recreateOnInvalid: config.mysqlRecreateInvalidTables, ...options}
-        const tables          = await s.showTables(options)
-        let   recreatedAll    = false
-
-        if (tables.includes("users"))
-            recreatedAll = !await validateUsersTable(validateOptions)
-        else
-            await createUsersTable(options)
-
-        if (!recreatedAll) {
-            if (tables.includes("nicknames"))
-                await validateNicknamesTable(validateOptions)
-            else
-                await createNicknamesTable(options)
-
-            if (tables.includes("tokens"))
-                await validateTokensTable(validateOptions)
-            else
-                await createTokensTable(options)
-        }
-    }
+        await createTablesAndEvents(connection) 
+    else if (config.mysqlValidateTables)
+        await validateTablesAndEvents(connection, !config.mysqlRecreateInvalidTables)
 
     if (config.logicCreateAdmin)
-        await logic.createAdmin(options)
+        await l.createAdmin({ connection })
 }
 
-interface ValidateSpecificTableOptions {
-    connection:        Connection
-    logger?:           Logger
-    recreateOnInvalid: boolean
+async function createTablesAndEvents(connection: AsyncConnection) {
+    await USERS_TABLE.create(connection)
+    await NICKNAMES_TABLE.create(connection)
+    await TOKENS_TABLE.create(connection)
+    await createCleanUpEvent(connection)
 }
 
-async function validateUsersTable(options: ValidateSpecificTableOptions): Promise<boolean> {
-    const { connection, logger, recreateOnInvalid } = options
+async function createCleanUpEvent(connection: AsyncConnection) {
+    connection.logger?.info(`Creating event "CleanUp"...`)
 
-    const valid = await validateTable({ 
-        connection,
-        logger,
-        table:           USERS_TABLE,
-        throwOnInvalid: !recreateOnInvalid
-    })
+    await connection.query("CREATE EVENT CleanUp "
+                         + "ON SCHEDULE EVERY 1 DAY "
+                         + "DO DELETE FROM tokens WHERE exp >= now()")
 
-    if (valid)
-        return true
-
-    await dropTokensTable(options)
-    await dropNicknamesTable(options)
-    await dropUsersTable(options)
-
-    await createUsersTable(options)
-    await createNicknamesTable(options)
-    await createTokensTable(options)
-
-    return false
+    connection.logger?.info("Created")
 }
 
-async function validateNicknamesTable(options: ValidateSpecificTableOptions) {
-    const { connection, logger, recreateOnInvalid } = options
+// Doesn't validate events yet
 
-    const valid = await validateTable({ 
-        connection,
-        logger,
-        table:           NICKNAMES_TABLE,
-        throwOnInvalid: !recreateOnInvalid
-    })
+async function validateTablesAndEvents(connection: AsyncConnection, throwOnInvalid: boolean) {
+    const tables = await s.showTables(connection)
 
-    if (!valid) {
-        await dropNicknamesTable(options)
-        await createNicknamesTable(options)
+    if (await handleTable(USERS_TABLE))
+        return
+
+    await handleTable(NICKNAMES_TABLE)
+    await handleTable(TOKENS_TABLE)
+
+    async function handleTable(table: t.ReadonlyTable): Promise<boolean> {
+        if (tables.includes(table.name))
+            return !await validateTable(connection, table, throwOnInvalid)
+
+        await table.create(connection)
+        return false
     }
 }
 
-async function validateTokensTable(options: ValidateSpecificTableOptions) {
-    const { connection, logger, recreateOnInvalid } = options
-
-    const valid = await validateTable({ 
-        connection,
-        logger,
-        table:           TOKENS_TABLE,
-        throwOnInvalid: !recreateOnInvalid
-    })
-
-    if (!valid) {
-        await dropTokensTable(options)
-        await createTokensTable(options)
-    }
-}
-
-interface ValidateTableOptions {
-    connection:     Connection
-    logger?:        Logger
-    table:          DeepReadonly<t.Table>
-    throwOnInvalid: boolean
-}
-
-async function validateTable(options: ValidateTableOptions): Promise<boolean> {
-    const valid = await s.isTableValid({ ...options, logInvalidAsError: options.throwOnInvalid })
-
-    if (valid)
+async function validateTable(connection: AsyncConnection, table: t.ReadonlyTable, throwOnInvalid?: boolean): Promise<boolean> {
+    if (await table.isValid(connection, throwOnInvalid))
         return true
 
-    if (options.throwOnInvalid)
-        throw e.fromMessage("Aborting. "
-                          + "You can turn off validation or enable automatic fixing of invalid tables. "
-                          + "See documentation on configuration for more info", options.logger)
+    if (throwOnInvalid)
+        throw LoggedError.fromMessage("Aborting. "
+                                    + "You can turn off validation or enable automatic fixing of invalid tables. "
+                                    + "See documentation on configuration for more info", connection.logger)
+
+    await table.recreate(connection)
 
     return false
-}
-
-interface SetupDatabaseObjectOptions {
-    connection: Connection
-    logger?:    Logger
-}
-
-async function dropUsersTable(options: SetupDatabaseObjectOptions) {
-    await s.dropTable({ ...options, name: "Users" })
-}
-
-async function dropNicknamesTable(options: SetupDatabaseObjectOptions) {
-    await s.dropTable({ ...options, name: "Nicknames" })
-}
-
-async function dropTokensTable(options: SetupDatabaseObjectOptions) {
-    await s.dropTable({ ...options, name: "Tokens" })
-}
-
-async function createTablesAndEvents(options: SetupDatabaseObjectOptions) {
-    await createUsersTable(options)
-    await createNicknamesTable(options)
-    await createTokensTable(options)
-    await createCleanUpEvent(options)
-}
-
-async function createUsersTable(options: SetupDatabaseObjectOptions) {
-    await s.createTable({ ...options, table: USERS_TABLE     })
-}
-
-async function createNicknamesTable(options: SetupDatabaseObjectOptions) {
-    await s.createTable({ ...options, table: NICKNAMES_TABLE })
-}
-
-async function createTokensTable(options: SetupDatabaseObjectOptions) {
-    await s.createTable({ ...options, table: TOKENS_TABLE })
-}
-
-async function createCleanUpEvent(options: SetupDatabaseObjectOptions) {
-    const { connection, logger } = options
-
-    logger?.info(`Creating event "CleanUp"...`)
-
-    await am.query({
-        connection,
-        logger,
-        sql: "CREATE EVENT CleanUp "
-           + "ON SCHEDULE EVERY 1 DAY "
-           + "DO DELETE FROM tokens WHERE exp >= now()"
-    })
-
-    logger?.info("Created")
 }

@@ -1,45 +1,32 @@
 import { Server as HttpServer                   } from "http"
 import { Application, Router, Request, Response } from "express"
 import { Logger                                 } from "winston"
-import { Connection, MysqlError                 } from "mysql"
 
-import shortUUID from "short-uuid"
-import express   from "express"
-import sleep     from "util/sleep"
-import Config    from "./Config"
-
-import * as am  from "./util/mysql/async"
-
-export interface ServerOptions {
-    config:  Config
-    logger?: Logger
-}
+import shortUuid       from "short-uuid"
+import express         from "express"
+import AsyncConnection from "util/mysql/AsyncConnection"
+import Config          from "./Config"
 
 export default class Server {
-    private readonly expressApp:       Application
-    private          httpServer?:      HttpServer
-    private          mysqlConnection?: Connection
+    private readonly expressApp:  Application
+    private          httpServer?: HttpServer
 
     private runPromise?:        Promise<void>
     private resolveRunPromise?: () => void
     private rejectRunPromise?:  (value: any) => void // For critical errors only
 
-    readonly config:  Config
-    readonly logger?: Logger
+    readonly mysqlConnection: AsyncConnection
+    readonly config:          Config
+    readonly logger?:         Logger
 
-    constructor(options: ServerOptions) {
-        const { config, logger } = options
+    constructor(config: Config, logger?: Logger) {
+        this.mysqlConnection = AsyncConnection.fromConfigServeUser(config, logger)
+        this.config          = config
+        this.logger          = logger
+        this.expressApp      = createExpressApp.call(this)
 
-        this.expressApp = express()
-        this.config     = config
-        this.logger     = logger
-
-        setupExpressApp.call(this)
-
-        return
-
-        function setupExpressApp(this: Server) {
-            const app = this.expressApp
+        function createExpressApp(this: Server): Application {
+            const app = express()
 
             if (this.logger)
                 setupLogger.call(this)
@@ -49,9 +36,11 @@ export default class Server {
             setup404.call(this)
             setup500.call(this)
 
+            return app
+
             function setupLogger(this: Server) {
                 app.use((req, res, next) => {
-                    (req as any).id = shortUUID.generate()
+                    (req as any).id = shortUuid.generate()
                     next()
                 })
 
@@ -116,12 +105,17 @@ export default class Server {
         }
     }
 
-    get available(): boolean {
-        return this.runPromise != null && this.mysqlConnection != null
+    get running(): boolean {
+        return this.runPromise != null
+    }
+
+    get isApiAvailable(): boolean {
+        return this.running
+            && this.mysqlConnection.state === "online"
     }
 
     async start() {
-        if (this.runPromise)
+        if (this.running)
             return
 
         this.logger?.info(
@@ -130,54 +124,15 @@ export default class Server {
         )
 
         initRunPromise.call(this)
-        await setupMysqlConnection.call(this)
+        await this.mysqlConnection.connect()
         listen.call(this)
 
-        return await (this.runPromise as unknown as Promise<void>)
+        return await this.runPromise
 
         function initRunPromise(this: Server) {
             this.runPromise = new Promise<void>((resolve, reject) => {
                 this.resolveRunPromise = resolve
                 this.rejectRunPromise  = reject
-            })
-        }
-
-        async function setupMysqlConnection(this: Server) {
-            this.mysqlConnection = this.config.createServeDBConnection()
-
-            await am.connect({ 
-                connection: this.mysqlConnection,
-                logger:     this.logger,
-                address:    this.config.mysqlAddress
-            })
-
-            this.mysqlConnection.on("error", async (error: MysqlError) => {
-                if (error.fatal) {
-                    this.logger?.error("Lost connection with database")
-
-                    this.mysqlConnection?.destroy()
-                    this.mysqlConnection = undefined
-
-                    while (true) {
-                        this.logger?.info(`Trying to reconnect in ${this.config.mysqlReconnectInterval} seconds...`)
-
-                        await sleep(1000 * this.config.mysqlReconnectInterval)
-
-                        try {
-                            const connection = this.config.createServeDBConnection() 
-
-                            await am.connect({ 
-                                connection,
-                                logger:  this.logger,
-                                address: this.config.mysqlAddress
-                            })
-
-                            this.mysqlConnection = connection
-
-                            break
-                        } catch {}
-                    }
-                }
             })
         }
 
@@ -194,13 +149,12 @@ export default class Server {
     }
 
     async stop() {
-        if (!this.runPromise)
+        if (!this.running)
             return
 
         this.logger?.info("Stopping...")
 
-        if (this.mysqlConnection)
-            await am.disconnect({ connection: this.mysqlConnection, logger: this.logger })
+        await this.mysqlConnection.disconnect()
 
         this.httpServer?.close(error => {
             if (error)

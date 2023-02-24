@@ -1,9 +1,8 @@
-import { Connection, MysqlError } from "mysql"
-import { Logger                 } from "winston"
+import AsyncConnection from "util/mysql/AsyncConnection"
+import LoggedError     from "./util/LoggedError"
 
-import * as am from "./util/mysql/async"
-import * as s  from "./util/mysql/statement"
-import * as e  from "./util/error"
+import { ReadonlyTable, expr                        } from "util/mysql/Table"
+import { USERS_TABLE, NICKNAMES_TABLE, TOKENS_TABLE } from "./db-schema"
 
 export const DEFAULT_ADMIN_LOGIN    = "admin"
 export const DEFAULT_ADMIN_PASSWORD = "admin"
@@ -11,45 +10,42 @@ export const DEFAULT_ADMIN_PASSWORD = "admin"
 export type User = string | number
 
 export interface CreateAdminOptions {
-    connection: Connection
-    logger?:    Logger
+    connection: AsyncConnection
     login?:     string
     password?:  string
 }
 
 export async function createAdmin(options: CreateAdminOptions): Promise<boolean> {
-    const { logger, connection } = options
-    const login                  = options.login    ?? DEFAULT_ADMIN_LOGIN
-    const password               = options.password ?? DEFAULT_ADMIN_PASSWORD
+    const connection = options.connection
+    const login      = options.login    ?? DEFAULT_ADMIN_LOGIN
+    const password   = options.password ?? DEFAULT_ADMIN_PASSWORD
 
-    logger?.info(`Trying creating administrator "${login}"...`)
-    logger?.info(`Checking if user "${login}" exists...`)
+    connection.logger?.info(`Trying too create administrator "${login}"...`)
+    connection.logger?.info(`Checking if user "${login}" exists...`)
 
-    const info = await getUserInfo({ user: login, logger, connection })
+    const info = await getUserInfo(connection, login)
 
     if (info == null) {
-        logger?.info(`There is no user "${login}"`)
+        connection.logger?.info(`There is no user "${login}"`)
 
         return await createUser({
             connection,
-            logger,
             login,
             password,
             isAdmin: true
          })
     } else {
-        logger?.info(`User "${login}" already exists`)
+        connection.logger?.info(`User "${login}" already exists`)
 
         if (!info.isAdmin)
-            logger?.warn(`User "${login}" doesn\'t have admin rights`)
+            connection.logger?.warn(`User "${login}" doesn\'t have admin rights`)
 
         return false
     }
 }
 
 export interface CreateUserOptions {
-    connection: Connection
-    logger?:    Logger
+    connection: AsyncConnection
     login:      string
     password:   string
     name?:      string
@@ -58,28 +54,27 @@ export interface CreateUserOptions {
 } 
 
 export async function createUser(options: CreateUserOptions): Promise<boolean> {
-    const { connection, logger, password, name, isAdmin, creator } = options
-    const login                                                    = normalizeLogin(options.login)
+    const { connection, login, password, name, isAdmin, creator } = options
 
-    logger?.info(`Creaing user "${login}"...`)
+    connection.logger?.info(`Creaing user "${login}"...`)
 
     if (!isLoginValid(login))
-        throw e.fromMessage(`Login "${login}" is invalid`, logger)
+        throw LoggedError.fromMessage(`Login "${login}" is invalid`, connection.logger)
 
     let creatorId: number | undefined
 
     switch (typeof creator) {
         case "string":
             if (!isLoginValid(creator))
-                throw e.fromMessage(`Creator login "${creator}" is invalid`, logger)
+                throw LoggedError.fromMessage(`Creator login "${creator}" is invalid`, connection.logger)
 
-            const creatorInfo = await getUserInfo({ connection, logger, user: creator })
+            const creatorInfo = await getUserInfo(connection, creator)
 
             if (!creatorInfo)
-                throw e.fromMessage(`Cannot find creator. There is no user "${creator}"`)
+                throw LoggedError.fromMessage(`Cannot find creator. There is no user "${creator}"`, connection.logger)
 
             if (!creatorInfo.isAdmin)
-                throw e.fromMessage(`Only admin can be a creator of another user. "${creator}" isn't an admin`)
+                throw LoggedError.fromMessage(`Only admin can be a creator of another user. "${creator}" isn't an admin`, connection.logger)
 
             creatorId = creatorInfo.id
 
@@ -89,153 +84,68 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
             creatorId = creator
     }
 
-    const created = await am.query({
-        connection,
-        logger,
-        sql:       'INSERT INTO Users (login, name, cr_id, password_hash, is_admin) VALUES (?, ?, ?, UNHEX(SHA2(?, 512)), ?)',
-        values:    [login, name, creatorId, `${login}:${password}`, isAdmin],
-        onError:   (error: MysqlError) => error.code === "ER_DUP_ENTRY" ? false : undefined,
-        onSuccess: () => true
+    const created = await USERS_TABLE.insert(connection, {
+        login,
+        name,
+        cr_id:         creatorId,
+        password_hash: expr("UNHEX(SHA2(?, 512))", `${login}:${password}`),
+        is_admin:      isAdmin
     })
 
-    logger?.info(created ? "Created" : "Already exists")
+    connection.logger?.info(created ? "Created" : "Already exists")
 
     return created
 }
 
-export interface DeleteAllUsersOptions {
-    connection: Connection
-    logger?:    Logger
+export async function deleteAllUser(connection: AsyncConnection) {
+    await USERS_TABLE.clear(connection)
 }
 
-export async function deleteAllUser(options: DeleteAllUsersOptions) {
-    await s.clearTable({ name: "Users", ...options })
+export async function deleteAllNicknames(connection: AsyncConnection, user?: User) {
+    await deleteAllTokensOrNicknames(connection, NICKNAMES_TABLE, user)
 }
 
-export interface DeleteAllNicknamesOptions {
-    connection: Connection
-    logger?:    Logger
-    user?:      User
+export async function deleteAllTokens(connection: AsyncConnection, user?: User) {
+    await deleteAllTokensOrNicknames(connection, TOKENS_TABLE, user)
 }
 
-export async function deleteAllNicknames(options: DeleteAllNicknamesOptions): Promise<boolean> {
-    const { user } = options
-
+async function deleteAllTokensOrNicknames(connection: AsyncConnection, table: ReadonlyTable, user?: User) {
     if (user == null) {
-        await s.clearTable({ name: "Nicknames", ...options })
-        return true
+        await table.clear(connection)
+        return
     }
-
-    const { connection, logger } = options
 
     let id
 
     switch (typeof user) {
         case "string":
-            logger?.info(`Deleting all nicknames of user "${user}"...`)
+            connection.logger?.info(`Deleting all ${table.name} of user "${user}"...`)
 
             if (!isLoginValid(user))
-                throw e.fromMessage(`User login "${user}" is invalid`, logger)
+                throw LoggedError.fromMessage(`User login "${user}" is invalid`, connection.logger)
 
-            const info = await getUserInfo({ connection, logger, user })
+            const info = await getUserInfo(connection, user)
 
             if (!info)
-                throw e.fromMessage(`There is no user "${user}"`)
+                throw LoggedError.fromMessage(`There is no user "${user}"`, connection.logger)
 
             id = info.id
 
             break
 
         case "number":
-            logger?.info(`Deleting all nicknames of user with id "${user}"...`)
+            connection.logger?.info(`Deleting all ${table.name} of user with id "${user}"...`)
             id = user
     }
 
-    const deleted = await am.query({
-        connection,
-        logger,
-        sql:    "DELETE FROM Nicknames WHERE user_id = ?",
-        values: [id],
-        onSuccess: (results: any[]) => results.length != 0
-    })
+    await table.delete(connection).where("user_id = ?", id)
 
-    logger?.info(deleted ? "Deleted" : "Nicknames not found")
-
-    return deleted
-
+    connection.logger?.info("Deleted")
 }
 
-export interface DeleteAllTokensOptions {
-    connection: Connection
-    logger?:    Logger
-    user?:      User
-}
-
-export async function deleteAllTokens(options: DeleteAllTokensOptions): Promise<boolean> {
-    const { user } = options
-
-    if (user == null) {
-        await s.clearTable({ name: "Tokens", ...options })
-        return true
-    }
-
-    const { connection, logger } = options
-
-    let id
-
-    switch (typeof user) {
-        case "string":
-            logger?.info(`Deleting all tokens of user "${user}"...`)
-
-            if (!isLoginValid(user))
-                throw e.fromMessage(`User login "${user}" is invalid`, logger)
-
-            const info = await getUserInfo({ connection, logger, user })
-
-            if (!info)
-                throw e.fromMessage(`There is no user "${user}"`)
-
-            id = info.id
-
-            break
-
-        case "number":
-            logger?.info(`Deleting all tokens of user with id "${user}"...`)
-            id = user
-    }
-
-    const deleted = await am.query({
-        connection,
-        logger,
-        sql:    "DELETE FROM Tokens WHERE user_id = ?",
-        values: [id],
-        onSuccess: (results: any[]) => results.length != 0
-    })
-
-    logger?.info(deleted ? "Deleted" : "Tokens not found")
-
-    return deleted
-}
-
-export type DeleteUserOptions = {
-    connection: Connection
-    logger?:    Logger
-    login:      string
-} | {
-    conneciton: Connection
-    logger?:    Logger
-    id:         number
-}
-
-export async function deleteUser(options: DeleteUserOptions) {
+export async function deleteUser(connection: AsyncConnection, user: User) {
     // TODO
 }
-
-export interface GetUserInfoOptions {
-    connection: Connection
-    logger?:    Logger
-    user:       User
-} 
 
 export interface UserInfo {
     id:           number
@@ -246,30 +156,25 @@ export interface UserInfo {
     isOnline:     boolean
 }
 
-export async function getUserInfo(options: GetUserInfoOptions): Promise<UserInfo | undefined> {
-    const { connection, logger, user } = options
+export async function getUserInfo(connection: AsyncConnection, user: User): Promise<UserInfo | undefined> {
+    const where = typeof user === "string" ? "login = ?"
+                                           : "id = ?"
 
-    return await am.query({
-        connection,
-        logger,
-        sql: typeof user === "string" ? "SELECT * FROM Users WHERE login = ?" 
-                                      : "SELECT * FROM Users WHERE id = ?",
-        values: [user],
-        onSuccess: (results: any[]) => {
-            if (!results.length)
-                return
+    const results = await USERS_TABLE.select(connection).where(where, user)
 
-            let { id, login, name, password_hash: passwordHash, is_admin: isAdmin, is_online: isOnline } = results[0]
+    if (!results.length)
+        return undefined
 
-            isAdmin = !!isAdmin
+    const { id, login, name, password_hash, is_admin, is_online } = results[0]
 
-            return { id, login, name, passwordHash, isAdmin, isOnline } as UserInfo
-        }
-    })
-}
-
-export function normalizeLogin(login: string) {
-    return login.trim()
+    return {
+        id,
+        login,
+        name,
+        passwordHash: password_hash,
+        isAdmin:      !!is_admin,
+        isOnline:     !!is_online
+    } as UserInfo
 }
 
 export function isLoginValid(login: string): boolean {

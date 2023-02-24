@@ -1,11 +1,11 @@
-import { promises as fsp              } from "fs"
-import { normalize, join, dirname     } from "path"
-import { Logger                       } from "winston"
-import { Connection, createConnection } from "mysql"
-import { DeepReadonly                 } from "util/type"
-import { deepAssign                   } from "./util/object"
+import { promises as fsp          } from "fs"
+import { normalize, join, dirname } from "path"
+import { Logger                   } from "winston"
+import { DeepReadonly             } from "util/type"
+import { deepAssign               } from "./util/object"
 
-import * as e from "./util/error"
+import LoggedError from "./util/LoggedError"
+
 import * as o from "./util/object"
 
 export interface ConfigJSON {
@@ -153,9 +153,8 @@ export default class Config {
         }
     }
 
-    static async readFromFile(options?: ReadConfigFromFileOptions): Promise<Config> {
-        const logger = options?.logger
-        const path   = options?.path ?? await this.findConfig(logger)
+    static async readFromFile(path?: string, logger?: Logger): Promise<Config> {
+        path = path ?? await this.findConfig(logger)
 
         logger?.info("Reading config...")
 
@@ -222,7 +221,7 @@ export default class Config {
 
             logger?.error(message)
 
-            throw e.forward(error, logger)
+            throw LoggedError.forward(error, logger)
         }
     }
 
@@ -265,13 +264,13 @@ export default class Config {
 
         switch (result.error) {
             case "EXCESS":
-                throw e.fromMessage(`Found unknown configuration option "${result.path}"`, logger)
+                throw LoggedError.fromMessage(`Found unknown configuration option "${result.path}"`, logger)
 
             case "MISSING":
-                throw e.fromMessage(`Missing required configuration option "${result.path}"`, logger)
+                throw LoggedError.fromMessage(`Missing required configuration option "${result.path}"`, logger)
 
             case "TYPE_MISMATCH":
-                throw e.fromMessage(`Configuration option "${result.path}" must be of ${result.expected} type but it's of ${result.got} type`, logger)
+                throw LoggedError.fromMessage(`Configuration option "${result.path}" must be of ${result.expected} type but it's of ${result.got} type`, logger)
         }
 
         this.validateJSONMysqlCredentials(json)
@@ -291,7 +290,7 @@ export default class Config {
             else
                 message = 'Missing "mysql.password" configuration option'
 
-            throw e.fromMessage(message, logger)
+            throw LoggedError.fromMessage(message, logger)
         }
     }
 
@@ -307,7 +306,7 @@ export default class Config {
             return
 
         if (!Number.isInteger(port) || port < 0 || port > 65535)
-            throw e.fromMessage(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`, logger)
+            throw LoggedError.fromMessage(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`, logger)
     }
 
     constructor(json: ConfigJSON, path?: string) {
@@ -336,36 +335,6 @@ export default class Config {
         }
     }
 
-    createInitDBConnection(): Connection {
-        const useInitUser = this.mysqlUseInitUser
-        const mysql       = this.read.mysql
-        const login       = useInitUser ? mysql?.init!.login!    : mysql?.login!
-        const password    = useInitUser ? mysql?.init!.password! : mysql?.password!
-
-        return createConnection({
-            host:       this.mysqlHost,
-            port:       this.mysqlPort,
-            socketPath: mysql?.socketPath,
-            user:       login,
-            password,
-        })
-    }
-
-    createServeDBConnection(): Connection {
-        const useServeUser = this.mysqlUseServeUser
-        const mysql        = this.read.mysql
-        const login        = useServeUser ? mysql?.serve!.login!    : mysql?.login!
-        const password     = useServeUser ? mysql?.serve!.password! : mysql?.password!
-
-        return createConnection({
-            host:       this.mysqlHost,
-            port:       this.mysqlPort,
-            socketPath: mysql?.socketPath,
-            user:       login,
-            password,
-        })
-    }
-
     get mysqlHost() {
         return this.read.mysql?.host ?? Config.DEFAULT_MYSQL_HOST
     }
@@ -382,7 +351,7 @@ export default class Config {
         const mysql = this.read.mysql
 
         if (mysql?.socketPath != null)
-            return mysql?.socketPath
+            return `unix:${mysql!.socketPath}`
 
         const host = mysql?.host ?? Config.DEFAULT_MYSQL_HOST
         const port = mysql?.port ?? Config.DEFAULT_MYSQL_PORT
@@ -396,7 +365,7 @@ export default class Config {
         const prefix = api?.prefix ?? Config.DEFAULT_HTTP_PREFIX
 
         if (api?.socketPath != null)
-            return `http://unix:/${api.socketPath}${prefix}/`
+            return `http://unix:${api.socketPath}${prefix}/`
 
         const port = api?.port ?? Config.DEFAULT_HTTP_PORT
 

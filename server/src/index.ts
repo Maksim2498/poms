@@ -1,15 +1,10 @@
-import { dirname     } from "path"
-import { LoggedError } from "./util/error"
+import winston     from "winston"
+import LoggedError from "./util/LoggedError"
+import Config      from "./Config"
+import init        from "./init"
+import Server      from "./Server"
 
-import winston from "winston"
-import Config  from "./Config"
-import init    from "./init"
-import Server  from "./Server"
-
-const logger = winston.createLogger({
-    format:     winston.format.cli(),
-    transports: [new winston.transports.Console()]
-})
+const logger = createLogger()
 
 main()
     .catch(error => {
@@ -19,31 +14,35 @@ main()
         logger.error(error instanceof Error ? error.message : error)
     })
 
-async function main() {
-    const config  = await Config.readFromFile({ logger });
-    const options = { config, logger }
-
-    const wd = dirname(config.path)
-
-    logger.info(`Setting working directory to ${wd}...`)
-    process.chdir(wd)
-    logger.info("Set")
-
-    await init(options)
-
-    const server = new Server(options)
-
-    let stopping = false
-
-    process.on("SIGINT", async () => {
-        if (stopping)
-            return
-
-        stopping = true
-        console.log()
-        await server.stop()
-        process.exit()
+function createLogger() {
+    return winston.createLogger({
+        format:     winston.format.cli(),
+        transports: [new winston.transports.Console()]
     })
+}
+
+async function main() {
+    const config = await Config.readFromFile(undefined, logger);
+
+    await init(config, logger)
+
+    const server = new Server(config, logger)
+
+    setupSigInt()
 
     await server.start()
+
+    function setupSigInt() {
+        let stopping = false
+
+        process.on("SIGINT", async () => {
+            if (stopping)
+                return
+
+            stopping = true
+            console.log()
+            await server.stop()
+            process.exit()
+        })
+    }
 }
