@@ -41,7 +41,6 @@ For initial token reception:
 
 ```http
 POST /auth
-
 Authorization: Bacic <base64 encoded login>:<base64 encoded password>
 ```
 
@@ -49,7 +48,6 @@ For token refreshing:
 
 ```http
 POST /auth
-
 Authorization: Bearer <refresh token>
 ```
 
@@ -77,7 +75,6 @@ __Request__:
 
 ```http
 POST /deauth
-
 Authorization: Bearer <token>
 ```
 
@@ -89,7 +86,6 @@ __Request__:
 
 ```http
 GET /users?[nicknames]
-
 Authorization: Bearer <access token>
 ```
 
@@ -115,7 +111,6 @@ __Request__:
 
 ```http
 GET /users/<login>?[nicknames]
-
 Authorization: Bearer <access token>
 ```
 
@@ -141,7 +136,6 @@ __Request__:
 
 ```http
 GET /users/<login>/reg
-
 Authorization: Bearer <access token>
 ```
 
@@ -162,7 +156,6 @@ __Request__:
 
 ```http
 GET /users/<login>/reg/time
-
 Authorization: Bearer <access token>
 ```
 
@@ -182,7 +175,6 @@ __Request__:
 
 ```http
 GET /users/<login>/reg/user
-
 Authorization: Bearer <access token>
 ```
 
@@ -202,7 +194,6 @@ __Request__:
 
 ```http
 GET /users/<login>/name
-
 Authorization: Bearer <access token>
 ```
 
@@ -222,7 +213,6 @@ __Request__:
 
 ```http
 GET /users/<login>/nicknames/
-
 Authorization: Bearer <access token>
 ```
 
@@ -240,7 +230,6 @@ __Request__:
 
 ```http
 DELETE /users
-
 Authorization: Bearer <access token>
 ```
 
@@ -253,7 +242,6 @@ __Request__:
 
 ```http
 DELETE /users/<user>
-
 Authorization: Bearer <access token>
 ```
 
@@ -266,7 +254,6 @@ __Request__:
 
 ```http
 DELETE /users/<user>/nicknames
-
 Authorization: Bearer <access token>
 ```
 
@@ -279,7 +266,6 @@ __Request__:
 
 ```http
 DELETE /users/<user>/nicknames/<nickname>
-
 Authorization: Bearer <access token>
 ```
 
@@ -292,8 +278,12 @@ __Request__:
 
 ```http
 PUT /users/<user>/name
-
 Authorization: Bearer <access token>
+Content-Type: application/json
+
+{
+    "name": <base64-encoded name string>
+}
 ```
 
 ### Update User Password
@@ -305,8 +295,12 @@ __Request__:
 
 ```http
 PUT /users/<user>/password
-
 Authorization: Bearer <access token>
+Content-Type: application/json
+
+{
+    "password": <base64-encoded password string>
+}
 ```
 
 ### Add User Nickname
@@ -318,7 +312,6 @@ __Request__:
 
 ```http
 POST /users/<user>/nicknames/<nickname>
-
 Authorization: Bearer <access token>
 ```
 
@@ -330,6 +323,17 @@ __Request__:
 
 ```http
 POST /users/<user>
-
 Authorization: Bearer <access token>
+Content-Type: application/json
+    
+{
+    // Required fields:
+
+    "password": <base64-encoded password string>,
+
+    // Optional fields:
+
+    "name":     <base64-encoded name string>,
+    "isAdmin":  true/false
+}
 ```
