@@ -37,7 +37,7 @@ section on [project's home page](https://github.com/Maksim2498/poms).
 
 ## Installation
 
-To install everything follow steps described below depending on your operating system.
+To install everything follow the steps listed below depending on your operating system.
 
 __Windows__:
 
