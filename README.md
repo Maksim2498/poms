@@ -35,9 +35,15 @@ For building Bukkit plugin you'll also need _JDK 17+_ and [Maven build system](h
 You can also just download prebuilt plugin from [releases](https://github.com/Maksim2498/poms/releases)
 section on [project's home page](https://github.com/Maksim2498/poms).
 
+___Warning___:
+
+This document wouldn't tell you how to build Bukkit plugin. To get more inforamtion on this topic see [this](/plugin/README.md).
+
 ## Installation
 
-To install everything follow the steps listed below depending on your operating system.
+To install everything needed for running follow the steps listed below depending on your operating system.
+This will install all __npm__ packages and will guide you through minimal required configuration. For advanced
+configuration see [this](/server/docs/config.md).
 
 __Windows__:
 
@@ -67,7 +73,7 @@ node install.js
 
 ## Running
 
-To run POMS follow the steps listed below depending on your operating system.
+To run __POMS__ follow the steps listed below depending on your operating system.
 
 __Windows__:
 
