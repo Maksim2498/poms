@@ -61,7 +61,7 @@ is considered an error):
 ## Placeholders
 
 Configuration options representing filesystem paths can contain placeholders
-starting with `<` and ending with `>`. You can escape `<` using `\` like this: `\<'.
+starting with `<` and ending with `>`. You can escape `<` using `\` like this: `\\<'.
 
 Those are all available placeholders:
 
