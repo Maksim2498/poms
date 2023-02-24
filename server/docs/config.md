@@ -48,6 +48,7 @@ is considered an error):
 | `logic.maxNicknames`          | `number`      | `5`                          | No       | Maximum number of nicknames per user                                               |
 | `logic.buildStatic`           | `boolean`     | `true`                       | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |
 | `logic.buildStaticPath`       | Path `string` | `<SITE_PATH>`                | No       | Path for running `npm run build` to build static content if needed                 |
+| `logic.openBrowser`           | `boolean`     | `true`                       | No       | If `true` opens browser after server start                                         |
 
  1) Are required if any of the following options are omitted:
 

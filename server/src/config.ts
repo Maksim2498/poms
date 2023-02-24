@@ -48,6 +48,7 @@ export interface ConfigJSON {
         maxNicknames?:          number
         buildStatic?:           boolean
         buildStaticPath?:       string
+        openBrowser?:           boolean
     }
 }
 
@@ -86,6 +87,7 @@ export default class Config {
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
     static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
     static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = this.placehold("<SITE_PATH>")
+    static readonly DEFAULT_LOGIC_OPEN_BROWSER            = true
 
     readonly read: DeepReadonly<ConfigJSON>
     readonly path: string
@@ -259,6 +261,7 @@ export default class Config {
                 { path: "maxNicknames",                type: "number"  },
                 { path: "buildStatic",                 type: "boolean" },
                 { path: "buildStaticPath",             type: "string"  },
+                { path: "openBrowser",                 type: "boolean" },
             ]
         })
 
@@ -456,5 +459,9 @@ export default class Config {
 
     get httpError500Path(): string {
         return this.read.http?.error500Path ?? Config.DEFAULT_HTTP_ERROR_500_PATH
+    }
+
+    get logicOpenBrowser(): boolean {
+        return this.read.logic?.openBrowser ?? Config.DEFAULT_LOGIC_OPEN_BROWSER
     }
 }

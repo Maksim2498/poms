@@ -2,7 +2,7 @@ import { Server as HttpServer                   } from "http"
 import { Application, Router, Request, Response } from "express"
 import { Logger                                 } from "winston"
 
-import open             from "open"
+import open            from "open"
 import shortUuid       from "short-uuid"
 import express         from "express"
 import AsyncConnection from "util/mysql/AsyncConnection"
@@ -11,6 +11,18 @@ import Config          from "./Config"
 import * as api from "api-schema"
 
 export default class Server {
+    static readonly DEFAULT_ON_STARTED = async (server: Server) => {
+        const config = server.config
+
+        if (config.logicOpenBrowser) {
+            const logger = server.logger
+            
+            logger?.info("Opening browser...")
+            await open(config.httpAddress)
+            logger?.info("Opened")
+        }
+    }
+
     private readonly expressApp:  Application
     private          httpServer?: HttpServer
 
@@ -144,7 +156,7 @@ export default class Server {
             && this.mysqlConnection.state === "online"
     }
 
-    async start(started: () => void = () => open(this.config.httpAddress)) {
+    async start(onStarted: (server: Server) => Promise<void> = Server.DEFAULT_ON_STARTED) {
         if (this.running)
             return
 
@@ -155,9 +167,9 @@ export default class Server {
 
         initRunPromise.call(this)
         await this.mysqlConnection.connect()
-        listen.call(this)
+        await listen.call(this)
 
-        started()
+        await onStarted(this)
 
         return await this.runPromise
 
@@ -168,15 +180,19 @@ export default class Server {
             })
         }
 
-        function listen(this: Server) {
-            const socketPath = this.config.read.http?.socketPath
-            const listening  = () => this.logger?.info(
-                this.config.httpServeStatic ? "Listening and serving static content..."
-                                            : "Listening..."
-            )
+        async function listen(this: Server) {
+            return new Promise<void>(resolve => {
+                const socketPath = this.config.read.http?.socketPath
+                const listening  = () => {
+                    this.logger?.info(this.config.httpServeStatic ? "Listening and serving static content..."
+                                                                  : "Listening...")
 
-            this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
-                                                 : this.expressApp.listen(this.config.httpPort, this.config.httpHost, listening)
+                    resolve()
+                }
+
+                this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
+                                                    : this.expressApp.listen(this.config.httpPort, this.config.httpHost, listening)
+            })
         }
     }
 
