@@ -67,7 +67,7 @@ node install.js
 
 ## Running
 
-To run POMS follow steps described below depending on your operating system.
+To run POMS follow the steps listed below depending on your operating system.
 
 __Windows__:
 
