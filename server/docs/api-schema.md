@@ -67,12 +67,12 @@ __Response__:
 {
     access: {
         token: string // token hex string
-        exp:   number // number of seconds before token expiration
+        exp:   string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
     }
 
     refresh: {
         token: string // token hex string
-        exp:   number // number of seconds before token expiration
+        exp:   string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
     }
 }
 ```
@@ -110,12 +110,12 @@ __Response__:
 
 ```ts
 {
-    name:      string
-    nicknames: string[] // if <nicknames> option is set
+    name:      string   // base64-encoded
+    nicknames: string[] // base64-encoded. Added if <nicknames> option is set
 
     reg: {
-        time:  string
-        login: string | null
+        time:  string        // if <nicknames> option is set
+        login: string | null // base64-encoded
     }
 }[]
 ```
@@ -139,12 +139,12 @@ __Response__:
 
 ```ts
 {
-    name:      string
-    nicknames: string[] // if <nicknames> option is set
+    name:      string   // base64-encoded
+    nicknames: string[] // base64-encoded. Added if <nicknames> option is set
 
     reg: {
-        time:  string
-        login: string | null
+        time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+        login: string | null // base64-encoded
     }
 }
 ```
@@ -168,8 +168,8 @@ __Responese__:
 
 ```ts
 {
-    time:  string
-    login: string | null
+    time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+    login: string | null // base64-encoded
 }
 ```
 
@@ -192,7 +192,7 @@ __Responese__:
 
 ```ts
 {
-    time: string
+    time: string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
 }
 ```
 
@@ -215,7 +215,7 @@ __Responese__:
 
 ```ts
 {
-    login: string | null
+    login: string | null // base64-encoded
 }
 ```
 
@@ -238,7 +238,7 @@ __Response__:
 
 ```ts
 {
-    name: string
+    name: string // base64-encoded
 }
 ```
 
@@ -260,7 +260,7 @@ Accept: application/json
 __Response__:
 
 ```ts
-string[]
+string[] // base64-encoded
 ```
 
 ### Delete All Users
@@ -338,9 +338,9 @@ Authorization: Bearer <access token>
 Content-Type: application/json
 ```
 
-```json5
+```ts
 {
-    name: <base64-encoded name string>
+    name: string // base64-encoded
 }
 ```
 
@@ -360,9 +360,9 @@ Authorization: Bearer <access token>
 Content-Type: application/json
 ```
 
-```json5
+```ts
 {
-    password: <base64-encoded password string>
+    password: string // base64-encoded
 }
 ```
 
@@ -396,15 +396,10 @@ Authorization: Bearer <access token>
 Content-Type: application/json
 ```
 
-```json5
+```ts
 {
-    // Required fields:
-
-    password: <base64-encoded password string>,
-
-    // Optional fields:
-
-    name:     <base64-encoded name string>,
-    isAdmin:  true/false
+    password: string   // base64-encoded
+    name?:    string   // base64-encoded
+    isAdmin?: boolean
 }
 ```
