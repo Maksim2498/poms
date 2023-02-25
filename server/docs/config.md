@@ -66,10 +66,10 @@ starting with `<` and ending with `>`. You can escape `<` using `\` like this: `
 
 Those are all available placeholders:
 
-- `<POM_PATH_PATH>` - path to the POMS root directory;
-- `<PLUGIN_PATH>`   - path to the Bukkit plugin directory;
-- `<SERVER_PATH>`   - path to the server directory;
-- `<SITE_PATH>`     - path to the site directory.
+- `<POM_PATH>`    - path to the POMS root directory;
+- `<PLUGIN_PATH>` - path to the Bukkit plugin directory;
+- `<SERVER_PATH>` - path to the server directory;
+- `<SITE_PATH>`   - path to the site directory.
 
 ## Minimal Config
 
