@@ -15,6 +15,13 @@ export interface Unit {
 export type Method = "get" | "post" | "put" | "delete"
 export type Hander = (this: Server, req: Request, res: Response) => void
 
+export function requireAcceptJson(req: Request, res: Response, next: () => void) {
+    if (req.accepts("json"))
+        next()
+
+    res.sendStatus(406)
+}
+
 export const units: UnitCollection = {
     auth: {
         method: "post",
@@ -22,7 +29,12 @@ export const units: UnitCollection = {
 
         handler(req, res) {
             const authorization = req.headers.authorization
-            const accept        = req.headers.accept
+            
+            if (authorization == null) {
+                res.sendStatus(400)
+                return
+            }
+
             res.sendStatus(501)
         }
     },
