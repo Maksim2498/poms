@@ -48,6 +48,8 @@ POST /auth
 
 ```http
 Authorization: Basic <base64 encoded login>:<base64 encoded password>
+Content-Type: application/json
+Content-Length: ...
 Accept: application/json
 ```
 
@@ -59,6 +61,8 @@ POST /auth
 
 ```http
 Authorization: Bearer <refresh token>
+Content-Type: application/json
+Content-Length: ...
 Accept: application/json
 ```
 
@@ -90,6 +94,8 @@ POST /deauth
 
 ```http
 Authorization: Bearer <access or refresh token>
+Content-Type: application/json
+Content-Length: ...
 Accept: application/json
 ```
 
@@ -366,6 +372,7 @@ PUT /users/<user>/name
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+Content-Length: ...
 Accept: application/json
 ```
 
@@ -395,6 +402,7 @@ PUT /users/<user>/password
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+Content-Length: ...
 Accept: application/json
 ```
 
@@ -445,6 +453,7 @@ POST /users/<user>
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+Content-Length: ...
 Accept: application/json
 ```
 
