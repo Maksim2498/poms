@@ -10,7 +10,7 @@ import * as o from "./util/object"
 
 export interface ConfigJSON {
     http?: {
-        prefix?:       string
+        apiPrefix?:    string
         host?:         string
         port?:         number
         socketPath?:   string
@@ -67,7 +67,7 @@ export default class Config {
 
     static readonly DEFAULT_PATH                          = this.FILE_NAME
 
-    static readonly DEFAULT_HTTP_PREFIX                   = "/api"
+    static readonly DEFAULT_HTTP_API_PREFIX               = "/api"
     static readonly DEFAULT_HTTP_HOST                     = "localhost"
     static readonly DEFAULT_HTTP_PORT                     = 8000
     static readonly DEFAULT_HTTP_SERVE_STATIC             = true
@@ -231,7 +231,7 @@ export default class Config {
         const result = o.validate(json, {
             fields: [
                 // API
-                { path: "http.prefix",                 type: "string"  },
+                { path: "http.apiPrefix",              type: "string"  },
                 { path: "http.host",                   type: "string"  },
                 { path: "http.port",                   type: "number"  },
                 { path: "http.socketPath",             type: "string"  },
@@ -316,7 +316,7 @@ export default class Config {
         const read = deepAssign({}, json)
 
         if (read.http != null) {
-            read.http.prefix       = normalize(`/${read.http.prefix ?? ""}`)
+            read.http.apiPrefix       = normalize(`/${read.http.apiPrefix ?? ""}`)
             read.http.socketPath   = preparePath(read.http.socketPath)
             read.http.staticPath   = preparePath(read.http.staticPath)
             read.http.error404Path = preparePath(read.http.error404Path)
@@ -365,7 +365,7 @@ export default class Config {
     get httpApiAddress(): string {
         const api    = this.read.http
         const host   = api?.host   ?? Config.DEFAULT_HTTP_HOST
-        const prefix = api?.prefix ?? Config.DEFAULT_HTTP_PREFIX
+        const prefix = api?.apiPrefix ?? Config.DEFAULT_HTTP_API_PREFIX
 
         if (api?.socketPath != null)
             return `http://unix:${api.socketPath}${prefix}/`
@@ -402,7 +402,7 @@ export default class Config {
     }
 
     get httpPrefix(): string {
-        return this.read.http?.prefix ?? Config.DEFAULT_HTTP_PREFIX
+        return this.read.http?.apiPrefix ?? Config.DEFAULT_HTTP_API_PREFIX
     }
 
     get httpHost(): string {
