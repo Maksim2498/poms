@@ -30,9 +30,9 @@ This document contains detailed description on all supported API methods and the
 ## Methods
 
 The following is a complete API method list. Every API method URI shown here is relative to
-`http.apiPrefix` configuration option which defaults to `/api`. Data interchange format is `JSON`.
-Server will respond with JSON on every valid request. Request and response `JSON` structure is
-described here as `TypeScript` data type.
+`http.apiPrefix` configuration option which defaults to `/api`. Data interchange format is _JSON_.
+Server will respond with JSON on every valid request. Request and response JSON structure is
+described here as _TypeScript_ data type.
 
 ### Authentication
 
