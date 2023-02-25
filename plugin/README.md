@@ -1,4 +1,4 @@
-# POMS Bukkit Plugin
+# POMS Bukkit Plugin (__WIP__)
 
 ![Logo](./images/logo.png)
 
