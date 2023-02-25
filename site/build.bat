@@ -1,3 +1,4 @@
 cd /D "%~dp0"
 
-mvn verify
+npm i
+npm build

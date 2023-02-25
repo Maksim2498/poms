@@ -43,7 +43,7 @@ This document wouldn't tell you how to build Bukkit plugin. To get more inforamt
 ## Installation
 
 To install everything needed for running follow the steps listed below depending on your operating system.
-This will install all __npm__ packages and will guide you through minimal required configuration. For advanced
+This will install all _npm_ packages and will guide you through minimal required configuration. For advanced
 configuration see [this](/server/docs/config.md).
 
 __Windows__:

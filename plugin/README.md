@@ -12,7 +12,9 @@
 
 ## About
 
-This is Bukkit plugin used to connect your Minecraft server to POSM system and set it under POMS's control.
+This is a Bukkit plugin for the [POMS project](../README.md). It connects your Minecraft server
+to the [POMS server](../server/README.md) and sets first under second's control. It relies on
+the REST API of POMS server and completely uselsess without it.
 
 ## Building
 

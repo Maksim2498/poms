@@ -2,4 +2,5 @@
 
 cd "$(dirname "$0")"/server
 
-mvn verify
+npm i
+npm build
