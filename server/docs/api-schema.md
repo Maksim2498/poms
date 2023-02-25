@@ -90,6 +90,13 @@ POST /deauth
 
 ```http
 Authorization: Bearer <access or refresh token>
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{}
 ```
 
 ### Get All Users Info
@@ -276,6 +283,7 @@ DELETE /users
 
 ```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -297,6 +305,7 @@ DELETE /users/<user>
 
 ```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 ### Delete All User nicknames
@@ -312,6 +321,7 @@ DELETE /users/<user>/nicknames
 
 ```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -333,6 +343,7 @@ DELETE /users/<user>/nicknames/<nickname>
 
 ```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -355,6 +366,7 @@ PUT /users/<user>/name
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+Accept: application/json
 ```
 
 ```ts
@@ -383,6 +395,7 @@ PUT /users/<user>/password
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+Accept: application/json
 ```
 
 ```ts
@@ -410,6 +423,7 @@ POST /users/<user>/nicknames/<nickname>
 
 ```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -431,6 +445,7 @@ POST /users/<user>
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+Accept: application/json
 ```
 
 ```ts
