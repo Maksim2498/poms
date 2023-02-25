@@ -43,7 +43,7 @@ __Request__:
 For initial token reception:
 
 ```http
-GET /auth
+POST /auth
 ```
 
 ```http
