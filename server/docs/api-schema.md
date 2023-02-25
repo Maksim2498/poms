@@ -26,12 +26,13 @@
 ## About
 
 This document contains detailed description on all supported API methods and their format.
-Every API method URI shown here is relative to `http.apiPrefix` configuration option which
-defaults to `/api`.
 
 ## Methods
 
-The following is a complete API method list.
+The following is a complete API method list. Every API method URI shown here is relative to
+`http.apiPrefix` configuration option which defaults to `/api`. Data interchange format is `JSON`.
+Server will respond with JSON on every valid request. Request and response `JSON` structure is
+described here as `TypeScript` data type.
 
 ### Authentication
 
@@ -277,6 +278,12 @@ DELETE /users
 Authorization: Bearer <access token>
 ```
 
+__Response__:
+
+```ts
+{}
+```
+
 ### Delete User
 
 Deletes specified user. If issued with administator's access token
@@ -307,6 +314,12 @@ DELETE /users/<user>/nicknames
 Authorization: Bearer <access token>
 ```
 
+__Response__:
+
+```ts
+{}
+```
+
 ### Delete User Nickname
 
 Deletes specified nickname of given user. If issued with administator's access token
@@ -320,6 +333,12 @@ DELETE /users/<user>/nicknames/<nickname>
 
 ```http
 Authorization: Bearer <access token>
+```
+
+__Response__:
+
+```ts
+{}
 ```
 
 ### Update User Name
@@ -344,6 +363,12 @@ Content-Type: application/json
 }
 ```
 
+__Response__:
+
+```ts
+{}
+```
+
 ### Update User Password
 
 Updates specified user password. If issued with administator's access token
@@ -366,6 +391,12 @@ Content-Type: application/json
 }
 ```
 
+__Response__:
+
+```ts
+{}
+```
+
 ### Add User Nickname
 
 Adds nickname to the user. If issued with administator's access token
@@ -379,6 +410,12 @@ POST /users/<user>/nicknames/<nickname>
 
 ```http
 Authorization: Bearer <access token>
+```
+
+__Response__:
+
+```ts
+{}
 ```
 
 ### Add User
@@ -402,4 +439,10 @@ Content-Type: application/json
     name?:    string   // base64-encoded
     isAdmin?: boolean
 }
+```
+
+__Response__:
+
+```ts
+{}
 ```
