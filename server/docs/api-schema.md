@@ -26,6 +26,8 @@
 ## About
 
 This document contains detailed description on all supported API methods and their format.
+Every API method URI shown here is relative to `http.apiPrefix` configuration option which
+defaults to `/api`.
 
 ## Methods
 
@@ -40,15 +42,23 @@ __Request__:
 For initial token reception:
 
 ```http
-POST /auth
-Authorization: Bacic <base64 encoded login>:<base64 encoded password>
+GET /auth
+```
+
+```http
+Authorization: Basic <base64 encoded login>:<base64 encoded password>
+Accept: application/json
 ```
 
 For token refreshing:
 
 ```http
 POST /auth
+```
+
+```http
 Authorization: Bearer <refresh token>
+Accept: application/json
 ```
 
 __Response__:
@@ -75,6 +85,9 @@ __Request__:
 
 ```http
 POST /deauth
+```
+
+```http
 Authorization: Bearer <access or refresh token>
 ```
 
@@ -86,7 +99,11 @@ __Request__:
 
 ```http
 GET /users?[nicknames]
+```
+
+```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -111,7 +128,11 @@ __Request__:
 
 ```http
 GET /users/<login>?[nicknames]
+```
+
+```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -136,7 +157,11 @@ __Request__:
 
 ```http
 GET /users/<login>/reg
+```
+
+```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Responese__:
@@ -156,7 +181,11 @@ __Request__:
 
 ```http
 GET /users/<login>/reg/time
+```
+
+```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Responese__:
@@ -175,7 +204,11 @@ __Request__:
 
 ```http
 GET /users/<login>/reg/user
+```
+
+```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Responese__:
@@ -194,7 +227,11 @@ __Request__:
 
 ```http
 GET /users/<login>/name
+```
+
+```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -213,7 +250,11 @@ __Request__:
 
 ```http
 GET /users/<login>/nicknames/
+```
+
+```http
 Authorization: Bearer <access token>
+Accept: application/json
 ```
 
 __Response__:
@@ -230,6 +271,9 @@ __Request__:
 
 ```http
 DELETE /users
+```
+
+```http
 Authorization: Bearer <access token>
 ```
 
@@ -242,6 +286,9 @@ __Request__:
 
 ```http
 DELETE /users/<user>
+```
+
+```http
 Authorization: Bearer <access token>
 ```
 
@@ -254,6 +301,9 @@ __Request__:
 
 ```http
 DELETE /users/<user>/nicknames
+```
+
+```http
 Authorization: Bearer <access token>
 ```
 
@@ -266,6 +316,9 @@ __Request__:
 
 ```http
 DELETE /users/<user>/nicknames/<nickname>
+```
+
+```http
 Authorization: Bearer <access token>
 ```
 
@@ -278,11 +331,16 @@ __Request__:
 
 ```http
 PUT /users/<user>/name
+```
+
+```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+```
 
+```json5
 {
-    "name": <base64-encoded name string>
+    name: <base64-encoded name string>
 }
 ```
 
@@ -295,11 +353,16 @@ __Request__:
 
 ```http
 PUT /users/<user>/password
+```
+
+```http
 Authorization: Bearer <access token>
 Content-Type: application/json
+```
 
+```json5
 {
-    "password": <base64-encoded password string>
+    password: <base64-encoded password string>
 }
 ```
 
@@ -312,6 +375,9 @@ __Request__:
 
 ```http
 POST /users/<user>/nicknames/<nickname>
+```
+
+```http
 Authorization: Bearer <access token>
 ```
 
@@ -323,17 +389,22 @@ __Request__:
 
 ```http
 POST /users/<user>
+```
+
+```http
 Authorization: Bearer <access token>
 Content-Type: application/json
-    
+```
+
+```json5
 {
     // Required fields:
 
-    "password": <base64-encoded password string>,
+    password: <base64-encoded password string>,
 
     // Optional fields:
 
-    "name":     <base64-encoded name string>,
-    "isAdmin":  true/false
+    name:     <base64-encoded name string>,
+    isAdmin:  true/false
 }
 ```
