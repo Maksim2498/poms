@@ -5,6 +5,7 @@
 ![Plugin Version](https://img.shields.io/github/v/release/Maksim2498/poms?label=plugin%20version)
 [![License](https://img.shields.io/github/license/Maksim2498/poms)](https://opensource.org/license/mit/)
 ![Downloads](https://img.shields.io/github/downloads/Maksim2498/poms/total)
+![Language Count](https://img.shields.io/github/languages/count/Maksim2498/poms)
 
 ![Logo](/images/logo.png)
 
