@@ -1,3 +1,3 @@
 # POMS Site
 
-\<There will be an image>
+![Logo](./images/logo.png)

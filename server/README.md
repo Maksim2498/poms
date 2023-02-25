@@ -1,6 +1,6 @@
 # POMS Server
 
-\<There will be an image>
+![Logo](./images/logo.png)
 
 ## Table of Contents
 
