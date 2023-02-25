@@ -3,6 +3,7 @@ import LoggedError     from "./util/LoggedError"
 
 import { ReadonlyTable, expr                        } from "util/mysql/Table"
 import { USERS_TABLE, NICKNAMES_TABLE, TOKENS_TABLE } from "./db-schema"
+import { Logger                                     } from "winston"
 
 export const DEFAULT_ADMIN_LOGIN    = "admin"
 export const DEFAULT_ADMIN_PASSWORD = "admin"
@@ -58,30 +59,20 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
 
     connection.logger?.info(`Creaing user "${login}"...`)
 
-    if (!isLoginValid(login))
-        throw LoggedError.fromMessage(`Login "${login}" is invalid`, connection.logger)
+    validateLogin(login, connection.logger)
 
     let creatorId: number | undefined
 
-    switch (typeof creator) {
-        case "string":
-            if (!isLoginValid(creator))
-                throw LoggedError.fromMessage(`Creator login "${creator}" is invalid`, connection.logger)
+    if (creator != null) {
+        const creatorInfo = await forceGetUserInfo(connection, creator)
 
-            const creatorInfo = await getUserInfo(connection, creator)
+        if (!creatorInfo.isAdmin)
+            throw LoggedError.fromMessage(
+                `Only admin can be a creator of another user. "${creatorInfo.name}" isn't an admin`,
+                connection.logger
+            )
 
-            if (!creatorInfo)
-                throw LoggedError.fromMessage(`Cannot find creator. There is no user "${creator}"`, connection.logger)
-
-            if (!creatorInfo.isAdmin)
-                throw LoggedError.fromMessage(`Only admin can be a creator of another user. "${creator}" isn't an admin`, connection.logger)
-
-            creatorId = creatorInfo.id
-
-            break
-
-        case "number":
-            creatorId = creator
+        creatorId = creatorInfo.id
     }
 
     const created = await USERS_TABLE.insert(connection, {
@@ -115,36 +106,50 @@ async function deleteAllTokensOrNicknames(connection: AsyncConnection, table: Re
         return
     }
 
-    let id
+    connection.logger?.info(typeof user === "string" ? `Deleting all ${table.name} of user "${user}"...`
+                                                     : `Deleting all ${table.name} of user with id "${user}"...`)
 
-    switch (typeof user) {
-        case "string":
-            connection.logger?.info(`Deleting all ${table.name} of user "${user}"...`)
-
-            if (!isLoginValid(user))
-                throw LoggedError.fromMessage(`User login "${user}" is invalid`, connection.logger)
-
-            const info = await getUserInfo(connection, user)
-
-            if (!info)
-                throw LoggedError.fromMessage(`There is no user "${user}"`, connection.logger)
-
-            id = info.id
-
-            break
-
-        case "number":
-            connection.logger?.info(`Deleting all ${table.name} of user with id "${user}"...`)
-            id = user
-    }
-
-    await table.delete(connection).where("user_id = ?", id)
+    await table.delete(connection).where("user_id = ?", await getUserId(connection, user))
 
     connection.logger?.info("Deleted")
 }
 
 export async function deleteUser(connection: AsyncConnection, user: User) {
-    // TODO
+    switch (typeof user) {
+        case "string":
+            connection.logger?.info(`Deleting user "${user}"...`)
+            validateLogin(user)
+            await USERS_TABLE.delete(connection).where("login = ?", user)
+            break
+
+        case "number":
+            connection.logger?.info(`Deleting user with id ${user}...`)
+            await USERS_TABLE.delete(connection).where("id = ?", user)
+    }
+
+    connection.logger?.info("Deleted")
+}
+
+export async function getValidUserId(connection: AsyncConnection, user: User): Promise<number> {
+    return (await forceGetUserInfo(connection, user)).id
+}
+
+export async function getUserId(conneciton: AsyncConnection, user: User): Promise<number> {
+    return typeof user === "string" ? (await forceGetUserInfo(conneciton, user)).id
+                                    : user
+}
+
+export async function forceGetUserInfo(connection: AsyncConnection, user: User): Promise<UserInfo> {
+    const info = await getUserInfo(connection, user)
+
+    if (info == null) {
+        const message = typeof user === "string" ? `There is no user "${user}"`
+                                                 : `There is no user with id ${user}`
+
+        throw LoggedError.fromMessage(message, connection.logger)
+    }
+
+    return info
 }
 
 export interface UserInfo {
@@ -157,8 +162,17 @@ export interface UserInfo {
 }
 
 export async function getUserInfo(connection: AsyncConnection, user: User): Promise<UserInfo | undefined> {
-    const where = typeof user === "string" ? "login = ?"
-                                           : "id = ?"
+    let where: string
+
+    switch (typeof user) {
+        case "string":
+            validateLogin(user, connection.logger)
+            where = "login = ?"
+            break
+
+        case "number":
+            where = "id = ?"
+    }
 
     const results = await USERS_TABLE.select(connection).where(where, user)
 
@@ -175,6 +189,11 @@ export async function getUserInfo(connection: AsyncConnection, user: User): Prom
         isAdmin:      !!is_admin,
         isOnline:     !!is_online
     } as UserInfo
+}
+
+function validateLogin(login: string, logger?: Logger) {
+    if (!isLoginValid(login))
+        throw LoggedError.fromMessage(`Login "${login}" is invalid`, logger)
 }
 
 export function isLoginValid(login: string): boolean {
