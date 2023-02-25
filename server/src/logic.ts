@@ -191,7 +191,7 @@ export async function getUserInfo(connection: AsyncConnection, user: User): Prom
     } as UserInfo
 }
 
-function validateLogin(login: string, logger?: Logger) {
+export function validateLogin(login: string, logger?: Logger) {
     if (!isLoginValid(login))
         throw LoggedError.fromMessage(`Login "${login}" is invalid`, logger)
 }

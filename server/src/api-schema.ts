@@ -2,6 +2,10 @@ import Server from "./Server"
 
 import { Request, Response } from "express"
 
+export type UnitCollection = {
+    [key: string]: Unit
+}
+
 export interface Unit {
     method:  Method
     path:    string
@@ -11,155 +15,159 @@ export interface Unit {
 export type Method = "get" | "post" | "put" | "delete"
 export type Hander = (this: Server, req: Request, res: Response) => void
 
-export const auth: Unit = {
-    method: "post",
-    path:   "/auth",
+export const units: UnitCollection = {
+    auth: {
+        method: "post",
+        path:   "/auth",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            const authorization = req.headers.authorization
+            const accept        = req.headers.accept
+            res.sendStatus(501)
+        }
+    },
 
-export const deauth: Unit = {
-    method: "post",
-    path:   "/deauth",
+    deauth: {
+        method: "post",
+        path:   "/deauth",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const getAllUsers: Unit = {
-    method: "get",
-    path:   "/users",
+    getAllUsers: {
+        method: "get",
+        path:   "/users",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const getUser: Unit = {
-    method: "get",
-    path:   "/users/:user",
+    getUser: {
+        method: "get",
+        path:   "/users/:user",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const getUserReg: Unit = {
-    method: "get",
-    path:   "/users/:user/reg",
+    getUserReg: {
+        method: "get",
+        path:   "/users/:user/reg",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const getUserRegTime: Unit = {
-    method: "get",
-    path:   "/users/:user/reg/time",
+    getUserRegTime: {
+        method: "get",
+        path:   "/users/:user/reg/time",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const getUserRegUser: Unit = {
-    method: "get",
-    path:   "/users/:user/reg/user",
+    getUserRegUser: {
+        method: "get",
+        path:   "/users/:user/reg/user",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const getUserName: Unit = {
-    method: "get",
-    path:   "/users/:user/name",
+    getUserName: {
+        method: "get",
+        path:   "/users/:user/name",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const getUserNicknames: Unit = {
-    method: "get",
-    path:   "/users/:user/nicknames",
+    getUserNicknames: {
+        method: "get",
+        path:   "/users/:user/nicknames",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const deleteAllUsers: Unit = {
-    method: "delete",
-    path:   "/users",
+    deleteAllUsers: {
+        method: "delete",
+        path:   "/users",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const deleteUser: Unit = {
-    method: "delete",
-    path:   "/users/:user",
+    deleteUser: {
+        method: "delete",
+        path:   "/users/:user",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const deleteAllUserNicknames: Unit = {
-    method: "delete",
-    path:   "/users/:user/nicknames",
+    deleteAllUserNicknames: {
+        method: "delete",
+        path:   "/users/:user/nicknames",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const deleteUserNickname: Unit = {
-    method: "delete",
-    path:   "/users/:user/nicknames/:nickname",
+    deleteUserNickname: {
+        method: "delete",
+        path:   "/users/:user/nicknames/:nickname",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const updateUserName: Unit = {
-    method: "put",
-    path:   "/users/:user/name",
+    updateUserName: {
+        method: "put",
+        path:   "/users/:user/name",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const updateUserPassword: Unit = {
-    method: "put",
-    path:   "/users/:user/password",
+    updateUserPassword: {
+        method: "put",
+        path:   "/users/:user/password",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const addUserNickname: Unit = {
-    method: "post",
-    path:   "/users/:user/nicknames/:nickname",
+    addUserNickname: {
+        method: "post",
+        path:   "/users/:user/nicknames/:nickname",
 
-    handler(req, res) {
-        res.sendStatus(501)
-    }
-}
+        handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
 
-export const addUser: Unit = {
-    method: "post",
-    path:   "/users/:user",
+    addUser: {
+        method: "post",
+        path:   "/users/:user",
 
-    handler(req, res) {
-        res.sendStatus(501)
+        handler(req, res) {
+            res.sendStatus(501)
+        }
     }
 }

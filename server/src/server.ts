@@ -79,8 +79,10 @@ export default class Server {
                 function createRouter(this: Server): Router {
                     const router = Router()
 
-                    for (const unitName in api) {
-                        const unit = (api as any)[unitName] as api.Unit
+                    router.use(express.json())
+
+                    for (const unitName in api.units) {
+                        const unit = (api.units as any)[unitName] as api.Unit
                         router[unit.method](unit.path, unit.handler.bind(this))
                     }
 
