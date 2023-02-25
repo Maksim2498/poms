@@ -44,7 +44,7 @@ section on [project's home page](https://github.com/Maksim2498/poms).
 
 ___Warning___:
 
-This document wouldn't Bukkit plugin building process. To get more inforamtion on this topic see [this](/plugin/README.md).
+This document wouldn't guide you through Bukkit plugin building process. To get more inforamtion on this topic see [this](/plugin/README.md).
 
 ## Installation
 
