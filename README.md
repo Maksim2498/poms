@@ -105,7 +105,8 @@ node start
 
 ## Documentation
 
-- [Code of Conduct](/docs/CODE_OF_CONDUCT.md).
+- [Code of Conduct](/docs/CODE_OF_CONDUCT.md);
+- [Security](/docs/SECURITY.md).
 
 __API__:
 
