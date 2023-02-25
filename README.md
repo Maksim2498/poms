@@ -15,6 +15,7 @@
 
 This is all-in-one solution for administration of private offline-mode Minecraft server.
 It consists of Bukkit plugin for Minecraft server, back-end server with REST API and front-end Web-based interface.
+It provides the means for authorization, user management, and remote console access from browser (for administrators only).
 
 You can get detailed information on project components in the following files:
 
