@@ -54,7 +54,7 @@ configuration see [this](/server/docs/config.md).
 
 __Windows__:
 
-Simply double click on `install.bat` batch file or run the following command in your terminal:
+Simply double click on `install.bat` batch file or execute the following command in your terminal:
 
 ```sh
 install.bat
@@ -62,7 +62,7 @@ install.bat
 
 __Unix-Like__:
 
-Run the following command in your terminal:
+Execute the following command in your terminal:
 
 ```sh
 ./install.sh
@@ -72,7 +72,7 @@ __Other__:
 
 This method is universal and isn't dependent on your operating system.
 
-Run the following command in your terminal:
+Execute the following command in your terminal:
 
 ```sh
 node install.js
@@ -84,7 +84,7 @@ To run __POMS__ follow the steps listed below depending on your operating system
 
 __Windows__:
 
-Simply double click on `run.bat` file or run the following command in your terminal:
+Simply double click on `run.bat` file or execute the following command in your terminal:
 
 ```sh
 run.bat
@@ -92,7 +92,7 @@ run.bat
 
 __Unix-Like__:
 
-Run the following command in your terminal:
+Execute the following command in your terminal:
 
 ```sh
 ./run.sh
@@ -102,7 +102,7 @@ __Other__:
 
 This method is universal and isn't dependent on your operating system.
 
-Run the following commands in your terminal:
+Execute the following commands in your terminal:
 
 ```sh
 cd server
