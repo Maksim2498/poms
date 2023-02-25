@@ -1,5 +1,11 @@
 # POMS - Personal Offline Minecraft Server
 
+![Server Version](https://img.shields.io/github/package-json/v/Maksim2498/poms?filename=server%2Fpackage.json&label=server%20version)
+![Site Version](https://img.shields.io/github/package-json/v/Maksim2498/poms?filename=site%2Fpackage.json&label=client%20version)
+![Plugin Version](https://img.shields.io/github/v/release/Maksim2498/poms?label=plugin%20version)
+[![License](https://img.shields.io/github/license/Maksim2498/poms)](https://opensource.org/license/mit/)
+![Downloads](https://img.shields.io/github/downloads/Maksim2498/poms/total)
+
 ![Logo](/images/logo.png)
 
 ## Table of Contents
