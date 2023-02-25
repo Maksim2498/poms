@@ -257,11 +257,11 @@ export default class Config {
 
                 // Logic
                 { path: "logic.createAdmin",           type: "boolean" },
-                { path: "maxTokens",                   type: "number"  },
-                { path: "maxNicknames",                type: "number"  },
-                { path: "buildStatic",                 type: "boolean" },
-                { path: "buildStaticPath",             type: "string"  },
-                { path: "openBrowser",                 type: "boolean" },
+                { path: "logic.maxTokens",             type: "number"  },
+                { path: "logic.maxNicknames",          type: "number"  },
+                { path: "logic.buildStatic",           type: "boolean" },
+                { path: "logic.buildStaticPath",       type: "string"  },
+                { path: "logic.openBrowser",           type: "boolean" },
             ]
         })
 
