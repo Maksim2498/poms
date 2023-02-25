@@ -114,7 +114,7 @@ __Response__:
     nicknames: string[] // base64-encoded. Added if <nicknames> option is set
 
     reg: {
-        time:  string        // if <nicknames> option is set
+        time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
         login: string | null // base64-encoded
     }
 }[]
