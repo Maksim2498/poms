@@ -73,7 +73,7 @@ Those are all available placeholders:
 
 ## Minimal Config
 
-Minimal valid config is following:
+Minimal valid config is the following:
 
 ```json
 {
