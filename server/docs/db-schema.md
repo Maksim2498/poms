@@ -74,10 +74,10 @@ __Definition__:
 
 ```sql
 CREATE TABLE ATokens (
-    id       BINARY(64)                NOT NULL PRIMARY KEY,
-    user_id  BIGINT                    NOT NULL,
-    cr_time  TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    exp_time TIMESTAMP                 NOT NULL,
+    id       BINARY(64) NOT NULL PRIMARY KEY,
+    user_id  BIGINT     NOT NULL,
+    cr_time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    exp_time TIMESTAMP  NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
 )
@@ -95,10 +95,10 @@ __Definition__:
 
 ```sql
 CREATE TABLE RTokens (
-    id        BINARY(64)                NOT NULL PRIMARY KEY,
-    atoken_id BINARY(64)                NOT NULL,
-    cr_time   TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    exp_time  TIMESTAMP                 NOT NULL,
+    id        BINARY(64) NOT NULL PRIMARY KEY,
+    atoken_id BINARY(64) NOT NULL,
+    cr_time   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    exp_time  TIMESTAMP  NOT NULL,
 
     FOREIGN KEY (atoken_id) REFERENCES ATokens (id) ON DELETE CASCADE
 )
@@ -117,8 +117,8 @@ __Definition__:
 ```sql
 CREATE EVENT CleanUp
 ON SCHEDULE EVERY 1 DAY
-DO BEIGN
-    DELETE FROM rtokens WHERE exp_time >= now();
-    DELETE FROM atokens WHERE exp_time >= now();
-END
+DO
+    DELETE FROM ATokens WHERE id in (
+        SELECT atoken_id FROM RTokens WHERE exp_time >= now()
+    );
 ```

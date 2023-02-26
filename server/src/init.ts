@@ -100,10 +100,10 @@ async function createCleanUpEvent(connection: AsyncConnection) {
 
     await connection.query("CREATE EVENT CleanUp "
                          + "ON SCHEDULE EVERY 1 DAY "
-                         + "DO BEGIN "
-                         +     "DELETE FROM rtokens WHERE exp_time >= now();"
-                         +     "DELETE FROM atokens WHERE exp_time >= now();"
-                         + "END")
+                         + "DO "
+                         +     "DELETE FROM ATokens WHERE id in ("
+                         +         "SELECT atoken_id FROM RTokens WHERE exp_time >= now()"
+                         +     ")")
 
     connection.logger?.info("Created")
 }
