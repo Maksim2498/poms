@@ -23,7 +23,9 @@ The following is a complete list of all tables with their detailed description.
 
 Holds all users with their login, name, password hash, and admin flag.
 
-`password_hash` = UNHEX(SHA2(`login` + ":" + `password`, 512)).
+```sql
+password_hash = UNHEX(SHA2(login + ":" + password, 512))
+```
 
 __Definition__:
 
@@ -63,7 +65,9 @@ CREATE TABLE Nicknames (
 
 Holds all users' access and refresh tokens with expiration date and time.
 
-`id` = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP()))).
+```sql
+id = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))
+```
 
 __Definition__:
 
