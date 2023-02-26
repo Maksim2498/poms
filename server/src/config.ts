@@ -158,9 +158,9 @@ export default class Config {
 
         logger?.info("Reading config...")
 
-        const json = await this.readJSON(path, logger)
+        const json = await this.readJson(path, logger)
 
-        this.validateJSON(json, logger)
+        this.validateJson(json, logger)
 
         const config = new Config(json, path)
 
@@ -194,7 +194,7 @@ export default class Config {
         }
     }
 
-    private static async readJSON(path: string, logger?: Logger): Promise<any> {
+    private static async readJson(path: string, logger?: Logger): Promise<any> {
         try {
             const buffer = await fsp.readFile(path)
             const string = buffer.toString();
@@ -221,7 +221,7 @@ export default class Config {
         }
     }
 
-    private static validateJSON(json: any, logger?: Logger) {
+    private static validateJson(json: any, logger?: Logger) {
         const result = o.validate(json, {
             fields: [
                 // API
@@ -270,11 +270,11 @@ export default class Config {
                 throw new Error(`Configuration option "${result.path}" must be of ${result.expected} type but it's of ${result.got} type`)
         }
 
-        this.validateJSONMysqlCredentials(json)
-        this.validateJSONPortFields(json)
+        this.validateJsonMysqlCredentials(json)
+        this.validateJsonPortFields(json)
     }
 
-    private static validateJSONMysqlCredentials(json: any, logger?: Logger) {
+    private static validateJsonMysqlCredentials(json: any, logger?: Logger) {
         if ((json.mysql?.login        == null || json.mysql?.password        == null)
          && (json.mysql?.init?.login  == null || json.mysql?.init?.password  == null
           || json.mysql?.serve?.login == null || json.mysql?.serve?.password == null)) {
@@ -288,12 +288,12 @@ export default class Config {
         }
     }
 
-    private static validateJSONPortFields(json: any, logger?: Logger) {
-        this.validateJSONPortField(json, "api.port",   logger)
-        this.validateJSONPortField(json, "mysql.port", logger)
+    private static validateJsonPortFields(json: any, logger?: Logger) {
+        this.validateJsonPortField(json, "api.port",   logger)
+        this.validateJsonPortField(json, "mysql.port", logger)
     }
 
-    private static validateJSONPortField(json: any, path: string, logger?: Logger) {
+    private static validateJsonPortField(json: any, path: string, logger?: Logger) {
         const port = o.getField(json, path)
 
         if (port == null)
