@@ -57,11 +57,9 @@ is described here as _TypeScript_ data type. The following is a complete API met
 
 ### Authentication
 
-Used for initial token reception and for it's refreshing.
+Used for initial token pair reception.
 
 __Request__:
-
-For initial token reception:
 
 ```http
 POST /auth
@@ -72,7 +70,27 @@ Authorization: Basic <base64 encoded login>:<base64 encoded password>
 Accept: application/json
 ```
 
-For token refreshing:
+__Response__:
+
+```ts
+{
+    access: {
+        id:  string // token hex string
+        exp: string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+    }
+
+    refresh: {
+        id:  string // token hex string
+        exp: string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+    }
+}
+```
+
+### Reauthenticate
+
+Used for access token renewal.
+
+__Request__:
 
 ```http
 POST /auth

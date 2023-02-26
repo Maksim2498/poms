@@ -62,6 +62,15 @@ export const units: UnitCollection = {
         }
     },
 
+    reauth: {
+        method: "post",
+        path:   "/reauth",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
     deauth: {
         method: "post",
         path:   "/deauth",
