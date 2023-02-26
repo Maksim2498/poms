@@ -1,7 +1,8 @@
 import crypto          from "crypto"
 import AsyncConnection from "util/mysql/AsyncConnection"
 
-import { ReadonlyTable, expr                        } from "util/mysql/Table"
+import { ReadonlyTable, expr                                          } from "./util/mysql/Table"
+import { dateSecondsAhead                                             } from "./util/date"
 import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./db-schema"
 
 export const DEFAULT_ADMIN_LOGIN    = "admin"
@@ -9,14 +10,14 @@ export const DEFAULT_ADMIN_PASSWORD = "admin"
 
 export type User = string | number
 
-export interface AuthOptions {
+export interface LifeTimeOptions {
     accessLifeTime?:  number
     refreshLifeTime?: number
 }
 
-export const DEFAULT_AUTH_OPTIONS: AuthOptions = {
-    accessLifeTime:  30 * 60,
-    refreshLifeTime: 7 * 24 * 60 * 60 // Weak
+export const DEFAULT_LIFETIME_OPTIONS: LifeTimeOptions = {
+    accessLifeTime:  30 * 60,         // 30 minutes
+    refreshLifeTime: 7 * 24 * 60 * 60 // 1  weak
 }
 
 export interface TokenPair {
@@ -29,53 +30,55 @@ export interface Token {
     exp?: Date
 }
 
-export async function auth(connection: AsyncConnection, login: string, password: string, options: AuthOptions = DEFAULT_AUTH_OPTIONS): Promise<TokenPair> {
-    const user_id    = await getUserIdByCredentials(connection, login, password)
-    const accessId   = generateId()
-    const accessExp  = dateSecondsAhead(options.accessLifeTime)
-    const refreshId  = generateId()
-    const refreshExp = dateSecondsAhead(options.refreshLifeTime)
+export async function auth(connection: AsyncConnection, login: string, password: string, options: LifeTimeOptions = DEFAULT_LIFETIME_OPTIONS): Promise<TokenPair> {
+    const userId   = await getUserIdByCredentials(connection, login, password)
+    return await createTokenPair(connection, userId, options)
+}
+
+export async function reauth(connection: AsyncConnection, rTokenId: Buffer, options: LifeTimeOptions = DEFAULT_LIFETIME_OPTIONS): Promise<TokenPair> {
+    const rTokenInfo = await getRTokenInfo(connection, rTokenId,            true)
+    const aTokenInfo = await getATokenInfo(connection, rTokenInfo.aTokenId, true)
+    
+    await deleteAToken(connection, aTokenInfo.id) // Refresh token will be deleted cascade
+    
+    return await createTokenPair(connection, aTokenInfo.userId, options)
+}
+
+export async function createTokenPair(connection: AsyncConnection, userId: number, options: LifeTimeOptions = DEFAULT_LIFETIME_OPTIONS): Promise<TokenPair> {
+    const aTokenId  = generateTokenId()
+    const aTokenExp = dateSecondsAhead(options.accessLifeTime)
+    const rTokenId  = generateTokenId()
+    const rTokenExp = dateSecondsAhead(options.refreshLifeTime)
 
     await A_TOKENS_TABLE.insert(connection, {
-        id:       accessId,
-        exp_time: accessExp,
-        user_id
+        id:       aTokenId,
+        user_id:  userId,
+        exp_time: aTokenExp
     })
 
     await R_TOKENS_TABLE.insert(connection, {
-        id:        refreshId,
-        access_id: accessId,
-        exp_time:  refreshExp
+        id:        rTokenId,
+        atoken_id: aTokenId,
+        exp_time:  rTokenExp
     })
 
     return {
         id: {
-            id:  accessId,
-            exp: accessExp
+            id:  aTokenId,
+            exp: aTokenExp
         },
 
         refresh: {
-            id:  refreshId,
-            exp: refreshExp
+            id:  rTokenId,
+            exp: rTokenExp
         }
     }
+}
 
-    function generateId() {
-        const id = crypto.randomBytes(64)
-        id.writeUInt32BE(Date.now() / 1000, id.length - 4)
-        return id
-    }
-
-    function dateSecondsAhead(seconds?: number) {
-        if (seconds == null)
-            return undefined
-
-        const date = new Date()
-
-        date.setSeconds(date.getSeconds() + seconds)
-
-        return date
-    }
+export function generateTokenId(): Buffer {
+    const id = crypto.randomBytes(64)
+    id.writeUInt32BE(Date.now() / 1000, id.length - 4)
+    return id
 }
 
 export interface TokenPairJson {
@@ -247,6 +250,94 @@ export async function getValidUserId(connection: AsyncConnection, user: User): P
 export async function getUserId(conneciton: AsyncConnection, user: User): Promise<number> {
     return typeof user === "string" ? (await getUserInfo(conneciton, user, true)).id
                                     : user
+}
+
+export async function deleteRToken(conneciton: AsyncConnection, rToken: Buffer) {
+    checkToken(rToken)
+    await R_TOKENS_TABLE.delete(conneciton).where("id = ?", rToken)
+}
+
+export async function deleteAToken(conneciton: AsyncConnection, aToken: Buffer) {
+    checkToken(aToken)
+    await A_TOKENS_TABLE.delete(conneciton).where("id = ?", aToken)
+}
+
+export interface ATokenInfo {
+    id:       Buffer
+    userId:   number
+    exp:      Date
+    creation: Date
+}
+
+export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force: true): Promise<ATokenInfo>
+export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force?: false): Promise<ATokenInfo | undefined>
+export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force: boolean = false): Promise<ATokenInfo | undefined> {
+    checkToken(aTokenId)
+
+    const results = await A_TOKENS_TABLE.select(connection).where("id = ?", aTokenId)
+
+    if (!results.length) {
+        if (force)
+            throw new LogicError("Invalid access token")
+
+        return undefined
+    }
+
+    const { id, user_id, exp_time, cr_time } = results[0]
+
+    return {
+        id,
+        userId:   user_id,
+        exp:      exp_time,
+        creation: cr_time
+    }
+}
+
+export interface RTokenInfo {
+    id:       Buffer
+    aTokenId: Buffer
+    exp:      Date
+    creation: Date
+}
+
+export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: true): Promise<RTokenInfo>
+export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force?: false): Promise<RTokenInfo | undefined>
+export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: boolean = false): Promise<RTokenInfo | undefined> {
+    checkToken(rTokenId)
+
+    const results = await R_TOKENS_TABLE.select(conneciton).where("id = ?", rTokenId)
+
+    if (!results.length) {
+        if (force)
+            throw new LogicError("Invalid refresh token")
+
+        return undefined
+    }
+
+    const { id, atoken_id, exp_time, cr_time } = results[0]
+
+    return {
+        id,
+        aTokenId: atoken_id,
+        exp:      exp_time,
+        creation: cr_time
+    }
+}
+
+export function checkToken(rToken: Buffer) {
+    const invalidReason = validateToken(rToken)
+
+    if (invalidReason !== undefined)
+        throw new LogicError(invalidReason)
+}
+
+export function validateToken(tokenId: Buffer): string | undefined {
+    const LENGTH = 64
+
+    if (tokenId.length !== LENGTH)
+        return `Invalid token length. Expected: ${LENGTH}. Got: ${tokenId.length}`
+
+    return undefined
 }
 
 export interface UserInfo {

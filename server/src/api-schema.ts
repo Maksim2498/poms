@@ -2,6 +2,7 @@ import isBase64 from "is-base64"
 import Server   from "./Server"
 
 import { Request, Response } from "express"
+import { isHex             } from "./util/string"
 
 import * as l from "./logic"
 
@@ -67,7 +68,23 @@ export const units: UnitCollection = {
         path:   "/reauth",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const authorization = req.headers.authorization
+
+            if (authorization == null || !isHex(authorization)) {
+                res.sendStatus(400)
+                return
+            }
+
+            const rToken = Buffer.from(authorization, "hex")
+
+            if (rToken.length != 64) {
+                res.sendStatus(400)
+                return
+            }
+
+            const tokenPair = await l.reauth(this.mysqlConnection, rToken)
+
+            res.json(l.tokenPairToJson(tokenPair))
         }
     },
 

@@ -27,10 +27,10 @@ const aTokensTable = new Table("ATokens")
 
 const rTokensTable = new Table("RTokens")
     .addColumn({ name: "id",        type: t.binary(64),  primaryKey:   true                })
-    .addColumn({ name: "access_id", type: t.binary(64)                                     })
+    .addColumn({ name: "atoken_id", type: t.binary(64)                                     })
     .addColumn({ name: "exp_time",  type: t.timestamp(), nullable:     true                })
     .addColumn({ name: "cr_time",   type: t.timestamp(), defaultValue: t.CURRENT_TIMESTAMP })
-    .addForeignKey("access_id", aTokensTable, "id")
+    .addForeignKey("atoken_id", aTokensTable, "id")
 
 export const USERS_TABLE:     t.ReadonlyTable = usersTable
 export const NICKNAMES_TABLE: t.ReadonlyTable = nicknamesTable
