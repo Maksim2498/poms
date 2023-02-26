@@ -202,8 +202,12 @@ export async function deleteAllNicknames(connection: AsyncConnection, user?: Use
     await deleteAllTokensOrNicknames(connection, NICKNAMES_TABLE, user)
 }
 
-export async function deleteAllTokens(connection: AsyncConnection, user?: User) {
+export async function deleteAllATokens(connection: AsyncConnection, user?: User) {
     await deleteAllTokensOrNicknames(connection, A_TOKENS_TABLE, user)
+}
+
+export async function deleteAllRTokens(connection: AsyncConnection, user?: User) {
+    await deleteAllTokensOrNicknames(connection, R_TOKENS_TABLE, user)
 }
 
 async function deleteAllTokensOrNicknames(connection: AsyncConnection, table: ReadonlyTable, user?: User) {
