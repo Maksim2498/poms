@@ -6,7 +6,7 @@ import { deepAssign               } from "./util/object"
 
 import * as o from "./util/object"
 
-export interface ConfigJSON {
+export interface ConfigJson {
     http?: {
         apiPrefix?:    string
         host?:         string
@@ -87,7 +87,7 @@ export default class Config {
     static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = this.placehold("<SITE_PATH>")
     static readonly DEFAULT_LOGIC_OPEN_BROWSER            = true
 
-    readonly read: DeepReadonly<ConfigJSON>
+    readonly read: DeepReadonly<ConfigJson>
     readonly path: string
 
     static placehold(path: string): string {
@@ -303,7 +303,7 @@ export default class Config {
             throw new Error(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`)
     }
 
-    constructor(json: ConfigJSON, path?: string) {
+    constructor(json: ConfigJson, path?: string) {
         const read = deepAssign({}, json)
 
         if (read.http != null) {
