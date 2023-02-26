@@ -1,7 +1,7 @@
 import { promises as fsp                            } from "fs"
 import { dirname                                    } from "path"
 import { Logger                                     } from "winston"
-import { USERS_TABLE, NICKNAMES_TABLE, TOKENS_TABLE } from "./db-schema"
+import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./db-schema"
 
 import cp              from "child_process"
 import AsyncConnection from "./util/mysql/AsyncConnection"
@@ -90,7 +90,8 @@ async function initDatabaseObjects(connection: AsyncConnection, config: Config) 
 async function createTablesAndEvents(connection: AsyncConnection) {
     await USERS_TABLE.create(connection)
     await NICKNAMES_TABLE.create(connection)
-    await TOKENS_TABLE.create(connection)
+    await A_TOKENS_TABLE.create(connection)
+    await R_TOKENS_TABLE.create(connection)
     await createCleanUpEvent(connection)
 }
 
@@ -99,7 +100,10 @@ async function createCleanUpEvent(connection: AsyncConnection) {
 
     await connection.query("CREATE EVENT CleanUp "
                          + "ON SCHEDULE EVERY 1 DAY "
-                         + "DO DELETE FROM tokens WHERE exp >= now()")
+                         + "DO BEGIN "
+                         +     "DELETE FROM rtokens WHERE exp_time >= now();"
+                         +     "DELETE FROM atokens WHERE exp_time >= now();"
+                         + "END")
 
     connection.logger?.info("Created")
 }
@@ -113,7 +117,11 @@ async function checkTablesAndEvents(connection: AsyncConnection, throwOnInvalid:
         return
 
     await handleTable(NICKNAMES_TABLE)
-    await handleTable(TOKENS_TABLE)
+    
+    if (await handleTable(A_TOKENS_TABLE))
+        return
+
+    await handleTable(R_TOKENS_TABLE)
 
     async function handleTable(table: t.ReadonlyTable): Promise<boolean> {
         if (tables.includes(table.name))

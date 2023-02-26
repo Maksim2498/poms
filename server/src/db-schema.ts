@@ -18,18 +18,21 @@ const nicknamesTable = new Table("Nicknames")
     .addForeignKey("user_id", usersTable, "id")
     .addPrimaryKey("user_id", "nickname")
 
-const tokensTable = new Table("Tokens")
-    .addColumn({ name: "id",       type: t.binary(64),  defaultValue: t.expr("CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))"), primaryKey: true })
-    .addColumn({ name: "user_id",  type: t.bigint()                                                                                                      })
-    .addColumn({ name: "exp_time", type: t.timestamp(), nullable:     true                                                                               })
-    .addColumn({ name: "cr_time",  type: t.timestamp(), defaultValue: t.CURRENT_TIMESTAMP                                                                })
-    .addColumn({ name: "type",     type: t.enumeration("access", "refresh")                                                                              })
+const aTokensTable = new Table("ATokens")
+    .addColumn({ name: "id",       type: t.binary(64),  primaryKey:   true                })
+    .addColumn({ name: "user_id",  type: t.bigint()                                       })
+    .addColumn({ name: "exp_time", type: t.timestamp(), nullable:     true                })
+    .addColumn({ name: "cr_time",  type: t.timestamp(), defaultValue: t.CURRENT_TIMESTAMP })
     .addForeignKey("user_id", usersTable, "id")
+
+const rTokensTable = new Table("RTokens")
+    .addColumn({ name: "id",        type: t.binary(64),  primaryKey:   true                })
+    .addColumn({ name: "access_id", type: t.binary(64)                                     })
+    .addColumn({ name: "exp_time",  type: t.timestamp(), nullable:     true                })
+    .addColumn({ name: "cr_time",   type: t.timestamp(), defaultValue: t.CURRENT_TIMESTAMP })
+    .addForeignKey("access_id", aTokensTable, "id")
 
 export const USERS_TABLE:     t.ReadonlyTable = usersTable
 export const NICKNAMES_TABLE: t.ReadonlyTable = nicknamesTable
-export const TOKENS_TABLE:    t.ReadonlyTable = tokensTable
-
-console.log(USERS_TABLE.toSql())
-console.log(NICKNAMES_TABLE.toSql())
-console.log(TOKENS_TABLE.toSql())
+export const A_TOKENS_TABLE:  t.ReadonlyTable = aTokensTable
+export const R_TOKENS_TABLE:  t.ReadonlyTable = rTokensTable

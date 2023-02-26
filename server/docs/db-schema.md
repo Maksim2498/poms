@@ -7,7 +7,8 @@
 - [Tables](#tables);
   - [Users](#users);
   - [Nicknames](#nicknames);
-  - [Tokens](#tokens);
+  - [ATokens](#atokens);
+  - [RTokens](#rtokens);
 - [Events](#events);
   - [Clean Up](#clean-up).
 
@@ -61,21 +62,45 @@ CREATE TABLE Nicknames (
 )
 ```
 
-### Tokens
+### ATokens
 
-Holds all users' access and refresh tokens with expiration date and time.
+Holds all users' access tokens with their creation and expiration date and time.
+
+```sql
+id = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))
+```
 
 __Definition__:
 
 ```sql
-CREATE TABLE Tokens (
-    id       BINARY(64)                NOT NULL DEFAULT (CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))) PRIMARY KEY,
+CREATE TABLE ATokens (
+    id       BINARY(64)                NOT NULL PRIMARY KEY,
     user_id  BIGINT                    NOT NULL,
     cr_time  TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     exp_time TIMESTAMP                 NOT NULL,
-    type     ENUM("access", "refresh") NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
+)
+```
+
+### RTokens
+
+Holds all users' refresh tokens with their creation and expiration date and time.
+
+```sql
+id = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))
+```
+
+__Definition__:
+
+```sql
+CREATE TABLE RTokens (
+    id        BINARY(64)                NOT NULL PRIMARY KEY,
+    atoken_id BINARY(64)                NOT NULL,
+    cr_time   TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    exp_time  TIMESTAMP                 NOT NULL,
+
+    FOREIGN KEY (atoken_id) REFERENCES ATokens (id) ON DELETE CASCADE
 )
 ```
 
@@ -92,6 +117,8 @@ __Definition__:
 ```sql
 CREATE EVENT CleanUp
 ON SCHEDULE EVERY 1 DAY
-DO
-    DELETE FROM tokens WHERE exp >= now()
+DO BEIGN
+    DELETE FROM rtokens WHERE exp_time >= now();
+    DELETE FROM atokens WHERE exp_time >= now();
+END
 ```

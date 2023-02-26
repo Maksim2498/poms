@@ -2,7 +2,7 @@ import crypto          from "crypto"
 import AsyncConnection from "util/mysql/AsyncConnection"
 
 import { ReadonlyTable, expr                        } from "util/mysql/Table"
-import { USERS_TABLE, NICKNAMES_TABLE, TOKENS_TABLE } from "./db-schema"
+import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./db-schema"
 
 export const DEFAULT_ADMIN_LOGIN    = "admin"
 export const DEFAULT_ADMIN_PASSWORD = "admin"
@@ -10,8 +10,8 @@ export const DEFAULT_ADMIN_PASSWORD = "admin"
 export type User = string | number
 
 export interface AuthOptions {
-    accessLifeTime:  number
-    refreshLifeTime: number
+    accessLifeTime?:  number
+    refreshLifeTime?: number
 }
 
 export const DEFAULT_AUTH_OPTIONS: AuthOptions = {
@@ -25,8 +25,8 @@ export interface TokenPair {
 }
 
 export interface Token {
-    id:  Buffer
-    exp: Date
+    id:   Buffer
+    exp?: Date
 }
 
 export async function auth(connection: AsyncConnection, login: string, password: string, options: AuthOptions = DEFAULT_AUTH_OPTIONS): Promise<TokenPair> {
@@ -36,18 +36,16 @@ export async function auth(connection: AsyncConnection, login: string, password:
     const refreshId  = generateId()
     const refreshExp = dateSecondsAhead(options.refreshLifeTime)
 
-    await TOKENS_TABLE.insert(connection, {
-        user_id,
+    await A_TOKENS_TABLE.insert(connection, {
         id:       accessId,
         exp_time: accessExp,
-        type:     "access"
+        user_id
     })
 
-    await TOKENS_TABLE.insert(connection, {
-        user_id,
-        id:       refreshId,
-        exp_time: refreshExp,
-        type:     "refresh"
+    await R_TOKENS_TABLE.insert(connection, {
+        id:        refreshId,
+        access_id: accessId,
+        exp_time:  refreshExp
     })
 
     return {
@@ -68,9 +66,14 @@ export async function auth(connection: AsyncConnection, login: string, password:
         return id
     }
 
-    function dateSecondsAhead(seconds: number) {
+    function dateSecondsAhead(seconds?: number) {
+        if (seconds == null)
+            return undefined
+
         const date = new Date()
+
         date.setSeconds(date.getSeconds() + seconds)
+
         return date
     }
 }
@@ -88,14 +91,14 @@ export function tokenPairToJson(tokenPair: TokenPair): TokenPairJson {
 }
 
 export interface TokenJson {
-    id:  string
-    exp: string
+    id:   string
+    exp?: string
 }
 
 export function tokenToJson(token: Token): TokenJson {
     return {
         id:  token.id.toString("hex"),
-        exp: token.exp.toISOString()
+        exp: token.exp?.toISOString()
     }
 }
 
@@ -200,7 +203,7 @@ export async function deleteAllNicknames(connection: AsyncConnection, user?: Use
 }
 
 export async function deleteAllTokens(connection: AsyncConnection, user?: User) {
-    await deleteAllTokensOrNicknames(connection, TOKENS_TABLE, user)
+    await deleteAllTokensOrNicknames(connection, A_TOKENS_TABLE, user)
 }
 
 async function deleteAllTokensOrNicknames(connection: AsyncConnection, table: ReadonlyTable, user?: User) {
