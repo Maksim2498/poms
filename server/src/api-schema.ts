@@ -28,20 +28,22 @@ export function requireAcceptJson(req: Request, res: Response, next: () => void)
     res.sendStatus(406)
 }
 
+export function requireAuthorization(req: Request, res: Response, next: () => void) {
+    if (req.headers.authorization != null) {
+        next()
+        return
+    }
+
+    res.sendStatus(401)
+}
+
 export const units: UnitCollection = {
     auth: {
         method: "post",
         path:   "/auth",
 
         async handler(req, res) {
-            const authorization = req.headers.authorization
-            
-            if (authorization == null) {
-                res.sendStatus(400)
-                return
-            }
-
-            const splits = authorization.split(":")
+            const splits = req.headers.authorization!.split(":")
 
             if (splits.length != 2) {
                 res.sendStatus(400)
@@ -68,9 +70,9 @@ export const units: UnitCollection = {
         path:   "/reauth",
 
         async handler(req, res) {
-            const authorization = req.headers.authorization
+            const authorization = req.headers.authorization!
 
-            if (authorization == null || !isHex(authorization)) {
+            if (!isHex(authorization)) {
                 res.sendStatus(400)
                 return
             }
@@ -93,7 +95,23 @@ export const units: UnitCollection = {
         path:   "/deauth",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const authorization = req.headers.authorization!
+
+            if (!isHex(authorization)) {
+                res.sendStatus(400)
+                return
+            }
+
+            const aToken = Buffer.from(authorization, "hex")
+
+            if (aToken.length != 64) {
+                res.sendStatus(400)
+                return
+            }
+
+            await l.deleteAToken(this.mysqlConnection, aToken)
+        
+            res.json({})
         }
     },
 

@@ -78,6 +78,7 @@ export default class Server {
                     const router = Router()
 
                     router.use(api.requireAcceptJson)
+                    router.use(api.requireAuthorization)
                     router.use(express.json())
 
                     for (const unitName in api.units) {

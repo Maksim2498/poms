@@ -119,7 +119,7 @@ __Response__:
 
 ### Deauthentication
 
-Used for token deactivation.
+Used for access and refresh token pair deactivation.
 
 __Request__:
 
@@ -128,7 +128,7 @@ POST /deauth
 ```
 
 ```http
-Authorization: Bearer <access or refresh token>
+Authorization: Bearer <access token>
 Accept: application/json
 ```
 
