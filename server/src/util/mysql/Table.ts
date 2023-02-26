@@ -5,6 +5,26 @@ import { deepAssign } from "util/object"
 
 import * as s from "./statement"
 
+// Expression:
+
+export function expr(expression: string, ...values: any[]) {
+    return new Expression(expression, ...values)
+}
+
+export class Expression {
+    readonly expression: string
+    readonly values:     any[]
+
+    constructor(expression: string, ...values: any[]) {
+        this.expression = expression
+        this.values     = values
+    }
+
+    toSql(): string {
+        return mysql.format(this.expression, this.values)
+    }
+}
+
 // Column:
 
 export type AddColumnOptions = {
@@ -98,9 +118,9 @@ export type DefaultValue = number
                          | string
                          | boolean
                          | null
-                         | { special: "CURRENT_TIMESTAMP"}
-
-export const CURRENT_TIMESTAMP: DefaultValue = { special: "CURRENT_TIMESTAMP" }
+                         | Expression
+                        
+export const CURRENT_TIMESTAMP = expr("CURRENT_TIMESTAMP")
 
 // Constraint:
 
@@ -157,7 +177,7 @@ export interface ReadonlyTable {
     clear(connection: AsyncConnection): Promise<void>
     createAll(connection: AsyncConnection): Promise<void>
     create(connection: AsyncConnection): Promise<void>
-    isValid(connection: AsyncConnection, logInvalidAsError?: boolean): Promise<boolean>
+    validate(connection: AsyncConnection): Promise<string | undefined>
     insert(connection: AsyncConnection, insertPairs: InsertPairs): Promise<boolean>
     select(connection: AsyncConnection, ...columns: string[]): Filter
     delete(conneciton: AsyncConnection): Filter
@@ -303,17 +323,13 @@ export default class Table {
         conneciton.logger?.info("Created")
     }
 
-    async isValid(conneciton: AsyncConnection, logInvalidAsError?: boolean): Promise<boolean> {
-        conneciton.logger?.info(`Validating table "${this.displayName}"...`)
-        
-        const valid = await conneciton.query(
+    async validate(connection: AsyncConnection): Promise<string | undefined> {
+        return await connection.query(
             "DESC ??",
             this.displayName,
             (results: any[]) => {
-                if (results.length < this.columns.size) {
-                    logInvalid("Too few columns")
-                    return false
-                }
+                if (results.length < this.columns.size)
+                    return "Too few columns"
 
                 const checked = [] as string[]
 
@@ -325,63 +341,37 @@ export default class Table {
 
                     const expectedType = Table.typeToSql(column.type)
 
-                    if (Type !== expectedType) {
-                        logInvalid(`Invalid type in column "${column.displayName}". Expected: ${expectedType}. Got: ${Type}`)
-                        return false
-                    }
+                    if (Type !== expectedType)
+                        return `Invalid type in column "${column.displayName}". Expected: ${expectedType}. Got: ${Type}`
 
                     const gotNullable = Null === "YES"
 
-                    if (gotNullable != column.nullable) {
-                        logInvalid(`Invaild nullability in column "${column.displayName}". Expected: ${column.nullable}. Got: ${gotNullable}`)
-                        return false
-                    }
+                    if (gotNullable != column.nullable)
+                        return `Invaild nullability in column "${column.displayName}". Expected: ${column.nullable}. Got: ${gotNullable}`
 
                     const expectedDefault = Table.defaultValueToDescResult(column.defaultValue)
 
-                    if (Default != expectedDefault) {
-                        logInvalid(`Invalid default value in column "${column.displayName}". Expected: ${expectedDefault}. Got: ${Default}`)
-                        return false
-                    }
+                    if (Default != expectedDefault)
+                        return `Invalid default value in column "${column.displayName}". Expected: ${expectedDefault}. Got: ${Default}`
 
                     const expectedKey = this.columnToDescKey(column)
 
-                    if (Key != expectedKey) {
-                        logInvalid(`Invalid key in column "${column.displayName}". Expected ${expectedKey}. Got: ${Key}`)
-                        return false
-                    }
+                    if (Key != expectedKey)
+                        return `Invalid key in column "${column.displayName}". Expected ${expectedKey}. Got: ${Key}`
 
-                    if (column.autoIncrement && Extra !== "auto_increment") {
-                        logInvalid(`Missing auto_increment extra in column "${column.displayName}"`)
-                        return false
-                    }
+                    if (column.autoIncrement && Extra !== "auto_increment")
+                        return `Missing auto_increment extra in column "${column.displayName}"`
 
                     checked.push(column.name)
                 }
 
                 for (const column of this.columns.keys())
-                    if (!checked.includes(column)) {
-                        logInvalid(`Missing column "${this.columns.get(column)!.displayName}"`)
-                        return false
-                    }
+                    if (!checked.includes(column))
+                        return `Missing column "${this.columns.get(column)!.displayName}"`
 
-                return true;
+                return undefined;
             }
         )
-
-        if (valid)
-            conneciton.logger?.info("Valid")
-        else
-            logInvalid("Invalid")
-
-        return valid
-
-        function logInvalid(message: string) {
-            if (logInvalidAsError)
-                conneciton.logger?.error(message)
-            else
-                conneciton.logger?.info(message)
-        }
     }
 
     private static defaultValueToDescResult(value?: DefaultValue): any {
@@ -393,10 +383,12 @@ export default class Table {
                 return Number(value)
             
             case "object":
-                switch (value.special) {
-                    case "CURRENT_TIMESTAMP":
-                        return "CURRENT_TIMESTAMP"
-                }
+                if (value.expression.trim().toLowerCase() === "current_timestamp")
+                    return "now()"
+
+                return value.expression.trim()
+                                       .replaceAll(/\s+/g, "")
+                                       .toLowerCase()
 
             default:
                 return value
@@ -622,10 +614,7 @@ export default class Table {
                 return PREFIX + value.toString().toUpperCase()
 
             case "object":
-                switch (value.special) {
-                    case "CURRENT_TIMESTAMP":
-                        return PREFIX + "CURRENT_TIMESTAMP"
-                }
+                return `${PREFIX}(${value.toSql()})`
         }
     }
 
@@ -670,23 +659,7 @@ export default class Table {
     }
 }
 
-export function expr(expression: string, ...values: any[]) {
-    return new Expression(expression, ...values)
-}
-
-export class Expression {
-    expression: string
-    values:     any[]
-
-    constructor(expression: string, ...values: any[]) {
-        this.expression = expression
-        this.values     = values
-    }
-
-    toSql(): string {
-        return mysql.format(this.expression, this.values)
-    }
-}
+// Misc:
 
 export function isNameValid(name: string) {
     return name.match(/^\w+$/)

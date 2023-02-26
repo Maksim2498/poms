@@ -19,13 +19,17 @@ const nicknamesTable = new Table("Nicknames")
     .addPrimaryKey("user_id", "nickname")
 
 const tokensTable = new Table("Tokens")
-    .addColumn({ name: "id",       type: t.binary(64),  primaryKey: true                  })
-    .addColumn({ name: "user_id",  type: t.bigint()                                       })
-    .addColumn({ name: "exp_time", type: t.timestamp(), nullable: true                    })
-    .addColumn({ name: "cr_time",  type: t.timestamp(), defaultValue: t.CURRENT_TIMESTAMP })
-    .addColumn({ name: "type",     type: t.enumeration("access", "refresh")               })
+    .addColumn({ name: "id",       type: t.binary(64),  defaultValue: t.expr("CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))"), primaryKey: true })
+    .addColumn({ name: "user_id",  type: t.bigint()                                                                                                      })
+    .addColumn({ name: "exp_time", type: t.timestamp(), nullable:     true                                                                               })
+    .addColumn({ name: "cr_time",  type: t.timestamp(), defaultValue: t.CURRENT_TIMESTAMP                                                                })
+    .addColumn({ name: "type",     type: t.enumeration("access", "refresh")                                                                              })
     .addForeignKey("user_id", usersTable, "id")
 
 export const USERS_TABLE:     t.ReadonlyTable = usersTable
 export const NICKNAMES_TABLE: t.ReadonlyTable = nicknamesTable
 export const TOKENS_TABLE:    t.ReadonlyTable = tokensTable
+
+console.log(USERS_TABLE.toSql())
+console.log(NICKNAMES_TABLE.toSql())
+console.log(TOKENS_TABLE.toSql())

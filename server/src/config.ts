@@ -4,8 +4,6 @@ import { Logger                   } from "winston"
 import { DeepReadonly             } from "util/type"
 import { deepAssign               } from "./util/object"
 
-import LoggedError from "./util/LoggedError"
-
 import * as o from "./util/object"
 
 export interface ConfigJSON {
@@ -201,29 +199,25 @@ export default class Config {
             const buffer = await fsp.readFile(path)
             const string = buffer.toString();
 
-            return JSON.parse(string)
+            try {
+                return JSON.parse(string)
+            } catch (error) {
+                throw new Error(`Configuration file ${path} is a malformed json`, { cause: error })
+            }
         } catch (error) {
-            let message: string = `Failed to open configuration file ${path}`
-
-            if (error instanceof SyntaxError)
-                message = `Configuration file ${path} is a malformed json`
-            else if (error instanceof Error)
+            if (error instanceof Error)
                 switch ((error as any).code) {
                     case "ENOENT":
-                        message = `Configuration file ${path} not found`, { cause: error }
-                        break
+                        throw new Error(`Configuration file ${path} not found`, { cause: error })
 
                     case "EISDIR":
-                        message = `Configuration file ${path} is a directory`
-                        break
+                        throw new Error(`Configuration file ${path} is a directory`, { cause: error })
 
                     case "EPERM":
-                        message = `You have no permission to open configuration file ${path}`
+                        throw new Error(`You have no permission to open configuration file ${path}`, { cause: error })
                 }
 
-            logger?.error(message)
-
-            throw LoggedError.forward(error, logger)
+            throw new Error(`Failed to open configuration file ${path}`, { cause: error })
         }
     }
 
@@ -267,13 +261,13 @@ export default class Config {
 
         switch (result.error) {
             case "EXCESS":
-                throw LoggedError.fromMessage(`Found unknown configuration option "${result.path}"`, logger)
+                throw new Error(`Found unknown configuration option "${result.path}"`)
 
             case "MISSING":
-                throw LoggedError.fromMessage(`Missing required configuration option "${result.path}"`, logger)
+                throw new Error(`Missing required configuration option "${result.path}"`)
 
             case "TYPE_MISMATCH":
-                throw LoggedError.fromMessage(`Configuration option "${result.path}" must be of ${result.expected} type but it's of ${result.got} type`, logger)
+                throw new Error(`Configuration option "${result.path}" must be of ${result.expected} type but it's of ${result.got} type`)
         }
 
         this.validateJSONMysqlCredentials(json)
@@ -284,16 +278,13 @@ export default class Config {
         if ((json.mysql?.login        == null || json.mysql?.password        == null)
          && (json.mysql?.init?.login  == null || json.mysql?.init?.password  == null
           || json.mysql?.serve?.login == null || json.mysql?.serve?.password == null)) {
-            let message: string
-
             if (json.mysql?.login == json.mysql?.password)
-                message = 'Missing "mysql.login" and "mysql.password" configuration options'
-            else if (json.mysql?.login == null)
-                message = 'Missing "mysql.login" configuration option'
-            else
-                message = 'Missing "mysql.password" configuration option'
+                throw new Error('Missing "mysql.login" and "mysql.password" configuration options')
 
-            throw LoggedError.fromMessage(message, logger)
+            if (json.mysql?.login == null)
+                throw new Error('Missing "mysql.login" configuration option')
+
+            throw new Error('Missing "mysql.password" configuration option')
         }
     }
 
@@ -309,7 +300,7 @@ export default class Config {
             return
 
         if (!Number.isInteger(port) || port < 0 || port > 65535)
-            throw LoggedError.fromMessage(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`, logger)
+            throw new Error(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`)
     }
 
     constructor(json: ConfigJSON, path?: string) {
@@ -441,8 +432,8 @@ export default class Config {
         return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_TOKENS
     }
 
-    get logicMaxCNames(): number {
-        return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_NICKNAMES
+    get logicMaxNicknames(): number {
+        return this.read.logic?.maxNicknames ?? Config.DEFAULT_LOGIC_MAX_NICKNAMES
     }
 
     get logicBuildStatic(): boolean {

@@ -4,6 +4,7 @@
 
 - [Table of Contents](#table-of-contents);
 - [About](#about);
+- [Error Handling](#error-handling);
 - [Methods](#methods);
   - [Authentication](#authentication);
   - [Deauthentication](#deauthentication);
@@ -27,12 +28,32 @@
 
 This document contains detailed description on all supported API methods and their format.
 
+## Error Handling
+
+If server gets invalid request it sends `4xx` error to client. If something unexpected happends
+on the server side it sends `5xx` error. Else, if user send's structurally valid but logically
+invalid data (e.g. invalid login and password combination) server send's back a `200` code with
+json body of following the structure:
+
+```ts
+{
+    error: string
+}
+```
+
+Request is treated structurally invalid in the following cases:
+
+- Missing required header;
+- Required header's format is invalid;
+- Missing required body;
+- Required body format is invalid.
+
 ## Methods
 
-The following is a complete API method list. Every API method URI shown here is relative to
+Every API method URI shown here is relative to
 `http.apiPrefix` configuration option which defaults to `/api`. Data interchange format is _JSON_.
-Server will respond with JSON on every valid request. Request and response JSON structure is
-described here as _TypeScript_ data type.
+Server will respond with JSON on every structurally valid request. Request and response JSON structure
+is described here as _TypeScript_ data type. The following is a complete API method list.
 
 ### Authentication
 
@@ -67,13 +88,13 @@ __Response__:
 ```ts
 {
     access: {
-        token: string // token hex string
-        exp:   string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+        id:  string // token hex string
+        exp: string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
     }
 
     refresh: {
-        token: string // token hex string
-        exp:   string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+        id:  string // token hex string
+        exp: string // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
     }
 }
 ```

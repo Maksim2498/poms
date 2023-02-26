@@ -2,10 +2,9 @@ import { Logger                } from "winston"
 import { FieldInfo, MysqlError } from "mysql"
 import { normalize             } from "path"
 
-import mysql       from "mysql"
-import LoggedError from "util/LoggedError"
-import sleep       from "util/sleep"
-import Config      from "Config"
+import mysql  from "mysql"
+import sleep  from "util/sleep"
+import Config from "Config"
 
 export interface CreationOptions {
     logger?:            Logger
@@ -99,7 +98,7 @@ export default class AsyncConnection {
                 if (!error.fatal || this.state !== "online") 
                     return
 
-                this.logMysqlError(error)
+                this.logger?.error(error)
                 this.logger?.error("Lost connection with database")
 
                 this._connection.destroy()
@@ -108,6 +107,7 @@ export default class AsyncConnection {
 
                 while (true) {
                     this.logger?.info(`Trying to reconnect in ${this.reconnectInterval} seconds...`)
+
                     await sleep(1000 * this.reconnectInterval)
                     
                     try {
@@ -130,25 +130,24 @@ export default class AsyncConnection {
     }
 
     async connect() {
-        if (this.state !== "offline")
-            throw LoggedError.fromMessage(`Can connect only in "offline" state. Current state is "${this.state}"`, this.logger)
-
+        this.checkState("connect", "offline")
         await this.usafeConnect()
     }
 
     private async usafeConnect() {
         await new Promise<void>((resolve, reject) => {
             this.logger?.info(`Connecting to the database at ${this.address}...`)
+
             this._state = "connecting"
 
             this.connection.connect(error => {
                 if (error) {
-                    this.logMysqlError(error)
-                    reject(LoggedError.forward(error, this.logger))
+                    reject(error)
                     return
                 }
 
                 this.logger?.info("Connected")
+
                 this._state = "online"
                 resolve()
             })
@@ -161,8 +160,7 @@ export default class AsyncConnection {
         onSuccess: OnSuccess<T> = results => results,
         onError:   OnError<T>   = ()      => undefined
     ): Promise<T> {
-        if (this.state !== "online")
-            throw LoggedError.fromMessage(`Can prerform queries only in "online" state. Current state is "${this.state}"`, this.logger)
+        this.checkState("perform queries", "online")
 
         return await new Promise<T>((resolve, reject) => {
             this.connection.query(sql, values, (error, results, fieldInfo) => {
@@ -174,8 +172,7 @@ export default class AsyncConnection {
                         return
                     }
 
-                    this.logMysqlError(error)
-                    reject(LoggedError.forward(error, this.logger))
+                    reject(error)
                     return
                 }
 
@@ -185,29 +182,35 @@ export default class AsyncConnection {
     }
 
     async disconnect() {
-        if (this.state !== "online")
-            throw LoggedError.fromMessage(`Can disconnect only in "online" state. Current state is "${this.state}"`, this.logger)
+        this.checkState("disconnect", "online")
 
         await new Promise<void>(resolve => {
             this.logger?.info("Disconnecting from the database...")
+
             this._state = "disconnecting"
 
             this.connection.end(error => {
                 if (error) {
-                    this.logMysqlError(error)
+                    this.logger?.error(error)
 
                     if (!error.fatal)
                         this.connection.destroy()
                 }
 
                 this.logger?.info("Disconnected")
+
                 this._state = "offline"
                 resolve()
             })
         })
     }
 
-    private logMysqlError(error: MysqlError) {
-        this.logger?.error(error.sqlMessage ?? error.message ?? error ?? "Unknown MySQL error")
+    private checkState(action: string, requiredState: State) {
+        if (this.state !== requiredState)
+            this.invalidState(action, requiredState)
+    }
+
+    private invalidState(action: string, required: State) {
+        throw new Error(`Can ${action} only in "${required}" state. Current state is "${this.state}"`)
     }
 }

@@ -1,13 +1,15 @@
 import { Server as HttpServer                   } from "http"
 import { Application, Router, Request, Response } from "express"
 import { Logger                                 } from "winston"
+import { LogicError                             } from "logic"
 
 import open            from "open"
-import shortUuid       from "short-uuid"
 import express         from "express"
+import morgan          from "morgan"
 import AsyncConnection from "util/mysql/AsyncConnection"
 import Config          from "./Config"
 
+import * as s   from "util/mysql/statement"
 import * as api from "api-schema"
 
 export default class Server {
@@ -46,35 +48,31 @@ export default class Server {
             if (this.logger)
                 setupLogger.call(this)
 
-            setupAPI.call(this)
             setupStatic.call(this)
+            setupAPI.call(this)
             setup404.call(this)
             setup500.call(this)
 
             return app
 
             function setupLogger(this: Server) {
-                app.use((req, res, next) => {
-                    (req as any).id = shortUuid.generate()
-                    next()
+                const middleware = morgan("tiny", {
+                    stream: {
+                        write: message => this.logger?.http(message.trim())
+                    }
                 })
 
-                app.use((req, res, next) => {
-                    const id     = (req as any).id
-                    const method = req.method
-                    const url    = req.url
-
-                    this.logger!.info(`[${id}] - ${method} ${decodeURI(url)}`)
-                    res.on("close", () => this.logger!.info(`[${id}] - ${res.statusCode}`))
-
-                    next()
-                })
+                app.use(middleware)
             }
 
             function setupAPI(this: Server) {
                 const router = createRouter.call(this)
 
                 app.use(this.config.httpPrefix, router)
+
+                const errorHandler = createErrorHandler.call(this)
+
+                router.use(errorHandler)
 
                 function createRouter(this: Server): Router {
                     const router = Router()
@@ -84,10 +82,29 @@ export default class Server {
 
                     for (const unitName in api.units) {
                         const unit = (api.units as any)[unitName] as api.Unit
-                        router[unit.method](unit.path, unit.handler.bind(this))
+
+                        router[unit.method](unit.path, async (req, res, next) => {
+                            try {
+                                await unit.handler.call(this, req, res)
+                            } catch (error) {
+                                if (error instanceof LogicError) {
+                                    res.json({ error: error.message })
+                                    return
+                                }
+
+                                next(error)
+                            }
+                        })
                     }
 
                     return router
+                }
+
+                function createErrorHandler(this: Server) {
+                    return (error: Error, req: Request, res: Response, next: () => void) => {
+                        this.logger?.error(error)
+                        res.sendStatus(500)
+                    }
                 }
             }
 
@@ -112,13 +129,14 @@ export default class Server {
 
             function setup500(this: Server) {
                 app.use((error: Error, req: Request, res: Response, next: () => void) => {
-                    logger?.error(error.message)
+                    logger?.error(error)
 
                     res.status(500).sendFile(config.httpError500Path, error => {
                         if (!error)
                             return
 
                         this.logger?.error(error)
+
                         res.end("Internal Server Error")
                     })
                 })
@@ -145,7 +163,7 @@ export default class Server {
         )
 
         initRunPromise.call(this)
-        await this.mysqlConnection.connect()
+        await initMysqlConnection.call(this)
         await listen.call(this)
         await onStarted(this)
 
@@ -156,6 +174,15 @@ export default class Server {
                 this.resolveRunPromise = resolve
                 this.rejectRunPromise  = reject
             })
+        }
+
+        async function initMysqlConnection(this: Server) {
+            this.logger?.info("Initializing database connection...")
+
+            await this.mysqlConnection.connect()
+            await s.useDatabase(this.mysqlConnection, this.config.mysqlDatabase)
+            
+            this.logger?.info("Database connection is initialized")
         }
 
         async function listen(this: Server) {
@@ -169,7 +196,7 @@ export default class Server {
                 }
 
                 this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
-                                                    : this.expressApp.listen(this.config.httpPort, this.config.httpHost, listening)
+                                                     : this.expressApp.listen(this.config.httpPort, this.config.httpHost, listening)
             })
         }
     }
@@ -187,6 +214,7 @@ export default class Server {
                 this.logger?.error(error)
 
             this.logger?.info("Stopped")
+
             this.resolveRunPromise!()
         })
 

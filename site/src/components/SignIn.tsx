@@ -95,7 +95,7 @@ export default function SignIn(props: Props) {
     }
 
     function validatePassword(password: string): string | undefined {
-        const MIN_LENGTH = 8
+        const MIN_LENGTH = 4
 
         return password.length < MIN_LENGTH ? `Password must be at least ${MIN_LENGTH} characters long`
                                             : undefined

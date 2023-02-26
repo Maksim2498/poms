@@ -1,14 +1,120 @@
+import crypto          from "crypto"
 import AsyncConnection from "util/mysql/AsyncConnection"
-import LoggedError     from "./util/LoggedError"
 
 import { ReadonlyTable, expr                        } from "util/mysql/Table"
 import { USERS_TABLE, NICKNAMES_TABLE, TOKENS_TABLE } from "./db-schema"
-import { Logger                                     } from "winston"
 
 export const DEFAULT_ADMIN_LOGIN    = "admin"
 export const DEFAULT_ADMIN_PASSWORD = "admin"
 
 export type User = string | number
+
+export interface AuthOptions {
+    accessLifeTime:  number
+    refreshLifeTime: number
+}
+
+export const DEFAULT_AUTH_OPTIONS: AuthOptions = {
+    accessLifeTime:  30 * 60,
+    refreshLifeTime: 7 * 24 * 60 * 60 // Weak
+}
+
+export interface TokenPair {
+    id:      Token
+    refresh: Token
+}
+
+export interface Token {
+    id:  Buffer
+    exp: Date
+}
+
+export async function auth(connection: AsyncConnection, login: string, password: string, options: AuthOptions = DEFAULT_AUTH_OPTIONS): Promise<TokenPair> {
+    const user_id    = await getUserIdByCredentials(connection, login, password)
+    const accessId   = generateId()
+    const accessExp  = dateSecondsAhead(options.accessLifeTime)
+    const refreshId  = generateId()
+    const refreshExp = dateSecondsAhead(options.refreshLifeTime)
+
+    await TOKENS_TABLE.insert(connection, {
+        user_id,
+        id:       accessId,
+        exp_time: accessExp,
+        type:     "access"
+    })
+
+    await TOKENS_TABLE.insert(connection, {
+        user_id,
+        id:       refreshId,
+        exp_time: refreshExp,
+        type:     "refresh"
+    })
+
+    return {
+        id: {
+            id:  accessId,
+            exp: accessExp
+        },
+
+        refresh: {
+            id:  refreshId,
+            exp: refreshExp
+        }
+    }
+
+    function generateId() {
+        const id = crypto.randomBytes(64)
+        id.writeUInt32BE(Date.now() / 1000, id.length - 4)
+        return id
+    }
+
+    function dateSecondsAhead(seconds: number) {
+        const date = new Date()
+        date.setSeconds(date.getSeconds() + seconds)
+        return date
+    }
+}
+
+export interface TokenPairJson {
+    access:  TokenJson
+    refresh: TokenJson
+}
+
+export function tokenPairToJson(tokenPair: TokenPair): TokenPairJson {
+    return {
+        access:  tokenToJson(tokenPair.id),
+        refresh: tokenToJson(tokenPair.refresh)
+    }
+}
+
+export interface TokenJson {
+    id:  string
+    exp: string
+}
+
+export function tokenToJson(token: Token): TokenJson {
+    return {
+        id:  token.id.toString("hex"),
+        exp: token.exp.toISOString()
+    }
+}
+
+export async function getUserIdByCredentials(connection: AsyncConnection, login: string, password: string): Promise<number> {
+    checkLogin(login)
+    checkPassword(password)
+
+    const results = await USERS_TABLE.select(connection, "id")
+                                     .where(
+                                         "login = ? and password_hash = UNHEX(SHA2(?, 512))",
+                                         login,
+                                         `${login}:${password}`
+                                     )
+
+    if (results.length === 0)
+        throw new LogicError("Invalid login or password")
+
+    return results[0].id
+}
 
 export interface CreateAdminOptions {
     connection: AsyncConnection
@@ -59,18 +165,15 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
 
     connection.logger?.info(`Creaing user "${login}"...`)
 
-    validateLogin(login, connection.logger)
+    checkLogin(login)
 
     let creatorId: number | undefined
 
     if (creator != null) {
-        const creatorInfo = await forceGetUserInfo(connection, creator)
+        const creatorInfo = await getUserInfo(connection, creator, true)
 
         if (!creatorInfo.isAdmin)
-            throw LoggedError.fromMessage(
-                `Only admin can be a creator of another user. "${creatorInfo.name}" isn't an admin`,
-                connection.logger
-            )
+            throw new LogicError(`Only admin can be a creator of another user. "${creatorInfo.name}" isn't an admin`)
 
         creatorId = creatorInfo.id
     }
@@ -118,7 +221,7 @@ export async function deleteUser(connection: AsyncConnection, user: User) {
     switch (typeof user) {
         case "string":
             connection.logger?.info(`Deleting user "${user}"...`)
-            validateLogin(user)
+            checkLogin(user)
             await USERS_TABLE.delete(connection).where("login = ?", user)
             break
 
@@ -131,25 +234,12 @@ export async function deleteUser(connection: AsyncConnection, user: User) {
 }
 
 export async function getValidUserId(connection: AsyncConnection, user: User): Promise<number> {
-    return (await forceGetUserInfo(connection, user)).id
+    return (await getUserInfo(connection, user, true)).id
 }
 
 export async function getUserId(conneciton: AsyncConnection, user: User): Promise<number> {
-    return typeof user === "string" ? (await forceGetUserInfo(conneciton, user)).id
+    return typeof user === "string" ? (await getUserInfo(conneciton, user, true)).id
                                     : user
-}
-
-export async function forceGetUserInfo(connection: AsyncConnection, user: User): Promise<UserInfo> {
-    const info = await getUserInfo(connection, user)
-
-    if (info == null) {
-        const message = typeof user === "string" ? `There is no user "${user}"`
-                                                 : `There is no user with id ${user}`
-
-        throw LoggedError.fromMessage(message, connection.logger)
-    }
-
-    return info
 }
 
 export interface UserInfo {
@@ -161,12 +251,14 @@ export interface UserInfo {
     isOnline:     boolean
 }
 
-export async function getUserInfo(connection: AsyncConnection, user: User): Promise<UserInfo | undefined> {
+export async function getUserInfo(connection: AsyncConnection, user: User, force: true): Promise<UserInfo>
+export async function getUserInfo(connection: AsyncConnection, user: User, force?: false): Promise<UserInfo | undefined>
+export async function getUserInfo(connection: AsyncConnection, user: User, force: boolean = false): Promise<UserInfo | undefined> {
     let where: string
 
     switch (typeof user) {
         case "string":
-            validateLogin(user, connection.logger)
+            checkLogin(user)
             where = "login = ?"
             break
 
@@ -176,8 +268,13 @@ export async function getUserInfo(connection: AsyncConnection, user: User): Prom
 
     const results = await USERS_TABLE.select(connection).where(where, user)
 
-    if (!results.length)
+    if (!results.length) {
+        if (force)
+            throw new LogicError(typeof user === "string" ? `There is no user "${user}"`
+                                                          : `There is no user with id ${user}`)
+        
         return undefined
+    }
 
     const { id, login, name, password_hash, is_admin, is_online } = results[0]
 
@@ -191,12 +288,39 @@ export async function getUserInfo(connection: AsyncConnection, user: User): Prom
     } as UserInfo
 }
 
-export function validateLogin(login: string, logger?: Logger) {
-    if (!isLoginValid(login))
-        throw LoggedError.fromMessage(`Login "${login}" is invalid`, logger)
+export function checkPassword(password: string) {
+    const invalidReason = validatePassword(password)
+
+    if (invalidReason !== undefined)
+        throw new LogicError(invalidReason)
 }
 
-export function isLoginValid(login: string): boolean {
-    return login.length >= 4
-        && !login.match(/\s/)
+export function validatePassword(password: string): string | undefined {
+    const MIN_LENGTH = 4
+
+    if (password.length < MIN_LENGTH)
+        return `Password is too short. Minimum ${MIN_LENGTH} characters required`
+
+    return undefined
 }
+
+export function checkLogin(login: string) {
+    const invalidReason = validateLogin(login)
+
+    if (invalidReason !== undefined)
+        throw new LogicError(invalidReason)
+}
+
+export function validateLogin(login: string): string | undefined {
+    const MIN_LENGTH = 4
+
+    if (login.length < MIN_LENGTH)
+        return `Login "${login}" is too short. Minimum ${MIN_LENGTH} characters required`
+
+    if (login.match(/\s/))
+        return `Login "${login}" contains whitespace`
+
+    return undefined
+}
+
+export class LogicError extends Error {}

@@ -1,6 +1,9 @@
-import Server from "./Server"
+import isBase64 from "is-base64"
+import Server   from "./Server"
 
 import { Request, Response } from "express"
+
+import * as l from "./logic"
 
 export type UnitCollection = {
     [key: string]: Unit
@@ -13,11 +16,13 @@ export interface Unit {
 }
 
 export type Method = "get" | "post" | "put" | "delete"
-export type Hander = (this: Server, req: Request, res: Response) => void
+export type Hander = (this: Server, req: Request, res: Response) => Promise<void>
 
 export function requireAcceptJson(req: Request, res: Response, next: () => void) {
-    if (req.accepts("json"))
+    if (req.accepts("json")) {
         next()
+        return
+    }
 
     res.sendStatus(406)
 }
@@ -27,7 +32,7 @@ export const units: UnitCollection = {
         method: "post",
         path:   "/auth",
 
-        handler(req, res) {
+        async handler(req, res) {
             const authorization = req.headers.authorization
             
             if (authorization == null) {
@@ -35,7 +40,25 @@ export const units: UnitCollection = {
                 return
             }
 
-            res.sendStatus(501)
+            const splits = authorization.split(":")
+
+            if (splits.length != 2) {
+                res.sendStatus(400)
+                return
+            }
+
+            const [base64Login, base64Password] = splits
+
+            if (!isBase64(base64Login) || !isBase64(base64Password)) {
+                res.sendStatus(400)
+                return
+            }
+
+            const login     = Buffer.from(base64Login,    "base64").toString()
+            const password  = Buffer.from(base64Password, "base64").toString()
+            const tokenPair = await l.auth(this.mysqlConnection, login, password)
+
+            res.json(l.tokenPairToJson(tokenPair))
         }
     },
 
@@ -43,7 +66,7 @@ export const units: UnitCollection = {
         method: "post",
         path:   "/deauth",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -52,7 +75,7 @@ export const units: UnitCollection = {
         method: "get",
         path:   "/users",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -61,7 +84,7 @@ export const units: UnitCollection = {
         method: "get",
         path:   "/users/:user",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -70,7 +93,7 @@ export const units: UnitCollection = {
         method: "get",
         path:   "/users/:user/reg",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -79,7 +102,7 @@ export const units: UnitCollection = {
         method: "get",
         path:   "/users/:user/reg/time",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -88,7 +111,7 @@ export const units: UnitCollection = {
         method: "get",
         path:   "/users/:user/reg/user",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -97,7 +120,7 @@ export const units: UnitCollection = {
         method: "get",
         path:   "/users/:user/name",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -106,7 +129,7 @@ export const units: UnitCollection = {
         method: "get",
         path:   "/users/:user/nicknames",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -115,7 +138,7 @@ export const units: UnitCollection = {
         method: "delete",
         path:   "/users",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -124,7 +147,7 @@ export const units: UnitCollection = {
         method: "delete",
         path:   "/users/:user",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -133,7 +156,7 @@ export const units: UnitCollection = {
         method: "delete",
         path:   "/users/:user/nicknames",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -142,7 +165,7 @@ export const units: UnitCollection = {
         method: "delete",
         path:   "/users/:user/nicknames/:nickname",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -151,7 +174,7 @@ export const units: UnitCollection = {
         method: "put",
         path:   "/users/:user/name",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -160,7 +183,7 @@ export const units: UnitCollection = {
         method: "put",
         path:   "/users/:user/password",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -169,7 +192,7 @@ export const units: UnitCollection = {
         method: "post",
         path:   "/users/:user/nicknames/:nickname",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     },
@@ -178,7 +201,7 @@ export const units: UnitCollection = {
         method: "post",
         path:   "/users/:user",
 
-        handler(req, res) {
+        async handler(req, res) {
             res.sendStatus(501)
         }
     }

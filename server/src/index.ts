@@ -1,25 +1,15 @@
-import winston     from "winston"
-import LoggedError from "./util/LoggedError"
-import Config      from "./Config"
-import init        from "./init"
-import Server      from "./Server"
+import winston from "winston"
+import Config  from "./Config"
+import init    from "./init"
+import Server  from "./Server"
 
 const logger = createLogger()
 
-main()
-    .catch(error => {
-        if (!error || error instanceof LoggedError)
-            return
-
-        logger.error(error instanceof Error ? error.message : error)
-    })
-
-function createLogger() {
-    return winston.createLogger({
-        format:     winston.format.cli(),
-        transports: [new winston.transports.Console()]
-    })
-}
+main().catch(error => {
+    logger.error(error)
+    logger.info("Aborting...")
+    process.exit(1)
+})
 
 async function main() {
     const config = await Config.readFromFile(undefined, logger);
@@ -45,4 +35,23 @@ async function main() {
             process.exit()
         })
     }
+}
+
+function createLogger() {
+    const Console = winston.transports.Console
+    const fmt     = winston.format
+
+    return winston.createLogger({
+        level:             process.env.NODE_ENV === "production" ? "http" : "debug",
+        transports:        [new Console()],
+        exceptionHandlers: [new Console()],
+        rejectionHandlers: [new Console()],
+        format:            fmt.combine(
+            fmt.errors(),
+            fmt.colorize({ all: true }),
+            fmt.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+            fmt.align(),
+            fmt.printf(entry => `[${entry.timestamp}] ${entry.level}: ${entry.message}`)
+        )
+    })
 }

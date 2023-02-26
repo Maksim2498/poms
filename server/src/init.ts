@@ -5,7 +5,6 @@ import { USERS_TABLE, NICKNAMES_TABLE, TOKENS_TABLE } from "./db-schema"
 
 import cp              from "child_process"
 import AsyncConnection from "./util/mysql/AsyncConnection"
-import LoggedError     from "./util/LoggedError"
 import Config          from "./Config"
 
 import * as s from "./util/mysql/statement"
@@ -82,7 +81,7 @@ async function initDatabaseObjects(connection: AsyncConnection, config: Config) 
     if (created)
         await createTablesAndEvents(connection) 
     else if (config.mysqlValidateTables)
-        await validateTablesAndEvents(connection, !config.mysqlRecreateInvalidTables)
+        await checkTablesAndEvents(connection, !config.mysqlRecreateInvalidTables)
 
     if (config.logicCreateAdmin)
         await l.createAdmin({ connection })
@@ -107,7 +106,7 @@ async function createCleanUpEvent(connection: AsyncConnection) {
 
 // Doesn't validate events yet
 
-async function validateTablesAndEvents(connection: AsyncConnection, throwOnInvalid: boolean) {
+async function checkTablesAndEvents(connection: AsyncConnection, throwOnInvalid: boolean) {
     const tables = await s.showTables(connection)
 
     if (await handleTable(USERS_TABLE))
@@ -118,21 +117,27 @@ async function validateTablesAndEvents(connection: AsyncConnection, throwOnInval
 
     async function handleTable(table: t.ReadonlyTable): Promise<boolean> {
         if (tables.includes(table.name))
-            return !await validateTable(connection, table, throwOnInvalid)
+            return !await checkTable(connection, table, throwOnInvalid)
 
         await table.create(connection)
         return false
     }
 }
 
-async function validateTable(connection: AsyncConnection, table: t.ReadonlyTable, throwOnInvalid?: boolean): Promise<boolean> {
-    if (await table.isValid(connection, throwOnInvalid))
+async function checkTable(connection: AsyncConnection, table: t.ReadonlyTable, throwOnInvalid?: boolean): Promise<boolean> {
+    connection.logger?.info(`Validating table "${table.displayName}"...`)
+ 
+    const invalidReason = await table.validate(connection)
+
+    if (invalidReason === undefined) {
+        connection.logger?.info("Valid")
         return true
+    }
 
     if (throwOnInvalid)
-        throw LoggedError.fromMessage("Aborting. "
-                                    + "You can turn off validation or enable automatic fixing of invalid tables. "
-                                    + "See documentation on configuration for more info", connection.logger)
+        throw new Error(invalidReason)
+
+    connection.logger?.error(invalidReason)
 
     await table.recreate(connection)
 
