@@ -1,5 +1,7 @@
 # API Schema
 
+![Logo](../images/api-logo.png)
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents);
