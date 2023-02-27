@@ -403,6 +403,11 @@ export function validatePassword(password: string): string | undefined {
     if (password.length < MIN_LENGTH)
         return `Password is too short. Minimum ${MIN_LENGTH} characters required`
 
+    const MAX_LENGTH = 255
+
+    if (password.length > MAX_LENGTH)
+        return `Password is too long. Maximum ${MAX_LENGTH} characters allowed`
+
     return undefined
 }
 
@@ -418,6 +423,11 @@ export function validateLogin(login: string): string | undefined {
 
     if (login.length < MIN_LENGTH)
         return `Login "${login}" is too short. Minimum ${MIN_LENGTH} characters required`
+
+    const MAX_LENGTH = 255
+
+    if (login.length > MAX_LENGTH)
+        return `Login is too long. Maximum ${MAX_LENGTH} characters allowed`
 
     if (login.match(/\s/))
         return `Login "${login}" contains whitespace`
