@@ -221,6 +221,26 @@ export const units: UnitCollection = {
         }
     },
 
+    isUserAdmin: {
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/is-admin",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    isUserOnline: {
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/is-online",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
     getUserReg: {
         permission: "user",
         method:     "get",
@@ -325,6 +345,16 @@ export const units: UnitCollection = {
         permission: "mixed",
         method:     "put",
         path:       "/users/:user/password",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    updateUserPermissions: {
+        permission: "admin",
+        method:     "put",
+        path:       "/users/:user/is-admin",
 
         async handler(req, res) {
             res.sendStatus(501)

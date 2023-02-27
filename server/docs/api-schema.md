@@ -10,6 +10,8 @@
   - [Deauthentication](#deauthentication);
   - [Get All Users Info](#get-all-users-info);
   - [Get User Info](#get-user-info);
+  - [Check If User Is Administrator](#check-if-user-is-administrator);
+  - [Check If User Is Online](#check-if-user-is-online);
   - [Get User Registration Info](#get-user-registration-info);
   - [Get User Registration Time](#get-user-registration-time);
   - [Get User Registrar](#get-user-registrar);
@@ -21,6 +23,7 @@
   - [Delete User Nickname](#delete-user-nickname);
   - [Update User Name](#update-user-name);
   - [Update User Password](#update-user-password);
+  - [Update User Permissions](#update-user-permissions);
   - [Add User Canonical Name](#add-user-nickname);
   - [Add User](#add-user).
 
@@ -176,7 +179,7 @@ Returns full information on specified user.
 __Request__:
 
 ```http
-GET /users/<login>?[nicknames]
+GET /users/<user>?[nicknames]
 ```
 
 ```http
@@ -200,6 +203,52 @@ __Response__:
 }
 ```
 
+### Check If User Is Administrator
+
+Returns boolean value indicating weather is specified user administrator.
+
+__Request__:
+
+```http
+GET /users/<user>/is-admin
+```
+
+```http
+Authorization: Bearer <access token>
+Accept: application/json
+```
+
+__Responese__:
+
+```ts
+{
+    isAdmin: boolean
+}
+```
+
+### Check If User Is Online
+
+Returns boolean value indicating weather is specified user online.
+
+__Request__:
+
+```http
+GET /users/<user>/is-online
+```
+
+```http
+Authorization: Bearer <access token>
+Accept: application/json
+```
+
+__Responese__:
+
+```ts
+{
+    isOnline: boolean
+}
+```
+
 ### Get User Registration Info
 
 Returns full registration information on specified user.
@@ -207,7 +256,7 @@ Returns full registration information on specified user.
 __Request__:
 
 ```http
-GET /users/<login>/reg
+GET /users/<user>/reg
 ```
 
 ```http
@@ -231,7 +280,7 @@ Returns user registration time.
 __Request__:
 
 ```http
-GET /users/<login>/reg/time
+GET /users/<user>/reg/time
 ```
 
 ```http
@@ -254,7 +303,7 @@ Returns user registrar or null if user was registered by the system.
 __Request__:
 
 ```http
-GET /users/<login>/reg/user
+GET /users/<user>/reg/user
 ```
 
 ```http
@@ -277,7 +326,7 @@ Returns name of specified user.
 __Request__:
 
 ```http
-GET /users/<login>/name
+GET /users/<user>/name
 ```
 
 ```http
@@ -300,7 +349,7 @@ Returns list of user nicknames.
 __Request__:
 
 ```http
-GET /users/<login>/nicknames/
+GET /users/<user>/nicknames/
 ```
 
 ```http
@@ -409,7 +458,6 @@ PUT /users/<user>/name
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
-Content-Length: ...
 Accept: application/json
 ```
 
@@ -439,13 +487,40 @@ PUT /users/<user>/password
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
-Content-Length: ...
 Accept: application/json
 ```
 
 ```ts
 {
     password: string // base64-encoded
+}
+```
+
+__Response__:
+
+```ts
+{}
+```
+
+### Update User Permissions
+
+Changes whether is specified user is administrator or not. This method is for administators only.
+
+__Request__:
+
+```http
+PUT /users/<user>/is-admin
+```
+
+```http
+Authorization: Bearer <access token>
+Content-Type: application/json
+Accept: application/json
+```
+
+```ts
+{
+    isAdmin: boolean
 }
 ```
 
@@ -490,7 +565,6 @@ POST /users/<user>
 ```http
 Authorization: Bearer <access token>
 Content-Type: application/json
-Content-Length: ...
 Accept: application/json
 ```
 
