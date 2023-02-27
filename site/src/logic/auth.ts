@@ -1,5 +1,22 @@
-export function auth(login: string, password: string) {
+import { encode                     } from "js-base64"
+import { saveTokenPairJsonToCookies } from "./token"
 
+export async function auth(login: string, password: string) {
+    const headers = new Headers()
+
+    headers.set("Authorization", encode(login) + ":" + encode(password))
+
+    const result = await fetch("/api/auth", { method: "POST", headers })
+
+    if (!result.ok)
+        throw new Error(result.statusText)
+
+    const json = await result.json()
+
+    if (json.error)
+        throw new Error(json.error)
+
+    saveTokenPairJsonToCookies(json)
 }
 
 export function checkLogin(login: string) {

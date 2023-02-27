@@ -68,7 +68,7 @@ export function saveTokenPairToCookies(pair: TokenPair) {
     }
 }
 
-export function loadTokenPairFromCookies(): TokenPair | undefined {
+export function readTokenPairFromCookies(): TokenPair | undefined {
     const cookie = Cookies.get(COOKIE_NAME)
 
     if (!cookie)
