@@ -5,9 +5,6 @@ import { ReadonlyTable, expr                                          } from "./
 import { dateSecondsAhead                                             } from "./util/date"
 import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./db-schema"
 
-export const DEFAULT_ADMIN_LOGIN    = "admin"
-export const DEFAULT_ADMIN_PASSWORD = "admin"
-
 export type User = string | number
 
 export interface LifeTimeOptions {
@@ -126,6 +123,10 @@ export async function getUserIdByCredentials(connection: AsyncConnection, login:
     return results[0].id
 }
 
+export const DEFAULT_ADMIN_LOGIN    = "admin"
+export const DEFAULT_ADMIN_PASSWORD = "admin"
+export const DEFAULT_ADMIN_NAME     = "Administartor"
+
 export interface CreateAdminOptions {
     connection: AsyncConnection
     login?:     string
@@ -149,6 +150,7 @@ export async function createAdmin(options: CreateAdminOptions): Promise<boolean>
             connection,
             login,
             password,
+            name:    DEFAULT_ADMIN_NAME,
             isAdmin: true
          })
     } else {
