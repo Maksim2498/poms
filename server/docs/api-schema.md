@@ -1,6 +1,6 @@
 # API Schema
 
-![Logo](../images/api-logo.png)
+<img src="../images/api-logo.png" width="600" height="600">
 
 ## Table of Contents
 
