@@ -40,7 +40,7 @@ export default function AppearingMessage(props: Props) {
     useEffect(() => {
         const interval = setInterval(() => setShowCursor(!showCursor), cursorTick)
         return () => clearInterval(interval)
-    })
+    }, [showCursor, cursorTick])
 
     return <div className="AppearingMessage">
         {message}{showCursor ? cursor : cursorStub}
