@@ -31,12 +31,16 @@ export interface Token {
 }
 
 export async function auth(connection: AsyncConnection, login: string, password: string, options: LifeTimeOptions = DEFAULT_LIFETIME_OPTIONS): Promise<TokenPair> {
-    const userId   = await getUserIdByCredentials(connection, login, password)
+    const userId = await getUserIdByCredentials(connection, login, password)
     return await createTokenPair(connection, userId, options)
 }
 
 export async function reauth(connection: AsyncConnection, rTokenId: Buffer, options: LifeTimeOptions = DEFAULT_LIFETIME_OPTIONS): Promise<TokenPair> {
     const rTokenInfo = await getRTokenInfo(connection, rTokenId,            true)
+
+    if (rTokenInfo.exp <= new Date())
+        throw new LogicError("Token is too old")
+
     const aTokenInfo = await getATokenInfo(connection, rTokenInfo.aTokenId, true)
     
     await deleteAToken(connection, aTokenInfo.id) // Refresh token will be deleted cascade
