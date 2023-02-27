@@ -157,8 +157,10 @@ __Response__:
 
 ```ts
 {
-    name:      string   // base64-encoded
-    nicknames: string[] // base64-encoded. Added if <nicknames> option is set
+    name?:      string   // base64-encoded
+    nicknames?: string[] // base64-encoded. Added if <nicknames> option is set
+    isAdmin:    boolean
+    isOnline:   boolean
 
     reg: {
         time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
@@ -186,8 +188,10 @@ __Response__:
 
 ```ts
 {
-    name:      string   // base64-encoded
-    nicknames: string[] // base64-encoded. Added if <nicknames> option is set
+    name?:      string   // base64-encoded
+    nicknames?: string[] // base64-encoded. Added if <nicknames> option is set
+    isAdmin:    boolean
+    isOnline:   boolean
 
     reg: {
         time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)

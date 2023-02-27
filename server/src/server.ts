@@ -79,26 +79,48 @@ export default class Server {
 
                     router.use(api.requireAcceptJson)
                     router.use(api.requireAuthorization)
+                    router.use(api.disableGetCache)
                     router.use(express.json())
 
                     for (const unitName in api.units) {
                         const unit = (api.units as any)[unitName] as api.Unit
 
-                        router[unit.method](unit.path, async (req, res, next) => {
-                            try {
-                                await unit.handler.call(this, req, res)
-                            } catch (error) {
-                                if (error instanceof LogicError) {
-                                    res.json({ error: error.message })
-                                    return
-                                }
+                        const handlers = [
+                            async (req, res, next) => {
+                                try {
+                                    if (unit.permission) {
+                                        await api.checkPermission(this, unit.permission, req, res, next)
+                                        return
+                                    }
 
-                                next(error)
+                                    next()
+                                } catch (error) {
+                                    handleError(error, res, next)
+                                }
+                            },
+
+                            async (req, res, next) => {
+                                try {
+                                    await unit.handler.call(this, req, res)
+                                } catch (error) {
+                                    handleError(error, res, next)
+                                }
                             }
-                        })
+                        ] as ((req: Request, res: Response, next: (error?: any) => void) => Promise<void>)[]
+
+                        router[unit.method](unit.path, handlers)
                     }
 
                     return router
+
+                    function handleError(error: any, res: Response, next: (error?: any) => void) {
+                        if (error instanceof LogicError) {
+                            res.json({ error: error.message })
+                            return
+                        }
+
+                        next(error)
+                    }
                 }
 
                 function createErrorHandler(this: Server) {

@@ -152,6 +152,12 @@ export async function getUserIdByCredentials(connection: AsyncConnection, login:
     return results[0].id
 }
 
+export async function getUserLogin(connection: AsyncConnection, user: number, force: true): Promise<string>
+export async function getUserLogin(connection: AsyncConnection, user: number, force?: boolean): Promise<string | undefined>
+export async function getUserLogin(connection: AsyncConnection, user: number, force: boolean = false): Promise<string | undefined> {
+    return (await getUserInfo(connection, user, force))?.login
+}
+
 export interface UserInfo {
     id:           number
     login:        string
@@ -159,10 +165,12 @@ export interface UserInfo {
     passwordHash: Buffer
     isAdmin:      boolean
     isOnline:     boolean
+    created:      Date
+    creator?:     number
 }
 
 export async function getUserInfo(connection: AsyncConnection, user: User, force: true): Promise<UserInfo>
-export async function getUserInfo(connection: AsyncConnection, user: User, force?: false): Promise<UserInfo | undefined>
+export async function getUserInfo(connection: AsyncConnection, user: User, force?: boolean): Promise<UserInfo | undefined>
 export async function getUserInfo(connection: AsyncConnection, user: User, force: boolean = false): Promise<UserInfo | undefined> {
     let where: string
 
@@ -186,7 +194,7 @@ export async function getUserInfo(connection: AsyncConnection, user: User, force
         return undefined
     }
 
-    const { id, login, name, password_hash, is_admin, is_online } = results[0]
+    const { id, login, name, password_hash, is_admin, is_online, cr_time, cr_id } = results[0]
 
     return {
         id,
@@ -194,7 +202,9 @@ export async function getUserInfo(connection: AsyncConnection, user: User, force
         name,
         passwordHash: password_hash,
         isAdmin:      !!is_admin,
-        isOnline:     !!is_online
+        isOnline:     !!is_online,
+        created:      cr_time,
+        creator:      cr_id
     }
 }
 export function checkPassword(password: string) {

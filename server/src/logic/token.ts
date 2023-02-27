@@ -6,6 +6,18 @@ import { A_TOKENS_TABLE, R_TOKENS_TABLE } from "db-schema"
 import { deleteAllUserData, User        } from "./user"
 import { dateSecondsAhead               } from "util/date"
 
+export async function checkATokenIsActive(conneciton: AsyncConnection, token: ATokenInfo | Buffer | undefined | null) {
+    if (!await isATokenActive(conneciton, token))
+        throw new LogicError("Unregistered or expired token")
+}
+
+export async function isATokenActive(connection: AsyncConnection, token: ATokenInfo | Buffer | undefined | null): Promise<boolean> {
+    const info = token instanceof Buffer ?  await getATokenInfo(connection, token)
+                                         : token
+
+    return info != null && info.exp > new Date()
+}
+
 export interface LifeTimeOptions {
     accessLifeTime?:  number
     refreshLifeTime?: number
@@ -113,7 +125,7 @@ export interface ATokenInfo {
 }
 
 export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force: true): Promise<ATokenInfo>
-export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force?: false): Promise<ATokenInfo | undefined>
+export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force?: boolean): Promise<ATokenInfo | undefined>
 export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force: boolean = false): Promise<ATokenInfo | undefined> {
     checkToken(aTokenId)
 
@@ -144,7 +156,7 @@ export interface RTokenInfo {
 }
 
 export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: true): Promise<RTokenInfo>
-export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force?: false): Promise<RTokenInfo | undefined>
+export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force?: boolean): Promise<RTokenInfo | undefined>
 export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: boolean = false): Promise<RTokenInfo | undefined> {
     checkToken(rTokenId)
 

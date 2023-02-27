@@ -4,20 +4,26 @@ import Server   from "./Server"
 import { Request, Response             } from "express"
 import { isHex                         } from "./util/string"
 import { auth, reauth                  } from "./logic/auth"
-import { tokenPairToJson, deleteAToken } from "./logic/token"
+import { getUserInfo, getUserLogin     } from "./logic/user"
+import { getUserNicknames              } from "logic/nickname"
+import { checkATokenIsActive,
+         getATokenInfo,
+         tokenPairToJson, deleteAToken } from "./logic/token"
 
 export type UnitCollection = {
     [key: string]: Unit
 }
 
 export interface Unit {
-    method:  Method
-    path:    string
-    handler: Hander
+    permission?: Permission
+    method:      Method
+    path:        string
+    handler:     Hander
 }
 
-export type Method = "get" | "post" | "put" | "delete"
-export type Hander = (this: Server, req: Request, res: Response) => Promise<void>
+export type Permission = "user" | "admin" | "mixed"
+export type Method     = "get"  | "post"  | "put"   | "delete"
+export type Hander     = (this: Server, req: Request, res: Response) => Promise<void>
 
 export function requireAcceptJson(req: Request, res: Response, next: () => void) {
     if (req.accepts("json")) {
@@ -35,6 +41,69 @@ export function requireAuthorization(req: Request, res: Response, next: () => vo
     }
 
     res.sendStatus(401)
+}
+
+export function disableGetCache(req: Request, res: Response, next: () => void) {
+    if (req.method === "GET")
+        res.setHeader("Cache-Control", "no-cache")
+
+    next()
+}
+
+export async function checkPermission(server: Server, permission: Permission, req: Request, res: Response, next: () => void) {
+    const authorization = req.headers.authorization!
+
+    if (!isHex(authorization)) {
+        res.sendStatus(400)
+        return
+    }
+
+    const aToken = Buffer.from(authorization, "hex")
+
+    switch (permission) {
+        case "user": {
+            await checkATokenIsActive(server.mysqlConnection, aToken)
+            next()
+            return
+        }
+
+        // Check if not an admin trying to modify other's data
+
+        case "mixed": {
+            const tokenInfo = await getATokenInfo(server.mysqlConnection, aToken)
+
+            await checkATokenIsActive(server.mysqlConnection, tokenInfo)
+
+            const user     = req.params.user
+            const userInfo = (await getUserInfo(server.mysqlConnection, tokenInfo!.userId))!
+
+            if (userInfo.login !== user && !userInfo.isAdmin) {
+                res.sendStatus(403)
+                return
+            }
+
+            next()
+
+            return
+        }
+
+        case "admin": {
+            const tokenInfo = await getATokenInfo(server.mysqlConnection, aToken)
+
+            await checkATokenIsActive(server.mysqlConnection, tokenInfo)
+
+            const userInfo = (await getUserInfo(server.mysqlConnection, tokenInfo!.userId))!
+
+            if (!userInfo.isAdmin) {
+                res.sendStatus(403)
+                return
+            }
+
+            next()
+
+            return
+        }
+    }
 }
 
 export const units: UnitCollection = {
@@ -116,8 +185,9 @@ export const units: UnitCollection = {
     },
 
     getAllUsers: {
-        method: "get",
-        path:   "/users",
+        permission: "user",
+        method:     "get",
+        path:       "/users",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -125,17 +195,36 @@ export const units: UnitCollection = {
     },
 
     getUser: {
-        method: "get",
-        path:   "/users/:user",
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const info = await getUserInfo(this.mysqlConnection, user, true)
+            const json = {
+                name:     info.name,
+                isAdmin:  info.isAdmin,
+                isOnline: info.isOnline,
+
+                reg: {
+                    time:  info.created.toISOString(),
+                    login: info.creator != null ? await getUserLogin(this.mysqlConnection, info.creator)
+                                                : null
+                }
+            } as any
+
+            if ("nicknames" in req.query)
+                json.nicknames = await getUserNicknames(this.mysqlConnection, info.id)
+
+            res.json(json)
         }
     },
 
     getUserReg: {
-        method: "get",
-        path:   "/users/:user/reg",
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/reg",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -143,8 +232,9 @@ export const units: UnitCollection = {
     },
 
     getUserRegTime: {
-        method: "get",
-        path:   "/users/:user/reg/time",
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/reg/time",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -152,8 +242,9 @@ export const units: UnitCollection = {
     },
 
     getUserRegUser: {
-        method: "get",
-        path:   "/users/:user/reg/user",
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/reg/user",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -161,8 +252,9 @@ export const units: UnitCollection = {
     },
 
     getUserName: {
-        method: "get",
-        path:   "/users/:user/name",
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/name",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -170,8 +262,9 @@ export const units: UnitCollection = {
     },
 
     getUserNicknames: {
-        method: "get",
-        path:   "/users/:user/nicknames",
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/nicknames",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -179,8 +272,9 @@ export const units: UnitCollection = {
     },
 
     deleteAllUsers: {
-        method: "delete",
-        path:   "/users",
+        permission: "admin",
+        method:     "delete",
+        path:       "/users",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -188,8 +282,9 @@ export const units: UnitCollection = {
     },
 
     deleteUser: {
-        method: "delete",
-        path:   "/users/:user",
+        permission: "mixed",
+        method:     "delete",
+        path:       "/users/:user",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -197,8 +292,9 @@ export const units: UnitCollection = {
     },
 
     deleteAllUserNicknames: {
-        method: "delete",
-        path:   "/users/:user/nicknames",
+        permission: "mixed",
+        method:     "delete",
+        path:       "/users/:user/nicknames",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -206,8 +302,9 @@ export const units: UnitCollection = {
     },
 
     deleteUserNickname: {
-        method: "delete",
-        path:   "/users/:user/nicknames/:nickname",
+        permission: "mixed",
+        method:     "delete",
+        path:       "/users/:user/nicknames/:nickname",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -215,8 +312,9 @@ export const units: UnitCollection = {
     },
 
     updateUserName: {
-        method: "put",
-        path:   "/users/:user/name",
+        permission: "mixed",
+        method:     "put",
+        path:       "/users/:user/name",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -224,8 +322,9 @@ export const units: UnitCollection = {
     },
 
     updateUserPassword: {
-        method: "put",
-        path:   "/users/:user/password",
+        permission: "mixed",
+        method:     "put",
+        path:       "/users/:user/password",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -233,8 +332,9 @@ export const units: UnitCollection = {
     },
 
     addUserNickname: {
-        method: "post",
-        path:   "/users/:user/nicknames/:nickname",
+        permission: "mixed",
+        method:     "post",
+        path:       "/users/:user/nicknames/:nickname",
 
         async handler(req, res) {
             res.sendStatus(501)
@@ -242,8 +342,9 @@ export const units: UnitCollection = {
     },
 
     addUser: {
-        method: "post",
-        path:   "/users/:user",
+        permission: "admin",
+        method:     "post",
+        path:       "/users/:user",
 
         async handler(req, res) {
             res.sendStatus(501)
