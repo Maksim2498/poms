@@ -1,16 +1,16 @@
 import { Server as HttpServer                   } from "http"
 import { Application, Router, Request, Response } from "express"
 import { Logger                                 } from "winston"
-import { LogicError                             } from "logic"
 
 import open            from "open"
 import express         from "express"
 import morgan          from "morgan"
-import AsyncConnection from "util/mysql/AsyncConnection"
+import AsyncConnection from "./util/mysql/AsyncConnection"
+import LogicError      from "./logic/LogicError"
 import Config          from "./Config"
 
-import * as s   from "util/mysql/statement"
-import * as api from "api-schema"
+import * as s   from "./util/mysql/statement"
+import * as api from "./api-schema"
 
 export default class Server {
     static readonly DEFAULT_ON_STARTED = async (server: Server) => {

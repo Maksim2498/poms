@@ -1,10 +1,10 @@
 import isBase64 from "is-base64"
 import Server   from "./Server"
 
-import { Request, Response } from "express"
-import { isHex             } from "./util/string"
-
-import * as l from "./logic"
+import { Request, Response             } from "express"
+import { isHex                         } from "./util/string"
+import { auth, reauth                  } from "./logic/auth"
+import { tokenPairToJson, deleteAToken } from "./logic/token"
 
 export type UnitCollection = {
     [key: string]: Unit
@@ -59,9 +59,9 @@ export const units: UnitCollection = {
 
             const login     = Buffer.from(base64Login,    "base64").toString()
             const password  = Buffer.from(base64Password, "base64").toString()
-            const tokenPair = await l.auth(this.mysqlConnection, login, password)
+            const tokenPair = await auth(this.mysqlConnection, login, password)
 
-            res.json(l.tokenPairToJson(tokenPair))
+            res.json(tokenPairToJson(tokenPair))
         }
     },
 
@@ -84,9 +84,9 @@ export const units: UnitCollection = {
                 return
             }
 
-            const tokenPair = await l.reauth(this.mysqlConnection, rToken)
+            const tokenPair = await reauth(this.mysqlConnection, rToken)
 
-            res.json(l.tokenPairToJson(tokenPair))
+            res.json(tokenPairToJson(tokenPair))
         }
     },
 
@@ -109,7 +109,7 @@ export const units: UnitCollection = {
                 return
             }
 
-            await l.deleteAToken(this.mysqlConnection, aToken)
+            await deleteAToken(this.mysqlConnection, aToken)
         
             res.json({})
         }

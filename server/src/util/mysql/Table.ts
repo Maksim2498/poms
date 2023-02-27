@@ -1,29 +1,12 @@
-import AsyncConnection from "./AsyncConnection"
 import mysql           from "mysql"
+import AsyncConnection from "./AsyncConnection"
+import Expression      from "./Expression"
 
-import { deepAssign } from "util/object"
+import { deepAssign                                           } from "util/object"
+import { expr                                                 } from "./Expression"
+import { Type, EnumType, SizedType, SizelessType, isNameValid } from "./type"
 
 import * as s from "./statement"
-
-// Expression:
-
-export function expr(expression: string, ...values: any[]) {
-    return new Expression(expression, ...values)
-}
-
-export class Expression {
-    readonly expression: string
-    readonly values:     any[]
-
-    constructor(expression: string, ...values: any[]) {
-        this.expression = expression
-        this.values     = values
-    }
-
-    toSql(): string {
-        return mysql.format(this.expression, this.values)
-    }
-}
 
 // Column:
 
@@ -53,63 +36,6 @@ export interface Column {
     readonly unique:        boolean
     readonly autoIncrement: boolean
     readonly defaultValue?: DefaultValue
-}
-
-// Type:
-
-export type Type = EnumType
-                 | SizelessType
-                 | SizedType
-
-export type EnumType = {
-    name:     "enum"
-    variants: string[]
-}
-
-export type SizelessType = {
-    name: SizelessTypeName
-}
-
-export type SizedType = {
-    name: SizedTypeName
-    size: number | null
-}
-
-export type TypeName = SizedTypeName | SizelessTypeName
-
-export type SizedTypeName = "tinyint"
-                          | "bigint"
-                          | "varchar"
-                          | "binary"
-
-export type SizelessTypeName = "timestamp"
-
-export function boolean(): Type {
-    return tinyint(1)
-}
-
-export function timestamp(): Type {
-    return { name: "timestamp" }
-}
-
-export function tinyint(size?: number): Type {
-    return { name: "tinyint", size: size ?? null }
-}
-
-export function bigint(size?: number): Type {
-    return { name: "bigint", size: size ?? null }
-}
-
-export function varchar(size?: number): Type {
-    return { name: "varchar", size: size ?? null }
-}
-
-export function binary(size?: number): Type {
-    return { name: "binary", size: size ?? null }
-}
-
-export function enumeration(...variants: string[]): Type {
-    return { name: "enum", variants }
 }
 
 // Default Value:
@@ -657,10 +583,4 @@ export default class Table {
     toString(): string {
         return this.displayName
     }
-}
-
-// Misc:
-
-export function isNameValid(name: string) {
-    return name.match(/^\w+$/)
 }

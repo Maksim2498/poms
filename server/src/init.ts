@@ -2,6 +2,7 @@ import { promises as fsp                                              } from "fs
 import { dirname                                                      } from "path"
 import { Logger                                                       } from "winston"
 import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./db-schema"
+import { createAdmin                                                  } from "logic/user"
 
 import cp              from "child_process"
 import AsyncConnection from "./util/mysql/AsyncConnection"
@@ -9,7 +10,6 @@ import Config          from "./Config"
 
 import * as s from "./util/mysql/statement"
 import * as t from "./util/mysql/Table"
-import * as l from "./logic"
 
 
 export default async function init(config: Config, logger?: Logger) {
@@ -84,7 +84,7 @@ async function initDatabaseObjects(connection: AsyncConnection, config: Config) 
         await checkTablesAndEvents(connection, !config.mysqlRecreateInvalidTables)
 
     if (config.logicCreateAdmin)
-        await l.createAdmin({ connection })
+        await createAdmin({ connection })
 }
 
 async function createTablesAndEvents(connection: AsyncConnection) {
