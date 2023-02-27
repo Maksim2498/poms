@@ -38,13 +38,18 @@ This document contains detailed description on all supported API methods and the
 If server gets invalid request it sends `4xx` error to client. If something unexpected happends
 on the server side it sends `5xx` error. Else, if user send's structurally valid but logically
 invalid data (e.g. invalid login and password combination) server send's back a `200` code with
-json body of following the structure:
+JSON body of following the structure:
 
 ```ts
 {
-    error: string
+    error:       string
+    needRefresh: boolean
 }
 ```
+
+`needRefresh` field here indicates that error reason is expired or unregistered access token
+sent to server. After receiving a JSON with `needRefresh` set to `true` client should try to
+reauthenticate using [`/reauth`](#reauthenticate) method.
 
 Request is treated structurally invalid in the following cases:
 

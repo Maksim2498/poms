@@ -1,6 +1,7 @@
-import crypto          from "crypto"
-import AsyncConnection from "util/mysql/AsyncConnection"
-import LogicError      from "./LogicError"
+import crypto            from "crypto"
+import AsyncConnection   from "util/mysql/AsyncConnection"
+import LogicError        from "./LogicError"
+import TokenExpiredError from "./TokenExpiredError"
 
 import { A_TOKENS_TABLE, R_TOKENS_TABLE } from "db-schema"
 import { deleteAllUserData, User        } from "./user"
@@ -8,7 +9,7 @@ import { dateSecondsAhead               } from "util/date"
 
 export async function checkATokenIsActive(conneciton: AsyncConnection, token: ATokenInfo | Buffer | undefined | null) {
     if (!await isATokenActive(conneciton, token))
-        throw new LogicError("Unregistered or expired token")
+        throw new TokenExpiredError("Unregistered or expired token")
 }
 
 export async function isATokenActive(connection: AsyncConnection, token: ATokenInfo | Buffer | undefined | null): Promise<boolean> {

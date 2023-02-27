@@ -2,12 +2,13 @@ import { Server as HttpServer                   } from "http"
 import { Application, Router, Request, Response } from "express"
 import { Logger                                 } from "winston"
 
-import open            from "open"
-import express         from "express"
-import morgan          from "morgan"
-import AsyncConnection from "./util/mysql/AsyncConnection"
-import LogicError      from "./logic/LogicError"
-import Config          from "./Config"
+import open              from "open"
+import express           from "express"
+import morgan            from "morgan"
+import AsyncConnection   from "./util/mysql/AsyncConnection"
+import LogicError        from "./logic/LogicError"
+import TokenExpiredError from "./logic/TokenExpiredError"
+import Config            from "./Config"
 
 import * as s   from "./util/mysql/statement"
 import * as api from "./api-schema"
@@ -115,7 +116,11 @@ export default class Server {
 
                     function handleError(error: any, res: Response, next: (error?: any) => void) {
                         if (error instanceof LogicError) {
-                            res.json({ error: error.message })
+                            res.json({
+                                error:       error.message,
+                                needRefresh: error instanceof TokenExpiredError
+                            })
+
                             return
                         }
 
