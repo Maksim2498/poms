@@ -13,8 +13,8 @@ export interface LifeTimeOptions {
 }
 
 export const DEFAULT_LIFETIME_OPTIONS: LifeTimeOptions = {
-    accessLifeTime:  30 * 60,         // 30 minutes
-    refreshLifeTime: 7 * 24 * 60 * 60 // 1  weak
+    accessLifeTime:  30 * 60,          // 30 minutes
+    refreshLifeTime: 7  * 24 * 60 * 60 // 1  weak
 }
 
 export interface TokenPair {
