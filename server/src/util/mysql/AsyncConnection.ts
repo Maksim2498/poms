@@ -155,10 +155,10 @@ export default class AsyncConnection {
     }
 
     async query<T>(
-        sql:       string,
-        values:    any | any[] = [],
-        onSuccess: OnSuccess<T> = results => results,
-        onError:   OnError<T>   = ()      => undefined
+        sql:       string | { sql: string, nestTables: boolean},
+        values:    any    | any[] = [],
+        onSuccess: OnSuccess<T> = (results) => results,
+        onError:   OnError<T>   = (       ) => undefined
     ): Promise<T> {
         this.checkState("perform queries", "online")
 
