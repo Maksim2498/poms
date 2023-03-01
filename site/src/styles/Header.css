@@ -7,3 +7,8 @@
     padding-right: max(2rem, calc((100% - 60rem) / 2));
     height: 5rem
 }
+
+.Header .left h1 {
+    width: 6rem;
+    text-align: center
+}

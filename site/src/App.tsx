@@ -58,7 +58,7 @@ export default function App() {
                              }}/>
 
             case "user-panel":
-                return <Main show="user-panel" />
+                return <Main show="user-panel"/>
         }
     }
 }

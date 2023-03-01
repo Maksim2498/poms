@@ -1,16 +1,26 @@
 .UserPanel {
+    position: absolute;
+    left: max(2rem, calc((100% - 60rem) / 2));
+    top: 7rem;
     height: 100%
 }
 
 .UserPanel .content-selector {
-    background-color: #202020;
-    width: 10rem;
-    height: 100%;
+    list-style: none;
+    width: 6rem;
 }
 
 .UserPanel .content-selector .Button {
     width: 100%;
     border: none;
-    border-bottom: thin solid black;
-    border-radius: 0
+    text-align: center;
+    background-color: transparent;
+}
+
+.UserPanel .content-selector .Button:hover {
+    background-color: rgba(255, 255, 255, 20%)
+}
+
+.UserPanel .content-selector .Button:active {
+    background-color: rgba(255, 255, 255, 30%)
 }
