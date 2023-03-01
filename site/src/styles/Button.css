@@ -5,7 +5,8 @@
     border: thin solid #666;
     padding: .75rem;
     font-size: .9rem;
-    border-radius: .2rem
+    border-radius: .2rem;
+    transition: .1s background-color
 }
 
 .Button:hover {
