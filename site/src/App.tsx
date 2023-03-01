@@ -1,6 +1,5 @@
 import Header from "components/Header"
 import Main   from "components/Main"
-import Github from "components/Github"
 
 import { useState           } from "react"
 import { Show as ShowMain   } from "components/Main"
@@ -16,7 +15,6 @@ export default function App() {
     return <div className="App">
         {header()}
         {main()  }
-        <Github />
     </div>
 
     function header() {
