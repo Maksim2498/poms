@@ -166,7 +166,7 @@ export interface DeepUserInfo {
     isAdmin:      boolean
     isOnline:     boolean
     created:      Date
-    creator?:     UserInfo
+    creator:      UserInfo | null
 }
 
 export async function getDeepUserInfo(connection: AsyncConnection, user: User, force: true): Promise<DeepUserInfo>
@@ -184,7 +184,7 @@ export async function getDeepUserInfo(connection: AsyncConnection, user: User, f
             where = "target.id = ?"
     }
 
-    const results = await USERS_TABLE.join(connection, "target", USERS_TABLE, "creator", "this.cr_id = that.id")
+    const results = await USERS_TABLE.join(connection, "target", USERS_TABLE, "creator", "target.cr_id = creator.id")
                                      .where(where, user)
 
     if (!results.length) {
@@ -205,7 +205,7 @@ export async function getDeepUserInfo(connection: AsyncConnection, user: User, f
         isAdmin:      !!t.is_admin,
         isOnline:     !!t.is_online,
         created:      t.cr_time,
-        creator:      {
+        creator:      t.cr_id != null ? {
             id:           c.id,
             login:        c.login,
             name:         c.name,
@@ -214,7 +214,7 @@ export async function getDeepUserInfo(connection: AsyncConnection, user: User, f
             isOnline:     !!c.is_online,
             created:      c.cr_time,
             creator:      c.cr_id
-        }
+        } : null 
     }
 }
 

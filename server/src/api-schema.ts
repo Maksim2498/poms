@@ -4,7 +4,7 @@ import Server   from "./Server"
 import { Request, Response             } from "express"
 import { isHex                         } from "./util/string"
 import { auth, reauth                  } from "./logic/auth"
-import { getUserInfo, getUserLogin     } from "./logic/user"
+import { getDeepUserInfo, getUserInfo  } from "./logic/user"
 import { getUserNicknames              } from "logic/nickname"
 import { checkATokenIsActive,
          getATokenInfo,
@@ -201,16 +201,14 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getUserInfo(this.mysqlConnection, user, true)
+            const info = await getDeepUserInfo(this.mysqlConnection, user, true)
             const json = {
                 name:     info.name,
                 isAdmin:  info.isAdmin,
                 isOnline: info.isOnline,
-
-                reg: {
+                reg:      {
                     time:  info.created.toISOString(),
-                    login: info.creator != null ? await getUserLogin(this.mysqlConnection, info.creator)
-                                                : null
+                    login: info.creator?.login ?? null
                 }
             } as any
 
