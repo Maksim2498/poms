@@ -153,7 +153,7 @@ export interface RTokenInfo {
     id:       Buffer
     aTokenId: Buffer
     exp:      Date
-    creation: Date
+    created:  Date
 }
 
 export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: true): Promise<RTokenInfo>
@@ -176,7 +176,7 @@ export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffe
         id,
         aTokenId: atoken_id,
         exp:      exp_time,
-        creation: cr_time
+        created:  cr_time
     }
 }
 

@@ -88,6 +88,10 @@ export interface Filter {
     where(expr: string, ...values: any[]): Promise<any[]>
 }
 
+export interface SelectionFilter extends Filter {
+    select(...columns: string[]): Filter
+}
+
 // Table:
 
 export interface ReadonlyTable {
@@ -107,6 +111,7 @@ export interface ReadonlyTable {
     insert(connection: AsyncConnection, insertPairs: InsertPairs): Promise<boolean>
     select(connection: AsyncConnection, ...columns: string[]): Filter
     delete(conneciton: AsyncConnection): Filter
+    join(conneciton: AsyncConnection, thisName: string, table: ReadonlyTable, tableName: string, on: string): SelectionFilter
     columnConstraints(column: string): Constraint[]
 
     toSql(): string
@@ -441,6 +446,11 @@ export default class Table {
             all:   async ()                => await conneciton.query(`DELETE FROM ${this.displayName}`                      ),
             where: async (expr, ...values) => await conneciton.query(`DELETE FROM ${this.displayName} WHERE ${expr}`, values)
         }
+    }
+
+    join(conneciton: AsyncConnection, thisName: string, table: ReadonlyTable, tableName: string, on: string):SelectionFilter {
+        // TODO
+        return {} as SelectionFilter
     }
 
     toSql(): string {

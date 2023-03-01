@@ -158,6 +158,66 @@ export async function getUserLogin(connection: AsyncConnection, user: number, fo
     return (await getUserInfo(connection, user, force))?.login
 }
 
+export interface DeepUserInfo {
+    id:           number
+    login:        string
+    name?:        string
+    passwordHash: Buffer
+    isAdmin:      boolean
+    isOnline:     boolean
+    created:      Date
+    creator?:     UserInfo
+}
+
+export async function getDeepUserInfo(connection: AsyncConnection, user: User, force: true): Promise<DeepUserInfo>
+export async function getDeepUserInfo(connection: AsyncConnection, user: User, force?: boolean): Promise<DeepUserInfo | undefined>
+export async function getDeepUserInfo(connection: AsyncConnection, user: User, force: boolean = false): Promise<DeepUserInfo | undefined> {
+    let where: string
+
+    switch (typeof user) {
+        case "string":
+            checkLogin(user)
+            where = "target.login = ?"
+            break
+
+        case "number":
+            where = "target.id = ?"
+    }
+
+    const results = await USERS_TABLE.join(connection, "target", USERS_TABLE, "creator", "this.cr_id = that.id")
+                                     .where(where, user)
+
+    if (!results.length) {
+        if (force)
+            throw new LogicError(typeof user === "string" ? `There is no user "${user}"`
+                                                          : `There is no user with id ${user}`)
+        
+        return undefined
+    }
+
+    const { target: t, creator: c } = results[0]
+
+    return {
+        id:           t.id,
+        login:        t.login,
+        name:         t.name,
+        passwordHash: t.password_hash,
+        isAdmin:      !!t.is_admin,
+        isOnline:     !!t.is_online,
+        created:      t.cr_time,
+        creator:      {
+            id:           c.id,
+            login:        c.login,
+            name:         c.name,
+            passwordHash: c.password_hash,
+            isAdmin:      !!c.is_admin,
+            isOnline:     !!c.is_online,
+            created:      c.cr_time,
+            creator:      c.cr_id
+        }
+    }
+}
+
 export interface UserInfo {
     id:           number
     login:        string
