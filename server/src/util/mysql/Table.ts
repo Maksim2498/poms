@@ -428,7 +428,7 @@ export default class Table {
         const columnsSql = this.queryColumnsToSql(columns)
 
         return {
-            all:   async ()                => await connection.query(`SELECT ${columnsSql} FROM ${this.displayName}`                      ),
+            all:   async (               ) => await connection.query(`SELECT ${columnsSql} FROM ${this.displayName}`                      ),
             where: async (expr, ...values) => await connection.query(`SELECT ${columnsSql} FROM ${this.displayName} WHERE ${expr}`, values)
         }
     }
@@ -443,14 +443,91 @@ export default class Table {
 
     delete(conneciton: AsyncConnection): Filter {
         return {
-            all:   async ()                => await conneciton.query(`DELETE FROM ${this.displayName}`                      ),
+            all:   async (               ) => await conneciton.query(`DELETE FROM ${this.displayName}`                      ),
             where: async (expr, ...values) => await conneciton.query(`DELETE FROM ${this.displayName} WHERE ${expr}`, values)
         }
     }
 
-    join(conneciton: AsyncConnection, thisName: string, table: ReadonlyTable, tableName: string, on: string):SelectionFilter {
-        // TODO
-        return {} as SelectionFilter
+    join(conneciton: AsyncConnection, thisName: string, table: ReadonlyTable, tableName: string, on: string): SelectionFilter {
+        if (!isNameValid(thisName))
+            throw new Error(`<thisName> is invalid`)
+
+        if (!isNameValid(tableName))
+            throw new Error(`<tableName> is invalid`)
+
+        thisName  = thisName.toLowerCase()
+        tableName = tableName.toLowerCase()
+
+        return {
+            all: async () => {
+                const sql = `SELECT * FROM ${this.displayName} ${thisName} `
+                          + `LEFT JOIN ${table.displayName} ${tableName} `
+                          + `ON ${on}`
+
+                const results = await conneciton.query<any[]>({ sql, nestTables: true })
+
+                return results
+            },
+
+            where: async (expr, ...values) => {
+                const sql = `SELECT * FROM ${this.displayName} ${thisName} `
+                          + `LEFT JOIN ${table.displayName} ${tableName} `
+                          + `ON ${on} `
+                          + `WHERE ${expr}`
+
+                const results = await conneciton.query<any[]>({ sql, nestTables: true }, values)
+
+                return results
+            },
+
+            select: (...columns) => {
+                const columnsSql = this.joinQueryColumnsToSql(columns, thisName, table, tableName)
+
+                return {
+                    all: async () => {
+                        const sql = `SELECT ${columnsSql} FROM ${this.displayName} ${thisName} `
+                                  + `LEFT JOIN ${table.displayName} ${tableName} `
+                                  + `ON ${on}`
+
+                        const results = await conneciton.query<any[]>({ sql, nestTables: true })
+
+                        return results
+                    },
+
+                    where: async (expr, ...values) => {
+                        const sql = `SELECT ${columnsSql} FROM ${this.displayName} ${thisName} `
+                                  + `LEFT JOIN ${table.displayName} ${tableName} `
+                                  + `ON ${on}`
+                                  + `WHERE ${expr}`
+
+                        const results = await conneciton.query<any[]>({ sql, nestTables: true }, values)
+
+                        return results
+                    }
+                }
+            }
+        }
+    }
+
+    private joinQueryColumnsToSql(columns: string[], thisName: string, table: ReadonlyTable, tableName: string): string {
+        for (const initColumn of columns) {
+            let column = initColumn.toLowerCase()
+
+            if (column.startsWith(thisName)) {
+                column = column.slice(thisName.length + 1)
+
+                if (!this.columns.has(column))
+                    this.missingColumn(column)
+            } else if (column.startsWith(tableName)) {
+                column = column.slice(tableName.length + 1)
+
+                if (!table.columns.has(column))
+                    (table as any).missingColumn(column)
+            } else
+                throw new Error(`Column "${initColumn}" isn't presented in "${this.displayName}" and "${tableName}" tables`)
+        }
+            
+        return columns.length !== 0 ? columns.join(", ") : "*"
     }
 
     toSql(): string {
