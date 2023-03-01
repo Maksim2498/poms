@@ -32,7 +32,7 @@ export function validateLogin(login: string): string | undefined {
     if (login.length < MIN_LENGTH)
         return `Login must be at least ${MIN_LENGTH} characters long`
 
-    const MAX_LENGTH = 4
+    const MAX_LENGTH = 255
 
     if (login.length > MAX_LENGTH)
         return `Login must not be longer than ${MAX_LENGTH} characters`
