@@ -1,8 +1,7 @@
 .UserPanel {
     position: absolute;
     left: max(2rem, calc((100% - 60rem) / 2));
-    top: 7rem;
-    height: 100%
+    top: 7rem
 }
 
 .UserPanel .content-selector {
