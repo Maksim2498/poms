@@ -8,7 +8,7 @@ export type Props = {
 }
 
 export default function UserPanel(props: Props) {
-    const [header, setHeader] = useState("Profile")
+    const [header, setHeader] = useState("Server")
 
     return <div className="UserPanel">
         <ul className="content-selector">
