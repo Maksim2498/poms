@@ -57,7 +57,8 @@ export default function SignIn(props: Props) {
                    invalid     = {loginError != null}
                    value       = {login}
                    onChange    = {onLoginChange}
-                   placeholder = "Login" />
+                   placeholder = "Login"
+                   autofocus   = {true} />
 
             {errorMessge(loginError)}
 
