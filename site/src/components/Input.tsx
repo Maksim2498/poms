@@ -9,6 +9,7 @@ export type Props = {
     onChange?:    (event: FormEvent<HTMLInputElement>) => void
     disabled?:    boolean
     placeholder?: string
+    autofocus?:   boolean
 }
 
 export default function Input(props: Props) {
@@ -17,5 +18,6 @@ export default function Input(props: Props) {
                   value       = {props.value}
                   onChange    = {props.onChange}
                   disabled    = {props.disabled}
-                  placeholder = {props.placeholder} />
+                  placeholder = {props.placeholder}
+                  autoFocus   = {props.autofocus} />
 }
