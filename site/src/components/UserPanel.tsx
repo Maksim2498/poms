@@ -23,9 +23,9 @@ export default function UserPanel(props: Props) {
 
     function contentSelectorItems(): JSX.Element[] {
         const items: JSX.Element[] = [
-            <Button onClick={() => setHeader("Server")}>Server</Button>,
+            <Button onClick={() => setHeader("Server") }>Server</Button>,
             <Button onClick={() => setHeader("Profile")}>Profile</Button>,
-            <Button onClick={() => setHeader("Users")}>Users</Button>
+            <Button onClick={() => setHeader("Users")  }>Users</Button>
         ]
 
         if (props.isAdmin)

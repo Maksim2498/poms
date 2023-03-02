@@ -167,14 +167,14 @@ __Response__:
 
 ```ts
 {
-    name?:      string   // base64-encoded
-    nicknames?: string[] // base64-encoded. Added if <nicknames> option is set
-    isAdmin:    boolean
-    isOnline:   boolean
+    name:      string   | null
+    nicknames: string[] | null // Added if <nicknames> option is set
+    isAdmin:   boolean
+    isOnline:  boolean
 
     reg: {
-        time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
-        login: string | null // base64-encoded
+        time:  string          // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+        login: string | null
     }
 }[]
 ```
@@ -198,14 +198,14 @@ __Response__:
 
 ```ts
 {
-    name?:      string   // base64-encoded
-    nicknames?: string[] // base64-encoded. Added if <nicknames> option is set
-    isAdmin:    boolean
-    isOnline:   boolean
+    name:      string   | null
+    nicknames: string[] | null // Not null if <nicknames> option is set
+    isAdmin:   boolean
+    isOnline:  boolean
 
     reg: {
-        time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
-        login: string | null // base64-encoded
+        time:  string          // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+        login: string | null
     }
 }
 ```
@@ -276,7 +276,7 @@ __Responese__:
 ```ts
 {
     time:  string        // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
-    login: string | null // base64-encoded
+    login: string | null
 }
 ```
 
@@ -322,7 +322,7 @@ __Responese__:
 
 ```ts
 {
-    login: string | null // base64-encoded
+    login: string | null
 }
 ```
 
@@ -345,7 +345,7 @@ __Response__:
 
 ```ts
 {
-    name: string // base64-encoded
+    name: string
 }
 ```
 
@@ -367,7 +367,7 @@ Accept: application/json
 __Response__:
 
 ```ts
-string[] // base64-encoded
+string[]
 ```
 
 ### Delete All Users
@@ -470,7 +470,7 @@ Accept: application/json
 
 ```ts
 {
-    name: string // base64-encoded
+    name: string
 }
 ```
 
@@ -499,7 +499,7 @@ Accept: application/json
 
 ```ts
 {
-    password: string // base64-encoded
+    password: string
 }
 ```
 
@@ -577,8 +577,8 @@ Accept: application/json
 
 ```ts
 {
-    password: string   // base64-encoded
-    name?:    string   // base64-encoded
+    password: string
+    name?:    string
     isAdmin?: boolean
 }
 ```

@@ -4,7 +4,8 @@ import Server   from "./Server"
 import { Request, Response             } from "express"
 import { isHex                         } from "./util/string"
 import { auth, reauth                  } from "./logic/auth"
-import { getDeepUserInfo, getUserInfo  } from "./logic/user"
+import { getAllUsersDeepInfo,
+         getDeepUserInfo, getUserInfo  } from "./logic/user"
 import { getUserNicknames              } from "logic/nickname"
 import { checkATokenIsActive,
          getATokenInfo,
@@ -190,7 +191,29 @@ export const units: UnitCollection = {
         path:       "/users",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user        = req.params.user
+            const info        = await getAllUsersDeepInfo(this.mysqlConnection)
+            const jsonsWithId = info.map(i => {
+                return {
+                    id: i.id,
+                    json:  {
+                        name:      i.name,
+                        isAdmin:   i.isAdmin,
+                        isOnline:  i.isOnline,
+                        nicknames: null as null | string[],
+                        reg:       {
+                            time:  i.created.toISOString(),
+                            login: i.creator?.login ?? null
+                        }
+                    }
+                }
+            })
+
+            if ("nicknames" in req.query)
+                for (const { id, json } of jsonsWithId)
+                    json.nicknames = await getUserNicknames(this.mysqlConnection, id)
+
+            res.json(jsonsWithId.map(j => j.json))
         }
     },
 
@@ -203,14 +226,15 @@ export const units: UnitCollection = {
             const user = req.params.user
             const info = await getDeepUserInfo(this.mysqlConnection, user, true)
             const json = {
-                name:     info.name,
-                isAdmin:  info.isAdmin,
-                isOnline: info.isOnline,
-                reg:      {
+                name:      info.name,
+                isAdmin:   info.isAdmin,
+                isOnline:  info.isOnline,
+                nicknames: null as null | string[],
+                reg:       {
                     time:  info.created.toISOString(),
                     login: info.creator?.login ?? null
                 }
-            } as any
+            }
 
             if ("nicknames" in req.query)
                 json.nicknames = await getUserNicknames(this.mysqlConnection, info.id)
@@ -225,7 +249,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/is-admin",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const info = await getUserInfo(this.mysqlConnection, user, true)
+            
+            res.json({ isAdmin: info.isAdmin })
         }
     },
 
@@ -235,7 +262,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/is-online",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const info = await getUserInfo(this.mysqlConnection, user, true)
+            
+            res.json({ isOnline: info.isOnline })
         }
     },
 
@@ -245,7 +275,13 @@ export const units: UnitCollection = {
         path:       "/users/:user/reg",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const info = await getDeepUserInfo(this.mysqlConnection, user, true)
+
+            res.json({
+                time:  info.created.toISOString(),
+                login: info.creator?.login
+            })
         }
     },
 
@@ -255,7 +291,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/reg/time",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const info = await getUserInfo(this.mysqlConnection, user, true)
+
+            res.json({ time: info.created.toISOString() })
         }
     },
 
@@ -265,7 +304,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/reg/user",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const info = await getDeepUserInfo(this.mysqlConnection, user, true)
+
+            res.json({ login: info.creator?.login })
         }
     },
 
@@ -275,7 +317,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/name",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const info = await getUserInfo(this.mysqlConnection, user, true)
+
+            res.json({ name: info.name })
         }
     },
 
@@ -285,7 +330,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/nicknames",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user      = req.params.user
+            const nicknames = await getUserNicknames(this.mysqlConnection, user)
+
+            res.json(nicknames)
         }
     },
 

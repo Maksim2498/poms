@@ -161,12 +161,40 @@ export async function getUserLogin(connection: AsyncConnection, user: number, fo
 export interface DeepUserInfo {
     id:           number
     login:        string
-    name?:        string
+    name:         string | null
     passwordHash: Buffer
     isAdmin:      boolean
     isOnline:     boolean
     created:      Date
     creator:      UserInfo | null
+}
+
+export async function getAllUsersDeepInfo(conneciton: AsyncConnection): Promise<DeepUserInfo[]> {
+    const results = await USERS_TABLE.join(conneciton, "target", USERS_TABLE, "creator", "target.cr_id = creator.id").all()
+
+    return results.map(result => {
+        const { target: t, creator: c } = result
+
+        return {
+            id:           t.id,
+            login:        t.login,
+            name:         t.name,
+            passwordHash: t.password_hash,
+            isAdmin:      !!t.is_admin,
+            isOnline:     !!t.is_online,
+            created:      t.cr_time,
+            creator:      t.cr_id != null ? {
+                id:           c.id,
+                login:        c.login,
+                name:         c.name,
+                passwordHash: c.password_hash,
+                isAdmin:      !!c.is_admin,
+                isOnline:     !!c.is_online,
+                created:      c.cr_time,
+                creator:      c.cr_id
+            } : null
+        }
+    })
 }
 
 export async function getDeepUserInfo(connection: AsyncConnection, user: User, force: true): Promise<DeepUserInfo>
@@ -214,7 +242,7 @@ export async function getDeepUserInfo(connection: AsyncConnection, user: User, f
             isOnline:     !!c.is_online,
             created:      c.cr_time,
             creator:      c.cr_id
-        } : null 
+        } : null
     }
 }
 
@@ -227,6 +255,23 @@ export interface UserInfo {
     isOnline:     boolean
     created:      Date
     creator?:     number
+}
+
+export async function getAllUsersInfo(conneciton: AsyncConnection): Promise<UserInfo[]> {
+    const results = await USERS_TABLE.select(conneciton).all()
+
+    return results.map(result => {
+        return {
+            id:           result.id,
+            login:        result.login,
+            name:         result.name,
+            passwordHash: result.password_hash,
+            isAdmin:      !!result.is_admin,
+            isOnline:     !!result.is_online,
+            created:      result.cr_time,
+            creator:      result.cr_id
+        }
+    })
 }
 
 export async function getUserInfo(connection: AsyncConnection, user: User, force: true): Promise<UserInfo>
