@@ -1,4 +1,4 @@
 cd /D "%~dp0"
 
 npm i
-npm build
+npm run build
