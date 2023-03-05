@@ -34,6 +34,7 @@ export default function SignIn(props: Props) {
                   || !passwordChanged
                   || loginError    != null
                   || passwordError != null
+                  || commonError   != null
 
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
