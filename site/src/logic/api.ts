@@ -25,6 +25,8 @@ export async function method(method: Method, path: string): Promise<any> {
     if (!tokenPair)
         throw new NeedAuthError()
 
+    path = "/api/" + path
+
     if (tokenPair.access.exp > new Date()) {
         // First try
 
@@ -32,7 +34,7 @@ export async function method(method: Method, path: string): Promise<any> {
 
         headers.set("Authorization", tokenPair.access.id)
 
-        const result = await fetch("/api/" + path, { method, headers, cache: "no-cache" })
+        const result = await fetch(path, { method, headers, cache: "no-cache" })
 
         if (!result.ok)
             throw new Error(result.statusText)

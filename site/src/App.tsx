@@ -3,8 +3,9 @@ import LogicError from "logic/LogicError"
 import Header     from "components/Header"
 import Main       from "components/Main"
 
-import { useEffect, useState } from "react"
-import { auth,      deauth   } from "logic/auth"
+import {useState       } from "react"
+import { auth, deauth  } from "logic/auth"
+import { useEffectOnce } from "hooks/useEffectOnce"
 
 import "./App.css"
 
@@ -16,11 +17,11 @@ export default function App() {
     const [user,           setUser          ] = useState(undefined as User   | undefined)
     const [signIn,         setSignIn        ] = useState(false)
 
-    useEffect(() => {
+    useEffectOnce(() => {
         User.tryLoadUser().then(loaded => setUser(loaded))
                           .catch(error => console.error(error))
                           .finally(()  => setMainLoading(false))
-    }, [])
+    })
 
     return <div className="App">
         {header()}
