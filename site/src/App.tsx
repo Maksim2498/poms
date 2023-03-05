@@ -9,11 +9,12 @@ import { auth,      deauth   } from "logic/auth"
 import "./App.css"
 
 export default function App() {
-    const [mainLoading,   setMainLoading  ] = useState(true)
-    const [signInLoading, setSignInLoading] = useState(false)
-    const [signInError,   setSignInError  ] = useState(undefined as string | undefined)
-    const [user,          setUser         ] = useState(undefined as User   | undefined)
-    const [signIn,        setSignIn       ] = useState(false)
+    const [mainLoading,    setMainLoading   ] = useState(true)
+    const [signOutLoading, setSignOutLoading] = useState(false)
+    const [signInLoading,  setSignInLoading ] = useState(false)
+    const [signInError,    setSignInError   ] = useState(undefined as string | undefined)
+    const [user,           setUser          ] = useState(undefined as User   | undefined)
+    const [signIn,         setSignIn        ] = useState(false)
 
     useEffect(() => {
         User.tryLoadUser().then(loaded => setUser(loaded))
@@ -31,10 +32,21 @@ export default function App() {
             return <Header />
 
         if (user)
-            return <Header user={user} show="sign-out" onSignOut={() => {
-                deauth(true).catch(error => console.error(error))
-                            .finally(()  => setUser(undefined))
-            }} />
+            return <Header user        = {user}
+                           show        = "sign-out"
+                           buttonState = {signOutLoading ? "loading" : "active"}
+                           onSignOut   = { async () => {
+                               setSignOutLoading(true)
+
+                               try {
+                                   await deauth(true)
+                               } catch (error) {
+                                   console.error(error)
+                               } finally {
+                                   setUser(undefined)
+                                   setSignOutLoading(false)
+                               }
+                           }} />
 
         return <Header show = "sign-in" onSignIn={() => setSignIn(true)} />
     }
