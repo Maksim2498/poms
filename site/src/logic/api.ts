@@ -34,7 +34,7 @@ export async function method(method: Method, path: string): Promise<any> {
 
         headers.set("Authorization", tokenPair.access.id)
 
-        const result = await fetch(path, { method, headers, cache: "no-cache" })
+        const result = await fetch(path, { method, headers, cache: "no-store" })
 
         if (!result.ok)
             throw new Error(result.statusText)
