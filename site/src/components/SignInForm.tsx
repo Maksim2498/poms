@@ -22,11 +22,13 @@ export default function SignIn(props: Props) {
     const [password,        setPassword       ] = useState("")
     const [loginError,      setLoginError     ] = useState(props.loginError)
     const [passwordError,   setPasswordError  ] = useState(props.passwordError)
+    const [commonError,     setCommonError    ] = useState(props.commonError)
     const [loginChanged,    setLoginChanged   ] = useState(false)
     const [passwordChanged, setPasswordChanged] = useState(false)
 
     useEffect(() => setLoginError(props.loginError),       [props.loginError]   )
     useEffect(() => setPasswordError(props.passwordError), [props.passwordError])
+    useEffect(() => setCommonError(props.commonError),     [props.commonError]  )
 
     const disabled = !loginChanged
                   || !passwordChanged
@@ -45,6 +47,7 @@ export default function SignIn(props: Props) {
         const error = validateLogin(login)
 
         setLoginError(error)
+        setCommonError(undefined)
         setLoginChanged(true)
         setLogin(login)
     }
@@ -54,6 +57,7 @@ export default function SignIn(props: Props) {
         const error    = validatePassword(password)
 
         setPasswordError(error)
+        setCommonError(undefined)
         setPasswordChanged(true)
         setPassword(password)
     }
@@ -78,7 +82,7 @@ export default function SignIn(props: Props) {
                    placeholder = "Password" />
 
             {errorMessge(passwordError)}
-            {errorMessge(props.commonError)}
+            {errorMessge(commonError)}
 
             <div className="buttons">
                 <Button type="cancel" state={cancelState()} onClick={props.onCancel}>Cancel</Button>

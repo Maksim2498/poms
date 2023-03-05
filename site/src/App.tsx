@@ -59,7 +59,7 @@ export default function App() {
             return <Main show        = "sign-in"
                          loading     = {signInLoading}
                          commonError = {signInError}
-                         onCancel    = {() => setSignIn(false)}
+                         onCancel    = {() => { setSignIn(false); setSignInError(undefined) }}
                          onSignIn    = {async (login, password) => {
                             setSignInLoading(true)
 
@@ -72,6 +72,8 @@ export default function App() {
                                     setUser(user)
                                     setSignIn(false)
                                 }
+
+                                setSignInError(undefined)
                             } catch (error) {
                                 if (error instanceof LogicError) {
                                     setSignInError(error.message)
