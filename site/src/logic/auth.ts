@@ -85,7 +85,7 @@ export function readLoginFromCookies(): string | undefined {
 }
 
 export function removeLoginFromCookies() {
-    Cookies.remove(LOGIN_COOKIE_NAME)
+    Cookies.remove(LOGIN_COOKIE_NAME, { sameSite: "strict" })
 }
 
 export function checkLogin(login: string) {

@@ -83,5 +83,5 @@ export function readTokenPairFromCookies(): TokenPair | undefined {
 }
 
 export function removeTokenPairFromCookies() {
-    Cookies.remove(COOKIE_NAME)
+    Cookies.remove(COOKIE_NAME, { sameSite: "strict" })
 }
