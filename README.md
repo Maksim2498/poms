@@ -1,4 +1,4 @@
-# POMS - Personal Offline Minecraft Server (__WIP__)
+# POMS - Personal Offline-mode Minecraft Server administration system(__WIP__)
 
 ![Server Version](https://img.shields.io/github/package-json/v/Maksim2498/poms?filename=server%2Fpackage.json&label=server%20version)
 ![Site Version](https://img.shields.io/github/package-json/v/Maksim2498/poms?filename=site%2Fpackage.json&label=client%20version)
