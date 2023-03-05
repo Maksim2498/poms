@@ -15,13 +15,13 @@
 }
 
 .Profile .value {
-    left: calc(50% + .5rem);
+    left: calc(50% + .6rem);
     background-color: dimgray;
     border-radius: .4rem
 }
 
 .Profile .label {
-    right: calc(50% + .5rem)
+    right: calc(50% + .6rem)
 }
 
 .Profile .nicknames {

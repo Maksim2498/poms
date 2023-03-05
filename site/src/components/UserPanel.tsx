@@ -6,7 +6,6 @@ import Server  from "./Server"
 import Users   from "./Users"
 
 import { useState } from "react"
-import { cap      } from "util/string"
 
 import "styles/UserPanel.css"
 
@@ -66,6 +65,18 @@ export default function UserPanel(props: Props) {
     }
 
     function header() {
-        return <h2>{cap(selection)}</h2>
+        switch (selection) {
+            case "console":
+                return <h2>Server Console</h2>
+
+            case "profile":
+                return <h2>Your Profile</h2>
+
+            case "server":
+                return <h2>Server Status</h2>
+
+            case "users":
+                return <h2>User List</h2>
+        }
     }
 }
