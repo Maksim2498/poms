@@ -60,7 +60,7 @@ export default class User implements UserInfo {
     static async getInfo(login: string): Promise<UserInfo> {
         checkLogin(login)
 
-        const uri  = `users/${encodeURIComponent(login)}`
+        const uri  = `users/${encodeURIComponent(login)}?nicknames`
         const json = await api.get(uri)
         const raw  = userInfoSchema.parse(json)
 
