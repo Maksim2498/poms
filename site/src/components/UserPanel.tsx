@@ -1,7 +1,12 @@
-import Button from "./Button"
-import User   from "logic/User"
+import Button  from "./Button"
+import User    from "logic/User"
+import Console from "./Console"
+import Profile from "./Profile"
+import Server  from "./Server"
+import Users   from "./Users"
 
 import { useState } from "react"
+import { cap      } from "util/string"
 
 import "styles/UserPanel.css"
 
@@ -9,8 +14,13 @@ export type Props = {
     user: User
 }
 
+type Selection = "server"
+               | "profile"
+               | "users"
+               | "console"
+
 export default function UserPanel(props: Props) {
-    const [header, setHeader] = useState("Server")
+    const [selection, setSelection] = useState("server" as Selection)
 
     return <div className="UserPanel">
         <ul className="content-selector">
@@ -18,21 +28,44 @@ export default function UserPanel(props: Props) {
         </ul>
         <div className="content">
             <div className="header">
-                <h2>{header}</h2>
+                {header()}
+            </div>
+            <div className="main">
+                {main()}
             </div>
         </div>
     </div>
 
     function contentSelectorItems(): JSX.Element[] {
         const items: JSX.Element[] = [
-            <Button onClick={() => setHeader("Server") }>Server</Button>,
-            <Button onClick={() => setHeader("Profile")}>Profile</Button>,
-            <Button onClick={() => setHeader("Users")  }>Users</Button>
+            <Button onClick={() => setSelection("server") }>Server</Button>,
+            <Button onClick={() => setSelection("profile")}>Profile</Button>,
+            <Button onClick={() => setSelection("users")  }>Users</Button>
         ]
 
         if (props.user.isAdmin)
-            items.push(<Button onClick={() => setHeader("Console")}>Console</Button>)
+            items.push(<Button onClick={() => setSelection("console")}>Console</Button>)
 
         return items
+    }
+
+    function main() {
+        switch (selection) {
+            case "console":
+                return <Console />
+
+            case "profile":
+                return <Profile user={props.user}/>
+
+            case "server":
+                return <Server />
+
+            case "users":
+                return <Users />
+        }
+    }
+
+    function header() {
+        return <h2>{cap(selection)}</h2>
     }
 }
