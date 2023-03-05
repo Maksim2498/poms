@@ -2,6 +2,7 @@ import User       from "logic/User"
 import LogicError from "logic/LogicError"
 import Header     from "components/Header"
 import Main       from "components/Main"
+import Footer     from "components/Footer"
 
 import {useState       } from "react"
 import { auth, deauth  } from "logic/auth"
@@ -26,6 +27,7 @@ export default function App() {
     return <div className="App">
         {header()}
         {main()}
+        <Footer />
     </div>
 
     function header() {
