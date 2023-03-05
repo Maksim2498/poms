@@ -1,10 +1,12 @@
-import { useState } from "react"
 import Button from "./Button"
+import User   from "logic/User"
+
+import { useState } from "react"
 
 import "styles/UserPanel.css"
 
 export type Props = {
-    isAdmin?: boolean
+    user: User
 }
 
 export default function UserPanel(props: Props) {
@@ -28,7 +30,7 @@ export default function UserPanel(props: Props) {
             <Button onClick={() => setHeader("Users")  }>Users</Button>
         ]
 
-        if (props.isAdmin)
+        if (props.user.isAdmin)
             items.push(<Button onClick={() => setHeader("Console")}>Console</Button>)
 
         return items

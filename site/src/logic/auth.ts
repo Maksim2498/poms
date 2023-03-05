@@ -1,7 +1,15 @@
-import { encode                     } from "js-base64"
-import { saveTokenPairJsonToCookies } from "./token"
+import Cookies    from "js-cookie"
+import LogicError from "./LogicError"
+
+import { encode                      } from "js-base64"
+import { readTokenPairFromCookies,
+         removeTokenPairFromCookies,
+         saveTokenPairJsonToCookies  } from "./token"
 
 export async function auth(login: string, password: string) {
+    checkLogin(login)
+    checkPassword(password)
+
     const headers = new Headers()
 
     headers.set("Authorization", encode(login) + ":" + encode(password))
@@ -14,9 +22,70 @@ export async function auth(login: string, password: string) {
     const json = await result.json()
 
     if (json.error)
-        throw new Error(json.error)
+        throw new LogicError(json.error)
 
     saveTokenPairJsonToCookies(json)
+    safeLoginToCookies(login)
+}
+
+export async function deauth(force: boolean = false) {
+    try {
+        const tokenPair = readTokenPairFromCookies()
+
+        if (tokenPair == null)
+            throw new LogicError("Not authorized")
+
+        const headers = new Headers()
+
+        headers.set("Authorization", tokenPair.access.id)
+
+        const result = await fetch("/api/deauth", { method: "POST", headers })
+
+        if (!result.ok)
+            throw new Error(result.statusText)
+
+        const json = await result.json()
+
+        if (json.error)
+            throw new LogicError(json.error)
+
+        removeTokenPairFromCookies()
+        removeLoginFromCookies()
+    } catch (error) {
+        if (force) {
+            removeTokenPairFromCookies()
+            removeLoginFromCookies()
+        }
+
+        throw error
+    }
+}
+
+export const LOGIN_COOKIE_NAME = "login"
+
+export function safeLoginToCookies(login: string) {
+    Cookies.set(LOGIN_COOKIE_NAME, login, {
+        expires:  3650,
+        sameSite: "strict"
+    })
+}
+
+export function readLoginFromCookies(): string | undefined {
+    const login = Cookies.get(LOGIN_COOKIE_NAME)
+
+    if (login == null)
+        return undefined
+
+    if (validateLogin(login)) {
+        Cookies.remove(LOGIN_COOKIE_NAME)
+        return undefined
+    }
+
+    return login
+}
+
+export function removeLoginFromCookies() {
+    Cookies.remove(LOGIN_COOKIE_NAME)
 }
 
 export function checkLogin(login: string) {

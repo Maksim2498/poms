@@ -1,39 +1,47 @@
-.SignIn {
+.SignInForm {
+    position: relative;
     width: 14rem;
     background-color: #151515;
-    border-radius: .2rem;
+    border-radius: .4rem;
 }
 
-.SignIn fieldset {
+.SignInForm fieldset {
     border: none
 }
 
-.SignIn fieldset > * {
+.SignInForm fieldset > * {
     width: 12rem;
     margin: 1rem
 }
 
-.SignIn legend {
+.SignInForm legend {
     font-size: 1.5rem;
     padding: 1rem;
     margin: 0;
     width: auto;
     margin-left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%)
 }
 
-.SignIn .buttons {
+.SignInForm .buttons {
     display: flex;
     justify-content: space-between
 }
 
-.SignIn .buttons * {
+.SignInForm .buttons > * {
     width: 5rem
 }
 
-.SignIn .error-message {
+.SignInForm .error-message {
     width: 10rem;
     font-size: .8rem;
     margin: 0 1rem;
     color: red
+}
+
+.SignInForm > .Loading {
+    border-radius: .4rem;
+    position: absolute;
+    left: 0;
+    top: 0
 }

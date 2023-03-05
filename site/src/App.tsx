@@ -1,62 +1,80 @@
-import Header from "components/Header"
-import Main   from "components/Main"
+import User       from "logic/User"
+import LogicError from "logic/LogicError"
+import Header     from "components/Header"
+import Main       from "components/Main"
 
-import { useState           } from "react"
-import { Show as ShowMain   } from "components/Main"
-import { Show as ShowHeader } from "components/Header"
+import { useEffect, useState } from "react"
+import { auth,      deauth   } from "logic/auth"
 
 import "./App.css"
 
 export default function App() {
-    const [name,       setName      ] = useState("Anonymous")
-    const [showMain,   setShowMain  ] = useState("greeting" as ShowMain  )
-    const [showHeader, setShowHeader] = useState("sign-in"  as ShowHeader)
+    const [mainLoading,   setMainLoading  ] = useState(true)
+    const [signInLoading, setSignInLoading] = useState(false)
+    const [signInError,   setSignInError  ] = useState(undefined as string | undefined)
+    const [user,          setUser         ] = useState(undefined as User   | undefined)
+    const [signIn,        setSignIn       ] = useState(false)
+
+    useEffect(() => {
+        User.tryLoadUser().then(loaded => setUser(loaded))
+                          .catch(error => console.error(error))
+                          .finally(()  => setMainLoading(false))
+    }, [])
 
     return <div className="App">
         {header()}
-        {main()  }
+        {main()}
     </div>
 
     function header() {
-        switch (showHeader) {
-            case "none":
-                return <Header show="none" />
+        if (signIn || mainLoading)
+            return <Header />
 
-            case "sign-out":
-                return <Header show="sign-out" name={name} onSignOut={() => {
-                    setShowMain("greeting")
-                    setShowHeader("sign-in")
-                }} />
+        if (user)
+            return <Header user={user} show="sign-out" onSignOut={() => {
+                deauth(true).catch(error => console.error(error))
+                            .finally(()  => setUser(undefined))
+            }} />
 
-            case "sign-in":
-                return <Header show="sign-in" onSignIn={() => {
-                    setShowMain("sign-in")
-                    setShowHeader("none")
-                }} />
-        }
+        return <Header show = "sign-in" onSignIn={() => setSignIn(true)} />
     }
 
     function main() {
-        switch (showMain) {
-            case "greeting":
-                return <Main show="greeting" />
+        if (mainLoading)
+            return <Main show="loading" />
 
-            case "sign-in":
-                return <Main show="sign-in"
+        if (signIn)
+            return <Main show        = "sign-in"
+                         loading     = {signInLoading}
+                         commonError = {signInError}
+                         onCancel    = {() => setSignIn(false)}
+                         onSignIn    = {async (login, password) => {
+                            setSignInLoading(true)
 
-                             onCancel={() => {
-                                 setShowMain("greeting")
-                                 setShowHeader("sign-in")
-                             }}
-                             
-                             onSignIn={(login) => {
-                                 setShowMain("user-panel")
-                                 setShowHeader("sign-out")
-                                 setName(login)
-                             }}/>
+                            try {
+                                await auth(login, password)
 
-            case "user-panel":
-                return <Main show="user-panel"/>
-        }
+                                const user = await User.tryLoadUser()
+
+                                if (user) {
+                                    setUser(user)
+                                    setSignIn(false)
+                                }
+                            } catch (error) {
+                                if (error instanceof LogicError) {
+                                    setSignInError(error.message)
+                                } else {
+                                    setSignInError("Something unexpected happened")
+                                    console.error(error)
+                                }
+                            } finally {
+                                setSignInLoading(false)
+                            }
+                         }}/>
+        
+        if (user)
+            return <Main show="user-panel" user={user} />
+
+        return <Main show="greeting" />
     }
 }

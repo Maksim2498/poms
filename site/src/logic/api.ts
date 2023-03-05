@@ -1,4 +1,5 @@
 import NeedAuthError from "./NeedAuthError"
+import LogicError    from "./LogicError"
 
 import { readTokenPairFromCookies, saveTokenPairToCookies, tokenPairFromJson } from "./token"
 
@@ -42,7 +43,7 @@ export async function method(method: Method, path: string): Promise<any> {
             return json
 
         if (!json.needRefresh)
-            throw new Error(json.error)
+            throw new LogicError(json.error)
     }
 
     if (tokenPair.refresh.exp < new Date())
@@ -84,7 +85,7 @@ export async function method(method: Method, path: string): Promise<any> {
 
         if (newJson.error)
             throw newJson.needRefresh ? new NeedAuthError(newJson.error)
-                                      : new Error(newJson.error)
+                                      : new LogicError(newJson.error)
 
         return newJson
     } catch (error) {

@@ -1,12 +1,13 @@
 /* Common */
 
 .Button {
+    position: relative;
     background-color: #484848;
     border: thin solid #666;
     padding: .75rem;
     font-size: .9rem;
-    border-radius: .2rem;
-    transition: .1s background-color
+    border-radius: .4rem;
+    transition: .08s background-color
 }
 
 .Button:hover {
@@ -24,54 +25,71 @@
 
 /* Regular */
 
-.regular.Button {
+.regular.Button .children {
     color: #E8E8E8
 }
 
-.regular.Button:hover {
+.regular.Button:hover .children {
     color: #FFF
 }
 
-.regular.Button:active {
+.regular.Button:active .children {
     color: #EEE
 }
 
-.regular.Button:disabled {
+.regular.Button:disabled .children {
     color: #DDD
 }
 
 /* Submit */
 
-.submit.Button {
+.submit.Button .children {
     color: #18E818
 }
 
-.submit.Button:hover {
+.submit.Button:hover .children {
     color: #2F2
 }
 
-.submit.Button:active {
+.submit.Button:active .children {
     color: #1E1
 }
 
-.submit.Button:disabled {
+.submit.Button:disabled .children {
     color: #0D0
 }
 
 /* Cancel */
 
-.cancel.Button {
+.cancel.Button .children {
     color: #E81818
 }
 
-.cancel.Button:hover {
+.cancel.Button:hover .children {
     color: #F22
 }
 
-.cancel.Button:active {
+.cancel.Button:active .children {
     color: #E11
 }
 
-.cancel.Button {
+.cancel.Button:disabled .children {
     color: #D00
+}
+
+/* Loading */
+
+.Button > .Loading {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: .4rem
+}
+
+.Button > .Loading ~ * {
+    opacity: 0
+}
+
+.Button > * {
+    transition: .2s opacity
 }

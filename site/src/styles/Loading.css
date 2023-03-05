@@ -1,0 +1,38 @@
+.Loading {
+    background-color: rgba(255, 255, 255, 20%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.Loading * {
+    margin: .5rem;
+    border-radius: 50%;
+    width: .5rem;
+    aspect-ratio: 1 / 1;
+    animation-name: loading;
+    animation-timing-function: ease-in-out;
+    animation-direction: alternate;
+    animation-duration: 1s;
+    animation-iteration-count: infinite
+}
+
+.Loading *:nth-child(2) {
+    animation-delay: .25s
+}
+
+.Loading *:nth-child(3) {
+    animation-delay: .5s
+}
+
+@keyframes loading {
+    from {
+        background-color: white
+    }
+
+    to {
+        background-color: transparent
+    }
+}

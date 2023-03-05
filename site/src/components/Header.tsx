@@ -1,16 +1,21 @@
-import User from "./User"
+import User       from "logic/User"
+import UserButton from "./UserButton"
+
+import { State } from "./Button"
 
 import "styles/Header.css"
 
 export const DEFAULT_SHOW = "none"
 
 export type Props = {
-    show:       "sign-out"
-    name:       string
-    onSignOut?: () => void
+    show:         "sign-out"
+    user:         User
+    onSignOut?:   () => void
+    buttonState?: State
 } | {
-    show:      "sign-in"
-    onSignIn?: () => void
+    show:         "sign-in"
+    onSignIn?:    () => void
+    buttonState?: State
 } | {
     show?: "none"
 }
@@ -35,10 +40,13 @@ export default function Header(props: Props) {
                 return null
 
             case "sign-out":
-                return <User name={anyProps.name} onSignOut={anyProps.onSignOut} />
+                return <UserButton user    = {anyProps.user}
+                                   onClick = {anyProps.onSignOut}
+                                   state   = {anyProps.buttonState} />
 
             case "sign-in":
-                return <User onSignIn={anyProps.onSignIn} />
+                return <UserButton onClick = {anyProps.onSignIn}
+                                   state   = {anyProps.buttonState} />
         }
     }
 }

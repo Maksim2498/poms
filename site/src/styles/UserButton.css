@@ -1,0 +1,8 @@
+.signed-in.UserButton {
+    display: flex;
+    align-items: center
+}
+
+.signed-in.UserButton > * {
+    margin: 0 1rem
+}

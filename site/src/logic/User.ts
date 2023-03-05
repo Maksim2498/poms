@@ -1,35 +1,95 @@
-export interface UserJson {
-    login:      string
-    name?:      string
-    nicknames?: string[]
-    isAdmin?:   boolean
-    isOnline?:  boolean
-    reg:        {
-        time:   string
-        login?: string
-    }
-}
+import z from "zod"
 
-export default class User {
+import { readLoginFromCookies } from "./auth"
+import { checkLogin           } from "./auth"
+
+import * as api from "./api"
+
+const userInfoSchema = z.object({
+    name:      z.string().nullable(),
+    nicknames: z.string().array().nullable(),
+    isAdmin:   z.boolean(),
+    isOnline:  z.boolean(),
+    reg:       z.object({
+        time:  z.coerce.date(),
+        login: z.string().nullable()
+    })
+})
+
+export interface UserInfo {
     login:     string
-    name?:     string
+    name:      string | null
     nicknames: string[]
     isAdmin:   boolean
     isOnline:  boolean
     reg:       {
-        time:   Date
-        login?: string
+        time:  Date
+        login: string | null
+    }
+}
+
+export interface UserOptions {
+    login:      string
+    name?:      string   | null
+    nicknames?: string[] | null
+    isAdmin?:   boolean  | null
+    isOnline?:  boolean  | null
+    reg?:       {
+        time?:  Date     | null
+        login?: string   | null
+    }                    | null
+}
+
+export default class User implements UserInfo {
+    static async tryLoadUser(): Promise<User | undefined> {
+        const login = readLoginFromCookies()
+        
+        if (login == null)
+            return undefined
+
+        try {
+            const info = await this.getInfo(login)
+
+            return new User(info)
+        } catch (error) {
+            console.error(error)
+            return undefined
+        }
     }
 
-    constructor(json: UserJson) {
-        this.login     = json.login
-        this.name      = json.name
-        this.nicknames = json.nicknames != null ? [...json.nicknames] : []
-        this.isAdmin   = json.isAdmin  ?? false
-        this.isOnline  = json.isOnline ?? false
+    static async getInfo(login: string): Promise<UserInfo> {
+        checkLogin(login)
+
+        const uri  = `users/${encodeURIComponent(login)}`
+        const json = await api.get(uri)
+        const raw  = userInfoSchema.parse(json)
+
+        return {
+            ...raw,
+            login,
+            nicknames: raw.nicknames ?? []
+        }
+    }
+
+    login:     string
+    name:      string | null
+    nicknames: string[]
+    isAdmin:   boolean
+    isOnline:  boolean
+    reg:       {
+        time:  Date
+        login: string | null
+    }
+
+    constructor(options: UserOptions) {
+        this.login     = options.login
+        this.name      = options.name      ?? null
+        this.nicknames = options.nicknames != null ? [...options.nicknames] : []
+        this.isAdmin   = options.isAdmin   ?? false
+        this.isOnline  = options.isOnline  ?? false
         this.reg       = {
-            time:  new Date(json.reg.time),
-            login: json.reg.login
+            time:  options.reg?.time  ?  new Date(options.reg?.time) : new Date(),
+            login: options.reg?.login ?? null
         }
     }
 }

@@ -1,23 +1,32 @@
-import Button from "./Button"
-import Input  from "./Input"
+import Button  from "./Button"
+import Input   from "./Input"
+import Loading from "./Loading"
 
-import { FormEvent, useState             } from "react"
+import { FormEvent,  useEffect, useState } from "react"
 import { validateLogin, validatePassword } from "logic/auth"
+import { State                           } from "./Button"
 
-import "styles/SignIn.css"
+import "styles/SignInForm.css"
 
 export type Props = {
-    onSignIn?: (login: string, password: string) => void
-    onCancel?: () => void
+    onSignIn?:      (login: string, password: string) => void
+    onCancel?:      () => void
+    loginError?:    string
+    passwordError?: string
+    commonError?:   string
+    loading?:       boolean
 }
 
 export default function SignIn(props: Props) {
-    const [login,           setLogin           ] = useState("")
-    const [password,        setPassword        ] = useState("")
-    const [loginError,      setLoginError      ] = useState(undefined as undefined | string)
-    const [passwordError,   setPasswordError   ] = useState(undefined as undefined | string)
-    const [loginChanged,    setLoginChanged    ] = useState(false)
-    const [passwordChanged, setPasswordChanged ] = useState(false)
+    const [login,           setLogin          ] = useState("")
+    const [password,        setPassword       ] = useState("")
+    const [loginError,      setLoginError     ] = useState(props.loginError)
+    const [passwordError,   setPasswordError  ] = useState(props.passwordError)
+    const [loginChanged,    setLoginChanged   ] = useState(false)
+    const [passwordChanged, setPasswordChanged] = useState(false)
+
+    useEffect(() => setLoginError(props.loginError),       [props.loginError]   )
+    useEffect(() => setPasswordError(props.passwordError), [props.passwordError])
 
     const disabled = !loginChanged
                   || !passwordChanged
@@ -49,7 +58,7 @@ export default function SignIn(props: Props) {
         setPassword(password)
     }
 
-    return <form className="SignIn" onSubmit={onSubmit}>
+    return <form className="SignInForm" onSubmit={onSubmit}>
         <fieldset> 
             <legend>Sign In</legend>
 
@@ -69,12 +78,14 @@ export default function SignIn(props: Props) {
                    placeholder = "Password" />
 
             {errorMessge(passwordError)}
+            {errorMessge(props.commonError)}
 
             <div className="buttons">
-                <Button type="cancel" onClick={props.onCancel}>Cancel</Button>
-                <Button type="submit" disabled={disabled}>Sign In</Button>
+                <Button type="cancel" state={cancelState()} onClick={props.onCancel}>Cancel</Button>
+                <Button type="submit" state={submitState()}>Sign In</Button>
             </div>
         </fieldset>
+        {props.loading ? <Loading /> : null}
     </form>
 
     function errorMessge(message?: string) {
@@ -82,5 +93,13 @@ export default function SignIn(props: Props) {
             return null
 
         return <p className="error-message">{message}</p>
+    }
+
+    function cancelState(): State {
+        return props.loading ? "disabled" : "active"
+    }
+
+    function submitState(): State {
+        return disabled || props.loading ? "disabled" : "active"
     }
 }
