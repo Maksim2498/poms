@@ -32,7 +32,7 @@
 
 .Profile .nicknames .label {
     position: relative;
-    bottom: .4rem;
+    bottom: .4rem
 }
 
 .Profile .nicknames .label, .Profile .nicknames {
@@ -54,5 +54,25 @@
 .Profile .nicknames .value {
     position: initial;
     margin: .4rem 0;
-    text-align: center;
+    text-align: center
+}
+
+.Profile .offline.value {
+    color: #E81818
+}
+
+.Profile .online.value {
+    color: #18E818
+}
+
+.Profile .admin.value {
+    color: gold
+}
+
+.Profile .user.value {
+    color: cyan
+}
+
+.Profile .system.value {
+    color: purple
 }

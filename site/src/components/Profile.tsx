@@ -10,6 +10,12 @@ export default function Profile(props: Props) {
     const { user } = props
 
     return <div className="Profile">
+        <div className="status field">
+            <div className="label">Status</div>
+            {user.isOnline ? <div className="online value">Online</div>
+                           : <div className="offline value">Offline</div>}
+        </div>
+
         <div className="login field">
             <div className="label">Login:</div>
             <div className="value">{user.login}</div>
@@ -18,6 +24,12 @@ export default function Profile(props: Props) {
         <div className="name field">
             <div className="label">Name:</div>
             <div className="value">{user.name}</div>
+        </div>
+
+        <div className="role field">
+            <div className="label">Role:</div>
+            {user.isAdmin ? <div className="admin value">Administrator</div>
+                          : <div className="user value">User</div>}
         </div>
 
         <div className="reg field-group">
