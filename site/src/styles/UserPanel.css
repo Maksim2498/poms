@@ -31,7 +31,7 @@
 .UserPanel > .content {
     flex-grow: 1;
     background-color: #222;
-    border-radius: .2rem;
+    border-radius: .4rem;
     margin: 0 1rem;
     width: 6rem;
     height: 100%
@@ -40,7 +40,7 @@
 .UserPanel > .content > .header {
     background-color: #333;
     padding: .8rem;
-    border-radius: .2rem .2rem 0 0
+    border-radius: .4rem .4rem 0 0
 }
 
 .UserPanel > .content > .header h2 {
