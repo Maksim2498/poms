@@ -48,6 +48,12 @@ export interface ConfigJson {
         buildStaticPath?:       string
         openBrowser?:           boolean
     }
+
+    rcon?: {
+        address?:  string
+        port?:     number
+        password?: string
+    }
 }
 
 export interface ReadConfigFromFileOptions {
@@ -86,6 +92,9 @@ export default class Config {
     static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
     static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = this.placehold("<SITE_PATH>")
     static readonly DEFAULT_LOGIC_OPEN_BROWSER            = true
+
+    static readonly DEFAULT_RCON_ADDRESS                  = "localhost"
+    static readonly DEFAULT_RCON_PORT                     = 25575
 
     readonly read: DeepReadonly<ConfigJson>
     readonly path: string
@@ -224,7 +233,7 @@ export default class Config {
     private static validateJson(json: any, logger?: Logger) {
         const result = o.validate(json, {
             fields: [
-                // API
+                // HTTP
                 { path: "http.apiPrefix",              type: "string"  },
                 { path: "http.host",                   type: "string"  },
                 { path: "http.port",                   type: "number"  },
@@ -256,6 +265,11 @@ export default class Config {
                 { path: "logic.buildStatic",           type: "boolean" },
                 { path: "logic.buildStaticPath",       type: "string"  },
                 { path: "logic.openBrowser",           type: "boolean" },
+
+                // RCON
+                { path: "rcon.address",                type: "string"  },
+                { path: "rcon.port",                   type: "number"  },
+                { path: "rcon.password",               type: "string"  },
             ]
         })
 
@@ -274,7 +288,7 @@ export default class Config {
         this.validateJsonPortFields(json)
     }
 
-    private static validateJsonMysqlCredentials(json: any, logger?: Logger) {
+    private static validateJsonMysqlCredentials(json: any) {
         if ((json.mysql?.login        == null || json.mysql?.password        == null)
          && (json.mysql?.init?.login  == null || json.mysql?.init?.password  == null
           || json.mysql?.serve?.login == null || json.mysql?.serve?.password == null)) {
@@ -288,12 +302,13 @@ export default class Config {
         }
     }
 
-    private static validateJsonPortFields(json: any, logger?: Logger) {
-        this.validateJsonPortField(json, "api.port",   logger)
-        this.validateJsonPortField(json, "mysql.port", logger)
+    private static validateJsonPortFields(json: any) {
+        this.validateJsonPortField(json, "api.port"  )
+        this.validateJsonPortField(json, "mysql.port")
+        this.validateJsonPortField(json, "rcon.port" )
     }
 
-    private static validateJsonPortField(json: any, path: string, logger?: Logger) {
+    private static validateJsonPortField(json: any, path: string) {
         const port = o.getField(json, path)
 
         if (port == null)
@@ -307,7 +322,7 @@ export default class Config {
         const read = deepAssign({}, json)
 
         if (read.http != null) {
-            read.http.apiPrefix       = normalize(`/${read.http.apiPrefix ?? ""}`)
+            read.http.apiPrefix    = normalize(`/${read.http.apiPrefix ?? ""}`)
             read.http.socketPath   = preparePath(read.http.socketPath)
             read.http.staticPath   = preparePath(read.http.staticPath)
             read.http.error404Path = preparePath(read.http.error404Path)
@@ -454,5 +469,17 @@ export default class Config {
 
     get logicOpenBrowser(): boolean {
         return this.read.logic?.openBrowser ?? Config.DEFAULT_LOGIC_OPEN_BROWSER
+    }
+
+    get rconAddress(): string {
+        return this.read.rcon?.address ?? Config.DEFAULT_RCON_ADDRESS
+    }
+
+    get rconPort(): number {
+        return this.read.rcon?.port ?? Config.DEFAULT_RCON_PORT
+    }
+
+    get rconAvailable(): boolean {
+        return this.read.rcon?.password != null
     }
 }
