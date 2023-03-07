@@ -8,14 +8,14 @@ import * as o from "./util/object"
 
 export interface ConfigJson {
     http?: {
-        apiPrefix?:    string
-        host?:         string
-        port?:         number
-        socketPath?:   string
-        serveStatic?:  boolean
-        staticPath?:   string
-        error404Path?: string
-        error500Path?: string
+        apiPrefix?:             string
+        host?:                  string
+        port?:                  number
+        socketPath?:            string
+        serveStatic?:           boolean
+        staticPath?:            string
+        error404Path?:          string
+        error500Path?:          string
     }
 
     mysql: {
@@ -30,13 +30,13 @@ export interface ConfigJson {
         reconnectInterval?:     number
 
         init?: {
-            login?:    string
-            password?: string
+            login?:             string
+            password?:          string
         }
 
         serve?: {
-            login?:    string
-            password?: string
+            login?:             string
+            password?:          string
         }
     }
 
@@ -50,9 +50,9 @@ export interface ConfigJson {
     }
 
     rcon?: {
-        address?:  string
-        port?:     number
-        password?: string
+        address?:               string
+        port?:                  number
+        password?:              string
     }
 }
 
