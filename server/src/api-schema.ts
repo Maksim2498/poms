@@ -1,15 +1,19 @@
 import isBase64 from "is-base64"
 import Server   from "./Server"
 
-import { Request, Response             } from "express"
-import { isHex                         } from "./util/string"
-import { auth, reauth                  } from "./logic/auth"
-import { getAllUsersDeepInfo,
-         getDeepUserInfo, getUserInfo  } from "./logic/user"
-import { getUserNicknames              } from "logic/nickname"
-import { checkATokenIsActive,
-         getATokenInfo,
-         tokenPairToJson, deleteAToken } from "./logic/token"
+import { Request, Response } from "express"
+import { isHex             } from "./util/string"
+import { auth, reauth      } from "./logic/auth"
+
+import { deleteUser,
+         deleteAllUsers,      getUserInfo,
+         getDeepUserInfo,     getAllUsersDeepInfo } from "./logic/user"
+
+import { getUserNicknames,
+         deleteAllNicknames,  deleteUserNickname  } from "logic/nickname"
+
+import { checkATokenIsActive, getATokenInfo,
+         tokenPairToJson,     deleteAToken        } from "./logic/token"
 
 export type UnitCollection = {
     [key: string]: Unit
@@ -343,7 +347,8 @@ export const units: UnitCollection = {
         path:       "/users",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            await deleteAllUsers(this.mysqlConnection)
+            res.json({})
         }
     },
 
@@ -353,7 +358,9 @@ export const units: UnitCollection = {
         path:       "/users/:user",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            await deleteUser(this.mysqlConnection, user)
+            res.json({})
         }
     },
 
@@ -363,7 +370,9 @@ export const units: UnitCollection = {
         path:       "/users/:user/nicknames",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            await deleteAllNicknames(this.mysqlConnection, user)
+            res.json({})
         }
     },
 
@@ -373,7 +382,12 @@ export const units: UnitCollection = {
         path:       "/users/:user/nicknames/:nickname",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user     = req.params.user
+            const nickname = req.params.user
+
+            await deleteUserNickname(this.mysqlConnection, user, nickname)
+
+            res.json({})
         }
     },
 

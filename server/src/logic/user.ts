@@ -106,7 +106,7 @@ export async function deleteAllUserData(connection: AsyncConnection, table: Read
     connection.logger?.info("Deleted")
 }
 
-export async function deleteAllUser(connection: AsyncConnection) {
+export async function deleteAllUsers(connection: AsyncConnection) {
     await USERS_TABLE.clear(connection)
 }
 
