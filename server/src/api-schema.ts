@@ -1,5 +1,6 @@
-import isBase64 from "is-base64"
-import Server   from "./Server"
+import isBase64   from "is-base64"
+import Server     from "./Server"
+import LogicError from "logic/LogicError"
 
 import { Request, Response } from "express"
 import { isHex             } from "./util/string"
@@ -9,8 +10,9 @@ import { deleteUser,
          deleteAllUsers,      getUserInfo,
          getDeepUserInfo,     getAllUsersDeepInfo } from "./logic/user"
 
-import { getUserNicknames,
-         deleteAllNicknames,  deleteUserNickname  } from "logic/nickname"
+import { getUserNicknames,    addNickname,
+         deleteAllNicknames,  deleteUserNickname,
+         getUserNicknameCount                     } from "logic/nickname"
 
 import { checkATokenIsActive, getATokenInfo,
          tokenPairToJson,     deleteAToken        } from "./logic/token"
@@ -427,7 +429,18 @@ export const units: UnitCollection = {
         path:       "/users/:user/nicknames/:nickname",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const user = req.params.user
+            const max  = this.config.logicMaxNicknames
+            const has  = await getUserNicknameCount(this.mysqlConnection, user)
+
+            if (has >= max)
+                throw new LogicError("Too many nicknames")
+
+            const nickname = req.params.nickname
+
+            await addNickname(this.mysqlConnection, user, nickname)
+
+            res.json({})
         }
     },
 
