@@ -11,6 +11,7 @@ import "styles/SignInForm.css"
 export type Props = {
     onSignIn?:      (login: string, password: string) => void
     onCancel?:      () => void
+    onInput?:       () => void
     loginError?:    string
     passwordError?: string
     commonError?:   string
@@ -51,6 +52,7 @@ export default function SignIn(props: Props) {
         setCommonError(undefined)
         setLoginChanged(true)
         setLogin(login)
+        props.onInput?.()
     }
 
     const onPasswordChange = (e: FormEvent<HTMLInputElement>) => {
@@ -61,6 +63,7 @@ export default function SignIn(props: Props) {
         setCommonError(undefined)
         setPasswordChanged(true)
         setPassword(password)
+        props.onInput?.()
     }
 
     return <form className="SignInForm" onSubmit={onSubmit}>

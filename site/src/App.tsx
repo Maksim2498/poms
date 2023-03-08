@@ -63,6 +63,7 @@ export default function App() {
                          loading     = {signInLoading}
                          commonError = {signInError}
                          onCancel    = {() => { setSignIn(false); setSignInError(undefined) }}
+                         onInput     = {() => setSignInError(undefined)}
                          onSignIn    = {async (login, password) => {
                             setSignInLoading(true)
 
@@ -81,7 +82,7 @@ export default function App() {
                                 if (error instanceof LogicError) {
                                     setSignInError(error.message)
                                 } else {
-                                    setSignInError("Something unexpected happened")
+                                    setSignInError("Internal error")
                                     console.error(error)
                                 }
                             } finally {

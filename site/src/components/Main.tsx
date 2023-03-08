@@ -17,6 +17,7 @@ export type Props = {
     show:           "sign-in"
     onSignIn?:      (login: string, password: string) => void
     onCancel?:      () => void
+    onInput?:       () => void
     loginError?:    string
     passwordError?: string
     commonError?:   string
@@ -43,6 +44,7 @@ export default function Main(props: Props) {
             case "sign-in":
                 return <SignInForm onSignIn      = {anyProps.onSignIn}
                                    onCancel      = {anyProps.onCancel}
+                                   onInput       = {anyProps.onInput}
                                    loginError    = {anyProps.loginError}
                                    passwordError = {anyProps.passwordError}
                                    commonError   = {anyProps.commonError}
