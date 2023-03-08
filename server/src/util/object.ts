@@ -12,11 +12,11 @@ export interface ValidationOptions {
 export type ValidationResult = {
     error: undefined
 } | {
-    error: "EXCESS"
-    path:  string
+    error:    "EXCESS"
+    path:     string
 } | {
-    error: "MISSING"
-    path:  string
+    error:    "MISSING"
+    path:     string
 } | {
     error:    "TYPE_MISMATCH"
     path:     string

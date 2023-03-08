@@ -6,16 +6,20 @@ import { Request, Response } from "express"
 import { isHex             } from "./util/string"
 import { auth, reauth      } from "./logic/auth"
 
-import { deleteUser,
-         deleteAllUsers,      getUserInfo,
-         getDeepUserInfo,     getAllUsersDeepInfo } from "./logic/user"
+import { deleteUser,           createUser,
+         deleteAllUsers,       getUserInfo,
+         getDeepUserInfo,      getAllUsersDeepInfo } from "./logic/user"
 
-import { getUserNicknames,    addNickname,
-         deleteAllNicknames,  deleteUserNickname,
-         getUserNicknameCount                     } from "logic/nickname"
+import { getUserNicknames,     addNickname,
+         deleteAllNicknames,   deleteUserNickname,
+         getUserNicknameCount                      } from "logic/nickname"
 
-import { checkATokenIsActive, getATokenInfo,
-         tokenPairToJson,     deleteAToken        } from "./logic/token"
+import { checkATokenIsActive,  getATokenInfo,
+         tokenPairToJson,      deleteAToken,
+         ATokenInfo                                } from "./logic/token"
+
+import { ValidationOptions,    validate            } from "./util/object"
+
 
 export type UnitCollection = {
     [key: string]: Unit
@@ -65,11 +69,14 @@ export async function checkPermission(server: Server, permission: Permission, re
         return
     }
 
-    const aToken = Buffer.from(authorization, "hex")
+    const aToken     = Buffer.from(authorization, "hex")
+    const aTokenInfo = await getATokenInfo(server.mysqlConnection, aToken);
+
+    (req as any).aTokenInfo = aTokenInfo
 
     switch (permission) {
         case "user": {
-            await checkATokenIsActive(server.mysqlConnection, aToken)
+            await checkATokenIsActive(server.mysqlConnection, aTokenInfo)
             next()
             return
         }
@@ -77,12 +84,10 @@ export async function checkPermission(server: Server, permission: Permission, re
         // Check if not an admin trying to modify other's data
 
         case "mixed": {
-            const tokenInfo = await getATokenInfo(server.mysqlConnection, aToken)
-
-            await checkATokenIsActive(server.mysqlConnection, tokenInfo)
+            await checkATokenIsActive(server.mysqlConnection, aTokenInfo)
 
             const user     = req.params.user
-            const userInfo = (await getUserInfo(server.mysqlConnection, tokenInfo!.userId))!
+            const userInfo = (await getUserInfo(server.mysqlConnection, aTokenInfo!.userId))!
 
             if (userInfo.login !== user && !userInfo.isAdmin) {
                 res.sendStatus(403)
@@ -95,11 +100,9 @@ export async function checkPermission(server: Server, permission: Permission, re
         }
 
         case "admin": {
-            const tokenInfo = await getATokenInfo(server.mysqlConnection, aToken)
+            await checkATokenIsActive(server.mysqlConnection, aTokenInfo)
 
-            await checkATokenIsActive(server.mysqlConnection, tokenInfo)
-
-            const userInfo = (await getUserInfo(server.mysqlConnection, tokenInfo!.userId))!
+            const userInfo = (await getUserInfo(server.mysqlConnection, aTokenInfo!.userId))!
 
             if (!userInfo.isAdmin) {
                 res.sendStatus(403)
@@ -450,7 +453,45 @@ export const units: UnitCollection = {
         path:       "/users/:user",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const json = req.body
+
+            checkJson(json, {
+                allowExcess: true,
+                fields:      [
+                    { path: "password", type: "string", required: true },
+                    { path: "name",     type: "string"                 },
+                    { path: "isAdmin",  type: "boolean"                }
+                ]
+            })
+
+            const { password, name, isAdmin } = json as { password: string, name?: string, isAdmin?: boolean }
+            const aTokenInfo                  = (req as any).aTokenInfo as ATokenInfo
+            const creatorId                   = aTokenInfo.userId
+            const login                       = req.params.user
+        
+            await createUser({
+                connection: this.mysqlConnection,
+                login:      login,
+                password:   password,
+                name:       name,
+                isAdmin:    isAdmin,
+                creator:    creatorId,
+                force:      true
+            })
+        
+            res.json({})
         }
+    }
+}
+
+function checkJson(json: any, options?: ValidationOptions) {
+    const result = validate(json, options)
+
+    switch (result.error) {
+        case "MISSING":
+            throw new LogicError(`Missing required ${result.path} property`) 
+
+        case "TYPE_MISMATCH":
+            throw new LogicError(`Expected ${result.path} property to be of type ${result.expected} but it's of type ${result.got}`)
     }
 }

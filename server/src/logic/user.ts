@@ -54,10 +54,11 @@ export interface CreateUserOptions {
     name?:      string
     isAdmin?:   boolean
     creator?:   User
+    force?:     boolean
 } 
 
 export async function createUser(options: CreateUserOptions): Promise<boolean> {
-    const { connection, login, password, name, isAdmin, creator } = options
+    const { connection, login, password, name, isAdmin, creator, force } = options
 
     connection.logger?.info(`Creaing user "${login}"...`)
 
@@ -74,13 +75,16 @@ export async function createUser(options: CreateUserOptions): Promise<boolean> {
         creatorId = creatorInfo.id
     }
 
-    const created = await USERS_TABLE.insert(connection, {
+    const created = !!await USERS_TABLE.insert(connection, {
         login,
         name,
         cr_id:         creatorId,
         password_hash: expr("UNHEX(SHA2(?, 512))", `${login}:${password}`),
-        is_admin:      isAdmin
+        is_admin:      isAdmin ?? false
     })
+
+    if (!created && force)
+        throw new LogicError(`User "${login}" already exists`)
 
     connection.logger?.info(created ? "Created" : "Already exists")
 
