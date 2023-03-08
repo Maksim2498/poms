@@ -52,6 +52,8 @@ is considered an error):
 | `rcon.address`                | `string`      | `localhost`                  | No       | RCON server's address                                                              |
 | `rcon.port`                   | `number`      | `25575`                      | No       | RCON server's port                                                                 |
 | `rcon.password`               | `string`      | -                            | No       | RCON server's password                                                             |
+| `mc.address`                  | `string`      | `localhost`                  | No       | Minecraft server's address                                                         |
+| `mc.port`                     | `number`      | `25565`                      | No       | Minecraft server's port                                                            |
 
  1) Are required if any of the following options are omitted:
 

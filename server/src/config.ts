@@ -54,6 +54,11 @@ export interface ConfigJson {
         port?:                  number
         password?:              string
     }
+
+    mc?: {
+        address?:               string
+        port?:                  number
+    }
 }
 
 export interface ReadConfigFromFileOptions {
@@ -95,6 +100,9 @@ export default class Config {
 
     static readonly DEFAULT_RCON_ADDRESS                  = "localhost"
     static readonly DEFAULT_RCON_PORT                     = 25575
+
+    static readonly DEFAULT_MC_ADDRESS                    = "localhost"
+    static readonly DEFAULT_MC_PORT                       = 25575
 
     readonly read: DeepReadonly<ConfigJson>
     readonly path: string
@@ -270,6 +278,10 @@ export default class Config {
                 { path: "rcon.address",                type: "string"  },
                 { path: "rcon.port",                   type: "number"  },
                 { path: "rcon.password",               type: "string"  },
+
+                // Minecraft
+                { path: "mc.address",                  type: "string"  },
+                { path: "mc.port",                     type: "number"  },
             ]
         })
 
@@ -306,6 +318,7 @@ export default class Config {
         this.validateJsonPortField(json, "api.port"  )
         this.validateJsonPortField(json, "mysql.port")
         this.validateJsonPortField(json, "rcon.port" )
+        this.validateJsonPortField(json, "mc.port"   )
     }
 
     private static validateJsonPortField(json: any, path: string) {
@@ -481,5 +494,13 @@ export default class Config {
 
     get rconAvailable(): boolean {
         return this.read.rcon?.password != null
+    }
+
+    get mcAddress(): string {
+        return this.read.mc?.address ?? Config.DEFAULT_MC_ADDRESS
+    }
+
+    get mcPort(): number {
+        return this.read.mc?.port ?? Config.DEFAULT_MC_PORT
     }
 }
