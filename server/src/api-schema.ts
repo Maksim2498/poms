@@ -2,9 +2,9 @@ import isBase64   from "is-base64"
 import Server     from "./Server"
 import LogicError from "logic/LogicError"
 
-import { Request, Response } from "express"
-import { isHex             } from "./util/string"
-import { auth, reauth      } from "./logic/auth"
+import { Request, Response                         } from "express"
+import { isHex                                     } from "./util/string"
+import { auth, reauth                              } from "./logic/auth"
 
 import { deleteUser,           createUser,
          deleteAllUsers,       getUserInfo,
