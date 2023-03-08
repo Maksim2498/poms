@@ -470,7 +470,7 @@ Accept: application/json
 
 ```ts
 {
-    name: string
+    name: string | null
 }
 ```
 
