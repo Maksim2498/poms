@@ -3,9 +3,32 @@ import AsyncConnection   from "util/mysql/AsyncConnection"
 import LogicError        from "./LogicError"
 import TokenExpiredError from "./TokenExpiredError"
 
-import { A_TOKENS_TABLE, R_TOKENS_TABLE } from "db-schema"
-import { deleteAllUserData, User        } from "./user"
-import { dateSecondsAhead               } from "util/date"
+import { A_TOKENS_TABLE, R_TOKENS_TABLE     } from "db-schema"
+import { deleteAllUserData, getUserId, User } from "./user"
+import { dateSecondsAhead                   } from "util/date"
+
+export async function deleteUserExtraATokens(connection: AsyncConnection, user: User, limit: number) {
+    const id    = await getUserId(connection, user)
+    const count = await getUserATokenCount(connection, user)
+
+    if (limit >= count)
+        return
+
+    const diff = count - limit
+
+    await A_TOKENS_TABLE.delete(connection)
+                        .orderBy("cr_time")
+                        .limit(diff)
+                        .where("user_id = ?", id)
+}
+
+export async function getUserATokenCount(connection: AsyncConnection, user: User): Promise<number> {
+    const userId  = await getUserId(connection, user)
+    const results = await A_TOKENS_TABLE.unsafeSelect(connection, "count(*) as count")
+                                        .where("user_id = ?", userId)
+
+    return results[0]?.count ?? 0;
+}
 
 export async function checkATokenIsActive(conneciton: AsyncConnection, token: ATokenInfo | Buffer | undefined | null) {
     if (!await isATokenActive(conneciton, token))
@@ -24,10 +47,8 @@ export interface LifeTimeOptions {
     refreshLifeTime?: number
 }
 
-export const DEFAULT_LIFETIME_OPTIONS: LifeTimeOptions = {
-    accessLifeTime:  30 * 60,          // 30 minutes
-    refreshLifeTime: 7  * 24 * 60 * 60 // 1  weak
-}
+export const DEFAULT_ACCESS_TOKEN_LIFETIME  = 30 * 60           // 30 minutes
+export const DEFAULT_REFRESH_TOKEN_LIFETIME =  7 * 24 * 60 * 60 // 1 week
 
 export interface TokenPair {
     id:      Token
@@ -39,11 +60,12 @@ export interface Token {
     exp?: Date
 }
 
-export async function createTokenPair(connection: AsyncConnection, userId: number, options: LifeTimeOptions = DEFAULT_LIFETIME_OPTIONS): Promise<TokenPair> {
+export async function createTokenPair(connection: AsyncConnection, user: User, options?: LifeTimeOptions): Promise<TokenPair> {
+    const userId    = await getUserId(connection, user)
     const aTokenId  = createTokenId()
-    const aTokenExp = dateSecondsAhead(options.accessLifeTime)
+    const aTokenExp = dateSecondsAhead(options?.accessLifeTime  ?? DEFAULT_ACCESS_TOKEN_LIFETIME)
     const rTokenId  = createTokenId()
-    const rTokenExp = dateSecondsAhead(options.refreshLifeTime)
+    const rTokenExp = dateSecondsAhead(options?.refreshLifeTime ?? DEFAULT_REFRESH_TOKEN_LIFETIME)
 
     await A_TOKENS_TABLE.insert(connection, {
         id:       aTokenId,

@@ -133,7 +133,7 @@ export const units: UnitCollection = {
 
             const login     = Buffer.from(base64Login,    "base64").toString()
             const password  = Buffer.from(base64Password, "base64").toString()
-            const tokenPair = await auth(this.mysqlConnection, login, password)
+            const tokenPair = await auth(this.mysqlConnection, login, password, { maxTokens: this.config.logicMaxTokens - 1 })
 
             res.json(tokenPairToJson(tokenPair))
         }
