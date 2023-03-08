@@ -83,9 +83,19 @@ export interface InsertPairs {
     [key: string]: any
 }
 
-export interface Filter {
+export interface TopFilter {
     all(): Promise<any[]>
     where(expr: string, ...values: any[]): Promise<any[]>
+}
+
+export interface MiddleFilter extends TopFilter {
+    limit(count: number): TopFilter
+}
+
+export interface Filter extends MiddleFilter {
+    orderBy(...by: string[]): MiddleFilter
+    ascOrderBy(...by: string[]): MiddleFilter
+    descOrderBy(...by: string[]): MiddleFilter
 }
 
 export interface SelectionFilter extends Filter {
@@ -425,91 +435,334 @@ export default class Table {
     }
 
     select(connection: AsyncConnection, ...columns: string[]): Filter {
-        const columnsSql = this.queryColumnsToSql(columns)
-
         return {
-            all:   async (               ) => await connection.query(`SELECT ${columnsSql} FROM ${this.displayName}`                      ),
-            where: async (expr, ...values) => await connection.query(`SELECT ${columnsSql} FROM ${this.displayName} WHERE ${expr}`, values)
-        }
-    }
+            all:   async (               ) => await connection.query(this.selectToSql(columns)),
+            where: async (expr, ...values) => await connection.query(this.selectWhereToSql(columns, expr, values)),
 
-    private queryColumnsToSql(columns: string[]): string {
-        for (const column of columns)
-            if (!this.columns.has(column.toLowerCase()))
-                this.missingColumn(column)
-            
-        return columns.length !== 0 ? columns.join(", ") : "*"
-    }
-
-    delete(conneciton: AsyncConnection): Filter {
-        return {
-            all:   async (               ) => await conneciton.query(`DELETE FROM ${this.displayName}`                      ),
-            where: async (expr, ...values) => await conneciton.query(`DELETE FROM ${this.displayName} WHERE ${expr}`, values)
-        }
-    }
-
-    join(conneciton: AsyncConnection, thisName: string, table: ReadonlyTable, tableName: string, on: string): SelectionFilter {
-        if (!isNameValid(thisName))
-            throw new Error(`<thisName> is invalid`)
-
-        if (!isNameValid(tableName))
-            throw new Error(`<tableName> is invalid`)
-
-        thisName  = thisName.toLowerCase()
-        tableName = tableName.toLowerCase()
-
-        return {
-            all: async () => {
-                const sql = `SELECT * FROM ${this.displayName} ${thisName} `
-                          + `LEFT JOIN ${table.displayName} ${tableName} `
-                          + `ON ${on}`
-
-                const results = await conneciton.query<any[]>({ sql, nestTables: true })
-
-                return results
-            },
-
-            where: async (expr, ...values) => {
-                const sql = `SELECT * FROM ${this.displayName} ${thisName} `
-                          + `LEFT JOIN ${table.displayName} ${tableName} `
-                          + `ON ${on} `
-                          + `WHERE ${expr}`
-
-                const results = await conneciton.query<any[]>({ sql, nestTables: true }, values)
-
-                return results
-            },
-
-            select: (...columns) => {
-                const columnsSql = this.joinQueryColumnsToSql(columns, thisName, table, tableName)
-
+            limit: count => {
                 return {
-                    all: async () => {
-                        const sql = `SELECT ${columnsSql} FROM ${this.displayName} ${thisName} `
-                                  + `LEFT JOIN ${table.displayName} ${tableName} `
-                                  + `ON ${on}`
+                    all:   async (               ) => await connection.query(this.selectLimitToSql(columns, count)),
+                    where: async (expr, ...values) => await connection.query(this.selectLimitWhereToSql(columns, count, expr, values))
+                }
+            },
 
-                        const results = await conneciton.query<any[]>({ sql, nestTables: true })
+            orderBy:     (...by) => makeOrderByMiddleFilter.call(this, by        ),
+            ascOrderBy:  (...by) => makeOrderByMiddleFilter.call(this, by, "asc" ),
+            descOrderBy: (...by) => makeOrderByMiddleFilter.call(this, by, "desc"),
+        }
 
-                        return results
-                    },
+        function makeOrderByMiddleFilter(this: Table, by: string[], dir: OrderByDir = "asc"): MiddleFilter {
+            return {
+                all:   async (               ) => await connection.query(this.selectOrderBy(columns, by, dir)),
+                where: async (expr, ...values) => await connection.query(this.selectOrderByWhere(columns, by, dir, expr, values)),
 
-                    where: async (expr, ...values) => {
-                        const sql = `SELECT ${columnsSql} FROM ${this.displayName} ${thisName} `
-                                  + `LEFT JOIN ${table.displayName} ${tableName} `
-                                  + `ON ${on}`
-                                  + `WHERE ${expr}`
-
-                        const results = await conneciton.query<any[]>({ sql, nestTables: true }, values)
-
-                        return results
+                limit: count => {
+                    return {
+                        all:   async (               ) => await connection.query(this.selectOrderByLimit(columns, by, dir, count)),
+                        where: async (expr, ...values) => await connection.query(this.selectOrderByLimitWhere(columns, by, dir, count, expr, values))
                     }
                 }
             }
         }
     }
 
-    private joinQueryColumnsToSql(columns: string[], thisName: string, table: ReadonlyTable, tableName: string): string {
+    private selectOrderByLimitWhere(columns: string[], by: string[], dir: OrderByDir, count: number, expr: string, values: any[]): string {
+        return this.selectToSql(columns)
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private selectOrderByLimit(columns: string[], by: string[], dir: OrderByDir, count: number): string {
+        return this.selectToSql(columns)
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private selectOrderBy(columns: string[], by: string[], dir: OrderByDir): string {
+        return this.selectToSql(columns)
+             + this.orderByToSql(by, dir)
+    }
+
+    private selectOrderByWhere(columns: string[], by: string[], dir: OrderByDir, expr: string, values: string[]): string {
+        return this.selectToSql(columns)
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+    }
+
+    private selectLimitWhereToSql(columns: string[], count: number, expr: string, values: any[]): string {
+        return this.selectToSql(columns)
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private selectLimitToSql(columns: string[], count: number): string {
+        return this.selectToSql(columns)
+             + this.limitToSql(count)
+    }
+
+    private selectWhereToSql(columns: string[], expr: string, values: any[]): string {
+        return this.selectToSql(columns) + this.whereToSql(expr, values)
+    }
+
+    private selectToSql(columns: string[]): string {
+        return `SELECT ${this.queryColumnsToSql(columns)} FROM ${this.displayName} `
+    }
+
+    delete(connection: AsyncConnection): Filter {
+        return {
+            all:   async (               ) => await connection.query(this.deleteToSql()),
+            where: async (expr, ...values) => await connection.query(this.deleteWhereToSql(expr, values)),
+
+            limit: count => {
+                return {
+                    all:   async (               ) => await connection.query(this.deleteLimitToSql(count)),
+                    where: async (expr, ...values) => await connection.query(this.deleteLimitWhereToSql(count, expr, values))
+                }
+            },
+
+            orderBy:     (...by) => makeOrderByMiddleFilter.call(this, by        ),
+            ascOrderBy:  (...by) => makeOrderByMiddleFilter.call(this, by, "asc" ),
+            descOrderBy: (...by) => makeOrderByMiddleFilter.call(this, by, "desc"),
+        }
+
+        function makeOrderByMiddleFilter(this: Table, by: string[], dir: OrderByDir = "asc"): MiddleFilter {
+            return {
+                all:   async (               ) => await connection.query(this.deleteOrderBy(by, dir)),
+                where: async (expr, ...values) => await connection.query(this.deleteOrderByWhere(by, dir, expr, values)),
+
+                limit: count => {
+                    return {
+                        all:   async (               ) => await connection.query(this.deleteOrderByLimit(by, dir, count)),
+                        where: async (expr, ...values) => await connection.query(this.deleteOrderByLimitWhere(by, dir, count, expr, values))
+                    }
+                }
+            }
+        }
+    }
+
+    private deleteOrderByLimitWhere(by: string[], dir: OrderByDir, count: number, expr: string, values: any[]): string {
+        return this.deleteToSql()
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private deleteOrderByLimit(by: string[], dir: OrderByDir, count: number): string {
+        return this.deleteToSql()
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private deleteOrderByWhere(by: string[], dir: OrderByDir, expr: string, values: any[]): string {
+        return this.deleteToSql()
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+    }
+
+    private deleteOrderBy(by: string[], dir: OrderByDir): string {
+        return this.deleteToSql()
+             + this.orderByToSql(by, dir)
+    }
+
+    private deleteLimitWhereToSql(count: number, expr: string, values: any[]): string {
+        return this.deleteToSql()
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private deleteLimitToSql(count: number): string {
+        return this.deleteToSql()
+             + this.limitToSql(count)
+    }
+
+    private deleteWhereToSql(expr: string, values: any[]): string {
+        return this.deleteToSql()
+             + this.whereToSql(expr, values)
+    }
+
+    private deleteToSql(): string {
+        return `DELETE FROM ${this.displayName} `
+    }
+
+    join(conneciton: AsyncConnection, thisName: string, another: ReadonlyTable, anotherName: string, on: string): SelectionFilter {
+        if (!isNameValid(thisName))
+            throw new Error(`<thisName> is invalid`)
+
+        if (!isNameValid(anotherName))
+            throw new Error(`<tableName> is invalid`)
+
+        thisName    = thisName.toLowerCase()
+        anotherName = anotherName.toLowerCase()
+
+        return {
+            all:   async (               ) => await conneciton.query({ sql: this.joinToSql(thisName, another, anotherName, on), nestTables: true }),
+            where: async (expr, ...values) => await conneciton.query({ sql: this.joinWhereToSql(thisName, another, anotherName, on, expr, values), nestTables: true }),
+
+            limit: count => {
+                return {
+                    all:   async (               ) => await conneciton.query({ sql: this.joinLimitToSql(thisName, another, anotherName, on, count), nestTables: true }),
+                    where: async (expr, ...values) => await conneciton.query({ sql: this.joinLimitWhereToSql(thisName, another, anotherName, on, count, expr, values), nestTables: true }),
+                }
+            },
+
+            orderBy:     (...by) => makeOrderByMiddleFilter.call(this, by        ),
+            ascOrderBy:  (...by) => makeOrderByMiddleFilter.call(this, by, "asc" ),
+            descOrderBy: (...by) => makeOrderByMiddleFilter.call(this, by, "desc"),
+
+            select: (...columns) => {
+                return {
+                    all:   async (               ) => await conneciton.query({ sql: this.selectJoinToSql(columns, thisName, another, anotherName, on), nestTables: true }),
+                    where: async (expr, ...values) => await conneciton.query({ sql: this.selectJoinWhereToSql(columns, thisName, another, anotherName, on, expr, values), nestTables: true }),
+
+                    limit: count => {
+                        return {
+                            all:   async (               ) => await conneciton.query({ sql: this.selectJoinLimitToSql(columns, thisName, another, anotherName, on, count), nestTables: true }),
+                            where: async (expr, ...values) => await conneciton.query({ sql: this.selectJoinLimitWhereToSql(columns, thisName, another, anotherName, on, count, expr, values), nestTables: true }),
+                        }
+                    },
+
+                    orderBy:     (...by) => makeSelectOrderByMiddleFilter.call(this, columns, by        ),
+                    ascOrderBy:  (...by) => makeSelectOrderByMiddleFilter.call(this, columns, by, "asc" ),
+                    descOrderBy: (...by) => makeSelectOrderByMiddleFilter.call(this, columns, by, "desc"),
+                }
+            }
+        }
+
+        function makeOrderByMiddleFilter(this: Table, by: string[], dir: OrderByDir = "asc"): MiddleFilter {
+            return {
+                all:   async (               ) => await conneciton.query({ sql: this.joinOrderByToSql(thisName, another, anotherName, on, by, dir), nestTables: true }),
+                where: async (expr, ...values) => await conneciton.query({ sql: this.joinOrderByWhereToSql(thisName, another, anotherName, on, by, dir, expr, values), nestTables: true }),
+
+                limit: count => {
+                    return {
+                        all:   async (               ) => conneciton.query({ sql: this.joinOrderByLimitToSql(thisName, another, anotherName, on, by, dir, count), nestTables: true }),
+                        where: async (expr, ...values) => conneciton.query({ sql: this.joinOrderByLimitWhereToSql(thisName, another, anotherName, on, by, dir, count, expr, values), nestTables: true })
+                    }
+                }
+            }
+        }
+
+        function makeSelectOrderByMiddleFilter(this: Table, columns: string[], by: string[], dir: OrderByDir = "asc"): MiddleFilter {
+            return {
+                all:   async (               ) => await conneciton.query({ sql: this.selectJoinOrderByToSql(columns, thisName, another, anotherName, on, by, dir), nestTables: true }),
+                where: async (expr, ...values) => await conneciton.query({ sql: this.selectJoinOrderByWhereToSql(columns, thisName, another, anotherName, on, by, dir, expr, values), nestTables: true }),
+
+                limit: count => {
+                    return {
+                        all:   async (               ) => conneciton.query({ sql: this.selectJoinOrderByLimitToSql(columns, thisName, another, anotherName, on, by, dir, count), nestTables: true }),
+                        where: async (expr, ...values) => conneciton.query({ sql: this.selectJoinOrderByLimitWhereToSql(columns, thisName, another, anotherName, on, by, dir, count, expr, values), nestTables: true })
+                    }
+                }
+            }
+        }
+    }
+
+    private selectJoinOrderByLimitWhereToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir, count: number, expr: string, values: any[]): string {
+        return this.selectJoinToSql(columns, thisName, another, anotherName, on)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private selectJoinOrderByLimitToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir, count: number): string {
+        return this.selectJoinToSql(columns, thisName, another, anotherName, on)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+             + this.limitToSql(count)
+    }
+
+    private selectJoinOrderByWhereToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir, expr: string, values: any[]): string {
+        return this.selectJoinToSql(columns, thisName, another, anotherName, on)
+             + this.whereToSql(expr, values)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+    }
+
+    private selectJoinOrderByToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir): string {
+        return this.selectJoinToSql(columns, thisName, another, anotherName, on)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+    }
+
+    private selectJoinLimitWhereToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string, count: number, expr: string, values: any[]): string {
+        return this.selectJoinToSql(columns, thisName, another, anotherName, on)
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private selectJoinLimitToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string, count: number): string {
+        return this.selectJoinToSql(columns, thisName, another, anotherName, on)
+             + this.limitToSql(count)
+    }
+
+    private selectJoinWhereToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string, expr: string, values: any[]): string {
+        return this.selectJoinToSql(columns, thisName, another, anotherName, on)
+             + this.whereToSql(expr, values)
+    }
+
+    private selectJoinToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string, on: string): string {
+        return `SELECT ${this.scopedQueryColumnsToSql(columns, thisName, another, anotherName)} `
+             + `FROM ${this.displayName} ${thisName} `
+             + `LEFT JOIN ${another.displayName} ${anotherName} `
+             + `ON ${on} `
+    }
+
+    private joinOrderByLimitWhereToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir, count: number, expr: string, values: any[]): string {
+        return this.joinToSql(thisName, another, anotherName, on)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private joinOrderByLimitToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir, count: number): string {
+        return this.joinToSql(thisName, another, anotherName, on)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+             + this.limitToSql(count)
+    }
+
+    private joinOrderByWhereToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir, expr: string, values: any[]): string {
+        return this.joinToSql(thisName, another, anotherName, on)
+             + this.whereToSql(expr, values)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+    }
+
+    private joinOrderByToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string, by: string[], dir: OrderByDir): string {
+        return this.joinToSql(thisName, another, anotherName, on)
+             + this.scopedOrderByToSql(by, thisName, another, anotherName, dir)
+    }
+
+    private joinLimitWhereToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string, count: number, expr: string, values: any[]): string {
+        return this.joinToSql(thisName, another, anotherName, on)
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private joinLimitToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string, count: number): string {
+        return this.joinToSql(thisName, another, anotherName, on)
+             + this.limitToSql(count)
+    }
+
+    private joinWhereToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string, expr: string, values: any[]): string {
+        return this.joinToSql(thisName, another, anotherName, on)
+             + this.whereToSql(expr, values)
+    }
+
+    private joinToSql(thisName: string, another: ReadonlyTable, anotherName: string, on: string): string {
+        return `SELECT * FROM ${this.displayName} ${thisName} `
+             + `LEFT JOIN ${another.displayName} ${anotherName} `
+             + `ON ${on} `
+    }
+
+    private scopedOrderByToSql(by: string[], thisName: string, another: ReadonlyTable, anotherName: string, dir: OrderByDir = "asc"): string {
+        return `ORDER BY ${this.scopedQueryColumnsToSql(by, thisName, another, anotherName)} ${dir.toUpperCase()}} `
+    }
+
+    private scopedQueryColumnsToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string): string {
+        this.checkScopedColumns(columns, thisName, another, anotherName)
+
+        return columns.length !== 0 ? columns.join(", ")
+                                    : "*"
+    }
+
+    private checkScopedColumns(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string) {
         for (const initColumn of columns) {
             let column = initColumn.toLowerCase()
 
@@ -518,16 +771,39 @@ export default class Table {
 
                 if (!this.columns.has(column))
                     this.missingColumn(column)
-            } else if (column.startsWith(tableName)) {
-                column = column.slice(tableName.length + 1)
+            } else if (column.startsWith(anotherName)) {
+                column = column.slice(anotherName.length + 1)
 
-                if (!table.columns.has(column))
-                    (table as any).missingColumn(column)
+                if (!another.columns.has(column))
+                    (another as any).missingColumn(column)
             } else
-                throw new Error(`Column "${initColumn}" isn't presented in "${this.displayName}" and "${tableName}" tables`)
+                throw new Error(`Column "${initColumn}" isn't presented in "${this.displayName}" and "${anotherName}" tables`)
         }
-            
-        return columns.length !== 0 ? columns.join(", ") : "*"
+    }
+
+    private orderByToSql(by: string[], dir: OrderByDir = "asc"): string {
+        return `ORDER BY ${this.queryColumnsToSql(by)} ${dir.toUpperCase()} `
+    }
+
+    private limitToSql(count: number): string {
+        return `LIMIT ${count}`
+    }
+
+    private whereToSql(expr: string, values: any[]): string {
+        return `WHERE ${mysql.format(expr, values)} `
+    }
+
+    private queryColumnsToSql(columns: string[]): string {
+        this.checkColumns(columns)
+
+        return columns.length !== 0 ? columns.join(", ") 
+                                    : "*"
+    }
+
+    private checkColumns(columns: string[]) {
+        for (const column of columns)
+            if (!this.columns.has(column.toLowerCase()))
+                this.missingColumn(column)
     }
 
     toSql(): string {
@@ -671,3 +947,7 @@ export default class Table {
         return this.displayName
     }
 }
+
+// Misc
+
+type OrderByDir = "asc" | "desc"
