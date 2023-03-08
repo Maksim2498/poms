@@ -162,6 +162,13 @@ export default class AsyncConnection {
     ): Promise<T> {
         this.checkState("perform queries", "online")
 
+        if (this.logger) {
+            const sqlString          = typeof sql === "string" ? sql : sql.sql
+            const formattedSqlString = mysql.format(sqlString, values)
+
+            this.logger?.debug(`Performing SQL query "${formattedSqlString}"...`)
+        }
+
         return await new Promise<T>((resolve, reject) => {
             this.connection.query(sql, values, (error, results, fieldInfo) => {
                 if (error) {
