@@ -434,6 +434,81 @@ export default class Table {
         }
     }
 
+    unsafeSelect(connection: AsyncConnection, columns: string): Filter {
+        return {
+            all:   async (               ) => await connection.query(this.unsafeSelectToSql(columns)),
+            where: async (expr, ...values) => await connection.query(this.unsafeSelectWhereToSql(columns, expr, values)),
+
+            limit: count => {
+                return {
+                    all:   async (               ) => await connection.query(this.unsafeSelectLimitToSql(columns, count)),
+                    where: async (expr, ...values) => await connection.query(this.unsafeSelectLimitWhereToSql(columns, count, expr, values))
+                }
+            },
+
+            orderBy:     (...by) => makeOrderByMiddleFilter.call(this, by        ),
+            ascOrderBy:  (...by) => makeOrderByMiddleFilter.call(this, by, "asc" ),
+            descOrderBy: (...by) => makeOrderByMiddleFilter.call(this, by, "desc"),
+        }
+
+        function makeOrderByMiddleFilter(this: Table, by: string[], dir: OrderByDir = "asc"): MiddleFilter {
+            return {
+                all:   async (               ) => await connection.query(this.unsafeSelectOrderBy(columns, by, dir)),
+                where: async (expr, ...values) => await connection.query(this.unsafeSelectOrderByWhere(columns, by, dir, expr, values)),
+
+                limit: count => {
+                    return {
+                        all:   async (               ) => await connection.query(this.unsafeSelectOrderByLimit(columns, by, dir, count)),
+                        where: async (expr, ...values) => await connection.query(this.unsafeSelectOrderByLimitWhere(columns, by, dir, count, expr, values))
+                    }
+                }
+            }
+        }
+    }
+
+    private unsafeSelectOrderByLimitWhere(columns: string, by: string[], dir: OrderByDir, count: number, expr: string, values: any[]): string {
+        return this.unsafeSelectToSql(columns)
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private unsafeSelectOrderByLimit(columns: string, by: string[], dir: OrderByDir, count: number): string {
+        return this.unsafeSelectToSql(columns)
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private unsafeSelectOrderBy(columns: string, by: string[], dir: OrderByDir): string {
+        return this.unsafeSelectToSql(columns)
+             + this.orderByToSql(by, dir)
+    }
+
+    private unsafeSelectOrderByWhere(columns: string, by: string[], dir: OrderByDir, expr: string, values: string[]): string {
+        return this.unsafeSelectToSql(columns)
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+    }
+
+    private unsafeSelectLimitWhereToSql(columns: string, count: number, expr: string, values: any[]): string {
+        return this.unsafeSelectToSql(columns)
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private unsafeSelectLimitToSql(columns: string, count: number): string {
+        return this.unsafeSelectToSql(columns)
+             + this.limitToSql(count)
+    }
+
+    private unsafeSelectWhereToSql(columns: string, expr: string, values: any[]): string {
+        return this.unsafeSelectToSql(columns) + this.whereToSql(expr, values)
+    }
+
+    private unsafeSelectToSql(columns: string): string {
+        return `SELECT ${columns} FROM ${this.displayName} `
+    }
+
     select(connection: AsyncConnection, ...columns: string[]): Filter {
         return {
             all:   async (               ) => await connection.query(this.selectToSql(columns)),
@@ -757,9 +832,7 @@ export default class Table {
 
     private scopedQueryColumnsToSql(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string): string {
         this.checkScopedColumns(columns, thisName, another, anotherName)
-
-        return columns.length !== 0 ? columns.join(", ")
-                                    : "*"
+        return this.unsafeQueryColumnsToSql(columns)
     }
 
     private checkScopedColumns(columns: string[], thisName: string, another: ReadonlyTable, anotherName: string) {
@@ -795,7 +868,10 @@ export default class Table {
 
     private queryColumnsToSql(columns: string[]): string {
         this.checkColumns(columns)
+        return this.unsafeQueryColumnsToSql(columns)
+    }
 
+    private unsafeQueryColumnsToSql(columns: string[]): string {
         return columns.length !== 0 ? columns.join(", ") 
                                     : "*"
     }
