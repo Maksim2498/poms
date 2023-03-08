@@ -34,7 +34,7 @@ export default function Profile(props: Props) {
 
         <div className="reg field-group">
             <div className="login field">
-                <div className="label">Registar:</div>
+                <div className="label">Registrar:</div>
                 {user.reg.login ? <div className="value">{user.reg.login}</div>
                                 : <div className="system value">System</div>}
             </div>
