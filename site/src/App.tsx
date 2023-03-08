@@ -19,9 +19,9 @@ export default function App() {
     const [signIn,         setSignIn        ] = useState(false)
 
     useEffectOnce(() => {
-        User.tryLoadUser().then(loaded => setUser(loaded))
-                          .catch(error => console.error(error))
-                          .finally(()  => setMainLoading(false))
+        User.loadUser().then(loaded => setUser(loaded))
+                       .catch(error => console.error(error))
+                       .finally(()  => setMainLoading(false))
     })
 
     return <div className="App">
@@ -70,13 +70,10 @@ export default function App() {
                             try {
                                 await auth(login, password)
 
-                                const user = await User.tryLoadUser()
+                                const user = await User.loadUser()
 
-                                if (user) {
-                                    setUser(user)
-                                    setSignIn(false)
-                                }
-
+                                setUser(user)
+                                setSignIn(false)
                                 setSignInError(undefined)
                             } catch (error) {
                                 if (error instanceof LogicError) {

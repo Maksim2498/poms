@@ -41,20 +41,15 @@ export interface UserOptions {
 }
 
 export default class User implements UserInfo {
-    static async tryLoadUser(): Promise<User | undefined> {
+    static async loadUser(): Promise<User> {
         const login = readLoginFromCookies()
         
         if (login == null)
-            return undefined
+            throw new Error("There is no locally saved user login")
 
-        try {
-            const info = await this.getInfo(login)
+        const info = await this.getInfo(login)
 
-            return new User(info)
-        } catch (error) {
-            console.error(error)
-            return undefined
-        }
+        return new User(info)
     }
 
     static async getInfo(login: string): Promise<UserInfo> {
