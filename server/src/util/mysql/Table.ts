@@ -119,6 +119,7 @@ export interface ReadonlyTable {
     create(connection: AsyncConnection): Promise<void>
     validate(connection: AsyncConnection): Promise<string | undefined>
     insert(connection: AsyncConnection, insertPairs: InsertPairs): Promise<boolean>
+    unsafeSelect(connection: AsyncConnection, columns: string): Filter
     select(connection: AsyncConnection, ...columns: string[]): Filter
     delete(conneciton: AsyncConnection): Filter
     join(conneciton: AsyncConnection, thisName: string, table: ReadonlyTable, tableName: string, on: string): SelectionFilter
