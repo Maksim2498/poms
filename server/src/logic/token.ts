@@ -147,8 +147,8 @@ export interface ATokenInfo {
     creation: Date
 }
 
-export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force: true): Promise<ATokenInfo>
-export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force?: boolean): Promise<ATokenInfo | undefined>
+export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force: true):            Promise<ATokenInfo>
+export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force?: boolean):        Promise<ATokenInfo | undefined>
 export async function getATokenInfo(connection: AsyncConnection, aTokenId: Buffer, force: boolean = false): Promise<ATokenInfo | undefined> {
     checkToken(aTokenId)
 
@@ -178,8 +178,8 @@ export interface RTokenInfo {
     created:  Date
 }
 
-export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: true): Promise<RTokenInfo>
-export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force?: boolean): Promise<RTokenInfo | undefined>
+export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: true):            Promise<RTokenInfo>
+export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force?: boolean):        Promise<RTokenInfo | undefined>
 export async function getRTokenInfo(conneciton: AsyncConnection, rTokenId: Buffer, force: boolean = false): Promise<RTokenInfo | undefined> {
     checkToken(rTokenId)
 
