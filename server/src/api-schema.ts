@@ -353,11 +353,13 @@ export const units: UnitCollection = {
     },
 
     getServerStatus: {
-        method: "get",
-        path:   "/server",
+        permission: "user",
+        method:     "get",
+        path:       "/server",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json(status)
         }
     },
 
