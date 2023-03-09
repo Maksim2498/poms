@@ -426,7 +426,7 @@ __Response__:
         sample: {
             id:       string
             nickname: string
-            login:    string
+            login:    string | null
         }[]
     }
 
