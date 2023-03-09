@@ -65,8 +65,9 @@ const CONFIG_JSON_SCHEMA = z.object({
     }).strict().optional(),
 
     mc: z.object({
-        host:                     OSTRING,
-        port:                  OPORT
+        host:                  OSTRING,
+        port:                  OPORT,
+        statusLifetime:        OUINT
     }).strict().optional()
 })
 
@@ -114,6 +115,7 @@ export default class Config {
 
     static readonly DEFAULT_MC_HOST                       = "localhost"
     static readonly DEFAULT_MC_PORT                       = 25575
+    static readonly DEFAULT_MC_STATUS_LIFETIME            = 10
 
     readonly read: DeepReadonly<ConfigJson>
     readonly path: string
@@ -482,5 +484,9 @@ export default class Config {
 
     get mcPort(): number {
         return this.read.mc?.port ?? Config.DEFAULT_MC_PORT
+    }
+
+    get mcStatusLifetime(): number {
+        return this.read.mc?.statusLifetime ?? Config.DEFAULT_MC_STATUS_LIFETIME
     }
 }

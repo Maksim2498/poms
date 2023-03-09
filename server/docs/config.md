@@ -54,6 +54,7 @@ is considered an error):
 | `rcon.password`               | `string`      | -                            | No       | RCON server's password                                                             |
 | `mc.host`                     | `string`      | `localhost`                  | No       | Minecraft server's address                                                         |
 | `mc.port`                     | `number`      | `25565`                      | No       | Minecraft server's port                                                            |
+| `mc.statusLifetime`           | 'number'      | `10`                         | No       | Minecraft server's status cache lifetime in seconds                                |
 
  1) Are required if any of the following options are omitted:
 
