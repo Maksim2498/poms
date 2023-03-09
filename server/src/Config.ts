@@ -59,13 +59,13 @@ const CONFIG_JSON_SCHEMA = z.object({
     }).strict().optional(),
 
     rcon: z.object({
-        address:               OSTRING,
+        host:                  OSTRING,
         port:                  OPORT,
         password:              OSTRING
     }).strict().optional(),
 
     mc: z.object({
-        address:               OSTRING,
+        host:                     OSTRING,
         port:                  OPORT
     }).strict().optional()
 })
@@ -109,10 +109,10 @@ export default class Config {
     static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = this.placehold("<SITE_PATH>")
     static readonly DEFAULT_LOGIC_OPEN_BROWSER            = true
 
-    static readonly DEFAULT_RCON_ADDRESS                  = "localhost"
+    static readonly DEFAULT_RCON_HOST                     = "localhost"
     static readonly DEFAULT_RCON_PORT                     = 25575
 
-    static readonly DEFAULT_MC_ADDRESS                    = "localhost"
+    static readonly DEFAULT_MC_HOST                       = "localhost"
     static readonly DEFAULT_MC_PORT                       = 25575
 
     readonly read: DeepReadonly<ConfigJson>
@@ -464,8 +464,8 @@ export default class Config {
         return this.read.logic?.openBrowser ?? Config.DEFAULT_LOGIC_OPEN_BROWSER
     }
 
-    get rconAddress(): string {
-        return this.read.rcon?.address ?? Config.DEFAULT_RCON_ADDRESS
+    get rconHost(): string {
+        return this.read.rcon?.host ?? Config.DEFAULT_RCON_HOST
     }
 
     get rconPort(): number {
@@ -476,8 +476,8 @@ export default class Config {
         return this.read.rcon?.password != null
     }
 
-    get mcAddress(): string {
-        return this.read.mc?.address ?? Config.DEFAULT_MC_ADDRESS
+    get mcHost(): string {
+        return this.read.mc?.host ?? Config.DEFAULT_MC_HOST
     }
 
     get mcPort(): number {

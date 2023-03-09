@@ -49,10 +49,10 @@ is considered an error):
 | `logic.buildStatic`           | `boolean`     | `true`                       | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |
 | `logic.buildStaticPath`       | Path `string` | `<SITE_PATH>`                | No       | Path for running `npm run build` to build static content if needed                 |
 | `logic.openBrowser`           | `boolean`     | `true`                       | No       | If `true` opens browser after server start                                         |
-| `rcon.address`                | `string`      | `localhost`                  | No       | RCON server's address                                                              |
+| `rcon.host`                   | `string`      | `localhost`                  | No       | RCON server's address                                                              |
 | `rcon.port`                   | `number`      | `25575`                      | No       | RCON server's port                                                                 |
 | `rcon.password`               | `string`      | -                            | No       | RCON server's password                                                             |
-| `mc.address`                  | `string`      | `localhost`                  | No       | Minecraft server's address                                                         |
+| `mc.host`                     | `string`      | `localhost`                  | No       | Minecraft server's address                                                         |
 | `mc.port`                     | `number`      | `25565`                      | No       | Minecraft server's port                                                            |
 
  1) Are required if any of the following options are omitted:
