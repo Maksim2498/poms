@@ -8,6 +8,7 @@ import morgan            from "morgan"
 import AsyncConnection   from "./util/mysql/AsyncConnection"
 import LogicError        from "./logic/LogicError"
 import TokenExpiredError from "./logic/TokenExpiredError"
+import StatusFetcher     from "logic/StatusFetcher"
 import Config            from "./Config"
 
 import * as s   from "./util/mysql/statement"
@@ -35,11 +36,13 @@ export default class Server {
 
     readonly mysqlConnection: AsyncConnection
     readonly config:          Config
+    readonly statusFetcher:   StatusFetcher
     readonly logger?:         Logger
 
     constructor(config: Config, logger?: Logger) {
         this.mysqlConnection = AsyncConnection.fromConfigServeUser(config, logger)
         this.config          = config
+        this.statusFetcher   = new StatusFetcher(this.mysqlConnection, this.config)
         this.logger          = logger
         this.expressApp      = createExpressApp.call(this)
 
