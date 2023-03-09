@@ -115,7 +115,7 @@ export default class Config {
     static readonly DEFAULT_RCON_PORT                     = 25575
 
     static readonly DEFAULT_MC_HOST                       = "localhost"
-    static readonly DEFAULT_MC_PORT                       = 25575
+    static readonly DEFAULT_MC_PORT                       = 25565
     static readonly DEFAULT_MC_STATUS_LIFETIME            = 10
 
     readonly read: DeepReadonly<ConfigJson>
