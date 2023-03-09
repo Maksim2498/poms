@@ -19,9 +19,6 @@ import { checkATokenIsActive,  getATokenInfo,
          tokenPairToJson,      deleteAToken,
          ATokenInfo                                } from "./logic/token"
 
-import { ValidationOptions,    validate            } from "./util/object"
-
-
 export type UnitCollection = {
     [key: string]: Unit
 }
@@ -117,13 +114,13 @@ export async function checkPermission(server: Server, permission: Permission, re
     }
 }
 
-const addUserSchema = z.object({
+const ADD_USER_SCHEMA = z.object({
     password: z.string(),
     name:     z.string().optional(),
     isAdmin:  z.boolean().optional()
 })
 
-type AddUserOptions = z.infer<typeof addUserSchema>
+type AddUserOptions = z.infer<typeof ADD_USER_SCHEMA>
 
 export const units: UnitCollection = {
     auth: {
@@ -463,7 +460,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const json        = req.body
-            const parseResult = addUserSchema.safeParse(json)
+            const parseResult = ADD_USER_SCHEMA.safeParse(json)
 
             if (!parseResult.success) {
                 res.sendStatus(400)

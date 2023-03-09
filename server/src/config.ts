@@ -1,65 +1,76 @@
+import z         from "zod"
+import ErrorList from "util/ErrorList"
+
 import { promises as fsp          } from "fs"
 import { normalize, join, dirname } from "path"
 import { Logger                   } from "winston"
 import { DeepReadonly             } from "util/type"
 import { deepAssign               } from "./util/object"
 
-import * as o from "./util/object"
+const OPORT     = z.number().int().nonnegative().max(65535).optional()
+const OSTRING   = z.string().optional()
+const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
+const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
+const OBOOLEAN  = z.boolean().optional()
+const OUINT     = z.number().int().nonnegative().optional()
+const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).optional()
 
-export interface ConfigJson {
-    http?: {
-        apiPrefix?:             string
-        host?:                  string
-        port?:                  number
-        socketPath?:            string
-        serveStatic?:           boolean
-        staticPath?:            string
-        error404Path?:          string
-        error500Path?:          string
-    }
+const CONFIG_JSON_SCHEMA = z.object({
+    http: z.object({
+        apiPrefix:             OURI_PATH,
+        host:                  OSTRING,
+        port:                  OPORT,
+        socketPath:            OPATH,
+        serveStatic:           OBOOLEAN,
+        staticPath:            OPATH,
+        error404Path:          OPATH,
+        error500Path:          OPATH,
+    }).strict().optional(),
 
-    mysql: {
-        database?:              string
-        host?:                  string
-        port?:                  number
-        socketPath?:            string
-        login?:                 string
-        password?:              string
-        validateTables?:        boolean
-        recreateInvalidTables?: boolean
-        reconnectInterval?:     number
+    mysql: z.object({
+        database:              ODB_NAME,
+        host:                  OSTRING,
+        port:                  OPORT,
+        socketPath:            OPATH,
+        login:                 OSTRING,
+        password:              OSTRING,
+        validateTables:        OBOOLEAN,
+        recreateInvalidTables: OBOOLEAN,
+        reconnectInterval:     OUINT,
 
-        init?: {
-            login?:             string
-            password?:          string
-        }
+        init: z.object({
+            login:             OSTRING,
+            password:          OSTRING
+        }).strict().optional(),
 
-        serve?: {
-            login?:             string
-            password?:          string
-        }
-    }
+        serve: z.object({
+            login:             OSTRING,
+            password:          OSTRING
+        }).strict().optional()
+    }).strict(),
 
-    logic?: {
-        createAdmin?:           boolean
-        maxTokens?:             number
-        maxNicknames?:          number
-        buildStatic?:           boolean
-        buildStaticPath?:       string
-        openBrowser?:           boolean
-    }
+    logic: z.object({
+        createAdmin:           OBOOLEAN,
+        maxTokens:             OUINT,
+        maxNicknames:          OUINT,
+        buildStatic:           OBOOLEAN,
+        buildStaticPath:       OPATH,
+        openBrowser:           OBOOLEAN
+    }).strict().optional(),
 
-    rcon?: {
-        address?:               string
-        port?:                  number
-        password?:              string
-    }
+    rcon: z.object({
+        address:               OSTRING,
+        port:                  OPORT,
+        password:              OSTRING
+    }).strict().optional(),
 
-    mc?: {
-        address?:               string
-        port?:                  number
-    }
-}
+    mc: z.object({
+        address:               OSTRING,
+        port:                  OPORT
+    }).strict().optional()
+})
+
+export type ConfigJson = z.infer<typeof CONFIG_JSON_SCHEMA>
 
 export interface ReadConfigFromFileOptions {
     path?:   string
@@ -175,10 +186,7 @@ export default class Config {
 
         logger?.info("Reading config...")
 
-        const json = await this.readJson(path, logger)
-
-        this.validateJson(json, logger)
-
+        const json   = await this.readJson(path)
         const config = new Config(json, path)
 
         logger?.info("Done")
@@ -211,7 +219,7 @@ export default class Config {
         }
     }
 
-    private static async readJson(path: string, logger?: Logger): Promise<any> {
+    private static async readJson(path: string): Promise<any> {
         try {
             const buffer = await fsp.readFile(path)
             const string = buffer.toString();
@@ -238,53 +246,7 @@ export default class Config {
         }
     }
 
-    private static validateJson(json: any, logger?: Logger) {
-        const result = o.validate(json, {
-            fields: [
-                // HTTP
-                { path: "http.apiPrefix",              type: "string"  },
-                { path: "http.host",                   type: "string"  },
-                { path: "http.port",                   type: "number"  },
-                { path: "http.socketPath",             type: "string"  },
-                { path: "http.serveStatic",            type: "boolean" },
-                { path: "http.staticPath",             type: "string"  },
-                { path: "http.error404Path",           type: "string"  },
-                { path: "http.error500Path",           type: "string"  },
-
-                // MySQL
-                { path: "mysql.database",              type: "string"  },
-                { path: "mysql.host",                  type: "string"  },
-                { path: "mysql.port",                  type: "number"  },
-                { path: "mysql.socketPath",            type: "string"  },
-                { path: "mysql.login",                 type: "string"  },
-                { path: "mysql.password",              type: "string"  },
-                { path: "mysql.validateTables",        type: "boolean" },
-                { path: "mysql.recreateInvalidTables", type: "boolean" },
-                { path: "mysql.reconnectInterval",     type: "number"  },
-                { path: "mysql.init.login",            type: "string"  },
-                { path: "mysql.init.password",         type: "string"  },
-                { path: "mysql.serve.login",           type: "string"  },
-                { path: "mysql.serve.password",        type: "string"  },
-
-                // Logic
-                { path: "logic.createAdmin",           type: "boolean" },
-                { path: "logic.maxTokens",             type: "number"  },
-                { path: "logic.maxNicknames",          type: "number"  },
-                { path: "logic.buildStatic",           type: "boolean" },
-                { path: "logic.buildStaticPath",       type: "string"  },
-                { path: "logic.openBrowser",           type: "boolean" },
-
-                // RCON
-                { path: "rcon.address",                type: "string"  },
-                { path: "rcon.port",                   type: "number"  },
-                { path: "rcon.password",               type: "string"  },
-
-                // Minecraft
-                { path: "mc.address",                  type: "string"  },
-                { path: "mc.port",                     type: "number"  },
-            ]
-        })
-
+    /*private static parseJson(json: any): ConfigJson {
         switch (result.error) {
             case "EXCESS":
                 throw new Error(`Found unknown configuration option "${result.path}"`)
@@ -295,33 +257,10 @@ export default class Config {
             case "TYPE_MISMATCH":
                 throw new Error(`Configuration option "${result.path}" must be of ${result.expected} type but it's of ${result.got} type`)
         }
+    }*/
 
-        this.validateJsonMysqlCredentials(json)
-        this.validateJsonPortFields(json)
-    }
 
-    private static validateJsonMysqlCredentials(json: any) {
-        if ((json.mysql?.login        == null || json.mysql?.password        == null)
-         && (json.mysql?.init?.login  == null || json.mysql?.init?.password  == null
-          || json.mysql?.serve?.login == null || json.mysql?.serve?.password == null)) {
-            if (json.mysql?.login == json.mysql?.password)
-                throw new Error('Missing "mysql.login" and "mysql.password" configuration options')
-
-            if (json.mysql?.login == null)
-                throw new Error('Missing "mysql.login" configuration option')
-
-            throw new Error('Missing "mysql.password" configuration option')
-        }
-    }
-
-    private static validateJsonPortFields(json: any) {
-        this.validateJsonPortField(json, "api.port"  )
-        this.validateJsonPortField(json, "mysql.port")
-        this.validateJsonPortField(json, "rcon.port" )
-        this.validateJsonPortField(json, "mc.port"   )
-    }
-
-    private static validateJsonPortField(json: any, path: string) {
+    /*private static validateJsonPortField(json: any, path: string) {
         const port = o.getField(json, path)
 
         if (port == null)
@@ -329,31 +268,96 @@ export default class Config {
 
         if (!Number.isInteger(port) || port < 0 || port > 65535)
             throw new Error(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`)
-    }
+    }*/
 
-    constructor(json: ConfigJson, path?: string) {
-        const read = deepAssign({}, json)
+    constructor(json: any, path?: string) {
+        const parsedJson = CONFIG_JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
 
-        if (read.http != null) {
-            read.http.apiPrefix    = normalize(`/${read.http.apiPrefix ?? ""}`)
-            read.http.socketPath   = preparePath(read.http.socketPath)
-            read.http.staticPath   = preparePath(read.http.staticPath)
-            read.http.error404Path = preparePath(read.http.error404Path)
-        }
+        if (!parsedJson.success)
+            throw Config.zodErrorToErrorList(parsedJson.error)
 
-        read.mysql.socketPath = preparePath(read.mysql.socketPath)
+        Config.validateParsedJsonMysqlCredentials(parsedJson.data)
 
-        if (read.logic != null)
-            read.logic.buildStaticPath = preparePath(read.logic.buildStaticPath)
-
+        const read = deepAssign({}, parsedJson.data)
+        
         this.read = read
         this.path = path ?? Config.DEFAULT_PATH
+    }
 
-        function preparePath(path: string | undefined): typeof path {
-            if (path == null)
-                return undefined
+    private static zodErrorMap(issue: z.ZodIssueOptionalMessage, ctx: { defaultError: string, data: any }): { message: string } {
+        switch (issue.code) {
+            case "invalid_type": {
+                const path     = makePath()
+                const expected = issue.expected
+                const received = issue.received
+                const message  = `Configuration option "${path}" is of type "${received}" but it was expected to be of type "${expected}"`
 
-            return Config.placehold(normalize(path))
+                return { message }
+            }
+
+            case "too_small": {
+                const path    = makePath()
+                const sign    = issue.inclusive ? "≥" : ">"
+                const message = `Configuration option "${path}" is too small. Expected to be ${sign} ${issue.minimum}`
+
+                return { message }
+            }
+
+            case "too_big": {
+                const path    = makePath()
+                const sign    = issue.inclusive ? "≤" : "<"
+                const message = `Configuration option "${path}" is too big. Expected to be ${sign} ${issue.maximum}`
+
+                return { message }
+            }
+
+            case "unrecognized_keys": {
+                const path     = makePath()
+                const keyPaths = issue.keys.map(key => `${path}.${key}`)
+                const message  = `Configuration contains the following unrecognized options: ${keyPaths.join(", ")}`
+
+                return { message }
+            }
+
+            case "invalid_string": {
+                const path    = makePath()
+                const message = `Configuration option "${path}" is of invalid format`
+
+                return { message }
+            }
+        }
+
+        return { message: ctx.defaultError + "(" + issue.code + ")" };
+
+        function makePath() {
+            return issue.path.join(".")
+        }
+    }
+
+    private static zodErrorToErrorList(error: z.ZodError): ErrorList {
+        return new ErrorList(error.issues.map(issue => new Error(issue.message)))
+    }
+
+    private static validateParsedJsonMysqlCredentials(config: ConfigJson) {
+        const noLogin         = config.mysql?.login           == null
+        const noPassword      = config.mysql?.password        == null
+        const noInitLogin     = config.mysql?.init?.login     == null
+        const noInitPassword  = config.mysql?.init?.password  == null
+        const noServeLogin    = config.mysql?.serve?.login    == null
+        const noServePassword = config.mysql?.serve?.password == null
+        const noGeneral       = noLogin      || noPassword
+        const noInit          = noInitLogin  || noInitPassword
+        const noServe         = noServeLogin || noServePassword
+        const noSpecial       = noInit       || noServe
+
+        if (noGeneral && noSpecial) {
+            if (noLogin && noPassword)
+                throw new Error('Missing "mysql.login" and "mysql.password" configuration options')
+
+            if (noLogin)
+                throw new Error('Missing "mysql.login" configuration option')
+
+            throw new Error('Missing "mysql.password" configuration option')
         }
     }
 

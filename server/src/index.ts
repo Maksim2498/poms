@@ -1,13 +1,20 @@
-import winston from "winston"
-import Config  from "./Config"
-import init    from "./init"
-import Server  from "./Server"
+import winston   from "winston"
+import ErrorList from "./util/ErrorList"
+import Config    from "./Config"
+import init      from "./init"
+import Server    from "./Server"
 
 const logger = createLogger()
 
 main().catch(error => {
-    logger.error(error)
+    if (error instanceof ErrorList)
+        for (const subError of error.errors)
+            logger.error(subError)
+    else
+        logger.error(error)
+
     logger.info("Aborting...")
+
     process.exit(1)
 })
 
