@@ -76,7 +76,6 @@ export default class StatusFetcher {
 
             favicon:      rawFetch.favicon
         }
-        console.log("fetch:", JSON.stringify(fetch, null, 4))
 
         this._lastFetch     = fetch
         this._lastFetchDate = new Date()
