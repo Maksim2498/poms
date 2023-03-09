@@ -9,6 +9,7 @@ import { deepAssign               } from "./util/object"
 
 const OPORT     = z.number().int().nonnegative().max(65535).optional()
 const OSTRING   = z.string().optional()
+const OHOST     = z.string().transform(s => s.trim()).optional()
 const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
 const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
 const OBOOLEAN  = z.boolean().optional()
@@ -18,7 +19,7 @@ const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "my
 const CONFIG_JSON_SCHEMA = z.object({
     http: z.object({
         apiPrefix:             OURI_PATH,
-        host:                  OSTRING,
+        host:                  OHOST,
         port:                  OPORT,
         socketPath:            OPATH,
         serveStatic:           OBOOLEAN,
@@ -29,7 +30,7 @@ const CONFIG_JSON_SCHEMA = z.object({
 
     mysql: z.object({
         database:              ODB_NAME,
-        host:                  OSTRING,
+        host:                  OHOST,
         port:                  OPORT,
         socketPath:            OPATH,
         login:                 OSTRING,
@@ -59,13 +60,13 @@ const CONFIG_JSON_SCHEMA = z.object({
     }).strict().optional(),
 
     rcon: z.object({
-        host:                  OSTRING,
+        host:                  OHOST,
         port:                  OPORT,
         password:              OSTRING
     }).strict().optional(),
 
     mc: z.object({
-        host:                  OSTRING,
+        host:                  OHOST,
         port:                  OPORT,
         statusLifetime:        OUINT
     }).strict().optional()
