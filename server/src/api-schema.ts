@@ -1,3 +1,4 @@
+import z          from "zod"
 import isBase64   from "is-base64"
 import Server     from "./Server"
 import LogicError from "logic/LogicError"
@@ -115,6 +116,14 @@ export async function checkPermission(server: Server, permission: Permission, re
         }
     }
 }
+
+const addUserSchema = z.object({
+    password: z.string(),
+    name:     z.string().optional(),
+    isAdmin:  z.boolean().optional()
+})
+
+type AddUserOptions = z.infer<typeof addUserSchema>
 
 export const units: UnitCollection = {
     auth: {
@@ -453,18 +462,15 @@ export const units: UnitCollection = {
         path:       "/users/:user",
 
         async handler(req, res) {
-            const json = req.body
+            const json        = req.body
+            const parseResult = addUserSchema.safeParse(json)
 
-            checkJson(json, {
-                allowExcess: true,
-                fields:      [
-                    { path: "password", type: "string", required: true },
-                    { path: "name",     type: "string"                 },
-                    { path: "isAdmin",  type: "boolean"                }
-                ]
-            })
+            if (!parseResult.success) {
+                res.sendStatus(400)
+                return
+            }
 
-            const { password, name, isAdmin } = json as { password: string, name?: string, isAdmin?: boolean }
+            const { password, name, isAdmin } = parseResult.data
             const aTokenInfo                  = (req as any).aTokenInfo as ATokenInfo
             const creatorId                   = aTokenInfo.userId
             const login                       = req.params.user
@@ -481,17 +487,5 @@ export const units: UnitCollection = {
         
             res.json({})
         }
-    }
-}
-
-function checkJson(json: any, options?: ValidationOptions) {
-    const result = validate(json, options)
-
-    switch (result.error) {
-        case "MISSING":
-            throw new LogicError(`Missing required ${result.path} property`) 
-
-        case "TYPE_MISMATCH":
-            throw new LogicError(`Expected ${result.path} property to be of type ${result.expected} but it's of type ${result.got}`)
     }
 }
