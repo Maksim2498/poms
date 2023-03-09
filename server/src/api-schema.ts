@@ -352,6 +352,15 @@ export const units: UnitCollection = {
         }
     },
 
+    getServerStatus: {
+        method: "get",
+        path:   "/server",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
     deleteAllUsers: {
         permission: "admin",
         method:     "delete",
