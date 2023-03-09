@@ -1,6 +1,6 @@
 # API Schema
 
-<img src="../images/api-logo.png" width="600" height="600">
+<img src="../images/api-logo.png" width="600" height="600" />
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@
   - [Get User Registrar](#get-user-registrar);
   - [Get User Name](#get-user-name);
   - [Get User Nicknames](#get-user-nicknames);
+  - [Get Server Status](#get-server-status);
   - [Delete All Users](#delete-all-users);
   - [Delete User](#delete-user);
   - [Delete All User Nickname](#delete-all-user-nicknames);
@@ -65,7 +66,9 @@ Every API method URI shown here is relative to
 Server will respond with JSON on every structurally valid request. Request and response JSON structure
 is described here as _TypeScript_ data type. The following is a complete API method list.
 
-### Authentication
+<hr />
+
+### __Authentication__
 
 Used for initial token pair reception.
 
@@ -96,7 +99,9 @@ __Response__:
 }
 ```
 
-### Reauthenticate
+<hr />
+
+### __Reauthenticate__
 
 Used for access token renewal.
 
@@ -127,7 +132,9 @@ __Response__:
 }
 ```
 
-### Deauthentication
+<hr />
+
+### __Deauthentication__
 
 Used for access and refresh token pair deactivation.
 
@@ -148,7 +155,9 @@ __Response__:
 {}
 ```
 
-### Get All Users Info
+<hr />
+
+### __Get All Users Info__
 
 Returns full information on all users.
 
@@ -179,7 +188,9 @@ __Response__:
 }[]
 ```
 
-### Get User Info
+<hr />
+
+### __Get User Info__
 
 Returns full information on specified user.
 
@@ -210,7 +221,9 @@ __Response__:
 }
 ```
 
-### Check If User Is Administrator
+<hr />
+
+### __Check If User Is Administrator__
 
 Returns boolean value indicating weather is specified user administrator.
 
@@ -233,7 +246,9 @@ __Responese__:
 }
 ```
 
-### Check If User Is Online
+<hr />
+
+### __Check If User Is Online__
 
 Returns boolean value indicating weather is specified user online.
 
@@ -256,7 +271,9 @@ __Responese__:
 }
 ```
 
-### Get User Registration Info
+<hr />
+
+### __Get User Registration Info__
 
 Returns full registration information on specified user.
 
@@ -280,7 +297,9 @@ __Responese__:
 }
 ```
 
-### Get User Registration Time
+<hr />
+
+### __Get User Registration Time__
 
 Returns user registration time.
 
@@ -303,7 +322,9 @@ __Responese__:
 }
 ```
 
-### Get User Registrar
+<hr />
+
+### __Get User Registrar__
 
 Returns user registrar or null if user was registered by the system.
 
@@ -326,7 +347,9 @@ __Responese__:
 }
 ```
 
-### Get User Name
+<hr />
+
+### __Get User Name__
 
 Returns name of specified user.
 
@@ -349,7 +372,9 @@ __Response__:
 }
 ```
 
-### Get User Nicknames
+<hr />
+
+### __Get User Nicknames__
 
 Returns list of user nicknames.
 
@@ -370,7 +395,54 @@ __Response__:
 string[]
 ```
 
-### Delete All Users
+<hr />
+
+### __Get Server Status__
+
+Returns current server status.
+
+__Request__:
+
+```http
+GET /server
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    version: {
+        name:         string
+        protocol:     number
+    }
+
+    players: {
+        online:       number
+        max:          number,
+        sample: {
+            id:       string
+            nickname: string
+            login:    string
+        }[]
+    }
+
+    motd: {
+        raw:          string
+        clean:        string
+        html:         string
+    }
+
+    favicon:          string // "data:image/png;base64,..."
+}
+```
+
+<hr />
+
+### __Delete All Users__
 
 Deletes all users! This method is for administators only.
 
@@ -391,7 +463,9 @@ __Response__:
 {}
 ```
 
-### Delete User
+<hr />
+
+### __Delete User__
 
 Deletes specified user. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
@@ -407,7 +481,9 @@ Authorization: Bearer <access token>
 Accept: application/json
 ```
 
-### Delete All User nicknames
+<hr />
+
+### __Delete All User nicknames__
 
 Deletes all nicknames of specified user. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
@@ -429,7 +505,9 @@ __Response__:
 {}
 ```
 
-### Delete User Nickname
+<hr />
+
+### __Delete User Nickname__
 
 Deletes specified nickname of given user. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
@@ -451,7 +529,9 @@ __Response__:
 {}
 ```
 
-### Update User Name
+<hr />
+
+### __Update User Name__
 
 Updates specified user name. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
@@ -480,7 +560,9 @@ __Response__:
 {}
 ```
 
-### Update User Password
+<hr />
+
+### __Update User Password__
 
 Updates specified user password. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
@@ -509,7 +591,9 @@ __Response__:
 {}
 ```
 
-### Update User Permissions
+<hr />
+
+### __Update User Permissions__
 
 Changes whether is specified user is administrator or not. This method is for administators only.
 
@@ -537,7 +621,9 @@ __Response__:
 {}
 ```
 
-### Add User Nickname
+<hr />
+
+### __Add User Nickname__
 
 Adds nickname to the user. If issued with administator's access token
 `user` - can be any user's login else can be only token owener's login.
@@ -559,7 +645,9 @@ __Response__:
 {}
 ```
 
-### Add User
+<hr />
+
+### __Add User__
 
 Adds new user. This method is for administators only.
 
