@@ -246,30 +246,6 @@ export default class Config {
         }
     }
 
-    /*private static parseJson(json: any): ConfigJson {
-        switch (result.error) {
-            case "EXCESS":
-                throw new Error(`Found unknown configuration option "${result.path}"`)
-
-            case "MISSING":
-                throw new Error(`Missing required configuration option "${result.path}"`)
-
-            case "TYPE_MISMATCH":
-                throw new Error(`Configuration option "${result.path}" must be of ${result.expected} type but it's of ${result.got} type`)
-        }
-    }*/
-
-
-    /*private static validateJsonPortField(json: any, path: string) {
-        const port = o.getField(json, path)
-
-        if (port == null)
-            return
-
-        if (!Number.isInteger(port) || port < 0 || port > 65535)
-            throw new Error(`Configuration option "${path}" must be a valid port number (an unsigned integer in range [0, 65535])`)
-    }*/
-
     constructor(json: any, path?: string) {
         const parsedJson = CONFIG_JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
 
