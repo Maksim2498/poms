@@ -75,4 +75,5 @@ on such topics as:
 
 - [API Schema](./docs/api-schema.md);
 - [Configuration](./docs/config.md);
-- [Database Schema](./docs/db-schema.md).
+- [Database Schema](./docs/db-schema.md);
+- [Console Proxy](./docs/ws-console-schema.md).
