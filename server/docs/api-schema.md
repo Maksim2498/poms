@@ -436,7 +436,7 @@ __Response__:
         html:         string
     }
 
-    favicon:          string // "data:image/png;base64,..."
+    favicon:          string | null // "data:image/png;base64,..."
 }
 ```
 
