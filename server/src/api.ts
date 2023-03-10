@@ -369,7 +369,8 @@ export const units: UnitCollection = {
         path:       "/server/version",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json(status.version)
         }
     },
 
@@ -379,7 +380,8 @@ export const units: UnitCollection = {
         path:       "/server/version/name",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ name: status.version.name })
         }
     },
 
@@ -389,7 +391,8 @@ export const units: UnitCollection = {
         path:       "/server/version/protocol",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ protocol: status.version.protocol })
         }
     },
 
@@ -399,7 +402,8 @@ export const units: UnitCollection = {
         path:       "/server/players",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json(status.players)
         }
     },
 
@@ -409,7 +413,12 @@ export const units: UnitCollection = {
         path:       "/server/players/count",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+
+            res.json({
+                online: status.players.online,
+                max:    status.players.max
+            })
         }
     },
 
@@ -419,7 +428,8 @@ export const units: UnitCollection = {
         path:       "/server/players/online",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ online: status.players.online })
         }
     },
 
@@ -429,7 +439,8 @@ export const units: UnitCollection = {
         path:       "/server/players/max",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ max: status.players.max })
         }
     },
 
@@ -439,7 +450,8 @@ export const units: UnitCollection = {
         path:       "/server/players/sample",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json(status.players.sample)
         }
     },
 
@@ -449,7 +461,8 @@ export const units: UnitCollection = {
         path:       "/server/motd",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json(status.motd)
         }
     },
 
@@ -459,7 +472,8 @@ export const units: UnitCollection = {
         path:       "/server/motd/raw",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ raw: status.motd.raw })
         }
     },
 
@@ -469,7 +483,8 @@ export const units: UnitCollection = {
         path:       "/server/motd/clean",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ clean: status.motd.clean })
         }
     },
 
@@ -479,7 +494,8 @@ export const units: UnitCollection = {
         path:       "/server/motd/html",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ html: status.motd.html })
         }
     },
 
@@ -489,7 +505,8 @@ export const units: UnitCollection = {
         path:       "/server/favicon",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const status = await this.statusFetcher.fetch()
+            res.json({ favicon: status.favicon })
         }
     },
 
