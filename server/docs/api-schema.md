@@ -24,6 +24,7 @@
   - [Get Server Version Name](#get-server-version-name);
   - [Get Server Version Protocol](#get-server-version-protocol);
   - [Get Server Players](#get-server-players);
+  - [Get Server Players Count](#get-server-players-count);
   - [Get Server Online Players](#get-server-online-players);
   - [Get Server Max Players](#get-server-max-players);
   - [Get Server Players Sample](#get-server-players-sample);
@@ -552,6 +553,31 @@ __Response__:
         nickname: string
         login:    string | null
     }[]
+}
+```
+
+<hr />
+
+### __Get Server  Players Count__
+
+Returns server's online and offline players count.
+
+__Request__:
+
+```http
+GET /server/players/count
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    online: number
+    max:    number
 }
 ```
 
