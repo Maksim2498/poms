@@ -1,7 +1,4 @@
-import { Server as HttpServer                   } from "http"
-import { Application, Router, Request, Response } from "express"
-import { Logger                                 } from "winston"
-
+import cp                from "child_process"
 import open              from "open"
 import express           from "express"
 import morgan            from "morgan"
@@ -11,40 +8,61 @@ import TokenExpiredError from "./logic/TokenExpiredError"
 import StatusFetcher     from "logic/StatusFetcher"
 import Config            from "./Config"
 
+import { promises as fsp                                              } from "fs"
+import { Server   as HttpServer                                       } from "http"
+import { dirname                                                      } from "path"
+import { Application, Router, Request, Response                       } from "express"
+import { Logger                                                       } from "winston"
+import { ReadonlyTable                                                } from "./util/mysql/Table"
+import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./tables"
+import { createAdmin                                                  } from "./logic/user"
+
 import * as s   from "./util/mysql/statement"
 import * as api from "./api"
+
+export type State = "created"
+                  | "initializing"
+                  | "initialized"
+                  | "starting"
+                  | "running"
+                  | "stopping"
 
 export default class Server {
     static readonly DEFAULT_ON_STARTED = async (server: Server) => {
         const config = server.config
 
-        if (config.logicOpenBrowser) {
-            const logger = server.logger
-            
-            logger?.info("Opening browser...")
-            await open(config.httpAddress)
-            logger?.info("Opened")
-        }
+        if (!config.logicOpenBrowser)
+            return
+
+        const logger = server.logger
+        
+        logger?.info("Opening browser...")
+        await open(config.httpAddress)
+        logger?.info("Opened")
     }
 
-    private readonly expressApp:  Application
-    private          httpServer?: HttpServer
+    private readonly expressApp:           Application
+    private          httpServer?:          HttpServer
 
-    private runPromise?:        Promise<void>
-    private resolveRunPromise?: () => void
-    private rejectRunPromise?:  (value: any) => void // For critical errors only
+    private          runPromise?:          Promise<void>
+    private          resolveRunPromise?:   () => void
+    private          rejectRunPromise?:    (value: any) => void // For critical errors only
 
-    readonly mysqlConnection: AsyncConnection
-    readonly config:          Config
-    readonly statusFetcher:   StatusFetcher
-    readonly logger?:         Logger
+    private          _state:               State = "created"
+
+    readonly         mysqlInitConnection:  AsyncConnection
+    readonly         mysqlServeConnection: AsyncConnection
+    readonly         config:               Config
+    readonly         statusFetcher:        StatusFetcher
+    readonly         logger?:              Logger
 
     constructor(config: Config, logger?: Logger) {
-        this.mysqlConnection = AsyncConnection.fromConfigServeUser(config, logger)
-        this.config          = config
-        this.statusFetcher   = new StatusFetcher(this.mysqlConnection, this.config)
-        this.logger          = logger
-        this.expressApp      = createExpressApp.call(this)
+        this.mysqlInitConnection  = AsyncConnection.fromConfigInitUser(config, logger)
+        this.mysqlServeConnection = AsyncConnection.fromConfigServeUser(config, logger)
+        this.config               = config
+        this.logger               = logger
+        this.expressApp           = createExpressApp.call(this)
+        this.statusFetcher        = new StatusFetcher(this.mysqlServeConnection, this.config)
 
         function createExpressApp(this: Server): Application {
             const app = express()
@@ -175,30 +193,185 @@ export default class Server {
         }
     }
 
-    get running(): boolean {
-        return this.runPromise != null
+    async init() {
+        this.checkState("created", "initialize")
+        this._state = "initializing"
+
+        this.logger?.info("Initializing server...")
+        this.initWorkingDirectory()
+        await this.initStatic()
+        await this.initDatabase()
+        this.logger?.info("Server is successfully initialized")
+
+        this._state = "initialized"
+    }
+
+    private initWorkingDirectory() {
+        const wd = dirname(this.config.path)
+
+        this.logger?.info(`Setting working directory to ${wd}...`)
+        process.chdir(wd)
+        this.logger?.info("Set")
+    }
+    
+    private async initStatic() {
+        if (!this.config.logicBuildStatic)
+            return
+
+        this.logger?.info("Initializing static content...")
+
+        const path = this.config.httpStaticPath
+
+        this.logger?.info(`Cheking if static content at ${path} alreading already exists...`)
+
+        let exits = false
+
+        try {
+            const files = await fsp.readdir(path)
+
+            if (files.length !== 0)
+                exits = true
+        } catch (error) {
+            if ((error as any).code !== "ENOENT")
+                throw error
+        }
+
+        if (exits)
+            this.logger?.info("Exits")
+        else {
+            this.logger?.info("Doesn't exist. Creating...")
+            cp.execSync("npm run build", { cwd: this.config.logicBuildStaticPath })
+            this.logger?.info("Created")
+        }
+
+        this.logger?.info("Static content is successfully initialized")
+    }
+
+    private async initDatabase() {
+        this.logger?.info("Initializing database...")
+
+        await this.mysqlInitConnection.connect()
+
+        try {
+            await this.initDatabaseObjects()
+        } finally {
+            await this.mysqlInitConnection.disconnect()
+        }
+
+        this.logger?.info("Database is successfully initialized")
+    }
+
+    private async initDatabaseObjects() {
+        const created = await s.createDatabase(this.mysqlInitConnection, this.config.mysqlDatabase, true)
+
+        if (created)
+            await this.createTablesAndEvents() 
+        else if (this.config.mysqlValidateTables)
+            await this.checkTablesAndEvents()
+
+        if (this.config.logicCreateAdmin)
+            await createAdmin({ connection: this.mysqlInitConnection })
+    }
+
+    private async createTablesAndEvents() {
+        await USERS_TABLE.create(this.mysqlInitConnection)
+        await NICKNAMES_TABLE.create(this.mysqlInitConnection)
+        await A_TOKENS_TABLE.create(this.mysqlInitConnection)
+        await R_TOKENS_TABLE.create(this.mysqlInitConnection)
+        await this.createCleanUpEvent()
+    }
+
+    private async createCleanUpEvent() {
+        this.logger?.info(`Creating event "CleanUp"...`)
+
+        await this.mysqlInitConnection.query("CREATE EVENT CleanUp "
+                                           + "ON SCHEDULE EVERY 1 DAY "
+                                           + "DO "
+                                           +     "DELETE FROM ATokens WHERE id in ("
+                                           +         "SELECT atoken_id FROM RTokens WHERE exp_time >= now()"
+                                           +     ")")
+
+        this.logger?.info("Created")
+    }
+
+    // Doesn't validate events yet
+
+    private async checkTablesAndEvents() {
+        const tables = await s.showTables(this.mysqlInitConnection)
+
+        if (await checkOrCreateIfMissing.call(this, USERS_TABLE))
+            return // If invalid all tables will be recreated
+
+        await checkOrCreateIfMissing.call(this, NICKNAMES_TABLE)
+        
+        if (await checkOrCreateIfMissing.call(this, A_TOKENS_TABLE))
+            return // If invalid RTokens table will be recreated
+
+        await checkOrCreateIfMissing.call(this, R_TOKENS_TABLE)
+
+        async function checkOrCreateIfMissing(this: Server, table: ReadonlyTable): Promise<boolean> {
+            if (tables.includes(table.name))
+                return !await this.checkTable(this.mysqlInitConnection, table)
+
+            await table.create(this.mysqlInitConnection)
+
+            return false
+        }
+    }
+
+    private async checkTable(connection: AsyncConnection, table: ReadonlyTable): Promise<boolean> {
+        connection.logger?.info(`Validating table "${table.displayName}"...`)
+    
+        const invalidReason = await table.validate(connection)
+
+        if (invalidReason === undefined) {
+            connection.logger?.info("Valid")
+            return true
+        }
+
+        if (!this.config.mysqlRecreateInvalidTables)
+            throw new Error(invalidReason)
+
+        connection.logger?.error(invalidReason)
+
+        await table.recreate(connection)
+
+        return false
     }
 
     get isApiAvailable(): boolean {
-        return this.running
-            && this.mysqlConnection.state === "online"
+        return this.state                 === "running"
+            && this.mysqlServeConnection.state === "online"
+    }
+
+    get state(): State {
+        return this._state
+    }
+
+    async finish(): Promise<void> {
+        await this.runPromise
     }
 
     async start(onStarted: (server: Server) => Promise<void> = Server.DEFAULT_ON_STARTED) {
-        if (this.running)
-            return
+        this.checkState("initialized", "start")
+        this._state = "starting"
 
-        this.logger?.info(
-            this.config.httpServeStatic ? `Starting listening at ${this.config.httpAddress} and serving static content from ${this.config.httpStaticPath}...`
-                                        : `Starting listening at ${this.config.httpAddress}...`
-        )
+        if (this.logger) {
+            const serveStatic = this.config.httpServeStatic
+            const address     = this.config.httpAddress
+            const message     = serveStatic ? `Starting listening at ${address} and serving static content from ${this.config.httpStaticPath}...`
+                                            : `Starting listening at ${address}...`
+
+            this.logger.info(message)
+        }
 
         initRunPromise.call(this)
         await initMysqlConnection.call(this)
         await listen.call(this)
-        await onStarted(this)
 
-        return await this.runPromise
+        this._state = "running"
+
+        await onStarted(this)
 
         function initRunPromise(this: Server) {
             this.runPromise = new Promise<void>((resolve, reject) => {
@@ -210,14 +383,14 @@ export default class Server {
         async function initMysqlConnection(this: Server) {
             this.logger?.info("Initializing database connection...")
 
-            await this.mysqlConnection.connect()
-            await s.useDatabase(this.mysqlConnection, this.config.mysqlDatabase)
+            await this.mysqlServeConnection.connect()
+            await s.useDatabase(this.mysqlServeConnection, this.config.mysqlDatabase)
             
-            this.logger?.info("Database connection is initialized")
+            this.logger?.info("Database connection is successfully initialized")
         }
 
         async function listen(this: Server) {
-            return new Promise<void>(resolve => {
+            await new Promise<void>(resolve => {
                 const socketPath = this.config.read.http?.socketPath
                 const listening  = () => {
                     this.logger?.info(this.config.httpServeStatic ? "Listening and serving static content..."
@@ -233,12 +406,12 @@ export default class Server {
     }
 
     async stop() {
-        if (!this.running)
-            return
+        this.checkState("running", "stop")
+        this._state = "stopping"
 
         this.logger?.info("Stopping...")
 
-        await this.mysqlConnection.disconnect()
+        await this.mysqlServeConnection.disconnect()
 
         this.httpServer?.close(error => {
             if (error)
@@ -246,9 +419,16 @@ export default class Server {
 
             this.logger?.info("Stopped")
 
+            this._state = "initialized"
+
             this.resolveRunPromise!()
         })
 
         await this.runPromise
+    }
+
+    private checkState(required: State, action: string) {
+        if (this.state !== required)
+            throw new Error(`Server cannot ${action} while it's in "${this.state}" state. It must be in "${required}" state`)
     }
 }

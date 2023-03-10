@@ -1,32 +1,19 @@
 import winston   from "winston"
 import ErrorList from "./util/ErrorList"
 import Config    from "./Config"
-import init      from "./init"
 import Server    from "./Server"
 
 const logger = createLogger()
 
-main().catch(error => {
-    if (error instanceof ErrorList)
-        for (const subError of error.errors)
-            logger.error(subError)
-    else
-        logger.error(error)
-
-    logger.info("Aborting...")
-
-    process.exit(1)
-})
+main().catch(processError)
 
 async function main() {
     const config = await Config.readFromFile(undefined, logger);
-
-    await init(config, logger)
-
     const server = new Server(config, logger)
 
     setupSigInt()
 
+    await server.init()
     await server.start()
 
     function setupSigInt() {
@@ -61,4 +48,16 @@ function createLogger() {
             fmt.printf(entry => `[${entry.timestamp}] ${entry.level}: ${entry.message}`)
         )
     })
+}
+
+function processError(error: any) {
+    if (error instanceof ErrorList)
+        for (const subError of error.errors)
+            logger.error(subError)
+    else
+        logger.error(error)
+
+    logger.info("Aborting...")
+
+    process.exit(1)
 }
