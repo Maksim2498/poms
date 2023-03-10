@@ -1,12 +1,12 @@
-import mysql           from "mysql"
-import AsyncConnection from "./AsyncConnection"
-import Expression      from "./Expression"
+import mysql                                                    from "mysql"
+import AsyncConnection                                          from "./AsyncConnection"
+import Expression                                               from "./Expression"
 
 import { deepAssign                                           } from "util/object"
 import { expr                                                 } from "./Expression"
 import { Type, EnumType, SizedType, SizelessType, isNameValid } from "./type"
 
-import * as s from "./statement"
+import * as s                                                   from "./statement"
 
 // Column:
 
@@ -133,8 +133,8 @@ export default class Table {
     private readonly _constraints:    Set<Constraint>            = new Set()
     private readonly _referencedFrom: Map<string, ReadonlyTable> = new Map()
 
-    readonly displayName: string
-    readonly name:        string
+    readonly         displayName:     string
+    readonly         name:            string
 
     constructor(name: string) {
         if (!isNameValid(name))

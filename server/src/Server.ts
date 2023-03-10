@@ -1,12 +1,16 @@
-import cp                from "child_process"
-import open              from "open"
-import express           from "express"
-import morgan            from "morgan"
-import AsyncConnection   from "./util/mysql/AsyncConnection"
-import LogicError        from "./logic/LogicError"
-import TokenExpiredError from "./logic/TokenExpiredError"
-import StatusFetcher     from "logic/StatusFetcher"
-import Config            from "./Config"
+import cp                                                               from "child_process"
+import open                                                             from "open"
+import express                                                          from "express"
+import morgan                                                           from "morgan"
+import AsyncConnection                                                  from "./util/mysql/AsyncConnection"
+import LogicError                                                       from "./logic/LogicError"
+import TokenManager                                                     from "./logic/TokenManager"
+import UserManager                                                      from "./logic/UserManager"
+import TokenExpiredError                                                from "./logic/TokenExpiredError"
+import StatusFetcher                                                    from "./logic/StatusFetcher"
+import AuthManager                                                      from "./logic/AuthManager"
+import NicknameManager                                                  from "./logic/NicknameManager"
+import Config                                                           from "./Config"
 
 import { promises as fsp                                              } from "fs"
 import { Server   as HttpServer                                       } from "http"
@@ -14,11 +18,10 @@ import { dirname                                                      } from "pa
 import { Application, Router, Request, Response                       } from "express"
 import { Logger                                                       } from "winston"
 import { ReadonlyTable                                                } from "./util/mysql/Table"
+import { useDatabase, createDatabase, showTables                      } from "./util/mysql/statement"
 import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./tables"
-import { createAdmin                                                  } from "./logic/user"
 
-import * as s   from "./util/mysql/statement"
-import * as api from "./api"
+import * as api                                                         from "./api"
 
 export type State = "created"
                   | "initializing"
@@ -48,21 +51,30 @@ export default class Server {
     private          resolveRunPromise?:   () => void
     private          rejectRunPromise?:    (value: any) => void // For critical errors only
 
+    private          mysqlInitConnection:  AsyncConnection
+    private          mysqlServeConnection: AsyncConnection
     private          _state:               State = "created"
 
-    readonly         mysqlInitConnection:  AsyncConnection
-    readonly         mysqlServeConnection: AsyncConnection
     readonly         config:               Config
-    readonly         statusFetcher:        StatusFetcher
     readonly         logger?:              Logger
 
+    readonly         statusFetcher:        StatusFetcher
+    readonly         userManager:          UserManager
+    readonly         tokenManager:         TokenManager
+    readonly         authManager:          AuthManager
+    readonly         nicknameManager:      NicknameManager
+
     constructor(config: Config, logger?: Logger) {
-        this.mysqlInitConnection  = AsyncConnection.fromConfigInitUser(config, logger)
-        this.mysqlServeConnection = AsyncConnection.fromConfigServeUser(config, logger)
         this.config               = config
         this.logger               = logger
+        this.mysqlInitConnection  = AsyncConnection.fromConfigInitUser(config, logger)
+        this.mysqlServeConnection = AsyncConnection.fromConfigServeUser(config, logger)
         this.expressApp           = createExpressApp.call(this)
-        this.statusFetcher        = new StatusFetcher(this.mysqlServeConnection, this.config)
+        this.userManager          = new UserManager(this, config, logger)
+        this.tokenManager         = new TokenManager(this.userManager)
+        this.authManager          = new AuthManager(this.tokenManager)
+        this.nicknameManager      = new NicknameManager(this.userManager)
+        this.statusFetcher        = new StatusFetcher(this.nicknameManager, config)
 
         function createExpressApp(this: Server): Application {
             const app = express()
@@ -262,29 +274,29 @@ export default class Server {
     }
 
     private async initDatabaseObjects() {
-        const created = await s.createDatabase(this.mysqlInitConnection, this.config.mysqlDatabase, true)
+        const created = await createDatabase(this.mysqlConnection, this.config.mysqlDatabase, true)
 
         if (created)
             await this.createTablesAndEvents() 
         else if (this.config.mysqlValidateTables)
             await this.checkTablesAndEvents()
 
-        if (this.config.logicCreateAdmin)
-            await createAdmin({ connection: this.mysqlInitConnection })
+        if (this.config.logicAdminCreate)
+            await this.userManager.createAdmin()
     }
 
     private async createTablesAndEvents() {
-        await USERS_TABLE.create(this.mysqlInitConnection)
-        await NICKNAMES_TABLE.create(this.mysqlInitConnection)
-        await A_TOKENS_TABLE.create(this.mysqlInitConnection)
-        await R_TOKENS_TABLE.create(this.mysqlInitConnection)
+        await USERS_TABLE.create(this.mysqlConnection)
+        await NICKNAMES_TABLE.create(this.mysqlConnection)
+        await A_TOKENS_TABLE.create(this.mysqlConnection)
+        await R_TOKENS_TABLE.create(this.mysqlConnection)
         await this.createCleanUpEvent()
     }
 
     private async createCleanUpEvent() {
         this.logger?.info(`Creating event "CleanUp"...`)
 
-        await this.mysqlInitConnection.query("CREATE EVENT CleanUp "
+        await this.mysqlConnection.query("CREATE EVENT CleanUp "
                                            + "ON SCHEDULE EVERY 1 DAY "
                                            + "DO "
                                            +     "DELETE FROM ATokens WHERE id in ("
@@ -297,7 +309,7 @@ export default class Server {
     // Doesn't validate events yet
 
     private async checkTablesAndEvents() {
-        const tables = await s.showTables(this.mysqlInitConnection)
+        const tables = await showTables(this.mysqlConnection)
 
         if (await checkOrCreateIfMissing.call(this, USERS_TABLE))
             return // If invalid all tables will be recreated
@@ -311,9 +323,9 @@ export default class Server {
 
         async function checkOrCreateIfMissing(this: Server, table: ReadonlyTable): Promise<boolean> {
             if (tables.includes(table.name))
-                return !await this.checkTable(this.mysqlInitConnection, table)
+                return !await this.checkTable(this.mysqlConnection, table)
 
-            await table.create(this.mysqlInitConnection)
+            await table.create(this.mysqlConnection)
 
             return false
         }
@@ -341,11 +353,16 @@ export default class Server {
 
     get isApiAvailable(): boolean {
         return this.state                 === "running"
-            && this.mysqlServeConnection.state === "online"
+            && this.mysqlConnection.state === "online"
     }
 
     get state(): State {
         return this._state
+    }
+
+    get mysqlConnection(): AsyncConnection {
+        return this.state === "running" ? this.mysqlServeConnection
+                                        : this.mysqlInitConnection
     }
 
     async finish(): Promise<void> {
@@ -384,7 +401,7 @@ export default class Server {
             this.logger?.info("Initializing database connection...")
 
             await this.mysqlServeConnection.connect()
-            await s.useDatabase(this.mysqlServeConnection, this.config.mysqlDatabase)
+            await useDatabase(this.mysqlServeConnection, this.config.mysqlDatabase)
             
             this.logger?.info("Database connection is successfully initialized")
         }

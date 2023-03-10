@@ -1,5 +1,6 @@
-import z         from "zod"
-import ErrorList from "util/ErrorList"
+import z                            from "zod"
+import parseDuration                from "parse-duration"
+import ErrorList                    from "util/ErrorList"
 
 import { promises as fsp          } from "fs"
 import { normalize, join, dirname } from "path"
@@ -9,12 +10,27 @@ import { deepAssign               } from "./util/object"
 
 const OPORT     = z.number().int().nonnegative().max(65535).optional()
 const OSTRING   = z.string().optional()
+const NSTRING   = z.string().nullish()
 const OHOST     = z.string().transform(s => s.trim()).optional()
 const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
 const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
 const OBOOLEAN  = z.boolean().optional()
 const OUINT     = z.number().int().nonnegative().optional()
 const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).optional()
+const ODUR      = z.string().transform((val, ctx) => {
+    const parsed = parseDuration(val)
+
+    if (parsed == null) {
+        const path    = ctx.path.join(".")
+        const message = `Configuration option "${path}" is a invalid duration`
+
+        ctx.addIssue({ code: "custom", message })
+
+        return z.NEVER
+    }
+
+    return parsed
+}).optional()
 
 const CONFIG_JSON_SCHEMA = z.object({
     http: z.object({
@@ -37,39 +53,47 @@ const CONFIG_JSON_SCHEMA = z.object({
         password:              OSTRING,
         validateTables:        OBOOLEAN,
         recreateInvalidTables: OBOOLEAN,
-        reconnectInterval:     OUINT,
+        reconnectInterval:     ODUR,
 
         init: z.object({
             login:             OSTRING,
-            password:          OSTRING
+            password:          OSTRING,
         }).strict().optional(),
 
         serve: z.object({
             login:             OSTRING,
-            password:          OSTRING
+            password:          OSTRING,
         }).strict().optional()
     }).strict(),
 
     logic: z.object({
-        createAdmin:           OBOOLEAN,
+        admin: z.object({
+            create:            OBOOLEAN,
+            name:              NSTRING,
+            login:             OSTRING,
+            password:          OSTRING,
+        }).strict().optional(),
+
         maxTokens:             OUINT,
         maxNicknames:          OUINT,
         buildStatic:           OBOOLEAN,
         buildStaticPath:       OPATH,
-        openBrowser:           OBOOLEAN
+        openBrowser:           OBOOLEAN,
+        aTokenLifetime:        ODUR,
+        rTokenLifetime:        ODUR,
     }).strict().optional(),
 
     rcon: z.object({
         host:                  OHOST,
         port:                  OPORT,
-        password:              OSTRING
+        password:              OSTRING,
     }).strict().optional(),
 
     mc: z.object({
         host:                  OHOST,
         port:                  OPORT,
-        statusLifetime:        OUINT
-    }).strict().optional()
+        statusLifetime:        ODUR,
+    }).strict().optional(),
 })
 
 export type ConfigJson = z.infer<typeof CONFIG_JSON_SCHEMA>
@@ -102,21 +126,26 @@ export default class Config {
     static readonly DEFAULT_MYSQL_PORT                    = 3306
     static readonly DEFAULT_MYSQL_VALIDATE_TABLES         = true 
     static readonly DEFAULT_MYSQL_RECREATE_INVALID_TABLES = false
-    static readonly DEFAULT_MYSQL_RECONNECT_INTERVAL      = 5
+    static readonly DEFAULT_MYSQL_RECONNECT_INTERVAL      = parseDuration("5s")
 
-    static readonly DEFAULT_LOGIC_CREATE_ADMIN            = true
+    static readonly DEFAULT_LOGIC_ADMIN_CREATE            = true
+    static readonly DEFAULT_LOGIC_ADMIN_NAME              = "Administrator"
+    static readonly DEFAULT_LOGIC_ADMIN_LOGIN             = "admin"
+    static readonly DEFAULT_LOGIC_ADMIN_PASSWORD          = "admin"
     static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
     static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
     static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = this.placehold("<SITE_PATH>")
     static readonly DEFAULT_LOGIC_OPEN_BROWSER            = true
+    static readonly DEFAULT_LOGIC_A_TOKEN_LIFETIME        = parseDuration("30m")
+    static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME        = parseDuration("1w")
 
     static readonly DEFAULT_RCON_HOST                     = "localhost"
     static readonly DEFAULT_RCON_PORT                     = 25575
 
     static readonly DEFAULT_MC_HOST                       = "localhost"
     static readonly DEFAULT_MC_PORT                       = 25565
-    static readonly DEFAULT_MC_STATUS_LIFETIME            = 10
+    static readonly DEFAULT_MC_STATUS_LIFETIME            = parseDuration("10s")
 
     readonly read: DeepReadonly<ConfigJson>
     readonly path: string
@@ -423,8 +452,8 @@ export default class Config {
         return this.read.http?.staticPath ?? Config.DEFAULT_HTTP_STATIC_PATH
     }
 
-    get logicCreateAdmin(): boolean {
-        return this.read.logic?.createAdmin ?? Config.DEFAULT_LOGIC_CREATE_ADMIN
+    get logicAdminCreate(): boolean {
+        return this.read.logic?.admin?.create ?? Config.DEFAULT_LOGIC_ADMIN_CREATE
     }
 
     get mysqlValidateTables(): boolean {
@@ -489,5 +518,25 @@ export default class Config {
 
     get mcStatusLifetime(): number {
         return this.read.mc?.statusLifetime ?? Config.DEFAULT_MC_STATUS_LIFETIME
+    }
+
+    get logicATokenLifetime(): number {
+        return this.read.logic?.aTokenLifetime ?? Config.DEFAULT_LOGIC_A_TOKEN_LIFETIME
+    }
+
+    get logicRTokenLifetime(): number {
+        return this.read.logic?.rTokenLifetime ?? Config.DEFAULT_LOGIC_R_TOKEN_LIFETIME
+    }
+
+    get logicAdminLogin(): string {
+        return this.read.logic?.admin?.login ?? Config.DEFAULT_LOGIC_ADMIN_LOGIN
+    }
+
+    get logicAdminPassword(): string { 
+        return this.read.logic?.admin?.password ?? Config.DEFAULT_LOGIC_ADMIN_PASSWORD
+    }
+
+    get logicAdminName(): string {
+        return this.read.logic?.admin?.name ?? Config.DEFAULT_LOGIC_ADMIN_NAME
     }
 }

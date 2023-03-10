@@ -2,9 +2,9 @@ import { Logger                } from "winston"
 import { FieldInfo, MysqlError } from "mysql"
 import { normalize             } from "path"
 
-import mysql  from "mysql"
-import sleep  from "util/sleep"
-import Config from "Config"
+import mysql                     from "mysql"
+import sleep                     from "util/sleep"
+import Config                    from "Config"
 
 export interface CreationOptions {
     logger?:            Logger
@@ -50,18 +50,19 @@ export default class AsyncConnection {
         const password     = useServeUser ? mysql?.serve!.password! : mysql?.password!
 
         return new AsyncConnection({
-            host:       config.mysqlHost,
-            port:       config.mysqlPort,
-            socketPath: mysql?.socketPath,
-            reconnect:  true,
+            host:              config.mysqlHost,
+            port:              config.mysqlPort,
+            socketPath:        mysql?.socketPath,
+            reconnect:         true,
+            reconnectInterval: config.mysqlReconnectInterval,
             login,
             password,
             logger
         })
     }
 
-    private _connection: mysql.Connection
-    private _state:      State = "offline"
+    private  _connection:       mysql.Connection
+    private  _state:            State = "offline"
 
     readonly address:           string
     readonly logger?:           Logger
@@ -106,9 +107,9 @@ export default class AsyncConnection {
                 this._state      = "reconnecting"
 
                 while (true) {
-                    this.logger?.info(`Trying to reconnect in ${this.reconnectInterval} seconds...`)
+                    this.logger?.info(`Trying to reconnect in ${Math.floor(this.reconnectInterval / 1000)} seconds...`)
 
-                    await sleep(1000 * this.reconnectInterval)
+                    await sleep(this.reconnectInterval)
                     
                     try {
                         await this.usafeConnect()

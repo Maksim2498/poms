@@ -1,4 +1,4 @@
-import Table from "./util/mysql/Table"
+import Table                                           from "./util/mysql/Table"
 
 import { ReadonlyTable, CURRENT_TIMESTAMP            } from "./util/mysql/Table"
 import { bigint, varchar, binary, timestamp, boolean } from "./util/mysql/type"

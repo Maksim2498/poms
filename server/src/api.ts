@@ -1,23 +1,11 @@
-import z          from "zod"
-import isBase64   from "is-base64"
-import Server     from "./Server"
-import LogicError from "logic/LogicError"
+import z                   from "zod"
+import isBase64            from "is-base64"
+import LogicError          from "./logic/LogicError"
+import TokenManager        from "./logic/TokenManager"
+import Server              from "./Server"
 
-import { Request, Response                         } from "express"
-import { isHex                                     } from "./util/string"
-import { auth, reauth                              } from "./logic/auth"
-
-import { deleteUser,           createUser,
-         deleteAllUsers,       getUserInfo,
-         getDeepUserInfo,      getAllUsersDeepInfo } from "./logic/user"
-
-import { getUserNicknames,     addNickname,
-         deleteAllNicknames,   deleteUserNickname,
-         getUserNicknameCount                      } from "logic/nickname"
-
-import { checkATokenIsActive,  getATokenInfo,
-         tokenPairToJson,      deleteAToken,
-         ATokenInfo                                } from "./logic/token"
+import { Request, Response } from "express"
+import { ATokenInfo        } from "./logic/TokenManager"
 
 export type UnitCollection = {
     [key: string]: Unit
@@ -61,20 +49,22 @@ export function disableGetCache(req: Request, res: Response, next: () => void) {
 
 export async function checkPermission(server: Server, permission: Permission, req: Request, res: Response, next: () => void) {
     const authorization = req.headers.authorization!
+    const tokenManager  = server.tokenManager
+    const userManager   = server.userManager
+    const aTokenId      = TokenManager.tryCreateTokenIdFromString(authorization)
 
-    if (!isHex(authorization)) {
+    if (aTokenId === undefined) {
         res.sendStatus(400)
         return
     }
 
-    const aToken     = Buffer.from(authorization, "hex")
-    const aTokenInfo = await getATokenInfo(server.mysqlServeConnection, aToken);
+    const aTokenInfo = await tokenManager.getATokenInfo(aTokenId);
 
     (req as any).aTokenInfo = aTokenInfo
 
     switch (permission) {
         case "user": {
-            await checkATokenIsActive(server.mysqlServeConnection, aTokenInfo)
+            await tokenManager.checkATokenIsActive(aTokenInfo)
             next()
             return
         }
@@ -82,10 +72,10 @@ export async function checkPermission(server: Server, permission: Permission, re
         // Check if not an admin trying to modify other's data
 
         case "mixed": {
-            await checkATokenIsActive(server.mysqlServeConnection, aTokenInfo)
+            await tokenManager.checkATokenIsActive(aTokenInfo)
 
             const user     = req.params.user
-            const userInfo = (await getUserInfo(server.mysqlServeConnection, aTokenInfo!.userId))!
+            const userInfo = (await userManager.getUserInfo(aTokenInfo!.userId))!
 
             if (userInfo.login !== user && !userInfo.isAdmin) {
                 res.sendStatus(403)
@@ -98,9 +88,9 @@ export async function checkPermission(server: Server, permission: Permission, re
         }
 
         case "admin": {
-            await checkATokenIsActive(server.mysqlServeConnection, aTokenInfo)
+            await tokenManager.checkATokenIsActive(aTokenInfo)
 
-            const userInfo = (await getUserInfo(server.mysqlServeConnection, aTokenInfo!.userId))!
+            const userInfo = (await userManager.getUserInfo(aTokenInfo!.userId))!
 
             if (!userInfo.isAdmin) {
                 res.sendStatus(403)
@@ -142,9 +132,10 @@ export const units: UnitCollection = {
 
             const login     = Buffer.from(base64Login,    "base64").toString()
             const password  = Buffer.from(base64Password, "base64").toString()
-            const tokenPair = await auth(this.mysqlServeConnection, login, password, { maxTokens: this.config.logicMaxTokens - 1 })
+            const tokenPair = await this.authManager.auth(login, password)
+            const json      = TokenManager.tokenPairToJson(tokenPair)
 
-            res.json(tokenPairToJson(tokenPair))
+            res.json(json)
         }
     },
 
@@ -154,22 +145,17 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const authorization = req.headers.authorization!
+            const rTokenId      = TokenManager.tryCreateTokenIdFromString(authorization)
 
-            if (!isHex(authorization)) {
+            if (rTokenId === undefined) {
                 res.sendStatus(400)
                 return
             }
 
-            const rToken = Buffer.from(authorization, "hex")
+            const tokenPair = await this.authManager.reauth(rTokenId)
+            const json      = TokenManager.tokenPairToJson(tokenPair)
 
-            if (rToken.length != 64) {
-                res.sendStatus(400)
-                return
-            }
-
-            const tokenPair = await reauth(this.mysqlServeConnection, rToken)
-
-            res.json(tokenPairToJson(tokenPair))
+            res.json(json)
         }
     },
 
@@ -179,20 +165,14 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const authorization = req.headers.authorization!
+            const aTokenId      = TokenManager.tryCreateTokenIdFromString(authorization)
 
-            if (!isHex(authorization)) {
+            if (aTokenId === undefined) {
                 res.sendStatus(400)
                 return
             }
-
-            const aToken = Buffer.from(authorization, "hex")
-
-            if (aToken.length != 64) {
-                res.sendStatus(400)
-                return
-            }
-
-            await deleteAToken(this.mysqlServeConnection, aToken)
+            
+            await this.authManager.deauth(aTokenId)
         
             res.json({})
         }
@@ -205,7 +185,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user        = req.params.user
-            const info        = await getAllUsersDeepInfo(this.mysqlServeConnection)
+            const info        = await this.userManager.getAllUsersDeepInfo()
             const jsonsWithId = info.map(i => {
                 return {
                     id: i.id,
@@ -224,7 +204,7 @@ export const units: UnitCollection = {
 
             if ("nicknames" in req.query)
                 for (const { id, json } of jsonsWithId)
-                    json.nicknames = await getUserNicknames(this.mysqlServeConnection, id)
+                    json.nicknames = await this.nicknameManager.getUserNicknames(id)
 
             res.json(jsonsWithId.map(j => j.json))
         }
@@ -237,7 +217,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getDeepUserInfo(this.mysqlServeConnection, user, true)
+            const info = await this.userManager.getDeepUserInfo(user, true)
             const json = {
                 name:      info.name,
                 isAdmin:   info.isAdmin,
@@ -250,7 +230,7 @@ export const units: UnitCollection = {
             }
 
             if ("nicknames" in req.query)
-                json.nicknames = await getUserNicknames(this.mysqlServeConnection, info.id)
+                json.nicknames = await this.nicknameManager.getUserNicknames(info.id)
 
             res.json(json)
         }
@@ -263,7 +243,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getUserInfo(this.mysqlServeConnection, user, true)
+            const info = await this.userManager.getUserInfo(user, true)
             
             res.json({ isAdmin: info.isAdmin })
         }
@@ -276,7 +256,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getUserInfo(this.mysqlServeConnection, user, true)
+            const info = await this.userManager.getUserInfo(user, true)
             
             res.json({ isOnline: info.isOnline })
         }
@@ -289,7 +269,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getDeepUserInfo(this.mysqlServeConnection, user, true)
+            const info = await this.userManager.getDeepUserInfo(user, true)
 
             res.json({
                 time:  info.created.toISOString(),
@@ -305,7 +285,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getUserInfo(this.mysqlServeConnection, user, true)
+            const info = await this.userManager.getUserInfo(user, true)
 
             res.json({ time: info.created.toISOString() })
         }
@@ -318,7 +298,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getDeepUserInfo(this.mysqlServeConnection, user, true)
+            const info = await this.userManager.getDeepUserInfo(user, true)
 
             res.json({ login: info.creator?.login })
         }
@@ -331,7 +311,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            const info = await getUserInfo(this.mysqlServeConnection, user, true)
+            const info = await this.userManager.getUserInfo(user, true)
 
             res.json({ name: info.name })
         }
@@ -344,7 +324,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user      = req.params.user
-            const nicknames = await getUserNicknames(this.mysqlServeConnection, user)
+            const nicknames = await this.nicknameManager.getUserNicknames(user)
 
             res.json(nicknames)
         }
@@ -514,7 +494,7 @@ export const units: UnitCollection = {
         path:       "/users",
 
         async handler(req, res) {
-            await deleteAllUsers(this.mysqlServeConnection)
+            await this.userManager.deleteAllUsers()
             res.json({})
         }
     },
@@ -526,7 +506,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            await deleteUser(this.mysqlServeConnection, user)
+            await this.userManager.deleteUser(user)
             res.json({})
         }
     },
@@ -538,7 +518,7 @@ export const units: UnitCollection = {
 
         async handler(req, res) {
             const user = req.params.user
-            await deleteAllNicknames(this.mysqlServeConnection, user)
+            await this.nicknameManager.deleteAllNicknames(user)
             res.json({})
         }
     },
@@ -552,7 +532,7 @@ export const units: UnitCollection = {
             const user     = req.params.user
             const nickname = req.params.user
 
-            await deleteUserNickname(this.mysqlServeConnection, user, nickname)
+            await this.nicknameManager.deleteUserNickname(user, nickname)
 
             res.json({})
         }
@@ -596,14 +576,14 @@ export const units: UnitCollection = {
         async handler(req, res) {
             const user = req.params.user
             const max  = this.config.logicMaxNicknames
-            const has  = await getUserNicknameCount(this.mysqlServeConnection, user)
+            const has  = await this.nicknameManager.getUserNicknameCount(user)
 
             if (has >= max)
                 throw new LogicError("Too many nicknames")
 
             const nickname = req.params.nickname
 
-            await addNickname(this.mysqlServeConnection, user, nickname)
+            await this.nicknameManager.addNickname(user, nickname)
 
             res.json({})
         }
@@ -628,14 +608,13 @@ export const units: UnitCollection = {
             const creatorId                   = aTokenInfo.userId
             const login                       = req.params.user
         
-            await createUser({
-                connection: this.mysqlServeConnection,
-                login:      login,
-                password:   password,
-                name:       name,
-                isAdmin:    isAdmin,
-                creator:    creatorId,
-                force:      true
+            await this.userManager.createUser({
+                login:    login,
+                password: password,
+                name:     name,
+                isAdmin:  isAdmin,
+                creator:  creatorId,
+                force:    true
             })
         
             res.json({})

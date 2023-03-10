@@ -1,10 +1,10 @@
-export function dateSecondsAhead(seconds?: number) {
-    if (seconds == null)
+export function dateMillisAhead(millis?: number) {
+    if (millis == null)
         return undefined
 
     const date = new Date()
 
-    date.setSeconds(date.getSeconds() + seconds)
+    date.setMilliseconds(date.getMilliseconds() + millis)
 
     return date
 }

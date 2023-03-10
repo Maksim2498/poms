@@ -36,6 +36,7 @@
     "morgan": "^1.10.0",
     "mysql": "^2.18.1",
     "open": "^8.4.2",
+    "parse-duration": "^1.0.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.1.2",
     "typescript": "^4.9.5",

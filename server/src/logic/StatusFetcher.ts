@@ -1,10 +1,9 @@
-import AsyncConnection from "util/mysql/AsyncConnection";
-import Config          from "Config";
+import Config           from "Config";
+import NicknameManager  from "./NicknameManager";
 
-import { status               } from "minecraft-server-util"
-import { deepAssign           } from "util/object";
-import { DeepReadonly         } from "util/type";
-import { getNicknameOwnerInfo } from "./nickname";
+import { status       } from "minecraft-server-util"
+import { deepAssign   } from "util/object";
+import { DeepReadonly } from "util/type";
 
 export interface Fetch {
     version: {
@@ -37,11 +36,11 @@ export default class StatusFetcher {
     private  _lastFetch:      Fetch | null = null
     private  _lastFetchDate:  Date  | null = null
 
-    readonly mysqlConnection: AsyncConnection
+    readonly nicknameManager: NicknameManager
     readonly config:          Config
 
-    constructor(mysqlConnection: AsyncConnection, config: Config) {
-        this.mysqlConnection = mysqlConnection
+    constructor(nicknameManager: NicknameManager, config: Config) {
+        this.nicknameManager = nicknameManager
         this.config          = config
     }
 
@@ -89,7 +88,7 @@ export default class StatusFetcher {
                 return []
 
             const promises = sample.map(async ({name: nickname, id}) => {
-                const info  = await getNicknameOwnerInfo(this.mysqlConnection, nickname)
+                const info  = await this.nicknameManager.getNicknameOwnerInfo(nickname)
                 const login = info?.login ?? null
 
                 return { id, nickname, login }
@@ -105,7 +104,7 @@ export default class StatusFetcher {
             return true;
 
         const now  = new Date()
-        const diff = Math.floor((now.valueOf() - this.lastFetchDate.valueOf()) / 1000)
+        const diff = now.valueOf() - this.lastFetchDate.valueOf()
 
         return diff >= this.config.mcStatusLifetime
     }
