@@ -20,6 +20,18 @@
   - [Get User Name](#get-user-name);
   - [Get User Nicknames](#get-user-nicknames);
   - [Get Server Status](#get-server-status);
+  - [Get Server Version](#get-server-version);
+  - [Get Server Version Name](#get-server-version-name);
+  - [Get Server Version Protocol](#get-server-version-protocol);
+  - [Get Server Players](#get-server-players);
+  - [Get Server Online Players](#get-server-online-players);
+  - [Get Server Max Players](#get-server-max-players);
+  - [Get Server Players Sample](#get-server-players-sample);
+  - [Get Server MOTD](#get-server-motd);
+  - [Get Server Raw MOTD](#get-server-raw-motd);
+  - [Get Server Clean MOTD](#get-server-clean-motd);
+  - [Get Server HTML MOTD](#get-server-html-motd);
+  - [Get Server Favicon](#get-server-favicon);
   - [Delete All Users](#delete-all-users);
   - [Delete User](#delete-user);
   - [Delete All User Nickname](#delete-all-user-nicknames);
@@ -399,7 +411,7 @@ string[]
 
 ### __Get Server Status__
 
-Returns current server status.
+Returns server's status.
 
 __Request__:
 
@@ -437,6 +449,305 @@ __Response__:
     }
 
     favicon:          string | null // "data:image/png;base64,..."
+}
+```
+
+<hr />
+
+### __Get Server Version__
+
+Returns server's version.
+
+__Request__:
+
+```http
+GET /server/version
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    name:     string
+    protocol: number
+}
+```
+
+<hr />
+
+### __Get Server Version Name__
+
+Returns server's version name.
+
+__Request__:
+
+```http
+GET /server/version/name
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    name: string
+}
+```
+
+<hr />
+
+### __Get Server Version Protocol__
+
+Returns server's version protocol.
+
+__Request__:
+
+```http
+GET /server/version/protocol
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    protocol: number
+}
+```
+
+<hr />
+
+### __Get Server Players__
+
+Returns server's players.
+
+__Request__:
+
+```http
+GET /server/players
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    online:       number
+    max:          number,
+    sample: {
+        id:       string
+        nickname: string
+        login:    string | null
+    }[]
+}
+```
+
+<hr />
+
+### __Get Server Online Players__
+
+Returns server's online players count.
+
+__Request__:
+
+```http
+GET /server/players/online
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    online: number
+}
+```
+
+<hr />
+
+### __Get Server Max Players__
+
+Returns server's maximum number of players.
+
+__Request__:
+
+```http
+GET /server/players/max
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    max: number,
+}
+```
+
+<hr />
+
+### __Get Server Players Sample__
+
+Returns server's players sample.
+
+__Request__:
+
+```http
+GET /server/players/sample
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    id:       string
+    nickname: string
+    login:    string | null
+}[]
+```
+
+<hr />
+
+### __Get Server MOTD__
+
+Returns server's Message Of The Day (MOTD).
+
+__Request__:
+
+```http
+GET /server/motd
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    raw:   string
+    clean: string
+    html:  string
+}
+```
+
+<hr />
+
+### __Get Server Raw MOTD__
+
+Returns server's raw Message Of The Day (MOTD).
+
+__Request__:
+
+```http
+GET /server/motd/raw
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    raw: string
+}
+```
+
+<hr />
+
+### __Get Server Clean MOTD__
+
+Returns server's clean Message Of The Day (MOTD).
+
+__Request__:
+
+```http
+GET /server/motd/clean
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    clean: string
+}
+```
+
+<hr />
+
+### __Get Server HTML MOTD__
+
+Returns server's HTML Message Of The Day (MOTD).
+
+__Request__:
+
+```http
+GET /server/motd/html
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    html: string
+}
+```
+
+<hr />
+
+### __Get Server Favicon__
+
+Returns server's favicon.
+
+__Request__:
+
+```http
+GET /server/favicon
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    favicon: string | null // "data:image/png;base64,..."
 }
 ```
 
