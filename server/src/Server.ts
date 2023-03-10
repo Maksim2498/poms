@@ -12,7 +12,7 @@ import StatusFetcher     from "logic/StatusFetcher"
 import Config            from "./Config"
 
 import * as s   from "./util/mysql/statement"
-import * as api from "./api-schema"
+import * as api from "./api"
 
 export default class Server {
     static readonly DEFAULT_ON_STARTED = async (server: Server) => {

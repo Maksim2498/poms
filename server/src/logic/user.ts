@@ -3,7 +3,7 @@ import LogicError      from "./LogicError"
 
 import { ReadonlyTable } from "util/mysql/Table"
 import { expr          } from "util/mysql/Expression"
-import { USERS_TABLE   } from "db-schema"
+import { USERS_TABLE   } from "tables"
 
 export type User = string | number
 

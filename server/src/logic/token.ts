@@ -3,7 +3,7 @@ import AsyncConnection   from "util/mysql/AsyncConnection"
 import LogicError        from "./LogicError"
 import TokenExpiredError from "./TokenExpiredError"
 
-import { A_TOKENS_TABLE, R_TOKENS_TABLE     } from "db-schema"
+import { A_TOKENS_TABLE, R_TOKENS_TABLE     } from "tables"
 import { deleteAllUserData, getUserId, User } from "./user"
 import { dateSecondsAhead                   } from "util/date"
 

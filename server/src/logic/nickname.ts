@@ -1,7 +1,7 @@
 import AsyncConnection from "util/mysql/AsyncConnection"
 import LogicError      from "./LogicError"
 
-import { NICKNAMES_TABLE, USERS_TABLE                                 } from "db-schema"
+import { NICKNAMES_TABLE, USERS_TABLE                                 } from "tables"
 import { UserInfo, User, deleteAllUserData, getUserId, getValidUserId } from "./user"
 
 export async function deleteAllNicknames(connection: AsyncConnection, user?: User) {

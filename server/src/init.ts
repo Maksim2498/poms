@@ -5,7 +5,7 @@ import Config          from "./Config"
 import { promises as fsp                                              } from "fs"
 import { dirname                                                      } from "path"
 import { Logger                                                       } from "winston"
-import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./db-schema"
+import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./tables"
 import { createAdmin                                                  } from "logic/user"
 
 import * as s from "./util/mysql/statement"
