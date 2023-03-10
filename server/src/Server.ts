@@ -74,7 +74,7 @@ export default class Server {
         this.tokenManager         = new TokenManager(this.userManager)
         this.authManager          = new AuthManager(this.tokenManager)
         this.nicknameManager      = new NicknameManager(this.userManager)
-        this.statusFetcher        = new StatusFetcher(this.nicknameManager, config)
+        this.statusFetcher        = new StatusFetcher(this.nicknameManager)
 
         function createExpressApp(this: Server): Application {
             const app = express()

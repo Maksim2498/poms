@@ -1,4 +1,3 @@
-import Config           from "Config";
 import NicknameManager  from "./NicknameManager";
 
 import { status       } from "minecraft-server-util"
@@ -37,11 +36,9 @@ export default class StatusFetcher {
     private  _lastFetchDate:  Date  | null = null
 
     readonly nicknameManager: NicknameManager
-    readonly config:          Config
 
-    constructor(nicknameManager: NicknameManager, config: Config) {
+    constructor(nicknameManager: NicknameManager) {
         this.nicknameManager = nicknameManager
-        this.config          = config
     }
 
     async cloneFetch(force: boolean = false): Promise<Fetch> {
@@ -53,9 +50,10 @@ export default class StatusFetcher {
         if (!force && !this.willRefetch)
             return this.cloneLastFetch()!
 
-        const rawFetch = await status(this.config.mcHost, this.config.mcPort)
-        const sample   = await mapSamples.call(this)
-        const fetch    = {
+        const { mcHost, mcPort } = this.nicknameManager.userManager.config
+        const rawFetch           = await status(mcHost, mcPort)
+        const sample             = await mapSamples.call(this)
+        const fetch              = {
             version: {
                 name:     rawFetch.version.name,
                 protocol: rawFetch.version.protocol
@@ -103,10 +101,11 @@ export default class StatusFetcher {
          || this.lastFetchDate == null)
             return true;
 
-        const now  = new Date()
-        const diff = now.valueOf() - this.lastFetchDate.valueOf()
+        const now    = new Date()
+        const diff   = now.valueOf() - this.lastFetchDate.valueOf()
+        const config = this.nicknameManager.userManager.config
 
-        return diff >= this.config.mcStatusLifetime
+        return diff >= config.mcStatusLifetime
     }
 
     get lastFetch(): ReadonlyFetch | null {
