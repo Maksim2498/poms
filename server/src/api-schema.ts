@@ -363,6 +363,136 @@ export const units: UnitCollection = {
         }
     },
 
+    getServerVersion: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/version",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerVersionName: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/version/name",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerVersionProtocol: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/version/protocol",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerPlayers: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/players",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerPlayersCount: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/players/count",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerOnlinePlayers: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/players/online",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerMaxPlayers: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/players/max",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerPlayersSample: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/players/sample",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerMotd: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/motd",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerRawMotd: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/motd/raw",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerCleanMotd: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/motd/clean",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerHtmlMotd: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/motd/html",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
+    getServerFavicon: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/favicon",
+
+        async handler(req, res) {
+            res.sendStatus(501)
+        }
+    },
+
     deleteAllUsers: {
         permission: "admin",
         method:     "delete",
