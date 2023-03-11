@@ -114,7 +114,7 @@ node start
 - [Code of Conduct](/docs/CODE_OF_CONDUCT.md);
 - [Security](/docs/SECURITY.md).
 
-__API__:
+__Server__:
 
 - [Configuration](/server/docs/config.md);
 - [Database Schema](/server/docs/db-schema.md);
