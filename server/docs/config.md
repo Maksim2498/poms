@@ -6,7 +6,11 @@
 - [About](#about);
 - [Schema](#schema);
 - [Placeholders](#placeholders);
-- [Minimal Config](#minimal-config).
+- [Minimal Config](#minimal-config);
+- [Format](#format);
+  - [Port Number](#port-number);
+  - [Path String](#path-string);
+  - [Duration Strings](#duration-strings).
 
 ## About
 
@@ -94,3 +98,20 @@ Minimal valid config is the following:
     }
 }
 ```
+
+## Format
+
+This section will provide description of different types' format
+
+### Port Number
+
+Just a number in range [0, 65535].
+
+### Path String
+
+A valid file system path.
+
+### Duration Strings
+
+Duration strings are parsed with [parse-duration](https://www.npmjs.com/package/parse-duration)
+npm package. Every string valid for parse-duration package is valid for POMS server.
