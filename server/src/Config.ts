@@ -9,12 +9,12 @@ import { DeepReadonly             } from "util/type"
 import { deepAssign               } from "./util/object"
 
 const OPORT     = z.number().int().nonnegative().max(65535).optional()
-const OSTRING   = z.string().optional()
+const OSTRING   = z.ostring()
 const NSTRING   = z.string().nullish()
 const OHOST     = z.string().transform(s => s.trim()).optional()
 const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
 const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
-const OBOOLEAN  = z.boolean().optional()
+const OBOOLEAN  = z.oboolean()
 const OUINT     = z.number().int().nonnegative().optional()
 const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).optional()
 const ODUR      = z.string().transform((val, ctx) => {
