@@ -107,6 +107,18 @@ export default class UserManager {
         return this.mysqlConnectionProvider.mysqlConnection
     }
 
+    async setName(user: User, name: string | null) {
+
+    }
+
+    async setPassword(user: User, password: string) {
+
+    }
+
+    async setIsAdmin(user: User, isAdmin: boolean) {
+
+    }
+
     async createAdmin(options?: CreateAdminOptions): Promise<boolean> {
         const login    = options?.login    ?? this.config.logicAdminLogin
         const password = options?.password ?? this.config.logicAdminName
