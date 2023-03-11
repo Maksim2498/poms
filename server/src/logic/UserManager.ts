@@ -107,15 +107,15 @@ export default class UserManager {
         return this.mysqlConnectionProvider.mysqlConnection
     }
 
-    async setName(user: User, name: string | null) {
+    async setUserName(user: User, name: string | null) {
 
     }
 
-    async setPassword(user: User, password: string) {
+    async setUserPassword(user: User, password: string) {
 
     }
 
-    async setIsAdmin(user: User, isAdmin: boolean) {
+    async setUserPermission(user: User, isAdmin: boolean) {
 
     }
 
