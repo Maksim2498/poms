@@ -106,8 +106,20 @@ export async function checkPermission(server: Server, permission: Permission, re
 
 const ADD_USER_SCHEMA = z.object({
     password: z.string(),
-    name:     z.string().optional(),
-    isAdmin:  z.boolean().optional()
+    name:     z.ostring(),
+    isAdmin:  z.oboolean()
+})
+
+const UPDATE_USER_NAME_SCHEMA = z.object({
+    name: z.string().nullable()
+})
+
+const UPDATE_USER_PASSWORD_SCHEMA = z.object({
+    password: z.string()
+})
+
+const UPDATE_USER_PERMISSION_SCHEMA = z.object({
+    isAdmin: z.boolean()
 })
 
 export const units: UnitCollection = {
@@ -544,7 +556,20 @@ export const units: UnitCollection = {
         path:       "/users/:user/name",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const json        = req.body
+            const parseResult = UPDATE_USER_NAME_SCHEMA.safeParse(json)
+
+            if (!parseResult.success) {
+                res.sendStatus(400)
+                return
+            }
+
+            const { name } = parseResult.data
+            const user     = req.params.user
+
+            await this.userManager.setUserName(user, name)
+
+            res.json({})
         }
     },
 
@@ -554,7 +579,20 @@ export const units: UnitCollection = {
         path:       "/users/:user/password",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const json        = req.body
+            const parseResult = UPDATE_USER_PASSWORD_SCHEMA.safeParse(json)
+
+            if (!parseResult.success) {
+                res.sendStatus(400)
+                return
+            }
+
+            const { password } = parseResult.data
+            const user         = req.params.user
+
+            await this.userManager.setUserPassword(user, password)
+
+            res.json({})
         }
     },
 
@@ -564,7 +602,20 @@ export const units: UnitCollection = {
         path:       "/users/:user/is-admin",
 
         async handler(req, res) {
-            res.sendStatus(501)
+            const json        = req.body
+            const parseResult = UPDATE_USER_PERMISSION_SCHEMA.safeParse(json)
+
+            if (!parseResult.success) {
+                res.sendStatus(400)
+                return
+            }
+
+            const { isAdmin } = parseResult.data
+            const user        = req.params.user
+
+            await this.userManager.setUserPermission(user, isAdmin)
+
+            res.json({})
         }
     },
 
