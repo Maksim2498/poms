@@ -79,7 +79,7 @@ export type UniqueConstraint = {
 
 // Query
 
-export interface InsertPairs {
+export interface KeyValuePairs {
     [key: string]: any
 }
 
@@ -118,7 +118,8 @@ export interface ReadonlyTable {
     createAll(connection: AsyncConnection): Promise<void>
     create(connection: AsyncConnection): Promise<void>
     validate(connection: AsyncConnection): Promise<string | undefined>
-    insert(connection: AsyncConnection, insertPairs: InsertPairs): Promise<boolean>
+    update(connection: AsyncConnection, updatePairs: KeyValuePairs): Promise<Filter>
+    insert(connection: AsyncConnection, insertPairs: KeyValuePairs): Promise<boolean>
     unsafeSelect(connection: AsyncConnection, columns: string): Filter
     select(connection: AsyncConnection, ...columns: string[]): Filter
     delete(conneciton: AsyncConnection): Filter
@@ -389,8 +390,13 @@ export default class Table {
         return constraints
     }
 
-    async insert(connection: AsyncConnection, insertPairs: InsertPairs): Promise<boolean> {
-        const { columns, expressions } = this.insertPairsToColumnListAndExpressionList(insertPairs)
+    async update(connection: AsyncConnection, updatePairs: KeyValuePairs): Promise<Filter> {
+        const { columns, expressions } = this.expandKeyValuePairs(updatePairs)
+        return {} as Filter
+    }
+
+    async insert(connection: AsyncConnection, insertPairs: KeyValuePairs): Promise<boolean> {
+        const { columns, expressions } = this.expandKeyValuePairs(insertPairs)
         const columnsSql               = this.queryColumnsToSql(columns)
         const expressionsSql           = expressions.join(", ")
 
@@ -402,7 +408,7 @@ export default class Table {
         )
     }
 
-    private insertPairsToColumnListAndExpressionList(insertPairs: InsertPairs): { columns: string[], expressions: string[] } {
+    private expandKeyValuePairs(insertPairs: KeyValuePairs): { columns: string[], expressions: string[] } {
         return {
             columns:     makeColumns(),
             expressions: makeExpressions()

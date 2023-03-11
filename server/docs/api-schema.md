@@ -1,7 +1,5 @@
 # API Schema
 
-<img src="../images/api-logo.png" width="600" height="600" />
-
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents);
@@ -558,7 +556,7 @@ __Response__:
 
 <hr />
 
-### __Get Server  Players Count__
+### __Get Server Players Count__
 
 Returns server's online and offline players count.
 

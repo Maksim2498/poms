@@ -48,14 +48,14 @@ export interface UserInfo {
 }
 
 export default class UserManager {
-    static checkPassword(password: string) {
-        const invalidReason = this.validatePassword(password)
+    static checkUserPassword(password: string) {
+        const invalidReason = this.validateUserPassword(password)
 
         if (invalidReason !== undefined)
             throw new LogicError(invalidReason)
     }
 
-    static validatePassword(password: string): string | undefined {
+    static validateUserPassword(password: string): string | undefined {
         const MIN_LENGTH = 4
 
         if (password.length < MIN_LENGTH)
@@ -69,14 +69,14 @@ export default class UserManager {
         return undefined
     }
 
-    static checkLogin(login: string) {
-        const invalidReason = this.validateLogin(login)
+    static checkUserLogin(login: string) {
+        const invalidReason = this.validateUserLogin(login)
 
         if (invalidReason !== undefined)
             throw new LogicError(invalidReason)
     }
 
-    static validateLogin(login: string): string | undefined {
+    static validateUserLogin(login: string): string | undefined {
         const MIN_LENGTH = 4
 
         if (login.length < MIN_LENGTH)
@@ -112,6 +112,7 @@ export default class UserManager {
     }
 
     async setUserPassword(user: User, password: string) {
+        UserManager.checkUserPassword(password)
 
     }
 
@@ -153,7 +154,7 @@ export default class UserManager {
 
         this.logger?.info(`Creaing user "${login}"...`)
 
-        UserManager.checkLogin(login)
+        UserManager.checkUserLogin(login)
 
         let creatorId: number | undefined
 
@@ -211,7 +212,7 @@ export default class UserManager {
             case "string":
                 this.logger?.info(`Deleting user "${user}"...`)
 
-                UserManager.checkLogin(user)
+                UserManager.checkUserLogin(user)
 
                 await USERS_TABLE.delete(this.mysqlConnection)
                                  .where("login = ?", user)
@@ -238,8 +239,8 @@ export default class UserManager {
     }
 
     async getUserIdByCredentials(login: string, password: string): Promise<number> {
-        UserManager.checkLogin(login)
-        UserManager.checkPassword(password)
+        UserManager.checkUserLogin(login)
+        UserManager.checkUserPassword(password)
 
         const results = await USERS_TABLE.select(this.mysqlConnection, "id")
                                          .where(
@@ -296,7 +297,7 @@ export default class UserManager {
 
         switch (typeof user) {
             case "string":
-                UserManager.checkLogin(user)
+                UserManager.checkUserLogin(user)
                 where = "target.login = ?"
                 break
 
@@ -363,7 +364,7 @@ export default class UserManager {
 
         switch (typeof user) {
             case "string":
-                UserManager.checkLogin(user)
+                UserManager.checkUserLogin(user)
                 where = "login = ?"
                 break
 
