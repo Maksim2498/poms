@@ -113,5 +113,5 @@ A valid file system path.
 
 ### Duration Strings
 
-Duration strings are parsed with [parse-duration](https://www.npmjs.com/package/parse-duration)
+Duration strings are parsed with [parse-duration](https://github.com/jkroso/parse-duration#readme)
 npm package. Every string valid for parse-duration package is valid for POMS server.
