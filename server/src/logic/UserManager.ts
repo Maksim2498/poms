@@ -111,7 +111,7 @@ export default class UserManager {
         const where = typeof user === "string" ? "login = ?"
                                                : "id = ?"
 
-        await USERS_TABLE.update(this.mysqlConnection, { "name": name })
+        await USERS_TABLE.update(this.mysqlConnection, { name })
                          .where(where, user)
     }
 
@@ -121,7 +121,11 @@ export default class UserManager {
     }
 
     async setUserPermission(user: User, isAdmin: boolean) {
+        const where = typeof user === "string" ? "login = ?"
+                                               : "id = ?"
 
+        await USERS_TABLE.update(this.mysqlConnection, { is_admin: isAdmin })
+                         .where(where, user)
     }
 
     async createAdmin(options?: CreateAdminOptions): Promise<boolean> {
