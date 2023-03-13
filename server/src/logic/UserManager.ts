@@ -108,7 +108,11 @@ export default class UserManager {
     }
 
     async setUserName(user: User, name: string | null) {
+        const where = typeof user === "string" ? "login = ?"
+                                               : "id = ?"
 
+        await USERS_TABLE.update(this.mysqlConnection, { "name": name })
+                         .where(where, user)
     }
 
     async setUserPassword(user: User, password: string) {
