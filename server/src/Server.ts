@@ -163,6 +163,13 @@ export default class Server {
 
                 function createErrorHandler(this: Server) {
                     return (error: Error, req: Request, res: Response, next: () => void) => {
+                        const code = (error as any).statusCode
+
+                        if (typeof code === "number") {
+                            res.sendStatus(code)
+                            return
+                        }
+
                         this.logger?.error(error)
                         res.sendStatus(500)
                     }
