@@ -13,6 +13,10 @@ export default class Expression {
         this.values     = values
     }
 
+    toString(): string {
+        return this.toSql()
+    }
+
     toSql(): string {
         return format(this.expression, this.values)
     }

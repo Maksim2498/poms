@@ -1,7 +1,9 @@
+import mysql                   from "mysql"
 import AsyncConnection         from "util/mysql/AsyncConnection"
 import AsyncConnectionProvider from "util/mysql/AsyncConnectionProvider"
 import Config                  from "Config"
 import LogicError              from "./LogicError"
+import Expression              from "util/mysql/Expression"
 
 import { Logger              } from "winston"
 import { ReadonlyTable       } from "util/mysql/Table"
@@ -48,6 +50,10 @@ export interface UserInfo {
 }
 
 export default class UserManager {
+    static makePasswordHashExpression(login: string, password: string): Expression {
+        return expr("UNHEX(SHA2(?, 512))", `${login}:${password}`)
+    }
+
     static checkUserPassword(password: string) {
         const invalidReason = this.validateUserPassword(password)
 
@@ -118,6 +124,13 @@ export default class UserManager {
     async setUserPassword(user: User, password: string) {
         UserManager.checkUserPassword(password)
 
+        const where = typeof user === "string" ? "login = ?"
+                                               : "id = ?"
+
+        const login = await this.getUserLogin(user, true)
+
+        await USERS_TABLE.update(this.mysqlConnection, { password_hash: UserManager.makePasswordHashExpression(login, password)})
+                         .where(where, user)
     }
 
     async setUserPermission(user: User, isAdmin: boolean) {
@@ -179,7 +192,7 @@ export default class UserManager {
             login,
             name,
             cr_id:         creatorId,
-            password_hash: expr("UNHEX(SHA2(?, 512))", `${login}:${password}`),
+            password_hash: UserManager.makePasswordHashExpression(login, password),
             is_admin:      isAdmin ?? false
         })
 
@@ -250,12 +263,11 @@ export default class UserManager {
         UserManager.checkUserLogin(login)
         UserManager.checkUserPassword(password)
 
-        const results = await USERS_TABLE.select(this.mysqlConnection, "id")
-                                         .where(
-                                             "login = ? and password_hash = UNHEX(SHA2(?, 512))",
-                                             login,
-                                             `${login}:${password}`
-                                         )
+        const passwordHashSql = UserManager.makePasswordHashExpression(login, password)
+        const loginSql        = mysql.escape(login)
+        const whereSql        = `login = ${loginSql} and password_hash = ${passwordHashSql}`
+        const results         = await USERS_TABLE.select(this.mysqlConnection, "id")
+                                                 .where(whereSql)
 
         if (results.length === 0)
             throw new LogicError("Invalid login or password")
@@ -263,10 +275,11 @@ export default class UserManager {
         return results[0].id
     }
 
-    async getUserLogin(user: number, force: true):            Promise<string>
-    async getUserLogin(user: number, force?: boolean):        Promise<string | undefined>
-    async getUserLogin(user: number, force: boolean = false): Promise<string | undefined> {
-        return (await this.getUserInfo(user, force))?.login
+    async getUserLogin(user: User, force: true):            Promise<string>
+    async getUserLogin(user: User, force?: boolean):        Promise<string | undefined>
+    async getUserLogin(user: User, force: boolean = false): Promise<string | undefined> {
+        return typeof user === "number" ? (await this.getUserInfo(user, force))?.login
+                                        : user
     }
 
     async getAllUsersDeepInfo(): Promise<DeepUserInfo[]> {
