@@ -591,6 +591,7 @@ export const units: UnitCollection = {
             const user         = req.params.user
 
             await this.userManager.setUserPassword(user, password)
+            await this.tokenManager.deleteAllATokens(user)
 
             res.json({})
         }
