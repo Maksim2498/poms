@@ -118,7 +118,7 @@ export interface ReadonlyTable {
     createAll(connection: AsyncConnection): Promise<void>
     create(connection: AsyncConnection): Promise<void>
     validate(connection: AsyncConnection): Promise<string | undefined>
-    update(connection: AsyncConnection, updatePairs: KeyValuePairs): Promise<Filter>
+    update(connection: AsyncConnection, updatePairs: KeyValuePairs): Filter
     insert(connection: AsyncConnection, insertPairs: KeyValuePairs): Promise<boolean>
     unsafeSelect(connection: AsyncConnection, columns: string): Filter
     select(connection: AsyncConnection, ...columns: string[]): Filter
@@ -390,9 +390,92 @@ export default class Table {
         return constraints
     }
 
-    async update(connection: AsyncConnection, updatePairs: KeyValuePairs): Promise<Filter> {
+    update(connection: AsyncConnection, updatePairs: KeyValuePairs): Filter {
+        return {
+            all:   async (               ) => await connection.query(this.updateToSql(updatePairs)),
+            where: async (expr, ...values) => await connection.query(this.updateWhereToSql(updatePairs, expr, values)),
+
+            limit: count => {
+                return {
+                    all:   async (               ) => await connection.query(this.updateLimitToSql(updatePairs, count)),
+                    where: async (expr, ...values) => await connection.query(this.updateLimitWhereToSql(updatePairs, count, expr, values))
+                }
+            },
+
+            orderBy:     (...by) => makeOrderByMiddleFilter.call(this, by        ),
+            ascOrderBy:  (...by) => makeOrderByMiddleFilter.call(this, by, "asc" ),
+            descOrderBy: (...by) => makeOrderByMiddleFilter.call(this, by, "desc"),
+        }
+
+        function makeOrderByMiddleFilter(this: Table, by: string[], dir: OrderByDir = "asc"): MiddleFilter {
+            return {
+                all:   async (               ) => await connection.query(this.updateOrderBy(updatePairs, by, dir)),
+                where: async (expr, ...values) => await connection.query(this.updateOrderByWhere(updatePairs, by, dir, expr, values)),
+
+                limit: count => {
+                    return {
+                        all:   async (               ) => await connection.query(this.updateOrderByLimit(updatePairs, by, dir, count)),
+                        where: async (expr, ...values) => await connection.query(this.updateOrderByLimitWhere(updatePairs, by, dir, count, expr, values))
+                    }
+                }
+            }
+        }
+    }
+
+    private updateOrderByLimitWhere(updatePairs: KeyValuePairs, by: string[], dir: OrderByDir, count: number, expr: string, values: any[]): string {
+        return this.updateToSql(updatePairs)
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private updateOrderByLimit(updatePairs: KeyValuePairs, by: string[], dir: OrderByDir, count: number): string {
+        return this.updateToSql(updatePairs)
+             + this.orderByToSql(by, dir)
+             + this.limitToSql(count)
+    }
+
+    private updateOrderBy(updatePairs: KeyValuePairs, by: string[], dir: OrderByDir): string {
+        return this.updateToSql(updatePairs)
+             + this.orderByToSql(by, dir)
+    }
+
+    private updateOrderByWhere(updatePairs: KeyValuePairs, by: string[], dir: OrderByDir, expr: string, values: string[]): string {
+        return this.updateToSql(updatePairs)
+             + this.whereToSql(expr, values)
+             + this.orderByToSql(by, dir)
+    }
+
+    private updateLimitWhereToSql(updatePairs: KeyValuePairs, count: number, expr: string, values: any[]): string {
+        return this.updateToSql(updatePairs)
+             + this.whereToSql(expr, values)
+             + this.limitToSql(count)
+    }
+
+    private updateLimitToSql(updatePairs: KeyValuePairs, count: number): string {
+        return this.updateToSql(updatePairs)
+             + this.limitToSql(count)
+    }
+
+    private updateWhereToSql(updatePairs: KeyValuePairs, expr: string, values: any[]): string {
+        return this.updateToSql(updatePairs) + this.whereToSql(expr, values)
+    }
+
+    private updateToSql(updatePairs: KeyValuePairs): string {
+        return `UPDATE ${this.displayName} SET ${this.keyValuePairsToSql(updatePairs)} `
+    }
+
+    private keyValuePairsToSql(updatePairs: KeyValuePairs): string {
         const { columns, expressions } = this.expandKeyValuePairs(updatePairs)
-        return {} as Filter
+
+        this.checkColumns(columns)
+
+        const sets = [] as string[]
+
+        for (let i = 0; i < columns.length; ++i)
+            sets.push(`${columns[i]} = ${expressions[i]}`)
+
+        return sets.join(", ")
     }
 
     async insert(connection: AsyncConnection, insertPairs: KeyValuePairs): Promise<boolean> {
