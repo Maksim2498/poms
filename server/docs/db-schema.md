@@ -58,7 +58,6 @@ CREATE TABLE Nicknames (
 
     PRIMARY KEY (user_id, nickname),
     FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE
-
 )
 ```
 
@@ -66,15 +65,11 @@ CREATE TABLE Nicknames (
 
 Holds all users' access tokens with their creation and expiration date and time.
 
-```sql
-id = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))
-```
-
 __Definition__:
 
 ```sql
 CREATE TABLE ATokens (
-    id       BINARY(64) NOT NULL PRIMARY KEY,
+    id       BINARY(64) NOT NULL DEFAULT CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP()))) PRIMARY KEY,
     user_id  BIGINT     NOT NULL,
     cr_time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     exp_time TIMESTAMP  NOT NULL,
@@ -87,15 +82,11 @@ CREATE TABLE ATokens (
 
 Holds all users' refresh tokens with their creation and expiration date and time.
 
-```sql
-id = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))
-```
-
 __Definition__:
 
 ```sql
 CREATE TABLE RTokens (
-    id        BINARY(64) NOT NULL PRIMARY KEY,
+    id        BINARY(64) NOT NULL DEFAULT CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP()))) PRIMARY KEY,
     atoken_id BINARY(64) NOT NULL,
     cr_time   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     exp_time  TIMESTAMP  NOT NULL,
@@ -120,5 +111,5 @@ ON SCHEDULE EVERY 1 DAY
 DO
     DELETE FROM ATokens WHERE id in (
         SELECT atoken_id FROM RTokens WHERE exp_time >= now()
-    );
+    )
 ```

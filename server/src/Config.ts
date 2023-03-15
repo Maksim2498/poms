@@ -1,11 +1,12 @@
 import z                            from "zod"
 import parseDuration                from "parse-duration"
+import template                     from "string-placeholder"
+import DeepReadonly                 from "util/DeepReadonly"
 import ErrorList                    from "util/ErrorList"
 
 import { promises as fsp          } from "fs"
 import { normalize, join, dirname } from "path"
 import { Logger                   } from "winston"
-import { DeepReadonly             } from "util/type"
 import { deepAssign               } from "./util/object"
 
 const OPORT     = z.number().int().nonnegative().max(65535).optional()
@@ -34,183 +35,125 @@ const ODUR      = z.string().transform((val, ctx) => {
 
 const CONFIG_JSON_SCHEMA = z.object({
     http: z.object({
-        apiPrefix:             OURI_PATH,
-        host:                  OHOST,
-        port:                  OPORT,
-        socketPath:            OPATH,
-        serveStatic:           OBOOLEAN,
-        staticPath:            OPATH,
-        error404Path:          OPATH,
-        error500Path:          OPATH,
+        apiPrefix:            OURI_PATH,
+        host:                 OHOST,
+        port:                 OPORT,
+        socketPath:           OPATH,
+        serveStatic:          OBOOLEAN,
+        staticPath:           OPATH,
+        error404Path:         OPATH,
+        error500Path:         OPATH,
     }).strict().optional(),
 
     mysql: z.object({
-        database:              ODB_NAME,
-        host:                  OHOST,
-        port:                  OPORT,
-        socketPath:            OPATH,
-        login:                 OSTRING,
-        password:              OSTRING,
-        validateTables:        OBOOLEAN,
-        recreateInvalidTables: OBOOLEAN,
-        reconnectInterval:     ODUR,
+        database:             ODB_NAME,
+        host:                 OHOST,
+        port:                 OPORT,
+        socketPath:           OPATH,
+        login:                OSTRING,
+        password:             OSTRING,
+        connectionLimit:      OUINT,
 
         init: z.object({
-            login:             OSTRING,
-            password:          OSTRING,
+            login:            OSTRING,
+            password:         OSTRING,
         }).strict().optional(),
 
         serve: z.object({
-            login:             OSTRING,
-            password:          OSTRING,
+            login:            OSTRING,
+            password:         OSTRING,
         }).strict().optional()
     }).strict(),
 
     logic: z.object({
         admin: z.object({
-            create:            OBOOLEAN,
-            name:              NSTRING,
-            login:             OSTRING,
-            password:          OSTRING,
+            create:           OBOOLEAN,
+            name:             NSTRING,
+            login:            OSTRING,
+            password:         OSTRING,
         }).strict().optional(),
 
-        maxTokens:             OUINT,
-        maxNicknames:          OUINT,
-        buildStatic:           OBOOLEAN,
-        buildStaticPath:       OPATH,
-        openBrowser:           OBOOLEAN,
-        aTokenLifetime:        ODUR,
-        rTokenLifetime:        ODUR,
+        maxTokens:            OUINT,
+        maxNicknames:         OUINT,
+        buildStatic:          OBOOLEAN,
+        buildStaticPath:      OPATH,
+        openBrowser:          OBOOLEAN,
+        aTokenLifetime:       ODUR,
+        rTokenLifetime:       ODUR,
+        allowAnonymousAccess: OBOOLEAN
     }).strict().optional(),
 
     rcon: z.object({
-        host:                  OHOST,
-        port:                  OPORT,
-        password:              OSTRING,
+        host:                 OHOST,
+        port:                 OPORT,
+        password:             OSTRING,
     }).strict().optional(),
 
     mc: z.object({
-        host:                  OHOST,
-        port:                  OPORT,
-        statusLifetime:        ODUR,
+        host:                 OHOST,
+        port:                 OPORT,
+        statusLifetime:       ODUR,
     }).strict().optional(),
 })
 
 export type ConfigJson = z.infer<typeof CONFIG_JSON_SCHEMA>
 
-export interface ReadConfigFromFileOptions {
-    path?:   string
-    logger?: Logger
-}
-
 export default class Config {
-    static readonly POMS_PATH                             = dirname(dirname(__dirname)) // this file is in /server/src/
-    static readonly PLUGIN_PATH                           = join(this.POMS_PATH, "plugin")
-    static readonly SERVER_PATH                           = join(this.POMS_PATH, "server")
-    static readonly SITE_PATH                             = join(this.POMS_PATH, "site")
+    static readonly POMS_PATH                            = dirname(dirname(__dirname)) // this file is in /server/src/
+    static readonly PLUGIN_PATH                          = join(this.POMS_PATH, "plugin")
+    static readonly SERVER_PATH                          = join(this.POMS_PATH, "server")
+    static readonly SITE_PATH                            = join(this.POMS_PATH, "site")
 
-    static readonly FILE_NAME                             = "poms-config.json"
+    static readonly FILE_NAME                            = "poms-config.json"
 
-    static readonly DEFAULT_PATH                          = this.FILE_NAME
+    static readonly DEFAULT_PATH                         = this.FILE_NAME
 
-    static readonly DEFAULT_HTTP_API_PREFIX               = "/api"
-    static readonly DEFAULT_HTTP_HOST                     = "localhost"
-    static readonly DEFAULT_HTTP_PORT                     = 8000
-    static readonly DEFAULT_HTTP_SERVE_STATIC             = true
-    static readonly DEFAULT_HTTP_STATIC_PATH              = this.placehold("<SITE_PATH>/build")
-    static readonly DEFAULT_HTTP_ERROR_404_PATH           = this.placehold("<SITE_PATH>/build/404.html")
-    static readonly DEFAULT_HTTP_ERROR_500_PATH           = this.placehold("<SITE_PATH>/build/500.html")
+    static readonly DEFAULT_HTTP_API_PREFIX              = "/api"
+    static readonly DEFAULT_HTTP_HOST                    = "localhost"
+    static readonly DEFAULT_HTTP_PORT                    = 8000
+    static readonly DEFAULT_HTTP_SERVE_STATIC            = true
+    static readonly DEFAULT_HTTP_STATIC_PATH             = this.placehold("<SITE_PATH>/build")
+    static readonly DEFAULT_HTTP_ERROR_404_PATH          = this.placehold("<SITE_PATH>/build/404.html")
+    static readonly DEFAULT_HTTP_ERROR_500_PATH          = this.placehold("<SITE_PATH>/build/500.html")
 
-    static readonly DEFAULT_MYSQL_DATABASE                = "poms"
-    static readonly DEFAULT_MYSQL_HOST                    = "localhost"
-    static readonly DEFAULT_MYSQL_PORT                    = 3306
-    static readonly DEFAULT_MYSQL_VALIDATE_TABLES         = true 
-    static readonly DEFAULT_MYSQL_RECREATE_INVALID_TABLES = false
-    static readonly DEFAULT_MYSQL_RECONNECT_INTERVAL      = parseDuration("5s")
+    static readonly DEFAULT_MYSQL_DATABASE               = "poms"
+    static readonly DEFAULT_MYSQL_HOST                   = "localhost"
+    static readonly DEFAULT_MYSQL_PORT                   = 3306
+    static readonly DEFAULT_MYSQL_CONNECTION_LIMIT       = 10
 
-    static readonly DEFAULT_LOGIC_ADMIN_CREATE            = true
-    static readonly DEFAULT_LOGIC_ADMIN_NAME              = "Administrator"
-    static readonly DEFAULT_LOGIC_ADMIN_LOGIN             = "admin"
-    static readonly DEFAULT_LOGIC_ADMIN_PASSWORD          = "admin"
-    static readonly DEFAULT_LOGIC_MAX_TOKENS              = 10
-    static readonly DEFAULT_LOGIC_MAX_NICKNAMES           = 5
-    static readonly DEFAULT_LOGIC_BUILD_STAITC            = true
-    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH       = this.placehold("<SITE_PATH>")
-    static readonly DEFAULT_LOGIC_OPEN_BROWSER            = true
-    static readonly DEFAULT_LOGIC_A_TOKEN_LIFETIME        = parseDuration("30m")
-    static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME        = parseDuration("1w")
+    static readonly DEFAULT_LOGIC_ADMIN_CREATE           = true
+    static readonly DEFAULT_LOGIC_ADMIN_NAME             = "Administrator"
+    static readonly DEFAULT_LOGIC_ADMIN_LOGIN            = "admin"
+    static readonly DEFAULT_LOGIC_ADMIN_PASSWORD         = "admin"
+    static readonly DEFAULT_LOGIC_MAX_TOKENS             = 10
+    static readonly DEFAULT_LOGIC_MAX_NICKNAMES          = 5
+    static readonly DEFAULT_LOGIC_BUILD_STAITC           = true
+    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH      = this.placehold("<SITE_PATH>")
+    static readonly DEFAULT_LOGIC_OPEN_BROWSER           = true
+    static readonly DEFAULT_LOGIC_A_TOKEN_LIFETIME       = parseDuration("30m")
+    static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME       = parseDuration("1w")
+    static readonly DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS = true
 
-    static readonly DEFAULT_RCON_HOST                     = "localhost"
-    static readonly DEFAULT_RCON_PORT                     = 25575
+    static readonly DEFAULT_RCON_HOST                    = "localhost"
+    static readonly DEFAULT_RCON_PORT                    = 25575
 
-    static readonly DEFAULT_MC_HOST                       = "localhost"
-    static readonly DEFAULT_MC_PORT                       = 25565
-    static readonly DEFAULT_MC_STATUS_LIFETIME            = parseDuration("10s")
+    static readonly DEFAULT_MC_HOST                      = "localhost"
+    static readonly DEFAULT_MC_PORT                      = 25565
+    static readonly DEFAULT_MC_STATUS_LIFETIME           = parseDuration("10s")
 
     readonly read: DeepReadonly<ConfigJson>
     readonly path: string
 
     static placehold(path: string): string {
-        const splits = split(path)
-
-        return splits.map(s => {
-            if (!s.isPlaceholder)
-                return s.text
-
-            switch (s.text) {
-                case "POMS_PATH":
-                    return this.POMS_PATH
-
-                case "PLUGIN_PATH":
-                    return this.PLUGIN_PATH
-
-                case "SERVER_PATH":
-                    return this.SERVER_PATH
-
-                case "SITE_PATH":
-                    return this.SITE_PATH
-
-                default:
-                    return `<${s.text}>`
-            }
-        }).join("")
-
-        type Split = {
-            text:           string
-            isPlaceholder?: boolean
-        }
-
-        function split(path: string): Split[] {
-            const rawSplits = path.split(/(?<!\\)</)
-            const splits    = [] as Split[]
-
-            splits.push({ text: rawSplits[0] })
-
-            for (let i = 1; i < rawSplits.length; ) {
-                const rawSplit = rawSplits[i]
-
-                if (rawSplit.includes(">")) {
-                    const endIndex = rawSplit.indexOf(">")
-
-                    splits.push({
-                        text:          rawSplit.slice(0, endIndex),
-                        isPlaceholder: true
-                    })
-
-                    splits.push({ text: rawSplit.slice(endIndex + 1) })
-
-                    i += 2
-
-                    continue
-                }
-
-                splits.push({ text: rawSplit })
-
-                ++i
-            }
-
-            return splits
-        }
+        return template(path, {
+            POMS_PATH:   this.POMS_PATH,
+            PLUGIN_PATH: this.PLUGIN_PATH,
+            SERVER_PATH: this.SERVER_PATH,
+            SITE_PATH:   this.SITE_PATH
+        }, {
+            before: "<",
+            after:  ">"
+        })
     }
 
     static async readFromFile(path?: string, logger?: Logger): Promise<Config> {
@@ -369,70 +312,7 @@ export default class Config {
         }
     }
 
-    get mysqlHost() {
-        return this.read.mysql?.host ?? Config.DEFAULT_MYSQL_HOST
-    }
-
-    get mysqlPort() {
-        return this.read.mysql?.port ?? Config.DEFAULT_MYSQL_PORT
-    }
-
-    get mysqlDatabase(): string {
-        return this.read.mysql?.database ?? Config.DEFAULT_MYSQL_DATABASE
-    }
-
-    get mysqlAddress(): string {
-        const mysql = this.read.mysql
-
-        if (mysql?.socketPath != null)
-            return `unix:${mysql!.socketPath}`
-
-        const host = mysql?.host ?? Config.DEFAULT_MYSQL_HOST
-        const port = mysql?.port ?? Config.DEFAULT_MYSQL_PORT
-
-        return `${host}:${port}`
-    }
-
-    get httpApiAddress(): string {
-        const api    = this.read.http
-        const host   = api?.host   ?? Config.DEFAULT_HTTP_HOST
-        const prefix = api?.apiPrefix ?? Config.DEFAULT_HTTP_API_PREFIX
-
-        if (api?.socketPath != null)
-            return `http://unix:${api.socketPath}${prefix}/`
-
-        const port = api?.port ?? Config.DEFAULT_HTTP_PORT
-
-        return `http://${host}:${port}${prefix}/`
-    }
-
-    get httpAddress(): string {
-        const api    = this.read.http
-        const host   = api?.host ?? Config.DEFAULT_HTTP_HOST
-
-        if (api?.socketPath != null)
-            return `http://unix:${api.socketPath}/`
-
-        const port = api?.port ?? Config.DEFAULT_HTTP_PORT
-
-        return `http://${host}:${port}/`
-    }
-
-    get mysqlUseInitUser(): boolean {
-        const mysql = this.read.mysql
-
-        return mysql?.init?.login    != null 
-            && mysql?.init?.password != null
-    }
-
-    get mysqlUseServeUser(): boolean {
-        const mysql = this.read.mysql
-
-        return mysql?.serve?.login    != null 
-            && mysql?.serve?.password != null
-    }
-
-    get httpPrefix(): string {
+    get httpApiPrefix(): string {
         return this.read.http?.apiPrefix ?? Config.DEFAULT_HTTP_API_PREFIX
     }
 
@@ -452,20 +332,103 @@ export default class Config {
         return this.read.http?.staticPath ?? Config.DEFAULT_HTTP_STATIC_PATH
     }
 
+    get httpError404Path(): string {
+        return this.read.http?.error404Path ?? Config.DEFAULT_HTTP_ERROR_404_PATH
+    }
+
+    get httpError500Path(): string {
+        return this.read.http?.error500Path ?? Config.DEFAULT_HTTP_ERROR_500_PATH
+    }
+
+    get httpApiAddress(): string {
+        const prefix     = this.httpApiPrefix
+        const socketPath = this.read.http?.socketPath
+
+        if (socketPath != null)
+            return `http://unix:${socketPath}${prefix}/`
+
+        const host = this.httpHost
+        const port = this.httpPort
+
+        return `http://${host}:${port}${prefix}/`
+    }
+
+    get httpAddress(): string {
+        const socketPath = this.read.http?.socketPath
+
+        if (socketPath != null)
+            return `http://unix:${socketPath}/`
+
+        const host = this.httpHost
+        const port = this.httpPort
+
+        return `http://${host}:${port}/`
+    }
+
+    get mysqlHost() {
+        return this.read.mysql?.host ?? Config.DEFAULT_MYSQL_HOST
+    }
+
+    get mysqlPort() {
+        return this.read.mysql?.port ?? Config.DEFAULT_MYSQL_PORT
+    }
+
+    get mysqlDatabase(): string {
+        return this.read.mysql?.database ?? Config.DEFAULT_MYSQL_DATABASE
+    }
+
+    get mysqlAddress(): string {
+        const socketPath = this.read.mysql.socketPath
+
+        if (socketPath != null)
+            return `unix:${socketPath}`
+
+        const port = this.mysqlPort
+        const host = this.mysqlHost
+
+        return `${host}:${port}`
+    }
+
+    get mysqlUseInitUser(): boolean {
+        const mysql = this.read.mysql
+
+        return mysql?.init?.login    != null 
+            && mysql?.init?.password != null
+    }
+
+    get mysqlUseServeUser(): boolean {
+        const mysql = this.read.mysql
+
+        return mysql?.serve?.login    != null 
+            && mysql?.serve?.password != null
+    }
+
+    get mysqlConnectionLimit(): number {
+        return this.read.mysql.connectionLimit ?? Config.DEFAULT_MYSQL_CONNECTION_LIMIT
+    }
+
     get logicAdminCreate(): boolean {
         return this.read.logic?.admin?.create ?? Config.DEFAULT_LOGIC_ADMIN_CREATE
     }
 
-    get mysqlValidateTables(): boolean {
-        return this.read.mysql?.validateTables ?? Config.DEFAULT_MYSQL_VALIDATE_TABLES
+    get logicAdminLogin(): string {
+        return this.read.logic?.admin?.login ?? Config.DEFAULT_LOGIC_ADMIN_LOGIN
     }
 
-    get mysqlRecreateInvalidTables(): boolean {
-        return this.read.mysql?.recreateInvalidTables ?? Config.DEFAULT_MYSQL_RECREATE_INVALID_TABLES
+    get logicAdminPassword(): string { 
+        return this.read.logic?.admin?.password ?? Config.DEFAULT_LOGIC_ADMIN_PASSWORD
     }
 
-    get mysqlReconnectInterval(): number {
-        return this.read.mysql?.reconnectInterval ?? Config.DEFAULT_MYSQL_RECONNECT_INTERVAL
+    get logicAdminName(): string {
+        return this.read.logic?.admin?.name ?? Config.DEFAULT_LOGIC_ADMIN_NAME
+    }
+
+    get logicATokenLifetime(): number {
+        return this.read.logic?.aTokenLifetime ?? Config.DEFAULT_LOGIC_A_TOKEN_LIFETIME
+    }
+
+    get logicRTokenLifetime(): number {
+        return this.read.logic?.rTokenLifetime ?? Config.DEFAULT_LOGIC_R_TOKEN_LIFETIME
     }
 
     get logicMaxTokens(): number {
@@ -484,16 +447,16 @@ export default class Config {
         return this.read.logic?.buildStaticPath ?? Config.DEFAULT_LOGIC_BUILD_STAITC_PATH
     }
 
-    get httpError404Path(): string {
-        return this.read.http?.error404Path ?? Config.DEFAULT_HTTP_ERROR_404_PATH
-    }
-
-    get httpError500Path(): string {
-        return this.read.http?.error500Path ?? Config.DEFAULT_HTTP_ERROR_500_PATH
-    }
-
     get logicOpenBrowser(): boolean {
         return this.read.logic?.openBrowser ?? Config.DEFAULT_LOGIC_OPEN_BROWSER
+    }
+
+    get logicAllowAnonymousAccess(): boolean {
+        return this.read.logic?.allowAnonymousAccess ?? Config.DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS
+    }
+
+    get rconAddress(): string {
+        return `${this.rconHost}:${this.rconPort}`
     }
 
     get rconHost(): string {
@@ -508,6 +471,10 @@ export default class Config {
         return this.read.rcon?.password != null
     }
 
+    get mcAddress(): string {
+        return `${this.mcHost}:${this.mcPort}`
+    }
+
     get mcHost(): string {
         return this.read.mc?.host ?? Config.DEFAULT_MC_HOST
     }
@@ -518,25 +485,5 @@ export default class Config {
 
     get mcStatusLifetime(): number {
         return this.read.mc?.statusLifetime ?? Config.DEFAULT_MC_STATUS_LIFETIME
-    }
-
-    get logicATokenLifetime(): number {
-        return this.read.logic?.aTokenLifetime ?? Config.DEFAULT_LOGIC_A_TOKEN_LIFETIME
-    }
-
-    get logicRTokenLifetime(): number {
-        return this.read.logic?.rTokenLifetime ?? Config.DEFAULT_LOGIC_R_TOKEN_LIFETIME
-    }
-
-    get logicAdminLogin(): string {
-        return this.read.logic?.admin?.login ?? Config.DEFAULT_LOGIC_ADMIN_LOGIN
-    }
-
-    get logicAdminPassword(): string { 
-        return this.read.logic?.admin?.password ?? Config.DEFAULT_LOGIC_ADMIN_PASSWORD
-    }
-
-    get logicAdminName(): string {
-        return this.read.logic?.admin?.name ?? Config.DEFAULT_LOGIC_ADMIN_NAME
     }
 }

@@ -1,11 +1,10 @@
-import z                     from "zod"
-import isBase64              from "is-base64"
-import LogicError            from "./logic/LogicError"
-import TokenManager          from "./logic/TokenManager"
-import Server                from "./Server"
+import z                                                   from "zod"
+import isBase64                                            from "is-base64"
+import Server                                              from "./Server"
 
-import { Request, Response } from "express"
-import { ATokenInfo        } from "./logic/TokenManager"
+import { Request, Response                               } from "express"
+import { Connection                                      } from "mysql2/promise"
+import { parseTokenId, safeParseTokenId, tokenPairToJson } from "./logic/token"
 
 export type UnitCollection = {
     [key: string]: Unit
@@ -18,9 +17,21 @@ export interface Unit {
     handler:     Hander
 }
 
-export type Permission = "user" | "admin" | "mixed"
-export type Method     = "get"  | "post"  | "put"   | "delete"
-export type Hander     = (this: Server, req: Request, res: Response) => Promise<void>
+export type Permission = "admin"
+                       | "mixed"
+                       | "user"
+
+export type Method = "delete"
+                   | "post"
+                   | "get"
+                   | "put"
+
+export type Hander = ConnectedHandler
+                   | DisconnectedHandler
+
+export type ConnectedHandler = (this: Server, connection: Connection, req: Request, res: Response) => Promise<void>
+
+export type DisconnectedHandler = (this: Server, req: Request, res: Response) => Promise<void>
 
 export function requireAcceptJson(req: Request, res: Response, next: () => void) {
     if (req.accepts("json")) {
@@ -31,15 +42,6 @@ export function requireAcceptJson(req: Request, res: Response, next: () => void)
     res.sendStatus(406)
 }
 
-export function requireAuthorization(req: Request, res: Response, next: () => void) {
-    if (req.headers.authorization != null) {
-        next()
-        return
-    }
-
-    res.sendStatus(401)
-}
-
 export function disableGetCache(req: Request, res: Response, next: () => void) {
     if (req.method === "GET")
         res.setHeader("Cache-Control", "no-cache")
@@ -47,60 +49,68 @@ export function disableGetCache(req: Request, res: Response, next: () => void) {
     next()
 }
 
-export async function checkPermission(server: Server, permission: Permission, req: Request, res: Response, next: () => void) {
-    const authorization = req.headers.authorization!
-    const tokenManager  = server.tokenManager
-    const userManager   = server.userManager
-    const aTokenId      = TokenManager.tryCreateTokenIdFromString(authorization)
+export async function checkPermission(this: Server, permission: Permission, req: Request, res: Response) {
+    if (this.config.logicAllowAnonymousAccess && permission === "user")
+        return
+
+    const authorization = req.headers.authorization
+
+    if (authorization == null) {
+        res.sendStatus(401)
+        return
+    }
+
+    const aTokenId = safeParseTokenId(authorization)
 
     if (aTokenId === undefined) {
         res.sendStatus(400)
         return
     }
 
-    const aTokenInfo = await tokenManager.getATokenInfo(aTokenId);
+    const connection = await this.pool.getConnection()
+    
+    try {
+        await connection.beginTransaction()
 
-    (req as any).aTokenInfo = aTokenInfo
+        const tokenManager = this.tokenManager
+        const aTokenInfo   = await tokenManager.getATokenInfo(connection, aTokenId);
 
-    switch (permission) {
-        case "user": {
-            await tokenManager.checkATokenIsActive(aTokenInfo)
-            next()
-            return
-        }
+        switch (permission) {
+            case "user":
+                await tokenManager.checkATokenIsActive(connection, aTokenInfo)
+                break
 
-        // Check if not an admin trying to modify other's data
+            // Check if not an admin trying to modify other's data
 
-        case "mixed": {
-            await tokenManager.checkATokenIsActive(aTokenInfo)
+            case "mixed": {
+                await tokenManager.checkATokenIsActive(connection, aTokenInfo)
 
-            const user     = req.params.user
-            const userInfo = (await userManager.getUserInfo(aTokenInfo!.userId))!
+                const userManager     = this.userManager
+                const reqUserId       = aTokenInfo!.userId
+                const reqUserInfo     = await userManager.getUserInfo(connection, reqUserId, true)
+                const reqUserLogin    = reqUserInfo.login.toLowerCase()
+                const targetUserLogin = req.params.user.toLowerCase()
+                const isReqUserAdmin  = reqUserInfo.isAdmin
 
-            if (userInfo.login !== user && !userInfo.isAdmin) {
-                res.sendStatus(403)
-                return
+                if (reqUserLogin !== targetUserLogin && !isReqUserAdmin)
+                    res.sendStatus(403)
             }
 
-            next()
+            case "admin": {
+                await tokenManager.checkATokenIsActive(connection, aTokenInfo)
 
-            return
-        }
+                const userManager = this.userManager
+                const userId      = aTokenInfo!.userId
+                const userInfo    = await userManager.getUserInfo(connection, userId, true)
 
-        case "admin": {
-            await tokenManager.checkATokenIsActive(aTokenInfo)
-
-            const userInfo = (await userManager.getUserInfo(aTokenInfo!.userId))!
-
-            if (!userInfo.isAdmin) {
-                res.sendStatus(403)
-                return
+                if (!userInfo.isAdmin)
+                    res.sendStatus(403)
             }
-
-            next()
-
-            return
         }
+
+        await connection.commit()
+    } finally {
+        connection.release()
     }
 }
 
@@ -123,12 +133,51 @@ const UPDATE_USER_PERMISSION_SCHEMA = z.object({
 })
 
 export const units: UnitCollection = {
+    isAnonymousAccessAllowed: {
+        method: "get",
+        path:   "/anonym-access-allowed",
+
+        async handler(this: Server, req: Request, res: Response) {
+            const allowed = this.config.logicAllowAnonymousAccess
+            res.json({ allowed })
+        }
+    },
+
+    getMaxNicknames: {
+        permission: "user",
+        method:     "get",
+        path:       "/max-nicknames",
+
+        async handler(this: Server, req: Request, res: Response) {
+            const max = this.config.logicMaxNicknames
+            res.json({ max })
+        }
+    },
+
+    getMaxTokens: {
+        permission: "user",
+        method:     "get",
+        path:       "/max-tokens",
+
+        async handler(this: Server, req: Request, res: Response) {
+            const max = this.config.logicMaxTokens
+            res.json({ max })
+        }
+    },
+
     auth: {
         method: "post",
         path:   "/auth",
 
-        async handler(req, res) {
-            const splits = req.headers.authorization!.split(":")
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const authorization = req.headers.authorization
+
+            if (authorization == null) {
+                res.sendStatus(401)
+                return
+            }
+
+            const splits = authorization.split(":")
 
             if (splits.length != 2) {
                 res.sendStatus(400)
@@ -144,8 +193,8 @@ export const units: UnitCollection = {
 
             const login     = Buffer.from(base64Login,    "base64").toString()
             const password  = Buffer.from(base64Password, "base64").toString()
-            const tokenPair = await this.authManager.auth(login, password)
-            const json      = TokenManager.tokenPairToJson(tokenPair)
+            const tokenPair = await this.authManager.auth(connection, login, password)
+            const json      = tokenPairToJson(tokenPair)
 
             res.json(json)
         }
@@ -155,17 +204,23 @@ export const units: UnitCollection = {
         method: "post",
         path:   "/reauth",
 
-        async handler(req, res) {
-            const authorization = req.headers.authorization!
-            const rTokenId      = TokenManager.tryCreateTokenIdFromString(authorization)
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const authorization = req.headers.authorization
+            
+            if (authorization == null) {
+                res.sendStatus(401)
+                return
+            }
+
+            const rTokenId = safeParseTokenId(authorization)
 
             if (rTokenId === undefined) {
                 res.sendStatus(400)
                 return
             }
 
-            const tokenPair = await this.authManager.reauth(rTokenId)
-            const json      = TokenManager.tokenPairToJson(tokenPair)
+            const tokenPair = await this.authManager.reauth(connection, rTokenId)
+            const json      = tokenPairToJson(tokenPair)
 
             res.json(json)
         }
@@ -175,16 +230,22 @@ export const units: UnitCollection = {
         method: "post",
         path:   "/deauth",
 
-        async handler(req, res) {
-            const authorization = req.headers.authorization!
-            const aTokenId      = TokenManager.tryCreateTokenIdFromString(authorization)
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const authorization = req.headers.authorization
+
+            if (authorization == null) {
+                res.sendStatus(401)
+                return
+            }
+
+            const aTokenId = safeParseTokenId(authorization)
 
             if (aTokenId === undefined) {
                 res.sendStatus(400)
                 return
             }
             
-            await this.authManager.deauth(aTokenId)
+            await this.authManager.deauth(connection, aTokenId)
         
             res.json({})
         }
@@ -195,13 +256,12 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users",
 
-        async handler(req, res) {
-            const user        = req.params.user
-            const info        = await this.userManager.getAllUsersDeepInfo()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const info        = await this.userManager.getAllUsersDeepInfo(connection)
             const jsonsWithId = info.map(i => {
                 return {
-                    id: i.id,
-                    json:  {
+                    id:            i.id,
+                    json:          {
                         name:      i.name,
                         isAdmin:   i.isAdmin,
                         isOnline:  i.isOnline,
@@ -216,7 +276,7 @@ export const units: UnitCollection = {
 
             if ("nicknames" in req.query)
                 for (const { id, json } of jsonsWithId)
-                    json.nicknames = await this.nicknameManager.getUserNicknames(id)
+                    json.nicknames = await this.nicknameManager.getUserNicknames(connection, id)
 
             res.json(jsonsWithId.map(j => j.json))
         }
@@ -227,9 +287,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getDeepUserInfo(user, true)
+            const info = await this.userManager.getDeepUserInfo(connection, user, true)
             const json = {
                 name:      info.name,
                 isAdmin:   info.isAdmin,
@@ -242,7 +302,7 @@ export const units: UnitCollection = {
             }
 
             if ("nicknames" in req.query)
-                json.nicknames = await this.nicknameManager.getUserNicknames(info.id)
+                json.nicknames = await this.nicknameManager.getUserNicknames(connection, info.id)
 
             res.json(json)
         }
@@ -253,9 +313,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user/is-admin",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(user, true)
+            const info = await this.userManager.getUserInfo(connection, user, true)
             
             res.json({ isAdmin: info.isAdmin })
         }
@@ -266,9 +326,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user/is-online",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(user, true)
+            const info = await this.userManager.getUserInfo(connection, user, true)
             
             res.json({ isOnline: info.isOnline })
         }
@@ -279,9 +339,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user/reg",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getDeepUserInfo(user, true)
+            const info = await this.userManager.getDeepUserInfo(connection, user, true)
 
             res.json({
                 time:  info.created.toISOString(),
@@ -295,9 +355,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user/reg/time",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(user, true)
+            const info = await this.userManager.getUserInfo(connection, user, true)
 
             res.json({ time: info.created.toISOString() })
         }
@@ -308,9 +368,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user/reg/user",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getDeepUserInfo(user, true)
+            const info = await this.userManager.getDeepUserInfo(connection, user, true)
 
             res.json({ login: info.creator?.login })
         }
@@ -321,9 +381,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user/name",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(user, true)
+            const info = await this.userManager.getUserInfo(connection, user, true)
 
             res.json({ name: info.name })
         }
@@ -334,9 +394,9 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/users/:user/nicknames",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user      = req.params.user
-            const nicknames = await this.nicknameManager.getUserNicknames(user)
+            const nicknames = await this.nicknameManager.getUserNicknames(connection, user, true)
 
             res.json(nicknames)
         }
@@ -347,8 +407,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json(status)
         }
     },
@@ -358,8 +418,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/version",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json(status.version)
         }
     },
@@ -369,8 +429,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/version/name",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ name: status.version.name })
         }
     },
@@ -380,8 +440,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/version/protocol",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ protocol: status.version.protocol })
         }
     },
@@ -391,8 +451,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/players",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json(status.players)
         }
     },
@@ -402,8 +462,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/players/count",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
 
             res.json({
                 online: status.players.online,
@@ -417,8 +477,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/players/online",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ online: status.players.online })
         }
     },
@@ -428,8 +488,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/players/max",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ max: status.players.max })
         }
     },
@@ -439,8 +499,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/players/sample",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json(status.players.sample)
         }
     },
@@ -450,8 +510,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/motd",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json(status.motd)
         }
     },
@@ -461,8 +521,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/motd/raw",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ raw: status.motd.raw })
         }
     },
@@ -472,8 +532,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/motd/clean",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ clean: status.motd.clean })
         }
     },
@@ -483,8 +543,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/motd/html",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ html: status.motd.html })
         }
     },
@@ -494,8 +554,8 @@ export const units: UnitCollection = {
         method:     "get",
         path:       "/server/favicon",
 
-        async handler(req, res) {
-            const status = await this.statusFetcher.fetch()
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status = await this.statusFetcher.fetch(connection)
             res.json({ favicon: status.favicon })
         }
     },
@@ -505,9 +565,9 @@ export const units: UnitCollection = {
         method:     "delete",
         path:       "/users",
 
-        async handler(req, res) {
-            await this.userManager.deleteAllUsers()
-            res.json({})
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const count = await this.userManager.deleteAllUsers(connection)
+            res.json({ count })
         }
     },
 
@@ -516,9 +576,9 @@ export const units: UnitCollection = {
         method:     "delete",
         path:       "/users/:user",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            await this.userManager.deleteUser(user)
+            await this.userManager.deleteUser(connection, user, true)
             res.json({})
         }
     },
@@ -528,10 +588,11 @@ export const units: UnitCollection = {
         method:     "delete",
         path:       "/users/:user/nicknames",
 
-        async handler(req, res) {
-            const user = req.params.user
-            await this.nicknameManager.deleteAllNicknames(user)
-            res.json({})
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const user  = req.params.user
+            const count = await this.nicknameManager.deleteAllUserNicknames(connection, user, true)
+
+            res.json({ count })
         }
     },
 
@@ -540,11 +601,14 @@ export const units: UnitCollection = {
         method:     "delete",
         path:       "/users/:user/nicknames/:nickname",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user     = req.params.user
             const nickname = req.params.user
 
-            await this.nicknameManager.deleteUserNickname(user, nickname)
+            await this.nicknameManager.deleteUserNickname(connection, user, nickname, {
+                checkNickname: true,
+                checkUser:     true
+            })
 
             res.json({})
         }
@@ -555,7 +619,7 @@ export const units: UnitCollection = {
         method:     "put",
         path:       "/users/:user/name",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const json        = req.body
             const parseResult = UPDATE_USER_NAME_SCHEMA.safeParse(json)
 
@@ -567,7 +631,7 @@ export const units: UnitCollection = {
             const { name } = parseResult.data
             const user     = req.params.user
 
-            await this.userManager.setUserName(user, name)
+            await this.userManager.setUserName(connection, user, name, true)
 
             res.json({})
         }
@@ -578,7 +642,7 @@ export const units: UnitCollection = {
         method:     "put",
         path:       "/users/:user/password",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const json        = req.body
             const parseResult = UPDATE_USER_PASSWORD_SCHEMA.safeParse(json)
 
@@ -590,8 +654,8 @@ export const units: UnitCollection = {
             const { password } = parseResult.data
             const user         = req.params.user
 
-            await this.userManager.setUserPassword(user, password)
-            await this.tokenManager.deleteAllATokens(user)
+            await this.userManager.setUserPassword(connection, user, password, true)
+            await this.tokenManager.deleteAllUserATokens(connection, user)
 
             res.json({})
         }
@@ -602,7 +666,7 @@ export const units: UnitCollection = {
         method:     "put",
         path:       "/users/:user/is-admin",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const json        = req.body
             const parseResult = UPDATE_USER_PERMISSION_SCHEMA.safeParse(json)
 
@@ -614,7 +678,7 @@ export const units: UnitCollection = {
             const { isAdmin } = parseResult.data
             const user        = req.params.user
 
-            await this.userManager.setUserPermission(user, isAdmin)
+            await this.userManager.setUserPermission(connection, user, isAdmin, true)
 
             res.json({})
         }
@@ -625,17 +689,11 @@ export const units: UnitCollection = {
         method:     "post",
         path:       "/users/:user/nicknames/:nickname",
 
-        async handler(req, res) {
-            const user = req.params.user
-            const max  = this.config.logicMaxNicknames
-            const has  = await this.nicknameManager.getUserNicknameCount(user)
-
-            if (has >= max)
-                throw new LogicError("Too many nicknames")
-
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const user     = req.params.user
             const nickname = req.params.nickname
 
-            await this.nicknameManager.addNickname(user, nickname)
+            await this.nicknameManager.addUserNickname(connection, user, nickname)
 
             res.json({})
         }
@@ -646,7 +704,7 @@ export const units: UnitCollection = {
         method:     "post",
         path:       "/users/:user",
 
-        async handler(req, res) {
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const json        = req.body
             const parseResult = ADD_USER_SCHEMA.safeParse(json)
 
@@ -656,11 +714,13 @@ export const units: UnitCollection = {
             }
 
             const { password, name, isAdmin } = parseResult.data
-            const aTokenInfo                  = (req as any).aTokenInfo as ATokenInfo
+            const authorization               = req.headers.authorization!
+            const aTokenId                    = parseTokenId(authorization)
+            const aTokenInfo                  = await this.tokenManager.getATokenInfo(connection, aTokenId, true)
             const creatorId                   = aTokenInfo.userId
             const login                       = req.params.user
         
-            await this.userManager.createUser({
+            await this.userManager.createUser(connection, {
                 login:    login,
                 password: password,
                 name:     name,

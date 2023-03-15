@@ -4,9 +4,13 @@
 
 - [Table of Contents](#table-of-contents);
 - [About](#about);
+- [Authorization](#authoriztion);
 - [Error Handling](#error-handling);
 - [Methods](#methods);
-  - [Authentication](#authentication);
+  - [Is Anonymous Access Allowed](#is-anonymous-access-allowed);
+  - [Get Max Nicknames](#get-max-nicknames);
+  - [Get Max Toknes](#get-max-tokens);
+  - [Authentication](#authoriztion);
   - [Deauthentication](#deauthentication);
   - [Get All Users Info](#get-all-users-info);
   - [Get User Info](#get-user-info);
@@ -45,12 +49,19 @@
 
 This document contains detailed description on all supported API methods and their format.
 
+## Authoriztion
+
+Almost all API methods require `Authorization` header to be set but when `logic.allowAnonymousAccess`
+configuration option is set to `true` all `GET`-methods (except [`/anonymous-access-allowed`](#is-anonymous-access-allowed))
+doesn't require it anymore. When `Authorization` header is required for `GET`-methods it must contain
+user's `access-token`.
+
 ## Error Handling
 
 If server gets invalid request it sends `4xx` error to client. If something unexpected happends
-on the server side it sends `5xx` error. Else, if user send's structurally valid but logically
+on the server side it sends `5xx` error. Else, if user sends structurally valid but logically
 invalid data (e.g. invalid login and password combination) server send's back a `200` code with
-JSON body of following the structure:
+JSON body of the following structure:
 
 ```ts
 {
@@ -59,7 +70,7 @@ JSON body of following the structure:
 }
 ```
 
-`needRefresh` field here indicates that error reason is expired or unregistered access token
+`needRefresh` field here indicates that the error reason is expired or unregistered access token
 sent to server. After receiving a JSON with `needRefresh` set to `true` client should try to
 reauthenticate using [`/reauth`](#reauthenticate) method.
 
@@ -72,10 +83,82 @@ Request is treated structurally invalid in the following cases:
 
 ## Methods
 
-Every API method URI shown here is relative to
-`http.apiPrefix` configuration option which defaults to `/api`. Data interchange format is _JSON_.
-Server will respond with JSON on every structurally valid request. Request and response JSON structure
-is described here as _TypeScript_ data type. The following is a complete API method list.
+Every API method URI shown here is relative to `http.apiPrefix` configuration option which defaults
+to `/api`. Data interchange format is _JSON_. Server will respond with JSON on every structurally
+valid request. Request and response JSON structure is described here as _TypeScript_ data type. The
+following is a complete API method list.
+
+<hr />
+
+### __Is Anonymous Access Allowed__
+
+Returns the value indicating whether anonymous access to `GET`-methods is allowed
+
+__Request__:
+
+```http
+GET /anonym-access-allowed
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    allowed: boolean
+}
+```
+
+<hr />
+
+### __Get Max Nicknames__
+
+Returns maximum allowed number of nicknames per user.
+
+__Request__:
+
+```http
+GET /max-nicknames
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    max: number
+}
+```
+
+<hr />
+
+### __Get Max Tokens__
+
+Returns maximum allowed number of tokens per user.
+
+__Request__:
+
+```http
+GET /max-tokens
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    max: number
+}
+```
 
 <hr />
 
@@ -179,7 +262,6 @@ GET /users?[nicknames]
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -212,7 +294,6 @@ GET /users/<user>?[nicknames]
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -241,11 +322,10 @@ Returns boolean value indicating weather is specified user administrator.
 __Request__:
 
 ```http
-GET /users/<user>/is-admin
+GET /users/<user>/admin
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -266,11 +346,10 @@ Returns boolean value indicating weather is specified user online.
 __Request__:
 
 ```http
-GET /users/<user>/is-online
+GET /users/<user>/online
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -295,7 +374,6 @@ GET /users/<user>/reg
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -321,7 +399,6 @@ GET /users/<user>/reg/time
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -346,7 +423,6 @@ GET /users/<user>/reg/user
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -371,7 +447,6 @@ GET /users/<user>/name
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -396,7 +471,6 @@ GET /users/<user>/nicknames/
 ```
 
 ```http
-Authorization: Bearer <access token>
 Accept: application/json
 ```
 
@@ -435,7 +509,6 @@ __Response__:
         online:       number
         max:          number,
         sample: {
-            id:       string
             nickname: string
             login:    string | null
         }[]
@@ -547,7 +620,6 @@ __Response__:
     online:       number
     max:          number,
     sample: {
-        id:       string
         nickname: string
         login:    string | null
     }[]
@@ -647,7 +719,6 @@ __Response__:
 
 ```ts
 {
-    id:       string
     nickname: string
     login:    string | null
 }[]
@@ -795,7 +866,9 @@ Accept: application/json
 __Response__:
 
 ```ts
-{}
+{
+    count: number
+}
 ```
 
 <hr />
@@ -837,7 +910,9 @@ Accept: application/json
 __Response__:
 
 ```ts
-{}
+{
+    count: number
+}
 ```
 
 <hr />
@@ -935,7 +1010,7 @@ Changes whether is specified user is administrator or not. This method is for ad
 __Request__:
 
 ```http
-PUT /users/<user>/is-admin
+PUT /users/<user>/admin
 ```
 
 ```http

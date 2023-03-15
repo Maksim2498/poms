@@ -1,27 +1,25 @@
-import cp                                                               from "child_process"
-import open                                                             from "open"
-import express                                                          from "express"
-import morgan                                                           from "morgan"
-import AsyncConnection                                                  from "./util/mysql/AsyncConnection"
-import LogicError                                                       from "./logic/LogicError"
-import TokenManager                                                     from "./logic/TokenManager"
-import UserManager                                                      from "./logic/UserManager"
-import TokenExpiredError                                                from "./logic/TokenExpiredError"
-import StatusFetcher                                                    from "./logic/StatusFetcher"
-import AuthManager                                                      from "./logic/AuthManager"
-import NicknameManager                                                  from "./logic/NicknameManager"
-import Config                                                           from "./Config"
+import cp                                                                              from "child_process"
+import open                                                                            from "open"
+import express                                                                         from "express"
+import morgan                                                                          from "morgan"
+import mysql                                                                           from "mysql2/promise"
+import LogicError                                                                      from "./logic/LogicError"
+import TokenExpiredError                                                               from "./logic/TokenExpiredError"
+import Config                                                                          from "./Config"
 
-import { promises as fsp                                              } from "fs"
-import { Server   as HttpServer                                       } from "http"
-import { dirname                                                      } from "path"
-import { Application, Router, Request, Response                       } from "express"
-import { Logger                                                       } from "winston"
-import { ReadonlyTable                                                } from "./util/mysql/Table"
-import { useDatabase, createDatabase, showTables                      } from "./util/mysql/statement"
-import { USERS_TABLE, NICKNAMES_TABLE, A_TOKENS_TABLE, R_TOKENS_TABLE } from "./tables"
+import { promises as fsp                                                             } from "fs"
+import { Server   as HttpServer                                                      } from "http"
+import { dirname                                                                     } from "path"
+import { Application, Router, Request, Response, RequestHandler, ErrorRequestHandler } from "express"
+import { Logger                                                                      } from "winston"
+import { Pool, Connection, FieldPacket, ResultSetHeader                              } from "mysql2/promise"
+import { TokenManager, DefaultTokenManager                                           } from "./logic/token"
+import { UserManager, DefaultUserManager                                             } from "./logic/user"
+import { StatusFetcher, DefaultStatusFetcher                                         } from "./logic/status"
+import { AuthManager, DefaultAuthManager                                             } from "./logic/auth"
+import { NicknameManager, DefaultNicknameManager                                     } from "./logic/nickname"
 
-import * as api                                                         from "./api"
+import * as api                                                                        from "./api"
 
 export type State = "created"
                   | "initializing"
@@ -40,59 +38,66 @@ export default class Server {
         const logger = server.logger
         
         logger?.info("Opening browser...")
+
         await open(config.httpAddress)
+
         logger?.info("Opened")
     }
 
-    private readonly expressApp:           Application
-    private          httpServer?:          HttpServer
+    private  httpServer?:        HttpServer
 
-    private          runPromise?:          Promise<void>
-    private          resolveRunPromise?:   () => void
-    private          rejectRunPromise?:    (value: any) => void // For critical errors only
+    private  runPromise?:        Promise<void>
+    private  resolveRunPromise?: () => void
+    private  rejectRunPromise?:  (value: any) => void // For critical errors only
 
-    private          mysqlInitConnection:  AsyncConnection
-    private          mysqlServeConnection: AsyncConnection
-    private          _state:               State = "created"
+    private  _state:             State = "created"
 
-    readonly         config:               Config
-    readonly         logger?:              Logger
-
-    readonly         statusFetcher:        StatusFetcher
-    readonly         userManager:          UserManager
-    readonly         tokenManager:         TokenManager
-    readonly         authManager:          AuthManager
-    readonly         nicknameManager:      NicknameManager
+    readonly config:             Config
+    readonly logger?:            Logger
+    readonly statusFetcher:      StatusFetcher
+    readonly userManager:        UserManager
+    readonly tokenManager:       TokenManager
+    readonly authManager:        AuthManager
+    readonly nicknameManager:    NicknameManager
+    readonly app:                Application
+    readonly pool:               Pool
 
     constructor(config: Config, logger?: Logger) {
-        this.config               = config
-        this.logger               = logger
-        this.mysqlInitConnection  = AsyncConnection.fromConfigInitUser(config, logger)
-        this.mysqlServeConnection = AsyncConnection.fromConfigServeUser(config, logger)
-        this.expressApp           = createExpressApp.call(this)
-        this.userManager          = new UserManager(this, config, logger)
-        this.tokenManager         = new TokenManager(this.userManager)
-        this.authManager          = new AuthManager(this.tokenManager)
-        this.nicknameManager      = new NicknameManager(this.userManager)
-        this.statusFetcher        = new StatusFetcher(this.nicknameManager)
+        const userManager     = new DefaultUserManager({ config, logger })
+        const tokenManager    = new DefaultTokenManager({ userManager, config, logger })
+        const nicknameManager = new DefaultNicknameManager({ userManager, config, logger })
+        const authManager     = new DefaultAuthManager({ userManager, tokenManager, config, logger })
+        const statusFetcher   = new DefaultStatusFetcher({ nicknameManager, config, logger })
+        const app             = createApp.call(this)
+        const pool            = createPool.call(this)
 
-        function createExpressApp(this: Server): Application {
+        this.config           = config
+        this.logger           = logger
+        this.userManager      = userManager
+        this.tokenManager     = tokenManager
+        this.nicknameManager  = nicknameManager
+        this.authManager      = authManager
+        this.statusFetcher    = statusFetcher
+        this.app              = app
+        this.pool             = pool
+
+        function createApp(this: Server): Application {
             const app = express()
 
-            if (this.logger)
-                setupLogger.call(this)
+            if (logger)
+                setupLogger()
 
-            setupStatic.call(this)
+            setupStatic()
             setupAPI.call(this)
-            setup404.call(this)
-            setup500.call(this)
+            setup404()
+            setup500()
 
             return app
 
-            function setupLogger(this: Server) {
+            function setupLogger() {
                 const middleware = morgan("tiny", {
                     stream: {
-                        write: message => this.logger?.http(message.trim())
+                        write: message => logger!.http(message.trim())
                     }
                 })
 
@@ -101,53 +106,99 @@ export default class Server {
 
             function setupAPI(this: Server) {
                 const router = createRouter.call(this)
+                const path   = config.httpApiPrefix
 
-                app.use(this.config.httpPrefix, router)
+                app.use(path, router)
 
-                const errorHandler = createErrorHandler.call(this)
-
-                router.use(errorHandler)
+                setup404()
+                setupErrorHandler()
 
                 function createRouter(this: Server): Router {
-                    const router = Router()
+                    const router     = Router()
+                    const jsonParser = createJsonParser()
 
                     router.use(api.requireAcceptJson)
-                    router.use(api.requireAuthorization)
                     router.use(api.disableGetCache)
-                    router.use(express.json())
+                    router.use(jsonParser)
 
-                    for (const unitName in api.units) {
-                        const unit = (api.units as any)[unitName] as api.Unit
-
-                        const handlers = [
-                            async (req, res, next) => {
-                                try {
-                                    if (unit.permission) {
-                                        await api.checkPermission(this, unit.permission, req, res, next)
-                                        return
-                                    }
-
-                                    next()
-                                } catch (error) {
-                                    handleError(error, res, next)
-                                }
-                            },
-
-                            async (req, res, next) => {
-                                try {
-                                    await unit.handler.call(this, req, res)
-                                } catch (error) {
-                                    handleError(error, res, next)
-                                }
-                            }
-                        ] as ((req: Request, res: Response, next: (error?: any) => void) => Promise<void>)[]
-
-                        router[unit.method](unit.path, handlers)
-                    }
+                    registerUnits.call(this)
 
                     return router
 
-                    function handleError(error: any, res: Response, next: (error?: any) => void) {
+                    function createJsonParser(): (RequestHandler | ErrorRequestHandler)[] {
+                        return [
+                            express.json(),
+                            (error: Error, req: Request, res: Response, next: (error: any) => void) => {
+                                if (error instanceof SyntaxError) {
+                                    res.sendStatus(400)
+                                    return
+                                }
+
+                                next(error)
+                            }
+                        ]
+                    }
+
+                    function registerUnits(this: Server) {
+                        for (const unitName in api.units) {
+                            const unit = api.units[unitName]
+
+                            const checkPermission = async (req: Request, res: Response, next: (error?: any) => void) => {
+                                try {
+                                    if (unit.permission != null)
+                                        await api.checkPermission.call(this, unit.permission, req, res)
+
+                                    next()
+                                } catch (error) {
+                                    next(error)
+                                }
+                            }
+
+                            const disconnectedHandler = async (req: Request, res: Response, next: (error?: any) => void) => {
+                                try {
+                                    const handler = unit.handler as api.DisconnectedHandler
+                                    await handler.call(this, req, res)
+                                } catch (error) {
+                                    next(error)
+                                }
+                            }
+
+                            const connectedHandler = async (req: Request, res: Response, next: (error?: any) => void) => {
+                                try {
+                                    const connection = await this.pool.getConnection()
+
+                                    try {
+                                        await connection.beginTransaction()
+
+                                        const handler = unit.handler as api.ConnectedHandler
+                                        await handler.call(this, connection, req, res)
+
+                                        await connection.commit()
+                                    } finally {
+                                        connection.release()
+                                    }
+                                } catch (error) {
+                                    next(error)
+                                }
+                            }
+
+                            const handlers = [
+                                checkPermission,
+                                unit.handler.length === 2 ? disconnectedHandler
+                                                          : connectedHandler
+                            ]
+
+                            router[unit.method](unit.path, handlers)
+                        }
+                    }
+                }
+
+                function setup404() {
+                    router.use((req, res) => res.sendStatus(404))
+                }
+
+                function setupErrorHandler() {
+                    const handler = (error: Error, req: Request, res: Response, next: () => void) => {
                         if (error instanceof LogicError) {
                             res.json({
                                 error:       error.message,
@@ -157,45 +208,38 @@ export default class Server {
                             return
                         }
 
-                        next(error)
-                    }
-                }
+                        logger?.error(error)
 
-                function createErrorHandler(this: Server) {
-                    return (error: Error, req: Request, res: Response, next: () => void) => {
-                        const code = (error as any).statusCode
-
-                        if (typeof code === "number") {
-                            res.sendStatus(code)
-                            return
-                        }
-
-                        this.logger?.error(error)
                         res.sendStatus(500)
                     }
+
+                    router.use(handler)
                 }
             }
 
-            function setupStatic(this: Server) {
-                if (!this.config.httpServeStatic)
+            function setupStatic() {
+                if (!config.httpServeStatic)
                     return
 
-                app.use(express.static(this.config.httpStaticPath))
+                const middleware = express.static(config.httpStaticPath)
+
+                app.use(middleware)
             }
         
-            function setup404(this:Server) {
+            function setup404() {
                 app.use((req, res) => {
                     res.status(404).sendFile(config.httpError404Path, error => {
                         if (!error)
                             return
 
-                        this.logger?.error(error)
+                        logger?.error(error)
+
                         res.end("Page Not Found")
                     })
                 })
             }
 
-            function setup500(this: Server) {
+            function setup500() {
                 app.use((error: Error, req: Request, res: Response, next: () => void) => {
                     logger?.error(error)
 
@@ -203,12 +247,33 @@ export default class Server {
                         if (!error)
                             return
 
-                        this.logger?.error(error)
+                        logger?.error(error)
 
                         res.end("Internal Server Error")
                     })
                 })
             }
+        }
+
+        function createPool(this: Server): Pool {
+            const database        = config.mysqlDatabase
+            const host            = config.mysqlHost
+            const port            = config.mysqlPort
+            const socketPath      = config.read.mysql.socketPath
+            const useServe        = config.mysqlUseServeUser
+            const connectionLimit = config.mysqlConnectionLimit
+            const user            = useServe ? config.read.mysql.serve?.login!    : config.read.mysql.login!
+            const password        = useServe ? config.read.mysql.serve?.password! : config.read.mysql.password!
+
+            return mysql.createPool({
+                database,
+                host,
+                port,
+                socketPath,
+                connectionLimit,
+                user,
+                password,
+            })
         }
     }
 
@@ -217,159 +282,185 @@ export default class Server {
         this._state = "initializing"
 
         this.logger?.info("Initializing server...")
-        this.initWorkingDirectory()
-        await this.initStatic()
-        await this.initDatabase()
+        initWorkingDirectory.call(this)
+        await initStatic.call(this)
+        await initDatabase.call(this)
         this.logger?.info("Server is successfully initialized")
 
         this._state = "initialized"
-    }
 
-    private initWorkingDirectory() {
-        const wd = dirname(this.config.path)
+        function initWorkingDirectory(this: Server) {
+            const wd = dirname(this.config.path)
 
-        this.logger?.info(`Setting working directory to ${wd}...`)
-        process.chdir(wd)
-        this.logger?.info("Set")
-    }
-    
-    private async initStatic() {
-        if (!this.config.logicBuildStatic)
-            return
-
-        this.logger?.info("Initializing static content...")
-
-        const path = this.config.httpStaticPath
-
-        this.logger?.info(`Cheking if static content at ${path} alreading already exists...`)
-
-        let exits = false
-
-        try {
-            const files = await fsp.readdir(path)
-
-            if (files.length !== 0)
-                exits = true
-        } catch (error) {
-            if ((error as any).code !== "ENOENT")
-                throw error
+            this.logger?.info(`Setting working directory to ${wd}...`)
+            process.chdir(wd)
+            this.logger?.info("Set")
         }
 
-        if (exits)
-            this.logger?.info("Exits")
-        else {
-            this.logger?.info("Doesn't exist. Creating...")
-            cp.execSync("npm run build", { cwd: this.config.logicBuildStaticPath })
-            this.logger?.info("Created")
+        async function initStatic(this: Server) {
+            if (!this.config.logicBuildStatic)
+                return
+
+            this.logger?.info("Initializing static content...")
+
+            const path = this.config.httpStaticPath
+
+            this.logger?.debug(`Cheking if static content at ${path} alreading already exists...`)
+
+            let exits = false
+
+            try {
+                const files = await fsp.readdir(path)
+
+                if (files.length !== 0)
+                    exits = true
+            } catch (error) {
+                if ((error as any).code !== "ENOENT")
+                    throw error
+            }
+
+            if (exits)
+                this.logger?.debug("Exits")
+            else {
+                this.logger?.debug("Doesn't exist. Creating...")
+                cp.execSync("npm run build", { cwd: this.config.logicBuildStaticPath })
+                this.logger?.debug("Created")
+            }
+
+            this.logger?.info("Static content is successfully initialized")
         }
 
-        this.logger?.info("Static content is successfully initialized")
-    }
+        async function initDatabase(this: Server) {
+            this.logger?.info("Initializing database...")
 
-    private async initDatabase() {
-        this.logger?.info("Initializing database...")
+            const connection = await createConnection.call(this)
 
-        await this.mysqlInitConnection.connect()
+            try {
+                await createObjects.call(this, connection)
+            } finally {
+                await connection.end()
+            }
 
-        try {
-            await this.initDatabaseObjects()
-        } finally {
-            await this.mysqlInitConnection.disconnect()
+            this.logger?.info("Database is successfully initialized")
+
+            async function createConnection(this: Server): Promise<Connection> {
+                const host       = this.config.mysqlHost
+                const port       = this.config.mysqlPort
+                const socketPath = this.config.read.mysql.socketPath
+                const useInit    = this.config.mysqlUseInitUser
+                const user       = useInit ? this.config.read.mysql.init?.login!    : this.config.read.mysql.login!
+                const password   = useInit ? this.config.read.mysql.init?.password! : this.config.read.mysql.password!
+
+                return await mysql.createConnection({
+                    host,
+                    port,
+                    socketPath,
+                    user,
+                    password
+                })
+            }
+
+            async function createObjects(this: Server, connection: Connection) {
+                await createDatabase.call(this)
+                await createUsersTable.call(this)
+                await createNicknamesTable.call(this)
+                await createATokensTable.call(this)
+                await createRTokensTable.call(this)
+                await createCleanUpEvent.call(this)
+
+                async function createDatabase(this: Server) {
+                    const database = this.config.mysqlDatabase
+
+                    this.logger?.debug(`Creating database "${database}"...`)
+                    const [result] = await connection.query("CREATE DATABASE IF NOT EXISTS ??", database) as [ResultSetHeader, FieldPacket[]]
+                    this.logger?.debug(result.warningStatus === 0 ? "Created" : "Already exists")
+
+                    this.logger?.debug(`Using database "${database}"...`)
+                    await connection.query("USE ??", database)
+                    this.logger?.debug("Used")
+                }
+
+                async function createUsersTable(this: Server) {
+                    const sql = "CREATE TABLE IF NOT EXISTS Users ("
+                              +     "id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+                              +     "login         VARCHAR(255) NOT NULL UNIQUE,"
+                              +     "name          VARCHAR(255),"
+                              +     "cr_id         BIGINT,"
+                              +     "cr_time       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                              +     "password_hash BINARY(64)   NOT NULL,"
+                              +     "is_admin      BOOLEAN      NOT NULL DEFAULT FALSE,"
+                              +     "is_online     BOOLEAN      NOT NULL DEFAULT FALSE,"
+                    
+                              +     "FOREIGN KEY (cr_id) REFERENCES Users (id) ON DELETE SET NULL"
+                              + ")"
+                    
+                    this.logger?.debug('Creating table "Users"...')
+                    const [result] = await connection.query(sql) as [ResultSetHeader, FieldPacket[]]
+                    this.logger?.debug(result.warningStatus === 0 ? "Created" : "Already exists")
+                }
+
+                async function createNicknamesTable(this: Server) {
+                    const sql = "CREATE TABLE IF NOT EXISTS Nicknames ("
+                              +     "user_id  BIGINT       NOT NULL,"
+                              +     "nickname VARCHAR(255) NOT NULL UNIQUE,"
+                    
+                              +     "PRIMARY KEY (user_id, nickname),"
+                              +     "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"
+                              + ")"
+                    
+                    this.logger?.debug('Creating table "Nicknames"...')
+                    const [result] = await connection.query(sql) as [ResultSetHeader, FieldPacket[]]
+                    this.logger?.debug(result.warningStatus === 0 ? "Created" : "Already exists")
+                }
+
+                async function createATokensTable(this: Server) {
+                    const sql = "CREATE TABLE IF NOT EXISTS ATokens ("
+                              +     "id       BINARY(64) NOT NULL DEFAULT (CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))) PRIMARY KEY,"
+                              +     "user_id  BIGINT     NOT NULL,"
+                              +     "cr_time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                              +     "exp_time TIMESTAMP  NOT NULL,"
+                    
+                              +     "FOREIGN KEY (user_id) REFERENCES Users (id) ON DELETE CASCADE"
+                              + ")"
+                    
+                    this.logger?.debug('Creating table "ATokens"...')
+                    const [result] = await connection.query(sql) as [ResultSetHeader, FieldPacket[]]
+                    this.logger?.debug(result.warningStatus === 0 ? "Created" : "Already exists")
+                }
+
+                async function createRTokensTable(this: Server) {
+                    const sql = "CREATE TABLE IF NOT EXISTS RTokens ("
+                              +     "id        BINARY(64) NOT NULL DEFAULT (CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))) PRIMARY KEY,"
+                              +     "atoken_id BINARY(64) NOT NULL,"
+                              +     "cr_time   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                              +     "exp_time  TIMESTAMP  NOT NULL,"
+                    
+                              +     "FOREIGN KEY (atoken_id) REFERENCES ATokens (id) ON DELETE CASCADE"
+                              + ")"
+                    
+                    this.logger?.debug('Creating table "RTokens"...')
+                    const [results] = await connection.query(sql) as [ResultSetHeader, FieldPacket[]]
+                    this.logger?.debug(results.warningStatus === 0 ? "Created" : "Already exists")
+                }
+
+                async function createCleanUpEvent(this: Server) {
+                    const sql = "CREATE EVENT IF NOT EXISTS CleanUp "
+                              + "ON SCHEDULE EVERY 1 DAY "
+                              + "DO "
+                              +     "DELETE FROM ATokens WHERE id in ("
+                              +         "SELECT atoken_id FROM RTokens WHERE exp_time >= now()"
+                              +     ")"
+                    
+                    this.logger?.debug('Creating event "CleanUp"...')
+                    const [results] = await connection.query(sql) as [ResultSetHeader, FieldPacket[]]
+                    this.logger?.debug(results.warningStatus === 0 ? "Created" : "Already exists")
+                }
+            }
         }
-
-        this.logger?.info("Database is successfully initialized")
-    }
-
-    private async initDatabaseObjects() {
-        const created = await createDatabase(this.mysqlConnection, this.config.mysqlDatabase, true)
-
-        if (created)
-            await this.createTablesAndEvents() 
-        else if (this.config.mysqlValidateTables)
-            await this.checkTablesAndEvents()
-
-        if (this.config.logicAdminCreate)
-            await this.userManager.createAdmin()
-    }
-
-    private async createTablesAndEvents() {
-        await USERS_TABLE.create(this.mysqlConnection)
-        await NICKNAMES_TABLE.create(this.mysqlConnection)
-        await A_TOKENS_TABLE.create(this.mysqlConnection)
-        await R_TOKENS_TABLE.create(this.mysqlConnection)
-        await this.createCleanUpEvent()
-    }
-
-    private async createCleanUpEvent() {
-        this.logger?.info(`Creating event "CleanUp"...`)
-
-        await this.mysqlConnection.query("CREATE EVENT CleanUp "
-                                           + "ON SCHEDULE EVERY 1 DAY "
-                                           + "DO "
-                                           +     "DELETE FROM ATokens WHERE id in ("
-                                           +         "SELECT atoken_id FROM RTokens WHERE exp_time >= now()"
-                                           +     ")")
-
-        this.logger?.info("Created")
-    }
-
-    // Doesn't validate events yet
-
-    private async checkTablesAndEvents() {
-        const tables = await showTables(this.mysqlConnection)
-
-        if (await checkOrCreateIfMissing.call(this, USERS_TABLE))
-            return // If invalid all tables will be recreated
-
-        await checkOrCreateIfMissing.call(this, NICKNAMES_TABLE)
-        
-        if (await checkOrCreateIfMissing.call(this, A_TOKENS_TABLE))
-            return // If invalid RTokens table will be recreated
-
-        await checkOrCreateIfMissing.call(this, R_TOKENS_TABLE)
-
-        async function checkOrCreateIfMissing(this: Server, table: ReadonlyTable): Promise<boolean> {
-            if (tables.includes(table.name))
-                return !await this.checkTable(this.mysqlConnection, table)
-
-            await table.create(this.mysqlConnection)
-
-            return false
-        }
-    }
-
-    private async checkTable(connection: AsyncConnection, table: ReadonlyTable): Promise<boolean> {
-        connection.logger?.info(`Validating table "${table.displayName}"...`)
-    
-        const invalidReason = await table.validate(connection)
-
-        if (invalidReason === undefined) {
-            connection.logger?.info("Valid")
-            return true
-        }
-
-        if (!this.config.mysqlRecreateInvalidTables)
-            throw new Error(invalidReason)
-
-        connection.logger?.error(invalidReason)
-
-        await table.recreate(connection)
-
-        return false
-    }
-
-    get isApiAvailable(): boolean {
-        return this.state                 === "running"
-            && this.mysqlConnection.state === "online"
     }
 
     get state(): State {
         return this._state
-    }
-
-    get mysqlConnection(): AsyncConnection {
-        return this.state === "running" ? this.mysqlServeConnection
-                                        : this.mysqlInitConnection
     }
 
     async finish(): Promise<void> {
@@ -380,7 +471,18 @@ export default class Server {
         this.checkState("initialized", "start")
         this._state = "starting"
 
-        if (this.logger) {
+        log.call(this)
+        initRunPromise.call(this)
+        await listen.call(this)
+
+        this._state = "running"
+
+        await onStarted(this)
+
+        function log(this: Server) {
+            if (!this.logger)
+                return
+
             const serveStatic = this.config.httpServeStatic
             const address     = this.config.httpAddress
             const message     = serveStatic ? `Starting listening at ${address} and serving static content from ${this.config.httpStaticPath}...`
@@ -389,28 +491,11 @@ export default class Server {
             this.logger.info(message)
         }
 
-        initRunPromise.call(this)
-        await initMysqlConnection.call(this)
-        await listen.call(this)
-
-        this._state = "running"
-
-        await onStarted(this)
-
         function initRunPromise(this: Server) {
             this.runPromise = new Promise<void>((resolve, reject) => {
                 this.resolveRunPromise = resolve
                 this.rejectRunPromise  = reject
             })
-        }
-
-        async function initMysqlConnection(this: Server) {
-            this.logger?.info("Initializing database connection...")
-
-            await this.mysqlServeConnection.connect()
-            await useDatabase(this.mysqlServeConnection, this.config.mysqlDatabase)
-            
-            this.logger?.info("Database connection is successfully initialized")
         }
 
         async function listen(this: Server) {
@@ -423,8 +508,8 @@ export default class Server {
                     resolve()
                 }
 
-                this.httpServer = socketPath != null ? this.expressApp.listen(socketPath, listening)
-                                                     : this.expressApp.listen(this.config.httpPort, this.config.httpHost, listening)
+                this.httpServer = socketPath != null ? this.app.listen(socketPath, listening)
+                                                     : this.app.listen(this.config.httpPort, this.config.httpHost, listening)
             })
         }
     }
@@ -434,8 +519,6 @@ export default class Server {
         this._state = "stopping"
 
         this.logger?.info("Stopping...")
-
-        await this.mysqlServeConnection.disconnect()
 
         this.httpServer?.close(error => {
             if (error)
