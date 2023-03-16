@@ -55,7 +55,7 @@ export interface TokenManager {
     deleteAllATokens(connection: Connection): Promise<number>
     deleteAllUserRTokens(connection: Connection, user: User): Promise<number>
     deleteAllRTokens(connection: Connection): Promise<number>
-    deleteAToken(connection: Connection, kenId: Buffer): Promise<boolean>
+    deleteAToken(connection: Connection, aTokenId: Buffer): Promise<boolean>
     deleteRToken(connection: Connection, rTokenId: Buffer): Promise<boolean>
     getATokenInfo(connection: Connection, aTokenId: Buffer, force: true): Promise<ATokenInfo>
     getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<ATokenInfo | undefined>
@@ -109,7 +109,7 @@ export class DefaultTokenManager implements TokenManager {
         return 0
     }
 
-    async deleteAToken(connection: Connection, kenId: Buffer): Promise<boolean> {
+    async deleteAToken(connection: Connection, aTokenId: Buffer): Promise<boolean> {
         return false
     }
 
