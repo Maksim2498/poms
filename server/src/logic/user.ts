@@ -78,11 +78,11 @@ export interface UserManager {
 
     getAllUsersInfo(connection: Connection): Promise<UserInfo[]>
 
-    getUserLogin(connection: Connection, user: User, force?: true):    Promise<string>
-    getUserLogin(connection: Connection, user: User, force?: boolean): Promise<string | undefined>
+    getUserLogin(connection: Connection, user: User, checkUser?: true):    Promise<string>
+    getUserLogin(connection: Connection, user: User, checkUser?: boolean): Promise<string | undefined>
 
-    getUserId(connection: Connection, user: User, force?: true):    Promise<number>
-    getUserId(connection: Connection, user: User, force?: boolean): Promise<number | undefined>
+    getUserId(connection: Connection, user: User, checkUser?: true):    Promise<number>
+    getUserId(connection: Connection, user: User, checkUser?: boolean): Promise<number | undefined>
 
     getUserInfo(connection: Connection, user: User, force:  true):    Promise<UserInfo>
     getUserInfo(connection: Connection, user: User, force?: boolean): Promise<UserInfo | undefined>
@@ -153,16 +153,26 @@ export class DefaultUserManager {
         return []
     }
 
-    async getUserLogin(connection: Connection, user: User, force?: true):            Promise<string>
-    async getUserLogin(connection: Connection, user: User, force?: boolean):         Promise<string | undefined>
-    async getUserLogin(connection: Connection, user: User, force:  boolean = false): Promise<string | undefined> {
+    async getUserLogin(connection: Connection, user: User, checkUser?: true):            Promise<string>
+    async getUserLogin(connection: Connection, user: User, checkUser?: boolean):         Promise<string | undefined>
+    async getUserLogin(connection: Connection, user: User, checkUser:  boolean = false): Promise<string | undefined> {
         return undefined
     }
 
-    async getUserId(connection: Connection, user: User, force?: true):            Promise<number>
-    async getUserId(connection: Connection, user: User, force?: boolean):         Promise<number | undefined>
-    async getUserId(connection: Connection, user: User, force:  boolean = false): Promise<number | undefined> {
-        return undefined
+    async getUserId(connection: Connection, user: User, checkUser?: true):            Promise<number>
+    async getUserId(connection: Connection, user: User, checkUser?: boolean):         Promise<number | undefined>
+    async getUserId(connection: Connection, user: User, checkUser:  boolean = false): Promise<number | undefined> {
+        if (checkUser) {
+            const info = await this.getUserInfo(connection, user, true)
+            return info.id
+        }
+
+        if (typeof user === "number")
+            return user
+
+        const info = await this.getUserInfo(connection, user)
+
+        return info?.id
     }
 
     async getUserInfo(connection: Connection, user: User, force:  true):            Promise<UserInfo>
