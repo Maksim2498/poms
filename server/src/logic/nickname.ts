@@ -28,6 +28,7 @@ export interface NicknameManager {
 
     deleteAllNicknames(connection: Connection): Promise<number>
 
+    forceDeleteUserNickname(connection: Connection, user: User, nickname: string): Promise<void>
     deleteUserNickname(connection: Connection, user: User, nickname: string, options?: DeleteUserNicknameOptions): Promise<boolean>
 
     deleteNickname(connection: Connection, nickname: string): Promise<boolean>
@@ -72,11 +73,35 @@ export class DefaultNicknameManager implements NicknameManager {
         const [result] = await connection.execute("DELETE FROM Nicknames") as [ResultSetHeader, FieldPacket[]]
 
         return result.affectedRows
+    }
 
+    async forceDeleteUserNickname(connection: Connection, user: User, nickname: string) {
+        await this.deleteUserNickname(connection, user, nickname, {
+            checkNickname: true,
+            checkUser:     true
+        })
     }
 
     async deleteUserNickname(connection: Connection, user: User, nickname: string, options: DeleteUserNicknameOptions): Promise<boolean> {
-        return false
+        const id = await this.userManager.getUserId(connection, user, options.checkUser)
+
+        if (id == null)
+            return false
+
+        const [result] = await connection.execute("DELETE FROM Nicknames WHERE user_id = ? AND nickname = ?", [id, nickname]) as [ResultSetHeader, FieldPacket[]]
+
+        if (result.affectedRows === 0) {
+            if (options.checkNickname) {
+                const message = typeof user === "string" ? `User "${user}" has no nickname "${nickname}"`
+                                                         : `User with id ${user} has no nickname "${nickname}"`
+                                                         
+                throw new LogicError(message)
+            }
+
+            return false
+        }
+
+        return true
     }
 
     async deleteNickname(connection: Connection, nickname: string): Promise<boolean> {
