@@ -156,7 +156,17 @@ export class DefaultUserManager {
     async getUserLogin(connection: Connection, user: User, checkUser?: true):            Promise<string>
     async getUserLogin(connection: Connection, user: User, checkUser?: boolean):         Promise<string | undefined>
     async getUserLogin(connection: Connection, user: User, checkUser:  boolean = false): Promise<string | undefined> {
-        return undefined
+        if (checkUser) {
+            const info = await this.getUserInfo(connection, user, true)
+            return info.login
+        }
+
+        if (typeof user === "string")
+            return user
+
+        const info = await this.getUserInfo(connection, user)
+
+        return info?.login
     }
 
     async getUserId(connection: Connection, user: User, checkUser?: true):            Promise<number>
