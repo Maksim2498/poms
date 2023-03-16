@@ -32,7 +32,12 @@ export class DefaultAuthManager implements AuthManager {
     }
 
     async auth(connection: Connection, login: string, password: string): Promise<TokenPair> {
-        return {} as TokenPair
+        const info      = await this.userManager.getUserInfoByCredentials(connection, login, password, true)
+        const maxTokens = this.config.logicMaxTokens
+
+        await this.tokenManager.deleteUserExtraATokens(connection, info.id, maxTokens - 1)
+
+        return await this.tokenManager.createTokenPair(connection, info.id)
     }
 
     async reauth(connection: Connection, rTokenId: Buffer): Promise<TokenPair> {
