@@ -1,4 +1,5 @@
 import Config                      from "Config"
+import LogicError                  from "./LogicError"
 
 import { Connection              } from "mysql2/promise"
 import { Logger                  } from "winston"
@@ -41,7 +42,16 @@ export class DefaultAuthManager implements AuthManager {
     }
 
     async reauth(connection: Connection, rTokenId: Buffer): Promise<TokenPair> {
-        return {} as TokenPair
+        const rTokenInfo = await this.tokenManager.getRTokenInfo(connection, rTokenId, true)
+
+        if (rTokenInfo.exp <= new Date())
+            throw new LogicError("Token is too old")
+
+        const aTokenInfo = await this.tokenManager.getATokenInfo(connection, rTokenInfo.aTokenId, true)
+        
+        await this.tokenManager.deleteAToken(connection, aTokenInfo.id, true) // Refresh token will be deleted cascade
+        
+        return await this.tokenManager.createTokenPair(connection, aTokenInfo.userId)
     }
 
     async deauth(connection: Connection, aTokenId: Buffer) {
