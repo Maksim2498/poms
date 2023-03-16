@@ -32,7 +32,7 @@ export interface NicknameManager {
 
     getUserNicknameCount(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
-    addUserNickname(connection: Connection, user: User, nickname: string): Promise<boolean>
+    addUserNickname(connection: Connection, user: User, nickname: string, checkUser?: boolean): Promise<boolean>
 
     getUserNicknames(connection: Connection, user: User, checkUser?: boolean): Promise<string[]>
 }
@@ -80,7 +80,7 @@ export class DefaultNicknameManager implements NicknameManager {
         return 0
     }
 
-    async addUserNickname(connection: Connection, user: User, nickname: string): Promise<boolean> {
+    async addUserNickname(connection: Connection, user: User, nickname: string, checkUser: boolean = false): Promise<boolean> {
         return false
     }
 
