@@ -86,7 +86,14 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async getUserNicknameCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
-        return 0
+        const id = await this.userManager.getUserId(connection, user, checkUser)
+
+        if (id == null)
+            return 0
+
+        const [rows] = await connection.execute("SELECT COUNT(*) AS count FROM NICKNAMES WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+
+        return rows[0].count
     }
 
     async forceAddUserNickname(connection: Connection, user: User, nickname: string) {
