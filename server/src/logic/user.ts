@@ -68,7 +68,7 @@ export interface UserManager {
     deleteUser(connection: Connection, user: User, force:  true):    Promise<true>
     deleteUser(connection: Connection, user: User, force?: boolean): Promise<boolean>
 
-    getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):    Promise<UserInfo | undefined>
+    getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):    Promise<UserInfo>
     getUserInfoByCredentials(connection: Connection, login: string, password: string, force?: boolean): Promise<UserInfo | undefined>
 
     getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]>
@@ -127,7 +127,7 @@ export class DefaultUserManager {
         return false
     }
 
-    async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):            Promise<UserInfo | undefined>
+    async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):            Promise<UserInfo>
     async getUserInfoByCredentials(connection: Connection, login: string, password: string, force?: boolean):         Promise<UserInfo | undefined>
     async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  boolean = false): Promise<UserInfo | undefined> {
         return undefined
