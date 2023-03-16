@@ -135,15 +135,15 @@ export class DefaultTokenManager implements TokenManager {
         return false
     }
 
-    async getATokenInfo(connection: Connection, aTokenId: Buffer, force: true):            Promise<ATokenInfo>
-    async getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean):        Promise<ATokenInfo | undefined>
-    async getATokenInfo(connection: Connection, aTokenId: Buffer, force: boolean = false): Promise<ATokenInfo | undefined> {
+    async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):            Promise<ATokenInfo>
+    async getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<ATokenInfo | undefined>
+    async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<ATokenInfo | undefined> {
         return {} as ATokenInfo
     }
 
-    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force: true):            Promise<RTokenInfo>
-    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean):        Promise<RTokenInfo | undefined>
-    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force: boolean = false): Promise<RTokenInfo | undefined> {
+    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):            Promise<RTokenInfo>
+    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean):         Promise<RTokenInfo | undefined>
+    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  boolean = false): Promise<RTokenInfo | undefined> {
         return {} as RTokenInfo
     }
 }
