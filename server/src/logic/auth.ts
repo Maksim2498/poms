@@ -47,9 +47,9 @@ export class DefaultAuthManager implements AuthManager {
         if (rTokenInfo.exp <= new Date())
             throw new LogicError("Token is too old")
 
-        const aTokenInfo = await this.tokenManager.getATokenInfo(connection, rTokenInfo.aTokenId, true)
+        const aTokenInfo = (await this.tokenManager.getATokenInfo(connection, rTokenInfo.aTokenId))!
         
-        await this.tokenManager.deleteAToken(connection, aTokenInfo.id, true) // Refresh token will be deleted cascade
+        await this.tokenManager.deleteAToken(connection, aTokenInfo.id) // Refresh token will be deleted cascade
         
         return await this.tokenManager.createTokenPair(connection, aTokenInfo.userId)
     }
