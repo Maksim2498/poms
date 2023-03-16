@@ -1,8 +1,8 @@
-import Config                          from "Config"
+import Config                                     from "Config"
 
-import { Connection                  } from "mysql2/promise"
-import { Logger                      } from "winston"
-import { UserManager, User, UserInfo } from "./user"
+import { Connection, FieldPacket, RowDataPacket } from "mysql2/promise"
+import { Logger                                 } from "winston"
+import { UserManager, User, UserInfo            } from "./user"
 
 export interface CreationOptions {
     readonly userManager: UserManager
@@ -85,6 +85,13 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async getUserNicknames(connection: Connection, user: User, checkUser: boolean = false): Promise<string[]> {
-        return []
+        const id = await this.userManager.getUserId(connection, user, checkUser)
+
+        if (id == null)
+            return []
+
+        const [rows] = await connection.execute("SELECT nickname FROM Nicknames WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+
+        return rows.map(row => row.nickname)
     }
 }
