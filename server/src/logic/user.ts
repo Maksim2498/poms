@@ -1,8 +1,8 @@
-import Config         from "Config"
-import LogicError     from "./LogicError"
+import Config                                     from "Config"
+import LogicError                                 from "./LogicError"
 
-import { Connection } from "mysql2/promise"
-import { Logger     } from "winston"
+import { Connection, FieldPacket, RowDataPacket } from "mysql2/promise"
+import { Logger                                 } from "winston"
 
 export interface CreationOptions {
     readonly config:  Config
@@ -35,7 +35,7 @@ export interface DeepUserInfo {
     isAdmin:      boolean
     isOnline:     boolean
     created:      Date
-    creator:      UserInfo | null
+    creatorInfo:  UserInfo | null
 }
 
 export interface UserInfo {
@@ -46,7 +46,7 @@ export interface UserInfo {
     isAdmin:      boolean
     isOnline:     boolean
     created:      Date
-    creator?:     number
+    creatorId?:   number
 }
 
 export interface UserManager {
@@ -188,7 +188,41 @@ export class DefaultUserManager {
     async getUserInfo(connection: Connection, user: User, force:  true):            Promise<UserInfo>
     async getUserInfo(connection: Connection, user: User, force?: boolean):         Promise<UserInfo | undefined>
     async getUserInfo(connection: Connection, user: User, force:  boolean = false): Promise<UserInfo | undefined> {
-        return undefined
+        const numUser  = typeof user === "number"
+        const whereSql = numUser ? "id = ?" : "login = ?"
+        const sql      = `SELECT * FROM Users WHERE ${whereSql}`
+        const [rows]   = await connection.execute(sql, [user]) as [RowDataPacket[], FieldPacket[]]
+
+        if (rows.length === 0) {
+            if (force) {
+                const message = numUser ? `User with id ${user} not found`
+                                        : `User "${user}" not found`
+
+                throw new LogicError(message)
+            }
+        
+            return undefined
+        }
+
+        const {
+            id,
+            login,
+            cr_id:         creatorId,
+            cr_time:       created,
+            password_hash: passwordHash,
+            is_admin:      isAdmin,
+            is_online:     isOnline
+        } = rows[0]
+
+        return {
+            id,
+            login,
+            creatorId,
+            created,
+            passwordHash,
+            isAdmin,
+            isOnline
+        }
     }
 }
 

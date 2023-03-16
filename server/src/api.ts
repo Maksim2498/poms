@@ -139,8 +139,7 @@ export const units: UnitCollection = {
         path:   "/test/:user",
 
         async handler(connection, req, res) {
-            await this.userManager.getUserInfo(connection, req.params.user, true)
-            res.json({})
+            res.json(await this.userManager.getUserInfo(connection, req.params.user, true))
         }
     },
 
@@ -280,7 +279,7 @@ export const units: UnitCollection = {
                         nicknames: null as null | string[],
                         reg:       {
                             time:  i.created.toISOString(),
-                            login: i.creator?.login ?? null
+                            login: i.creatorInfo?.login ?? null
                         }
                     }
                 }
@@ -310,7 +309,7 @@ export const units: UnitCollection = {
                 nicknames: null as null | string[],
                 reg:       {
                     time:  info.created.toISOString(),
-                    login: info.creator?.login ?? null
+                    login: info.creatorInfo?.login ?? null
                 }
             }
 
@@ -371,7 +370,7 @@ export const units: UnitCollection = {
 
             res.json({
                 time:  info.created.toISOString(),
-                login: info.creator?.login
+                login: info.creatorInfo?.login
             })
         }
     },
@@ -398,7 +397,7 @@ export const units: UnitCollection = {
             const user = req.params.user
             const info = await this.userManager.getDeepUserInfo(connection, user, true)
 
-            res.json({ login: info.creator?.login })
+            res.json({ login: info.creatorInfo?.login })
         }
     },
 
