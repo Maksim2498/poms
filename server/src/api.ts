@@ -136,10 +136,10 @@ export const units: UnitCollection = {
     // Temporary
     test: {
         method: "get",
-        path:   "/test/:user/:nickname",
+        path:   "/test/:user",
 
         async handler(connection, req, res) {
-            res.json(await this.nicknameManager.forceAddUserNickname(connection, req.params.user, req.params.nickname))
+            res.json({count: await this.nicknameManager.deleteAllUserNicknames(connection, req.params.user, true)})
         }
     },
 

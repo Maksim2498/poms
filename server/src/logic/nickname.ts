@@ -1,7 +1,7 @@
 import Config                                     from "Config"
 import LogicError                                 from "./LogicError"
 
-import { QueryError } from "mysql2"
+import { QueryError, ResultSetHeader } from "mysql2"
 import { Connection, FieldPacket, RowDataPacket } from "mysql2/promise"
 import { Logger                                 } from "winston"
 import { UserManager, User, UserInfo            } from "./user"
@@ -58,7 +58,14 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async deleteAllUserNicknames(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
-        return 0
+        const id = await this.userManager.getUserId(connection, user, checkUser)
+        
+        if (id == null)
+            return 0
+
+        const [result] = await connection.execute("DELETE FROM Nicknames WHERE user_id = ?", [id]) as [ResultSetHeader, FieldPacket[]]
+
+        return result.affectedRows
     }
 
     async deleteAllNicknames(connection: Connection): Promise<number> {
