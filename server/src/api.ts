@@ -133,6 +133,17 @@ const UPDATE_USER_PERMISSION_SCHEMA = z.object({
 })
 
 export const units: UnitCollection = {
+    // Temporary
+    test: {
+        method: "get",
+        path:   "/test/:user",
+
+        async handler(connection, req, res) {
+            await this.userManager.getUserInfo(connection, req.params.user, true)
+            res.json({})
+        }
+    },
+
     isAnonymousAccessAllowed: {
         method: "get",
         path:   "/anonym-access-allowed",
@@ -262,6 +273,7 @@ export const units: UnitCollection = {
                 return {
                     id:            i.id,
                     json:          {
+                        login:     i.login,
                         name:      i.name,
                         isAdmin:   i.isAdmin,
                         isOnline:  i.isOnline,
@@ -291,6 +303,7 @@ export const units: UnitCollection = {
             const user = req.params.user
             const info = await this.userManager.getDeepUserInfo(connection, user, true)
             const json = {
+                login:     info.login,
                 name:      info.name,
                 isAdmin:   info.isAdmin,
                 isOnline:  info.isOnline,
