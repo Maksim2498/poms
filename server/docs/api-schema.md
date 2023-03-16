@@ -14,6 +14,7 @@
   - [Deauthentication](#deauthentication);
   - [Get All Users Info](#get-all-users-info);
   - [Get User Info](#get-user-info);
+  - [Get User Login](#get-user-login);
   - [Check If User Is Administrator](#check-if-user-is-administrator);
   - [Check If User Is Online](#check-if-user-is-online);
   - [Get User Registration Info](#get-user-registration-info);
@@ -312,6 +313,30 @@ __Response__:
         time:  string          // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
         login: string | null
     }
+}
+```
+
+<hr />
+
+### __Get User Login__
+
+Returns specified user login
+
+__Request__:
+
+```http
+GET /users/<user>/login
+```
+
+```http
+Accept: application/json
+```
+
+__Responese__:
+
+```ts
+{
+    login: string
 }
 ```
 
