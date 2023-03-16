@@ -269,6 +269,7 @@ __Response__:
 
 ```ts
 {
+    login:     string
     name:      string   | null
     nicknames: string[] | null // Added if <nicknames> option is set
     isAdmin:   boolean
@@ -301,6 +302,7 @@ __Response__:
 
 ```ts
 {
+    login:     string
     name:      string   | null
     nicknames: string[] | null // Not null if <nicknames> option is set
     isAdmin:   boolean
