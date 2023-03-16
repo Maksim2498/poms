@@ -45,6 +45,6 @@ export class DefaultAuthManager implements AuthManager {
     }
 
     async deauth(connection: Connection, aTokenId: Buffer) {
-
+        await this.tokenManager.deleteAToken(connection, aTokenId, true)
     }
 }
