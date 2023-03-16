@@ -59,20 +59,33 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async deleteAllUserNicknames(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
+        this.logger?.debug(typeof user === "string" ? `Deleting all nicknames of user "${user}"...`
+                                                    : `Deleting all nicknames of user with id ${user}...`)
+
         const id = await this.userManager.getUserId(connection, user, checkUser)
         
-        if (id == null)
+        if (id == null) {
+            this.logger?.debug("Deleted (0)")
             return 0
+        }
 
         const [result] = await connection.execute("DELETE FROM Nicknames WHERE user_id = ?", [id]) as [ResultSetHeader, FieldPacket[]]
+        const count    = result.affectedRows
 
-        return result.affectedRows
+        this.logger?.debug(`Deleted (${count})`)
+
+        return count
     }
 
     async deleteAllNicknames(connection: Connection): Promise<number> {
-        const [result] = await connection.execute("DELETE FROM Nicknames") as [ResultSetHeader, FieldPacket[]]
+        this.logger?.debug("Deleting all nicknames...")
 
-        return result.affectedRows
+        const [result] = await connection.execute("DELETE FROM Nicknames") as [ResultSetHeader, FieldPacket[]]
+        const count    = result.affectedRows
+
+        this.logger?.debug(`Deleted (${count})`)
+
+        return count
     }
 
     async forceDeleteUserNickname(connection: Connection, user: User, nickname: string) {
@@ -83,10 +96,15 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async deleteUserNickname(connection: Connection, user: User, nickname: string, options: DeleteUserNicknameOptions): Promise<boolean> {
+        this.logger?.debug(typeof user === "string" ? `Deleting nickname "${nickname}" of user "${user}"...`
+                                                    : `Deleting all nickname "${nickname}" of user with id ${user}...`)
+
         const id = await this.userManager.getUserId(connection, user, options.checkUser)
 
-        if (id == null)
+        if (id == null) {
+            this.logger?.debug("Not deleted")
             return false
+        }
 
         const [result] = await connection.execute("DELETE FROM Nicknames WHERE user_id = ? AND nickname = ?", [id, nickname]) as [ResultSetHeader, FieldPacket[]]
 
@@ -98,8 +116,12 @@ export class DefaultNicknameManager implements NicknameManager {
                 throw new LogicError(message)
             }
 
+            this.logger?.debug("Not deleted")
+
             return false
         }
+
+        this.logger?.debug("Deleted")
 
         return true
     }
@@ -121,14 +143,20 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async getUserNicknameCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
+        this.logger?.debug(typeof user === "string" ? `Getting nickname count of user "${user}"...`
+                                                    : `Getting nickname count of user with id ${user}...`)
+
         const id = await this.userManager.getUserId(connection, user, checkUser)
 
         if (id == null)
             return 0
 
         const [rows] = await connection.execute("SELECT COUNT(*) AS count FROM NICKNAMES WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+        const count  = rows[0].count
 
-        return rows[0].count
+        this.logger?.debug(`Got: ${count}`)
+
+        return count
     }
 
     async forceAddUserNickname(connection: Connection, user: User, nickname: string) {
@@ -140,16 +168,23 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async addUserNickname(connection: Connection, user: User, nickname: string, options?: AddUserNicknameOptions): Promise<boolean> {
+        this.logger?.debug(typeof user === "string" ? `Adding nickname "${nickname}" of user "${user}"...`
+                                                    : `Adding nickname "${nickname}" of user with id ${user}...`)
+
         const id = await this.userManager.getUserId(connection, user, options?.checkUser)
 
-        if (id == null)
+        if (id == null) {
+            this.logger?.debug("Not added")
             return false
+        }
 
         const count = await this.getUserNicknameCount(connection, id)
 
         if (count >= this.config.logicMaxNicknames) {
             if (options?.throwOnLimit)
                 throw new LogicError("Too many nicknames")
+
+            this.logger?.debug("Not added")
 
             return false
         }
@@ -167,23 +202,33 @@ export class DefaultNicknameManager implements NicknameManager {
                     throw new LogicError(message)
                 }
 
+                this.logger?.debug("Not added")
+
                 return false
             }
 
             throw error
         }
 
+        this.logger?.debug("Added")
+
         return true
     }
 
     async getUserNicknames(connection: Connection, user: User, checkUser: boolean = false): Promise<string[]> {
+        this.logger?.debug(typeof user === "string" ? `Getting nicknames of user "${user}"...`
+                                                    : `Getting nicknames of user with id ${user}...`)
+
         const id = await this.userManager.getUserId(connection, user, checkUser)
 
         if (id == null)
             return []
 
-        const [rows] = await connection.execute("SELECT nickname FROM Nicknames WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+        const [rows]    = await connection.execute("SELECT nickname FROM Nicknames WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+        const nicknames = rows.map(row => row.nickname)
 
-        return rows.map(row => row.nickname)
+        this.logger?.debug(`Got: ${nicknames.map(n => `"${n}"`).join(", ")}`)
+
+        return nicknames
     }
 }
