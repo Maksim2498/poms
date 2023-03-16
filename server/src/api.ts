@@ -321,6 +321,19 @@ export const units: UnitCollection = {
         }
     },
 
+    getUserLogin: {
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user",
+
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const user = req.params.user
+            const info = await this.userManager.getDeepUserInfo(connection, user, true)
+
+            res.json({ login: info.login })
+        }
+    },
+
     isUserAdmin: {
         permission: "user",
         method:     "get",
