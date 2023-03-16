@@ -33,15 +33,23 @@ export class DefaultAuthManager implements AuthManager {
     }
 
     async auth(connection: Connection, login: string, password: string): Promise<TokenPair> {
+        this.logger?.debug(`Authenticating user "${login}"...`)
+
         const info      = await this.userManager.getUserInfoByCredentials(connection, login, password, true)
         const maxTokens = this.config.logicMaxTokens
 
         await this.tokenManager.deleteUserExtraATokens(connection, info.id, maxTokens - 1)
 
-        return await this.tokenManager.createTokenPair(connection, info.id)
+        const pair = await this.tokenManager.createTokenPair(connection, info.id)
+
+        this.logger?.debug("Athenticated")
+
+        return pair
     }
 
     async reauth(connection: Connection, rTokenId: Buffer): Promise<TokenPair> {
+        this.logger?.debug(`Reauthenticating token ${rTokenId.toString("hex")}...`)
+
         const rTokenInfo = await this.tokenManager.getRTokenInfo(connection, rTokenId, true)
 
         if (rTokenInfo.exp <= new Date())
@@ -51,10 +59,16 @@ export class DefaultAuthManager implements AuthManager {
         
         await this.tokenManager.deleteAToken(connection, aTokenInfo.id) // Refresh token will be deleted cascade
         
-        return await this.tokenManager.createTokenPair(connection, aTokenInfo.userId)
+        const pair = await this.tokenManager.createTokenPair(connection, aTokenInfo.userId)
+
+        this.logger?.debug("Reathenticated")
+
+        return pair
     }
 
     async deauth(connection: Connection, aTokenId: Buffer) {
+        this.logger?.debug(`Deauthenticating token ${aTokenId.toString("hex")}...`)
         await this.tokenManager.deleteAToken(connection, aTokenId, true)
+        this.logger?.debug("Deathenticated")
     }
 }
