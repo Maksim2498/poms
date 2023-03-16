@@ -47,19 +47,33 @@ export interface RTokenInfo {
 
 export interface TokenManager {
     deleteUserExtraATokens(connection: Connection, user: User, limit: number): Promise<number>
+
     getUserATokenCount(connection: Connection, user: User): Promise<number>
+
     checkATokenIsActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<void>
+
     isATokenActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<boolean>
+
     createTokenPair(connection: Connection, user: User): Promise<TokenPair>
+
     deleteAllUserATokens(connection: Connection, user: User): Promise<number>
+
     deleteAllATokens(connection: Connection): Promise<number>
+
     deleteAllUserRTokens(connection: Connection, user: User): Promise<number>
+
     deleteAllRTokens(connection: Connection): Promise<number>
-    deleteAToken(connection: Connection, aTokenId: Buffer): Promise<boolean>
-    deleteRToken(connection: Connection, rTokenId: Buffer): Promise<boolean>
-    getATokenInfo(connection: Connection, aTokenId: Buffer, force: true): Promise<ATokenInfo>
+
+    deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):    Promise<true>
+    deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<boolean>
+
+    deleteRToken(connection: Connection, aTokenId: Buffer, force:  true):    Promise<true>
+    deleteRToken(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<boolean>
+
+    getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):    Promise<ATokenInfo>
     getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<ATokenInfo | undefined>
-    getRTokenInfo(connection: Connection, rTokenId: Buffer, force: true): Promise<RTokenInfo>
+
+    getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):    Promise<RTokenInfo>
     getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean): Promise<RTokenInfo | undefined>
 }
 
@@ -109,11 +123,15 @@ export class DefaultTokenManager implements TokenManager {
         return 0
     }
 
-    async deleteAToken(connection: Connection, aTokenId: Buffer): Promise<boolean> {
+    async deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):            Promise<true>
+    async deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<boolean>
+    async deleteAToken(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<boolean> {
         return false
     }
 
-    async deleteRToken(connection: Connection, rTokenId: Buffer): Promise<boolean> {
+    async deleteRToken(connection: Connection, rTokenId: Buffer, force:  true):            Promise<true>
+    async deleteRToken(connection: Connection, rTokenId: Buffer, force?: boolean):         Promise<boolean>
+    async deleteRToken(connection: Connection, rTokenId: Buffer, force:  boolean = false): Promise<boolean> {
         return false
     }
 
