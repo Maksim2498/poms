@@ -78,6 +78,12 @@ export interface UserManager {
 
     getAllUsersInfo(connection: Connection): Promise<UserInfo[]>
 
+    getUserLogin(connection: Connection, user: User, force?: true):    Promise<string>
+    getUserLogin(connection: Connection, user: User, force?: boolean): Promise<string | undefined>
+
+    getUserId(connection: Connection, user: User, force?: true):    Promise<number>
+    getUserId(connection: Connection, user: User, force?: boolean): Promise<number | undefined>
+
     getUserInfo(connection: Connection, user: User, force:  true):    Promise<UserInfo>
     getUserInfo(connection: Connection, user: User, force?: boolean): Promise<UserInfo | undefined>
 }
@@ -145,6 +151,18 @@ export class DefaultUserManager {
 
     async getAllUsersInfo(connection: Connection): Promise<UserInfo[]> {
         return []
+    }
+
+    async getUserLogin(connection: Connection, user: User, force?: true):            Promise<string>
+    async getUserLogin(connection: Connection, user: User, force?: boolean):         Promise<string | undefined>
+    async getUserLogin(connection: Connection, user: User, force:  boolean = false): Promise<string | undefined> {
+        return undefined
+    }
+
+    async getUserId(connection: Connection, user: User, force?: true):            Promise<number>
+    async getUserId(connection: Connection, user: User, force?: boolean):         Promise<number | undefined>
+    async getUserId(connection: Connection, user: User, force:  boolean = false): Promise<number | undefined> {
+        return undefined
     }
 
     async getUserInfo(connection: Connection, user: User, force:  true):            Promise<UserInfo>
