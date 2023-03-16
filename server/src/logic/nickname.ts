@@ -1,5 +1,7 @@
 import Config                                     from "Config"
+import LogicError                                 from "./LogicError"
 
+import { QueryError } from "mysql2"
 import { Connection, FieldPacket, RowDataPacket } from "mysql2/promise"
 import { Logger                                 } from "winston"
 import { UserManager, User, UserInfo            } from "./user"
@@ -13,6 +15,12 @@ export interface CreationOptions {
 export interface DeleteUserNicknameOptions {
     checkUser?:     boolean
     checkNickname?: boolean
+}
+
+export interface AddUserNicknameOptions {
+    checkUser?:        boolean
+    throwOnLimit?:     boolean
+    throwOnDuplicate?: boolean
 }
 
 export interface NicknameManager {
@@ -32,7 +40,8 @@ export interface NicknameManager {
 
     getUserNicknameCount(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
-    addUserNickname(connection: Connection, user: User, nickname: string, checkUser?: boolean): Promise<boolean>
+    forceAddUserNickname(connection: Connection, user: User, nickname: string): Promise<void>
+    addUserNickname(connection: Connection, user: User, nickname: string, options?: AddUserNicknameOptions): Promise<boolean>
 
     getUserNicknames(connection: Connection, user: User, checkUser?: boolean): Promise<string[]>
 }
@@ -80,8 +89,49 @@ export class DefaultNicknameManager implements NicknameManager {
         return 0
     }
 
-    async addUserNickname(connection: Connection, user: User, nickname: string, checkUser: boolean = false): Promise<boolean> {
-        return false
+    async forceAddUserNickname(connection: Connection, user: User, nickname: string) {
+        await this.addUserNickname(connection, user, nickname, {
+            checkUser:        true,
+            throwOnLimit:     true,
+            throwOnDuplicate: true
+        })
+    }
+
+    async addUserNickname(connection: Connection, user: User, nickname: string, options?: AddUserNicknameOptions): Promise<boolean> {
+        const id = await this.userManager.getUserId(connection, user, options?.checkUser)
+
+        if (id == null)
+            return false
+
+        const count = await this.getUserNicknameCount(connection, id)
+
+        if (count >= this.config.logicMaxNicknames) {
+            if (options?.throwOnLimit)
+                throw new LogicError("Too many nicknames")
+
+            return false
+        }
+
+        try {
+            await connection.execute("INSERT INTO Nicknames (user_id, nickname) VALUES (?, ?)", [id, nickname])
+        } catch (error) {
+            const code = (error as any).code
+
+            if (code === "ER_DUP_ENTRY") {
+                if (options?.throwOnDuplicate) {
+                    const message = typeof user === "string" ? `User "${user}" already has nickname "${nickname}"`
+                                                             : `User with id ${user} already has nickname "${nickname}"`
+
+                    throw new LogicError(message)
+                }
+
+                return false
+            }
+
+            throw error
+        }
+
+        return true
     }
 
     async getUserNicknames(connection: Connection, user: User, checkUser: boolean = false): Promise<string[]> {
