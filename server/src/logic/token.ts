@@ -46,9 +46,9 @@ export interface RTokenInfo {
 }
 
 export interface TokenManager {
-    deleteUserExtraATokens(connection: Connection, user: User, limit: number): Promise<number>
+    deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser?: boolean): Promise<number>
 
-    getUserATokenCount(connection: Connection, user: User): Promise<number>
+    getUserATokenCount(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
     checkATokenIsActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<void>
 
@@ -56,11 +56,11 @@ export interface TokenManager {
 
     createTokenPair(connection: Connection, user: User): Promise<TokenPair>
 
-    deleteAllUserATokens(connection: Connection, user: User): Promise<number>
+    deleteAllUserATokens(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
     deleteAllATokens(connection: Connection): Promise<number>
 
-    deleteAllUserRTokens(connection: Connection, user: User): Promise<number>
+    deleteAllUserRTokens(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
     deleteAllRTokens(connection: Connection): Promise<number>
 
@@ -88,11 +88,11 @@ export class DefaultTokenManager implements TokenManager {
         this.logger      = options.logger
     }
 
-    async deleteUserExtraATokens(connection: Connection, user: User, limit: number): Promise<number> {
+    async deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser: boolean = false): Promise<number> {
         return 0
     }
 
-    async getUserATokenCount(connection: Connection, user: User): Promise<number> {
+    async getUserATokenCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
         return 0
     }
 
@@ -107,7 +107,7 @@ export class DefaultTokenManager implements TokenManager {
         return {} as TokenPair
     }
 
-    async deleteAllUserATokens(connection: Connection, user: User): Promise<number> {
+    async deleteAllUserATokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
         return 0
     }
 
@@ -115,7 +115,7 @@ export class DefaultTokenManager implements TokenManager {
         return 0
     }
 
-    async deleteAllUserRTokens(connection: Connection, user: User): Promise<number> {
+    async deleteAllUserRTokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
         return 0
     }
 
