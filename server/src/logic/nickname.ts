@@ -69,7 +69,10 @@ export class DefaultNicknameManager implements NicknameManager {
     }
 
     async deleteAllNicknames(connection: Connection): Promise<number> {
-        return 0
+        const [result] = await connection.execute("DELETE FROM Nicknames") as [ResultSetHeader, FieldPacket[]]
+
+        return result.affectedRows
+
     }
 
     async deleteUserNickname(connection: Connection, user: User, nickname: string, options: DeleteUserNicknameOptions): Promise<boolean> {
