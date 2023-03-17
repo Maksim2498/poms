@@ -136,11 +136,11 @@ export const units: UnitCollection = {
     // Temporary
     test: {
         method: "get",
-        path:   "/test/:user/:nickname",
+        path:   "/test/:nickname",
 
         async handler(connection, req, res) {
-            await this.nicknameManager.forceDeleteUserNickname(connection, req.params.user, req.params.nickname)
-            res.json({})
+            const id = await this.nicknameManager.getNicknameOwnerId(connection, req.params.nickname, true)
+            res.json({id})
         }
     },
 

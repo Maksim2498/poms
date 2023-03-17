@@ -152,7 +152,16 @@ export class DefaultNicknameManager implements NicknameManager {
     async getNicknameOwnerId(connection: Connection, nickname: string, force:  true):            Promise<number>
     async getNicknameOwnerId(connection: Connection, nickname: string, force?: boolean):         Promise<number | undefined>
     async getNicknameOwnerId(connection: Connection, nickname: string, force:  boolean = false): Promise<number | undefined> {
-        return undefined
+        const [rows] = await connection.execute("SELECT user_id FROM Nicknames WHERE nickname = ?", [nickname]) as [RowDataPacket[], FieldPacket[]]
+
+        if (rows.length === 0) {
+            if (force)
+                throw new LogicError(`There is no owner of nickname "${nickname}"`)
+        
+            return undefined
+        }
+
+        return rows[0].user_id
     }
 
     async getUserNicknameCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
