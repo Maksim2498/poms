@@ -6,7 +6,7 @@
 - [About](#about);
 - [Schema](#schema);
 - [Placeholders](#placeholders);
-- [Minimal Config](#minimal-config);
+- [Minimal Configuration](#minimal-configuration);
 - [Format](#format);
   - [Port Number](#port-number);
   - [Path String](#path-string);
@@ -85,9 +85,9 @@ Those are all available placeholders:
 - `<SERVER_PATH>` - path to the server directory;
 - `<SITE_PATH>`   - path to the site directory.
 
-## Minimal Config
+## Minimal Configuration
 
-Minimal valid config is the following:
+Minimal valid configuration file is the following:
 
 ```json
 {
