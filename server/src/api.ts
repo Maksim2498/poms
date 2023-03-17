@@ -139,8 +139,8 @@ export const units: UnitCollection = {
         path:   "/test/:nickname",
 
         async handler(connection, req, res) {
-            const id = await this.nicknameManager.getNicknameOwnerId(connection, req.params.nickname, true)
-            res.json({id})
+            const info = await this.nicknameManager.getNicknameOwnerInfo(connection, req.params.nickname, true)
+            res.json(info)
         }
     },
 

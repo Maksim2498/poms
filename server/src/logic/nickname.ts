@@ -152,13 +152,26 @@ export class DefaultNicknameManager implements NicknameManager {
     async getNicknameOwnerInfo(connection: Connection, nickname: string, force:  true):            Promise<UserInfo>
     async getNicknameOwnerInfo(connection: Connection, nickname: string, force?: boolean):         Promise<UserInfo | undefined>
     async getNicknameOwnerInfo(connection: Connection, nickname: string, force:  boolean = false): Promise<UserInfo | undefined> {
-        return undefined
+        this.logger?.debug(`Getting nickname "${nickname}" owner info...`)
+
+        const id = await this.getNicknameOwnerId(connection, nickname, force)
+
+        if (id == null) {
+            this.logger?.debug("Not found")
+            return undefined
+        }
+
+        const info = await this.userManager.getUserInfo(connection, id)
+
+        this.logger?.debug("Got")
+
+        return info
     }
 
     async getNicknameOwnerId(connection: Connection, nickname: string, force:  true):            Promise<number>
     async getNicknameOwnerId(connection: Connection, nickname: string, force?: boolean):         Promise<number | undefined>
     async getNicknameOwnerId(connection: Connection, nickname: string, force:  boolean = false): Promise<number | undefined> {
-        this.logger?.debug(`Getting owner id of nickname "${nickname}"...`)
+        this.logger?.debug(`Getting nickname "${nickname}" owner id...`)
 
         const [rows] = await connection.execute("SELECT user_id FROM Nicknames WHERE nickname = ?", [nickname]) as [RowDataPacket[], FieldPacket[]]
 
