@@ -31,7 +31,8 @@ export interface NicknameManager {
     forceDeleteUserNickname(connection: Connection, user: User, nickname: string): Promise<void>
     deleteUserNickname(connection: Connection, user: User, nickname: string, options?: DeleteUserNicknameOptions): Promise<boolean>
 
-    deleteNickname(connection: Connection, nickname: string): Promise<boolean>
+    deleteNickname(connection: Connection, nickname: string, force:  true):    Promise<true>
+    deleteNickname(connection: Connection, nickname: string, force?: boolean): Promise<boolean>
 
     getNicknameOwnerInfo(connection: Connection, nickname: string, force:  true):    Promise<UserInfo>
     getNicknameOwnerInfo(connection: Connection, nickname: string, force?: boolean): Promise<UserInfo | undefined>
@@ -126,8 +127,20 @@ export class DefaultNicknameManager implements NicknameManager {
         return true
     }
 
-    async deleteNickname(connection: Connection, nickname: string): Promise<boolean> {
-        return false
+    async deleteNickname(connection: Connection, nickname: string, force:  true):            Promise<true>
+    async deleteNickname(connection: Connection, nickname: string, force?: boolean):         Promise<boolean>
+    async deleteNickname(connection: Connection, nickname: string, force:  boolean = false): Promise<boolean> {
+        const [result] = await connection.execute("DELETE FROM Nicknames WHERE nickname = ?", [nickname]) as [ResultSetHeader, FieldPacket[]]
+        const deleted  = result.affectedRows !== 0
+
+        if (!deleted) {
+            if (force)
+                throw new LogicError(`Nickname "${nickname}" not found`)
+
+            return false
+        }
+
+        return true
     }
 
     async getNicknameOwnerInfo(connection: Connection, nickname: string, force:  true):            Promise<UserInfo>
