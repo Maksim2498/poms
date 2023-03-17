@@ -136,10 +136,10 @@ export const units: UnitCollection = {
     // Temporary
     test: {
         method: "get",
-        path:   "/test/:nickname",
+        path:   "/test/:user",
 
         async handler(connection, req, res) {
-            const info = await this.nicknameManager.getNicknameOwnerInfo(connection, req.params.nickname, true)
+            const info = await this.userManager.forceGetDeepUserInfo(connection, req.params.user)
             res.json(info)
         }
     },

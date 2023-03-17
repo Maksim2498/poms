@@ -116,7 +116,7 @@ export interface UserManager {
     getUserInfo(connection: Connection, user: User, force?: boolean): Promise<UserInfo | undefined>
 }
 
-export class DefaultUserManager {
+export class DefaultUserManager implements UserManager {
     readonly config:  Config
     readonly logger?: Logger
     
@@ -145,7 +145,7 @@ export class DefaultUserManager {
         return false
     }
 
-    async froceSetUserPermission(connection: Connection, user: User, isAdmin: boolean) {
+    async forceSetUserPermission(connection: Connection, user: User, isAdmin: boolean) {
         await this.setUserPermission(connection, user, isAdmin, true)
     }
 
@@ -212,7 +212,53 @@ export class DefaultUserManager {
     async getDeepUserInfo(connection: Connection, user: User, force: true):            Promise<DeepUserInfo>
     async getDeepUserInfo(connection: Connection, user: User, force?: boolean):        Promise<DeepUserInfo | undefined>
     async getDeepUserInfo(connection: Connection, user: User, force: boolean = false): Promise<DeepUserInfo | undefined> {
-        return undefined
+        const numUser = typeof user === "number"
+
+        this.logger?.debug(numUser ? `Getting deep info of user with id ${user}...`
+                                   : `Getting deep info of user "${user}"...`)
+
+        const whereSql = numUser ? "target.id = ?" : "target.login = ?"
+        const sql      = `SELECT * FROM Users target LEFT JOIN Users creator ON target.cr_id = creator.id WHERE ${whereSql}`
+        const [rows]   = await connection.execute({ sql, nestTables: true }, [user]) as [RowDataPacket[], FieldPacket[]]
+
+        if (rows.length === 0) {
+            if (force) {
+                const message = numUser ? `User with id ${user} not found`
+                                        : `User "${user}" not found`
+
+                throw new LogicError(message)
+            }
+
+            this.logger?.debug("Not found")
+        
+            return undefined
+        }
+
+        const { target: t, creator: c } = rows[0]
+
+        const info = {
+            id:           t.id,
+            login:        t.login,
+            name:         t.name,
+            passwordHash: t.password_hash,
+            isAdmin:      t.is_admin,
+            isOnline:     t.is_online,
+            created:      t.cr_time,
+            creatorInfo:  t.cr_id != null ? {
+                id:            c.id,
+                login:         c.login,
+                name:          c.name,
+                passwordHash:  c.password_hash,
+                isAdmin:       c.is_admin,
+                isOnline:      c.is_online,
+                created:       c.cr_time,
+                creatorId:     c.cr_id
+            } : null
+        }
+
+        this.logger?.debug(`Got: ${deepUserInfoToString(info)}`)
+
+        return info
     }
 
     async getAllUsersInfo(connection: Connection): Promise<UserInfo[]> {
@@ -336,7 +382,7 @@ export class DefaultUserManager {
             isOnline
         }
 
-        this.logger?.debug(`Got: ${JSON.stringify(info, null, 4)}`)
+        this.logger?.debug(`Got: ${userInfoToString(info)}`)
 
         return info
     }
@@ -385,4 +431,39 @@ export function validateUserLogin(login: string): string | undefined {
         return `Login "${login}" contains whitespace`
 
     return undefined
+}
+
+export function userInfoToString(info: UserInfo): string {
+    return JSON.stringify({
+        id:           info.id,
+        login:        info.login,
+        name:         info.name,
+        passwordHash: info.passwordHash.toString("hex"),
+        isOnline:     info.isOnline,
+        isAdmin:      info.isAdmin,
+        created:      info.created.toISOString(),
+        creatorId:    info.creatorId
+    }, null, 4)
+}
+
+export function deepUserInfoToString(info: DeepUserInfo): string {
+    return JSON.stringify({
+        id:           info.id,
+        login:        info.login,
+        name:         info.name,
+        passwordHash: info.passwordHash.toString("hex"),
+        isOnline:     info.isOnline,
+        isAdmin:      info.isAdmin,
+        created:      info.created.toISOString(),
+        creatorInfo:  info.creatorInfo != null ? {
+            id:           info.creatorInfo.id,
+            login:        info.creatorInfo.login,
+            name:         info.creatorInfo.name,
+            passwordHash: info.creatorInfo.passwordHash.toString("hex"),
+            isOnline:     info.creatorInfo.isOnline,
+            isAdmin:      info.creatorInfo.isAdmin,
+            created:      info.creatorInfo.created.toISOString(),
+            creatorId:    info.creatorInfo.creatorId
+        } : null
+    }, null, 4)
 }
