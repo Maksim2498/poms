@@ -130,6 +130,8 @@ export class DefaultNicknameManager implements NicknameManager {
     async deleteNickname(connection: Connection, nickname: string, force:  true):            Promise<true>
     async deleteNickname(connection: Connection, nickname: string, force?: boolean):         Promise<boolean>
     async deleteNickname(connection: Connection, nickname: string, force:  boolean = false): Promise<boolean> {
+        this.logger?.debug(`Deleting nickname "${nickname}"...`)
+
         const [result] = await connection.execute("DELETE FROM Nicknames WHERE nickname = ?", [nickname]) as [ResultSetHeader, FieldPacket[]]
         const deleted  = result.affectedRows !== 0
 
@@ -137,8 +139,12 @@ export class DefaultNicknameManager implements NicknameManager {
             if (force)
                 throw new LogicError(`Nickname "${nickname}" not found`)
 
+            this.logger?.debug("Not deleted")
+            
             return false
         }
+
+        this.logger?.debug("Deleted")
 
         return true
     }
@@ -152,16 +158,24 @@ export class DefaultNicknameManager implements NicknameManager {
     async getNicknameOwnerId(connection: Connection, nickname: string, force:  true):            Promise<number>
     async getNicknameOwnerId(connection: Connection, nickname: string, force?: boolean):         Promise<number | undefined>
     async getNicknameOwnerId(connection: Connection, nickname: string, force:  boolean = false): Promise<number | undefined> {
+        this.logger?.debug(`Getting owner id of nickname "${nickname}"...`)
+
         const [rows] = await connection.execute("SELECT user_id FROM Nicknames WHERE nickname = ?", [nickname]) as [RowDataPacket[], FieldPacket[]]
 
         if (rows.length === 0) {
             if (force)
                 throw new LogicError(`There is no owner of nickname "${nickname}"`)
         
+            this.logger?.debug("Not found")
+        
             return undefined
         }
 
-        return rows[0].user_id
+        const id = rows[0].user_id as number
+
+        this.logger?.debug(`Got: ${id}`)
+
+        return id
     }
 
     async getUserNicknameCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
