@@ -216,9 +216,11 @@ export class DefaultUserManager {
     }
 
     async getAllUsersInfo(connection: Connection): Promise<UserInfo[]> {
+        this.logger?.debug("Getting all users info...")
+
         const [rows] = await connection.execute("SELECT * FROM Users") as [RowDataPacket[], FieldPacket[]]
 
-        return rows.map(row => {
+        return rows.map((row, i) => {
             const {
                 id,
                 login,
@@ -229,7 +231,7 @@ export class DefaultUserManager {
                 is_online:     isOnline
             } = row
 
-            return {
+            const info = {
                 id,
                 login,
                 creatorId,
@@ -238,6 +240,10 @@ export class DefaultUserManager {
                 isAdmin,
                 isOnline
             }
+
+            this.logger?.debug(`Got (${i}): ${JSON.stringify(info, null, 4)}`)
+
+            return info
         })
     }
 
@@ -288,7 +294,11 @@ export class DefaultUserManager {
     async getUserInfo(connection: Connection, user: User, force:  true):            Promise<UserInfo>
     async getUserInfo(connection: Connection, user: User, force?: boolean):         Promise<UserInfo | undefined>
     async getUserInfo(connection: Connection, user: User, force:  boolean = false): Promise<UserInfo | undefined> {
-        const numUser  = typeof user === "number"
+        const numUser = typeof user === "number"
+
+        this.logger?.debug(numUser ? `Getting info of user with id ${user}...`
+                                   : `Getting info of user "${user}"...`)
+
         const whereSql = numUser ? "id = ?" : "login = ?"
         const sql      = `SELECT * FROM Users WHERE ${whereSql}`
         const [rows]   = await connection.execute(sql, [user]) as [RowDataPacket[], FieldPacket[]]
@@ -300,6 +310,8 @@ export class DefaultUserManager {
 
                 throw new LogicError(message)
             }
+
+            this.logger?.debug("Not found")
         
             return undefined
         }
@@ -314,7 +326,7 @@ export class DefaultUserManager {
             is_online:     isOnline
         } = rows[0]
 
-        return {
+        const info = {
             id,
             login,
             creatorId,
@@ -323,6 +335,10 @@ export class DefaultUserManager {
             isAdmin,
             isOnline
         }
+
+        this.logger?.debug(`Got: ${JSON.stringify(info, null, 4)}`)
+
+        return info
     }
 }
 
