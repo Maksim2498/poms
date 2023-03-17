@@ -1,7 +1,7 @@
 import Config                                     from "Config"
 import LogicError                                 from "./LogicError"
 
-import { QueryError, ResultSetHeader } from "mysql2"
+import { ResultSetHeader                        } from "mysql2"
 import { Connection, FieldPacket, RowDataPacket } from "mysql2/promise"
 import { Logger                                 } from "winston"
 import { UserManager, User, UserInfo            } from "./user"
