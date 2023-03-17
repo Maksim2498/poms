@@ -616,7 +616,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user  = req.params.user
-            const count = await this.nicknameManager.deleteAllUserNicknames(connection, user, true)
+            const count = await this.nicknameManager.forceDeleteAllUserNicknames(connection, user)
 
             res.json({ count })
         }
@@ -631,10 +631,7 @@ export const units: UnitCollection = {
             const user     = req.params.user
             const nickname = req.params.user
 
-            await this.nicknameManager.deleteUserNickname(connection, user, nickname, {
-                checkNickname: true,
-                checkUser:     true
-            })
+            await this.nicknameManager.forceDeleteUserNickname(connection, user, nickname)
 
             res.json({})
         }
@@ -719,7 +716,7 @@ export const units: UnitCollection = {
             const user     = req.params.user
             const nickname = req.params.nickname
 
-            await this.nicknameManager.addUserNickname(connection, user, nickname)
+            await this.nicknameManager.forceAddUserNickname(connection, user, nickname)
 
             res.json({})
         }

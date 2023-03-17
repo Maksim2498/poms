@@ -24,12 +24,17 @@ export interface AddUserNicknameOptions {
 }
 
 export interface NicknameManager {
+    forceDeleteAllUserNicknames(connection: Connection, user: User): Promise<void>
+
     deleteAllUserNicknames(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
     deleteAllNicknames(connection: Connection): Promise<number>
 
     forceDeleteUserNickname(connection: Connection, user: User, nickname: string): Promise<void>
+
     deleteUserNickname(connection: Connection, user: User, nickname: string, options?: DeleteUserNicknameOptions): Promise<boolean>
+
+    forceDeleteNickname(connection: Connection, nickname: string): Promise<void>
 
     deleteNickname(connection: Connection, nickname: string, force:  true):    Promise<true>
     deleteNickname(connection: Connection, nickname: string, force?: boolean): Promise<boolean>
@@ -37,13 +42,21 @@ export interface NicknameManager {
     getNicknameOwnerInfo(connection: Connection, nickname: string, force:  true):    Promise<UserInfo>
     getNicknameOwnerInfo(connection: Connection, nickname: string, force?: boolean): Promise<UserInfo | undefined>
 
+    forceGetNicknameOwnerId(connection: Connection, nickname: string): Promise<number>
+
+    forceGetNicknameOwnerInfo(connection: Connection, nickname: string): Promise<UserInfo>
+
     getNicknameOwnerId(connection: Connection, nickname: string, force:  true):    Promise<number>
     getNicknameOwnerId(connection: Connection, nickname: string, force?: boolean): Promise<number | undefined>
+
+    forceGetUserNicknameCount(connection: Connection, user: User): Promise<number>
 
     getUserNicknameCount(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
     forceAddUserNickname(connection: Connection, user: User, nickname: string): Promise<void>
     addUserNickname(connection: Connection, user: User, nickname: string, options?: AddUserNicknameOptions): Promise<boolean>
+
+    forceGetUserNicknames(connection: Connection, user: User): Promise<string[]>
 
     getUserNicknames(connection: Connection, user: User, checkUser?: boolean): Promise<string[]>
 }
@@ -57,6 +70,10 @@ export class DefaultNicknameManager implements NicknameManager {
         this.userManager = options.userManager
         this.config      = options.config
         this.logger      = options.logger
+    }
+
+    async forceDeleteAllUserNicknames(connection: Connection, user: User) {
+        await this.deleteAllUserNicknames(connection, user, true)
     }
 
     async deleteAllUserNicknames(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
@@ -127,6 +144,10 @@ export class DefaultNicknameManager implements NicknameManager {
         return true
     }
 
+    async forceDeleteNickname(connection: Connection, nickname: string) {
+        await this.deleteNickname(connection, nickname, true)
+    }
+
     async deleteNickname(connection: Connection, nickname: string, force:  true):            Promise<true>
     async deleteNickname(connection: Connection, nickname: string, force?: boolean):         Promise<boolean>
     async deleteNickname(connection: Connection, nickname: string, force:  boolean = false): Promise<boolean> {
@@ -149,6 +170,10 @@ export class DefaultNicknameManager implements NicknameManager {
         return true
     }
 
+    async forceGetNicknameOwnerInfo(connection: Connection, nickname: string): Promise<UserInfo> {
+        return await this.getNicknameOwnerInfo(connection, nickname, true)
+    }
+
     async getNicknameOwnerInfo(connection: Connection, nickname: string, force:  true):            Promise<UserInfo>
     async getNicknameOwnerInfo(connection: Connection, nickname: string, force?: boolean):         Promise<UserInfo | undefined>
     async getNicknameOwnerInfo(connection: Connection, nickname: string, force:  boolean = false): Promise<UserInfo | undefined> {
@@ -166,6 +191,10 @@ export class DefaultNicknameManager implements NicknameManager {
         this.logger?.debug("Got")
 
         return info
+    }
+
+    async forceGetNicknameOwnerId(connection: Connection, nickname: string): Promise<number> {
+        return await this.getNicknameOwnerId(connection, nickname, true)
     }
 
     async getNicknameOwnerId(connection: Connection, nickname: string, force:  true):            Promise<number>
@@ -189,6 +218,10 @@ export class DefaultNicknameManager implements NicknameManager {
         this.logger?.debug(`Got: ${id}`)
 
         return id
+    }
+
+    async forceGetUserNicknameCount(connection: Connection, user: User): Promise<number> {
+        return await this.getUserNicknameCount(connection, user, true)
     }
 
     async getUserNicknameCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
@@ -262,6 +295,10 @@ export class DefaultNicknameManager implements NicknameManager {
         this.logger?.debug("Added")
 
         return true
+    }
+
+    async forceGetUserNicknames(connection: Connection, user: User): Promise<string[]> {
+        return await this.getUserNicknames(connection, user, true)
     }
 
     async getUserNicknames(connection: Connection, user: User, checkUser: boolean = false): Promise<string[]> {
