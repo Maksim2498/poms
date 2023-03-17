@@ -216,7 +216,29 @@ export class DefaultUserManager {
     }
 
     async getAllUsersInfo(connection: Connection): Promise<UserInfo[]> {
-        return []
+        const [rows] = await connection.execute("SELECT * FROM Users") as [RowDataPacket[], FieldPacket[]]
+
+        return rows.map(row => {
+            const {
+                id,
+                login,
+                cr_id:         creatorId,
+                cr_time:       created,
+                password_hash: passwordHash,
+                is_admin:      isAdmin,
+                is_online:     isOnline
+            } = row
+
+            return {
+                id,
+                login,
+                creatorId,
+                created,
+                passwordHash,
+                isAdmin,
+                isOnline
+            }
+        })
     }
 
     async forceGetUserLogin(connection: Connection, user: User): Promise<string> {
