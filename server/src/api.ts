@@ -87,7 +87,7 @@ export async function checkPermission(this: Server, permission: Permission, req:
 
                 const userManager     = this.userManager
                 const reqUserId       = aTokenInfo!.userId
-                const reqUserInfo     = await userManager.getUserInfo(connection, reqUserId, true)
+                const reqUserInfo     = await userManager.forceGetUserInfo(connection, reqUserId)
                 const reqUserLogin    = reqUserInfo.login.toLowerCase()
                 const targetUserLogin = req.params.user.toLowerCase()
                 const isReqUserAdmin  = reqUserInfo.isAdmin
@@ -101,7 +101,7 @@ export async function checkPermission(this: Server, permission: Permission, req:
 
                 const userManager = this.userManager
                 const userId      = aTokenInfo!.userId
-                const userInfo    = await userManager.getUserInfo(connection, userId, true)
+                const userInfo    = await userManager.forceGetUserInfo(connection, userId)
 
                 if (!userInfo.isAdmin)
                     res.sendStatus(403)
@@ -739,15 +739,15 @@ export const units: UnitCollection = {
             const { password, name, isAdmin } = parseResult.data
             const authorization               = req.headers.authorization!
             const aTokenId                    = parseTokenId(authorization)
-            const aTokenInfo                  = await this.tokenManager.getATokenInfo(connection, aTokenId, true)
+            const aTokenInfo                  = await this.tokenManager.forceGetATokenInfo(connection, aTokenId)
             const creatorId                   = aTokenInfo.userId
             const login                       = req.params.user
         
             await this.userManager.forceCreateUser(connection, {
-                login:    login,
-                password: password,
-                name:     name,
-                isAdmin:  isAdmin,
+                login,
+                password,
+                name,
+                isAdmin,
                 creator:  creatorId
             })
         

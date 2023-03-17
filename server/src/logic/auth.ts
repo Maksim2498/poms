@@ -50,7 +50,7 @@ export class DefaultAuthManager implements AuthManager {
     async reauth(connection: Connection, rTokenId: Buffer): Promise<TokenPair> {
         this.logger?.debug(`Reauthenticating token ${rTokenId.toString("hex")}...`)
 
-        const rTokenInfo = await this.tokenManager.getRTokenInfo(connection, rTokenId, true)
+        const rTokenInfo = await this.tokenManager.forceGetRTokenInfo(connection, rTokenId)
 
         if (rTokenInfo.exp <= new Date())
             throw new LogicError("Token is too old")
@@ -68,7 +68,7 @@ export class DefaultAuthManager implements AuthManager {
 
     async deauth(connection: Connection, aTokenId: Buffer) {
         this.logger?.debug(`Deauthenticating token ${aTokenId.toString("hex")}...`)
-        await this.tokenManager.deleteAToken(connection, aTokenId, true)
+        await this.tokenManager.forceDeleteAToken(connection, aTokenId)
         this.logger?.debug("Deathenticated")
     }
 }

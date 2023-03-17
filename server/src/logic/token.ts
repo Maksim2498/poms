@@ -48,6 +48,8 @@ export interface RTokenInfo {
 export interface TokenManager {
     deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser?: boolean): Promise<number>
 
+    forceGetUserATokenCount(connection: Connection, user: User): Promise<number>
+
     getUserATokenCount(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
     checkATokenIsActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<void>
@@ -58,20 +60,32 @@ export interface TokenManager {
 
     deleteAllUserATokens(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
+    forceDeleteAllUserATokens(connection: Connection, user: User): Promise<number>
+
     deleteAllATokens(connection: Connection): Promise<number>
+
+    forceDeleteAllUserRTokens(connection: Connection, user: User): Promise<number>
 
     deleteAllUserRTokens(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
     deleteAllRTokens(connection: Connection): Promise<number>
 
+    forceDeleteAToken(connection: Connection, aTokenId: Buffer): Promise<void>
+
     deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):    Promise<true>
     deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<boolean>
+
+    forceDeleteRToken(connection: Connection, rTokenId: Buffer): Promise<void>
 
     deleteRToken(connection: Connection, aTokenId: Buffer, force:  true):    Promise<true>
     deleteRToken(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<boolean>
 
+    forceGetATokenInfo(connection: Connection, aTokenId: Buffer): Promise<ATokenInfo>
+
     getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):    Promise<ATokenInfo>
     getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<ATokenInfo | undefined>
+
+    forceGetRTokenInfo(connection: Connection, rTokenId: Buffer): Promise<RTokenInfo>
 
     getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):    Promise<RTokenInfo>
     getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean): Promise<RTokenInfo | undefined>
@@ -90,6 +104,10 @@ export class DefaultTokenManager implements TokenManager {
 
     async deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser: boolean = false): Promise<number> {
         return 0
+    }
+
+    async forceGetUserATokenCount(connection: Connection, user: User): Promise<number> {
+        return await this.getUserATokenCount(connection, user, true)
     }
 
     async getUserATokenCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
@@ -111,8 +129,16 @@ export class DefaultTokenManager implements TokenManager {
         return 0
     }
 
+    async forceDeleteAllUserATokens(connection: Connection, user: User): Promise<number> {
+        return await this.deleteAllUserATokens(connection, user, true)
+    }
+
     async deleteAllATokens(connection: Connection): Promise<number> {
         return 0
+    }
+
+    async forceDeleteAllUserRTokens(connection: Connection, user: User): Promise<number> {
+        return await this.deleteAllUserRTokens(connection, user, true)
     }
 
     async deleteAllUserRTokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
@@ -123,10 +149,18 @@ export class DefaultTokenManager implements TokenManager {
         return 0
     }
 
+    async forceDeleteAToken(connection: Connection, aTokenId: Buffer) {
+        await this.deleteAToken(connection, aTokenId, true)
+    }
+
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):            Promise<true>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<boolean>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<boolean> {
         return false
+    }
+
+    async forceDeleteRToken(connection: Connection, rTokenId: Buffer) {
+        await this.deleteRToken(connection, rTokenId, true)
     }
 
     async deleteRToken(connection: Connection, rTokenId: Buffer, force:  true):            Promise<true>
@@ -135,10 +169,18 @@ export class DefaultTokenManager implements TokenManager {
         return false
     }
 
+    async forceGetATokenInfo(connection: Connection, aTokenId: Buffer): Promise<ATokenInfo> {
+        return await this.getATokenInfo(connection, aTokenId, true)
+    }
+
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):            Promise<ATokenInfo>
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<ATokenInfo | undefined>
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<ATokenInfo | undefined> {
         return {} as ATokenInfo
+    }
+
+    async forceGetRTokenInfo(connection: Connection, rTokenId: Buffer): Promise<RTokenInfo> {
+        return await this.getRTokenInfo(connection, rTokenId, true)
     }
 
     async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):            Promise<RTokenInfo>
