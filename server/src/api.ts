@@ -301,7 +301,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getDeepUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetDeepUserInfo(connection, user)
             const json = {
                 login:     info.login,
                 name:      info.name,
@@ -328,7 +328,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getDeepUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetDeepUserInfo(connection, user)
 
             res.json({ login: info.login })
         }
@@ -341,7 +341,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetUserInfo(connection, user)
             
             res.json({ isAdmin: info.isAdmin })
         }
@@ -354,7 +354,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetUserInfo(connection, user)
             
             res.json({ isOnline: info.isOnline })
         }
@@ -367,7 +367,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getDeepUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetDeepUserInfo(connection, user)
 
             res.json({
                 time:  info.created.toISOString(),
@@ -383,7 +383,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetUserInfo(connection, user)
 
             res.json({ time: info.created.toISOString() })
         }
@@ -396,7 +396,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getDeepUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetDeepUserInfo(connection, user)
 
             res.json({ login: info.creatorInfo?.login })
         }
@@ -409,7 +409,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            const info = await this.userManager.getUserInfo(connection, user, true)
+            const info = await this.userManager.forceGetUserInfo(connection, user)
 
             res.json({ name: info.name })
         }
@@ -422,7 +422,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user      = req.params.user
-            const nicknames = await this.nicknameManager.getUserNicknames(connection, user, true)
+            const nicknames = await this.nicknameManager.forceGetUserNicknames(connection, user)
 
             res.json(nicknames)
         }
@@ -604,7 +604,7 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
-            await this.userManager.deleteUser(connection, user, true)
+            await this.userManager.forceDeleteUser(connection, user)
             res.json({})
         }
     },
@@ -654,7 +654,7 @@ export const units: UnitCollection = {
             const { name } = parseResult.data
             const user     = req.params.user
 
-            await this.userManager.setUserName(connection, user, name, true)
+            await this.userManager.forceSetUserName(connection, user, name)
 
             res.json({})
         }
@@ -677,7 +677,7 @@ export const units: UnitCollection = {
             const { password } = parseResult.data
             const user         = req.params.user
 
-            await this.userManager.setUserPassword(connection, user, password, true)
+            await this.userManager.forceSetUserPassword(connection, user, password)
             await this.tokenManager.deleteAllUserATokens(connection, user)
 
             res.json({})
@@ -701,7 +701,7 @@ export const units: UnitCollection = {
             const { isAdmin } = parseResult.data
             const user        = req.params.user
 
-            await this.userManager.setUserPermission(connection, user, isAdmin, true)
+            await this.userManager.forceSetUserPermission(connection, user, isAdmin)
 
             res.json({})
         }
@@ -743,13 +743,12 @@ export const units: UnitCollection = {
             const creatorId                   = aTokenInfo.userId
             const login                       = req.params.user
         
-            await this.userManager.createUser(connection, {
+            await this.userManager.forceCreateUser(connection, {
                 login:    login,
                 password: password,
                 name:     name,
                 isAdmin:  isAdmin,
-                creator:  creatorId,
-                force:    true
+                creator:  creatorId
             })
         
             res.json({})

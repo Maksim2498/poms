@@ -11,20 +11,26 @@ export interface CreationOptions {
 
 export type User = string | number
 
-export interface CreateAdminOptions {
+export interface ForceCreateAdminOptions {
     login?:    string
     password?: string
     name?:     string
-    force?:    boolean
 }
 
-export interface CreateUserOptions {
+export interface CreateAdminOptions extends ForceCreateAdminOptions {
+    force?: boolean
+}
+
+export interface ForceCreateUserOptions {
     login:      string
     password:   string
     name?:      string
     isAdmin?:   boolean
     creator?:   User
-    force?:     boolean
+}
+
+export interface CreateUserOptions extends ForceCreateUserOptions {
+    force?: boolean
 } 
 
 export interface DeepUserInfo {
@@ -50,39 +56,61 @@ export interface UserInfo {
 }
 
 export interface UserManager {
+    forceSetUserName(connection: Connection, user: User, name: string | null): Promise<void>
+
     setUserName(connection: Connection, user: User, name: string | null, force:  true):    Promise<true>
     setUserName(connection: Connection, user: User, name: string | null, force?: boolean): Promise<boolean>
+
+    forceSetUserPassword(connection: Connection, user: User, password: string): Promise<void>
 
     setUserPassword(connection: Connection, user: User, password: string, force:  true):    Promise<true>
     setUserPassword(connection: Connection, user: User, password: string, force?: boolean): Promise<boolean>
 
+    forceSetUserPermission(connection: Connection, user: User, isAdmin: boolean): Promise<void>
+
     setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  true):    Promise<true>
     setUserPermission(connection: Connection, user: User, isAdmin: boolean, force?: boolean): Promise<boolean>
 
+    forceCreateAdmin(connection: Connection, options?: CreateAdminOptions): Promise<void>
+
     createAdmin(connection: Connection, options?: CreateAdminOptions): Promise<boolean>
+
+    forceCreateUser(connection: Connection, options: ForceCreateUserOptions): Promise<void>
 
     createUser(connection: Connection, options: CreateUserOptions): Promise<boolean>
 
-    deleteAllUsers(connection: Connection, force?: boolean): Promise<number>
+    deleteAllUsers(connection: Connection): Promise<number>
+
+    forceDeleteUser(connection: Connection, user: User): Promise<void>
 
     deleteUser(connection: Connection, user: User, force:  true):    Promise<true>
     deleteUser(connection: Connection, user: User, force?: boolean): Promise<boolean>
+
+    forceGetUserInfoByCredentials(connection: Connection, login: string, password: string): Promise<UserInfo>
 
     getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):    Promise<UserInfo>
     getUserInfoByCredentials(connection: Connection, login: string, password: string, force?: boolean): Promise<UserInfo | undefined>
 
     getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]>
 
+    forceGetDeepUserInfo(connection: Connection, user: User): Promise<DeepUserInfo>
+
     getDeepUserInfo(connection: Connection, user: User, force: true):     Promise<DeepUserInfo>
     getDeepUserInfo(connection: Connection, user: User, force?: boolean): Promise<DeepUserInfo | undefined>
 
     getAllUsersInfo(connection: Connection): Promise<UserInfo[]>
 
+    forceGetUserLogin(connection: Connection, user: User): Promise<string>
+
     getUserLogin(connection: Connection, user: User, checkUser?: true):    Promise<string>
     getUserLogin(connection: Connection, user: User, checkUser?: boolean): Promise<string | undefined>
 
+    forceGetUserId(connection: Connection, user: User): Promise<number>
+
     getUserId(connection: Connection, user: User, checkUser?: true):    Promise<number>
     getUserId(connection: Connection, user: User, checkUser?: boolean): Promise<number | undefined>
+
+    forceGetUserInfo(connection: Connection, user: User): Promise<UserInfo>
 
     getUserInfo(connection: Connection, user: User, force:  true):    Promise<UserInfo>
     getUserInfo(connection: Connection, user: User, force?: boolean): Promise<UserInfo | undefined>
@@ -97,10 +125,18 @@ export class DefaultUserManager {
         this.logger = options.logger
     }
 
+    async forceSetUserName(connection: Connection, user: User, name: string | null) {
+        await this.setUserName(connection, user, name, true)
+    }
+
     async setUserName(connection: Connection, user: User, name: string | null, force:  true):            Promise<true>
     async setUserName(connection: Connection, user: User, name: string | null, force?: boolean):         Promise<boolean>
     async setUserName(connection: Connection, user: User, name: string | null, force:  boolean = false): Promise<boolean> {
         return false
+    }
+
+    async forceSetUserPassword(connection: Connection, user: User, password: string) {
+        await this.setUserPassword(connection, user, password, true)
     }
 
     async setUserPassword(connection: Connection, user: User, password: string, force:  true):            Promise<true>
@@ -109,28 +145,54 @@ export class DefaultUserManager {
         return false
     }
 
+    async froceSetUserPermission(connection: Connection, user: User, isAdmin: boolean) {
+        await this.setUserPermission(connection, user, isAdmin, true)
+    }
+
     async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  true):            Promise<true>
     async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force?: boolean):         Promise<boolean>
     async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  boolean = false): Promise<boolean> {
         return false
     }
 
+    async forceCreateAdmin(connection: Connection, options?: CreateAdminOptions) {
+        await this.createAdmin(connection, {
+            ...options,
+            force: true
+        })
+    }
+
     async createAdmin(connection: Connection, options?: CreateAdminOptions): Promise<boolean> {
         return false
+    }
+
+    async forceCreateUser(connection: Connection, options: ForceCreateUserOptions) {
+        await this.createUser(connection, {
+            ...options,
+            force: true
+        })
     }
 
     async createUser(connection: Connection, options: CreateUserOptions): Promise<boolean> {
         return false
     }
 
-    async deleteAllUsers(connection: Connection, force: boolean = false): Promise<number> {
+    async deleteAllUsers(connection: Connection): Promise<number> {
         return 0
+    }
+
+    async forceDeleteUser(connection: Connection, user: User) {
+        await this.deleteUser(connection, user, true)
     }
 
     async deleteUser(connection: Connection, user: User, force:  true):            Promise<true>
     async deleteUser(connection: Connection, user: User, force?: boolean):         Promise<boolean>
     async deleteUser(connection: Connection, user: User, force:  boolean = false): Promise<boolean> {
         return false
+    }
+
+    async forceGetUserInfoByCredentials(connection: Connection, login: string, password: string): Promise<UserInfo> {
+        return await this.getUserInfoByCredentials(connection, login, password, true)
     }
 
     async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):            Promise<UserInfo>
@@ -143,6 +205,10 @@ export class DefaultUserManager {
         return []
     }
 
+    async forceGetDeepUserInfo(connection: Connection, user: User): Promise<DeepUserInfo> {
+        return await this.getDeepUserInfo(connection, user, true)
+    }
+
     async getDeepUserInfo(connection: Connection, user: User, force: true):            Promise<DeepUserInfo>
     async getDeepUserInfo(connection: Connection, user: User, force?: boolean):        Promise<DeepUserInfo | undefined>
     async getDeepUserInfo(connection: Connection, user: User, force: boolean = false): Promise<DeepUserInfo | undefined> {
@@ -151,6 +217,10 @@ export class DefaultUserManager {
 
     async getAllUsersInfo(connection: Connection): Promise<UserInfo[]> {
         return []
+    }
+
+    async forceGetUserLogin(connection: Connection, user: User): Promise<string> {
+        return await this.getUserLogin(connection, user, true)
     }
 
     async getUserLogin(connection: Connection, user: User, checkUser?: true):            Promise<string>
@@ -169,6 +239,10 @@ export class DefaultUserManager {
         return info?.login
     }
 
+    async forceGetUserId(connection: Connection, user: User): Promise<number> {
+        return await this.getUserId(connection, user, true)
+    }
+
     async getUserId(connection: Connection, user: User, checkUser?: true):            Promise<number>
     async getUserId(connection: Connection, user: User, checkUser?: boolean):         Promise<number | undefined>
     async getUserId(connection: Connection, user: User, checkUser:  boolean = false): Promise<number | undefined> {
@@ -183,6 +257,10 @@ export class DefaultUserManager {
         const info = await this.getUserInfo(connection, user)
 
         return info?.id
+    }
+
+    async forceGetUserInfo(connection: Connection, user: User): Promise<UserInfo> {
+        return await this.getUserInfo(connection, user, true)
     }
 
     async getUserInfo(connection: Connection, user: User, force:  true):            Promise<UserInfo>
