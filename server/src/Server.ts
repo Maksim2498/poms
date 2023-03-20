@@ -200,6 +200,8 @@ export default class Server {
                 function setupErrorHandler() {
                     const handler = (error: Error, req: Request, res: Response, next: () => void) => {
                         if (error instanceof LogicError) {
+                            logger?.debug(`Failed: ${error.message}`)
+                            
                             res.json({
                                 error:       error.message,
                                 needRefresh: error instanceof TokenExpiredError
