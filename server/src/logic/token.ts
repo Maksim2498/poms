@@ -64,21 +64,10 @@ export interface TokenManager {
 
     deleteAllATokens(connection: Connection): Promise<number>
 
-    forceDeleteAllUserRTokens(connection: Connection, user: User): Promise<number>
-
-    deleteAllUserRTokens(connection: Connection, user: User, checkUser?: boolean): Promise<number>
-
-    deleteAllRTokens(connection: Connection): Promise<number>
-
     forceDeleteAToken(connection: Connection, aTokenId: Buffer): Promise<void>
 
     deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):    Promise<true>
     deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<boolean>
-
-    forceDeleteRToken(connection: Connection, rTokenId: Buffer): Promise<void>
-
-    deleteRToken(connection: Connection, aTokenId: Buffer, force:  true):    Promise<true>
-    deleteRToken(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<boolean>
 
     forceGetATokenInfo(connection: Connection, aTokenId: Buffer): Promise<ATokenInfo>
 
@@ -137,18 +126,6 @@ export class DefaultTokenManager implements TokenManager {
         return 0
     }
 
-    async forceDeleteAllUserRTokens(connection: Connection, user: User): Promise<number> {
-        return await this.deleteAllUserRTokens(connection, user, true)
-    }
-
-    async deleteAllUserRTokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
-        return 0
-    }
-
-    async deleteAllRTokens(connection: Connection): Promise<number> {
-        return 0
-    }
-
     async forceDeleteAToken(connection: Connection, aTokenId: Buffer) {
         await this.deleteAToken(connection, aTokenId, true)
     }
@@ -156,16 +133,6 @@ export class DefaultTokenManager implements TokenManager {
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):            Promise<true>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<boolean>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<boolean> {
-        return false
-    }
-
-    async forceDeleteRToken(connection: Connection, rTokenId: Buffer) {
-        await this.deleteRToken(connection, rTokenId, true)
-    }
-
-    async deleteRToken(connection: Connection, rTokenId: Buffer, force:  true):            Promise<true>
-    async deleteRToken(connection: Connection, rTokenId: Buffer, force?: boolean):         Promise<boolean>
-    async deleteRToken(connection: Connection, rTokenId: Buffer, force:  boolean = false): Promise<boolean> {
         return false
     }
 
