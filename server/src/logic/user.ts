@@ -55,6 +55,17 @@ export interface UserInfo {
     creatorId?:   number
 }
 
+export class UserNotFoundError extends LogicError {
+    readonly user: User
+
+    constructor(user: User) {
+        super(typeof user === "string" ? `User "${user}" not found`
+                                       : `User with id ${user} not found`)
+
+        this.user = user
+    }
+}
+
 export interface UserManager {
     forceSetUserName(connection: Connection, user: User, name: string | null): Promise<void>
 
@@ -180,7 +191,7 @@ export class DefaultUserManager implements UserManager {
     async deleteAllUsers(connection: Connection): Promise<number> {
         this.logger?.warn("Deleting all users")
 
-        const [info] = await connection.execute("DELETE Users") as [ResultSetHeader, FieldPacket[]]
+        const [info] = await connection.execute("DELETE FROM Users") as [ResultSetHeader, FieldPacket[]]
         const count  = info.affectedRows
 
         this.logger?.warn(`Deleted (${count})`)
@@ -195,7 +206,25 @@ export class DefaultUserManager implements UserManager {
     async deleteUser(connection: Connection, user: User, force:  true):            Promise<true>
     async deleteUser(connection: Connection, user: User, force?: boolean):         Promise<boolean>
     async deleteUser(connection: Connection, user: User, force:  boolean = false): Promise<boolean> {
-        return false
+        const numUser = typeof user === "number"
+
+        this.logger?.debug(numUser ? `Deleting user with id ${user}...`
+                                   : `Deleting user "${user}"...`)
+
+        const whereSql = numUser ? "id = ?" : "login = ?"
+        const sql      = `DELETE FROM Users WHERE ${whereSql}`
+        const [info]   = await connection.execute(sql, [user]) as [ResultSetHeader, FieldPacket[]]
+
+        if (info.affectedRows === 0) {
+            if (force)
+                throw new UserNotFoundError(user)
+            
+            this.logger?.debug("Not deleted")
+
+            return false
+        }
+
+        return true
     }
 
     async forceGetUserInfoByCredentials(connection: Connection, login: string, password: string): Promise<UserInfo> {
@@ -262,12 +291,8 @@ export class DefaultUserManager implements UserManager {
         const [rows]   = await connection.execute({ sql, nestTables: true }, [user]) as [RowDataPacket[], FieldPacket[]]
 
         if (rows.length === 0) {
-            if (force) {
-                const message = numUser ? `User with id ${user} not found`
-                                        : `User "${user}" not found`
-
-                throw new LogicError(message)
-            }
+            if (force)
+                throw new UserNotFoundError(user)
 
             this.logger?.debug("Not found")
         
@@ -390,12 +415,8 @@ export class DefaultUserManager implements UserManager {
         const [rows]   = await connection.execute(sql, [user]) as [RowDataPacket[], FieldPacket[]]
 
         if (rows.length === 0) {
-            if (force) {
-                const message = numUser ? `User with id ${user} not found`
-                                        : `User "${user}" not found`
-
-                throw new LogicError(message)
-            }
+            if (force)
+                throw new UserNotFoundError(user)
 
             this.logger?.debug("Not found")
         
