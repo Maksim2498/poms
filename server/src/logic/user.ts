@@ -1,7 +1,7 @@
 import Config                                     from "Config"
 import LogicError                                 from "./LogicError"
 
-import { Connection, FieldPacket, RowDataPacket } from "mysql2/promise"
+import { Connection, FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
 import { Logger                                 } from "winston"
 
 export interface CreationOptions {
@@ -178,7 +178,14 @@ export class DefaultUserManager implements UserManager {
     }
 
     async deleteAllUsers(connection: Connection): Promise<number> {
-        return 0
+        this.logger?.warn("Deleting all users")
+
+        const [info] = await connection.execute("DELETE Users") as [ResultSetHeader, FieldPacket[]]
+        const count  = info.affectedRows
+
+        this.logger?.warn(`Deleted (${count})`)
+
+        return count
     }
 
     async forceDeleteUser(connection: Connection, user: User) {
