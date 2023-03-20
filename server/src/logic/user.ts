@@ -234,7 +234,45 @@ export class DefaultUserManager implements UserManager {
     async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):            Promise<UserInfo>
     async getUserInfoByCredentials(connection: Connection, login: string, password: string, force?: boolean):         Promise<UserInfo | undefined>
     async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  boolean = false): Promise<UserInfo | undefined> {
-        return undefined
+        this.logger?.debug(`Getting info of user "${login}" by his/her credentials...`)
+
+        const toHash   = `${login.toLowerCase()}:${password}`
+        const whereSql = `login = ? and password_hash = UNHEX(SHA2(?, 512))`
+        const sql      = `SELECT * FROM Users WHERE ${whereSql}`
+        const [rows]   = await connection.execute(sql, [toHash]) as [RowDataPacket[], FieldPacket[]]
+
+        if (rows.length === 0) {
+            if (force)
+                throw new LogicError("Invalid login and/or password")
+            
+            this.logger?.debug("Invalid credentials")
+            
+            return undefined
+        }
+
+        const {
+            id,
+            login:         realLogin,
+            cr_id:         creatorId,
+            cr_time:       created,
+            password_hash: passwordHash,
+            is_admin:      isAdmin,
+            is_online:     isOnline
+        } = rows[0]
+
+        const info = {
+            id,
+            creatorId,
+            created,
+            passwordHash,
+            isAdmin,
+            isOnline,
+            login: realLogin
+        }
+
+        this.logger?.debug(`Got: ${userInfoToString(info)}`)
+
+        return info
     }
 
     async getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]> {
