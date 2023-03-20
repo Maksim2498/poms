@@ -155,7 +155,27 @@ export class DefaultUserManager implements UserManager {
     async setUserName(connection: Connection, user: User, name: string | null, force:  true):            Promise<true>
     async setUserName(connection: Connection, user: User, name: string | null, force?: boolean):         Promise<boolean>
     async setUserName(connection: Connection, user: User, name: string | null, force:  boolean = false): Promise<boolean> {
-        return false
+        const numUser = typeof user === "number"
+
+        this.logger?.debug(numUser ? `Setting name property to "${name}" of user with id ${user}...`
+                                   : `Setting name property to "${name}" of user "${user}"...`)
+
+        const whereSql = numUser ? "id = ?" : "login = ?"
+        const sql      = `UPDATE Users SET name = ? WHERE ${whereSql}`
+        const [result] = await connection.execute(sql, [name, user]) as [ResultSetHeader, FieldPacket[]]
+
+        if (result.affectedRows === 0) {
+            if (force)
+                throw new UserNotFoundError(user)
+
+            this.logger?.debug("Not set")
+
+            return false
+        }
+
+        this.logger?.debug("Set")
+
+        return true
     }
 
     async forceSetUserPassword(connection: Connection, user: User, password: string) {
