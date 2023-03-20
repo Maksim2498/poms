@@ -25,7 +25,7 @@ The following is a complete list of all tables with their detailed description.
 Holds all users with their login, name, password hash, and admin flag.
 
 ```sql
-password_hash = UNHEX(SHA2(login + ":" + password, 512))
+password_hash = UNHEX(SHA2(LOWER(login) + ":" + password, 512))
 ```
 
 __Definition__:
