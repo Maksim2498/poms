@@ -46,11 +46,11 @@ export interface RTokenInfo {
 }
 
 export interface ATokenRow {
-
+    // TODO
 }
 
 export interface RTokenRow {
-
+    // TODO
 }
 
 export interface TokenManager {
