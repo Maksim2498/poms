@@ -202,7 +202,40 @@ export class DefaultUserManager implements UserManager {
     }
 
     async getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]> {
-        return []
+        this.logger?.debug("Getting all users info...")
+
+        const [rows] = await connection.execute({
+            sql:        `SELECT * FROM Users target LEFT JOIN Users creator ON target.cr_id = creator.id`,
+            nestTables: true
+        }) as [RowDataPacket[], FieldPacket[]]
+
+        return rows.map((row, i) => {
+            const { target: t, creator: c } = row
+
+            const info = {
+                id:           t.id,
+                login:        t.login,
+                name:         t.name,
+                passwordHash: t.password_hash,
+                isAdmin:      t.is_admin,
+                isOnline:     t.is_online,
+                created:      t.cr_time,
+                creatorInfo:  t.cr_id != null ? {
+                    id:            c.id,
+                    login:         c.login,
+                    name:          c.name,
+                    passwordHash:  c.password_hash,
+                    isAdmin:       c.is_admin,
+                    isOnline:      c.is_online,
+                    created:       c.cr_time,
+                    creatorId:     c.cr_id
+                } : null
+            }
+
+            this.logger?.debug(`Got (${i}): ${deepUserInfoToString(info)}`)
+
+            return info
+        })
     }
 
     async forceGetDeepUserInfo(connection: Connection, user: User): Promise<DeepUserInfo> {
@@ -287,7 +320,7 @@ export class DefaultUserManager implements UserManager {
                 isOnline
             }
 
-            this.logger?.debug(`Got (${i}): ${JSON.stringify(info, null, 4)}`)
+            this.logger?.debug(`Got (${i}): ${userInfoToString(info)}`)
 
             return info
         })
