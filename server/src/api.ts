@@ -136,11 +136,16 @@ export const units: UnitCollection = {
     // Temporary
     test: {
         method: "get",
-        path:   "/test",
+        path:   "/test/:user/:password/:cr",
 
         async handler(connection, req, res) {
-            const info = await this.userManager.getAllUsersDeepInfo(connection)
-            res.json(info)
+            const created = await this.userManager.forceCreateUser(connection, {
+                login:    req.params.user,
+                password: req.params.password,
+                creator:  req.params.cr
+            })
+
+            res.json({ created })
         }
     },
 

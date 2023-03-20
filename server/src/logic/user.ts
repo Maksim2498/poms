@@ -30,7 +30,8 @@ export interface ForceCreateUserOptions {
 }
 
 export interface CreateUserOptions extends ForceCreateUserOptions {
-    force?: boolean
+    checkCreator?:  boolean
+    throwOnExists?: boolean
 } 
 
 export interface DeepUserInfo {
@@ -191,12 +192,62 @@ export class DefaultUserManager implements UserManager {
     async forceCreateUser(connection: Connection, options: ForceCreateUserOptions) {
         await this.createUser(connection, {
             ...options,
-            force: true
+            checkCreator:  true,
+            throwOnExists: true
         })
     }
 
     async createUser(connection: Connection, options: CreateUserOptions): Promise<boolean> {
-        return false
+        const { login, name, creator, password, isAdmin, checkCreator, throwOnExists } = options
+
+        this.logger?.debug(`Creating user "${login}"...`)
+
+        const creatorId = await getCreatorId.call(this)
+
+        if (creatorId === "not-found") {
+            this.logger?.debug("Not created (creator not found)")
+            return false
+        }
+
+        const sql    = "INSERT INTO Users (login, name, is_admin, cr_id, password_hash) VALUES (?, ?, ?, ?, UNHEX(SHA2(?, 512)))"
+        const toHash = `${login.toLowerCase()}:${password}`
+
+        try {
+            const result = await connection.execute(sql, [
+                login,
+                name    ?? null,
+                isAdmin ?? false,
+                creatorId,
+                toHash
+            ]) as [ResultSetHeader, FieldPacket[]]
+        } catch (error) {
+            if (throwOnExists) {
+                const code = (error as any).code
+
+                if (code === "ER_DUP_ENTRY")
+                    throw new LogicError(`User "${login}" already exists`)
+            }
+
+            this.logger?.debug("Not created (exists)")
+
+            return false
+        }
+
+        this.logger?.debug("Created")
+
+        return true
+
+        async function getCreatorId(this: DefaultUserManager): Promise<number | null | "not-found"> {
+            if (creator == null)
+                return null
+
+            const id = await this.getUserId(connection, creator, checkCreator)
+
+            if (id == null)
+                return "not-found"
+
+            return id
+        }
     }
 
     async deleteAllUsers(connection: Connection): Promise<number> {
