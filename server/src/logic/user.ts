@@ -22,11 +22,11 @@ export interface CreateAdminOptions extends ForceCreateAdminOptions {
 }
 
 export interface ForceCreateUserOptions {
-    login:      string
-    password:   string
-    name?:      string
-    isAdmin?:   boolean
-    creator?:   User
+    login:    string
+    password: string
+    name?:    string
+    isAdmin?: boolean
+    creator?: User
 }
 
 export interface CreateUserOptions extends ForceCreateUserOptions {
