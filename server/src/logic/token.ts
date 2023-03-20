@@ -45,6 +45,14 @@ export interface RTokenInfo {
     created:  Date
 }
 
+export interface ATokenRow {
+
+}
+
+export interface RTokenRow {
+
+}
+
 export interface TokenManager {
     deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser?: boolean): Promise<number>
 
@@ -92,6 +100,7 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser: boolean = false): Promise<number> {
+        // TODO
         return 0
     }
 
@@ -100,21 +109,26 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async getUserATokenCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
+        // TODO
         return 0
     }
 
     async checkATokenIsActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null) {
+        // TODO
     }
 
     async isATokenActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<boolean> {
+        // TODO
         return false
     }
 
     async createTokenPair(connection: Connection, user: User): Promise<TokenPair> {
+        // TODO
         return {} as TokenPair
     }
 
     async deleteAllUserATokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
+        // TODO
         return 0
     }
 
@@ -123,6 +137,7 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async deleteAllATokens(connection: Connection): Promise<number> {
+        // TODO
         return 0
     }
 
@@ -133,6 +148,7 @@ export class DefaultTokenManager implements TokenManager {
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):            Promise<true>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<boolean>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<boolean> {
+        // TODO
         return false
     }
 
@@ -143,6 +159,7 @@ export class DefaultTokenManager implements TokenManager {
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):            Promise<ATokenInfo>
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<ATokenInfo | undefined>
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<ATokenInfo | undefined> {
+        // TODO
         return {} as ATokenInfo
     }
 
@@ -153,6 +170,7 @@ export class DefaultTokenManager implements TokenManager {
     async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):            Promise<RTokenInfo>
     async getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean):         Promise<RTokenInfo | undefined>
     async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  boolean = false): Promise<RTokenInfo | undefined> {
+        // TODO
         return {} as RTokenInfo
     }
 }
@@ -203,4 +221,14 @@ export function validateTokenId(id: Buffer): string | undefined {
         return `Invalid token length. Expected: ${LENGTH}. Got: ${id.length}`
 
     return undefined
+}
+
+export function aTokenRowToInfo(row: ATokenRow): ATokenInfo {
+    // TODO
+    return {} as ATokenInfo
+}
+
+export function rTokenRowToInfo(row: RTokenRow): RTokenInfo {
+    // TODO
+    return {} as RTokenInfo
 }
