@@ -1,8 +1,8 @@
-import Config                                     from "Config"
-import LogicError                                 from "./LogicError"
+import Config                                                      from "Config"
+import LogicError                                                  from "./LogicError"
 
 import { Connection, FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
-import { Logger                                 } from "winston"
+import { Logger                                                  } from "winston"
 
 export interface CreationOptions {
     readonly config:  Config
