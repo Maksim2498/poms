@@ -185,7 +185,27 @@ export class DefaultUserManager implements UserManager {
     async setUserPassword(connection: Connection, user: User, password: string, force:  true):            Promise<true>
     async setUserPassword(connection: Connection, user: User, password: string, force?: boolean):         Promise<boolean>
     async setUserPassword(connection: Connection, user: User, password: string, force:  boolean = false): Promise<boolean> {
-        return false
+        const numUser = typeof user === "number"
+
+        this.logger?.debug(numUser ? `Updating password of user with id ${user}...`
+                                   : `Updating password of user "${user}"...`)
+
+        const login = await this.getUserLogin(connection, user, force)
+
+        if (login == null) {
+            this.logger?.debug("Not set")
+            return false
+        }
+
+        const toHash   = `${login.toLowerCase()}:${password}`
+        const whereSql = numUser ? "id = ?" : "login = ?"
+        const sql      = `UPDATE Users SET password_hash = UNHEX(SHA2(?, 512)) WHERE ${whereSql}`
+
+        await connection.execute(sql, [toHash, user])
+
+        this.logger?.debug("Set")
+
+        return true
     }
 
     async forceSetUserPermission(connection: Connection, user: User, isAdmin: boolean) {

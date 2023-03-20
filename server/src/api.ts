@@ -136,10 +136,10 @@ export const units: UnitCollection = {
     // Temporary
     test: {
         method: "get",
-        path:   "/test/:user/:name",
+        path:   "/test/:user/:password",
 
         async handler(connection, req, res) {
-            await this.userManager.forceSetUserName(connection, req.params.user, req.params.name)
+            await this.userManager.forceSetUserPassword(connection, req.params.user, req.params.password)
             res.json({})
         }
     },
