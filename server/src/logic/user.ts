@@ -175,7 +175,27 @@ export class DefaultUserManager implements UserManager {
     async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  true):            Promise<true>
     async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force?: boolean):         Promise<boolean>
     async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  boolean = false): Promise<boolean> {
-        return false
+        const numUser = typeof user === "number"
+
+        this.logger?.debug(numUser ? `Setting isAdmin property to ${isAdmin} of user with id ${user}...`
+                                   : `Setting isAdmin property to ${isAdmin} of user "${user}"...`)
+
+        const whereSql = numUser ? "id = ?" : "login = ?"
+        const sql      = `UPDATE Users SET is_admin = ? WHERE ${whereSql}`
+        const [result] = await connection.execute(sql, [isAdmin, user]) as [ResultSetHeader, FieldPacket[]]
+
+        if (result.affectedRows === 0) {
+            if (force)
+                throw new UserNotFoundError(user)
+
+            this.logger?.debug("Not set")
+
+            return false
+        }
+
+        this.logger?.debug("Set")
+
+        return true
     }
 
     async forceCreateAdmin(connection: Connection, options?: CreateAdminOptions) {
@@ -231,7 +251,7 @@ export class DefaultUserManager implements UserManager {
         const toHash = `${login.toLowerCase()}:${password}`
 
         try {
-            const result = await connection.execute(sql, [
+            await connection.execute(sql, [
                 login,
                 name    ?? null,
                 isAdmin ?? false,
@@ -271,8 +291,8 @@ export class DefaultUserManager implements UserManager {
     async deleteAllUsers(connection: Connection): Promise<number> {
         this.logger?.warn("Deleting all users")
 
-        const [info] = await connection.execute("DELETE FROM Users") as [ResultSetHeader, FieldPacket[]]
-        const count  = info.affectedRows
+        const [result] = await connection.execute("DELETE FROM Users") as [ResultSetHeader, FieldPacket[]]
+        const count    = result.affectedRows
 
         this.logger?.warn(`Deleted (${count})`)
 
@@ -293,9 +313,9 @@ export class DefaultUserManager implements UserManager {
 
         const whereSql = numUser ? "id = ?" : "login = ?"
         const sql      = `DELETE FROM Users WHERE ${whereSql}`
-        const [info]   = await connection.execute(sql, [user]) as [ResultSetHeader, FieldPacket[]]
+        const [result] = await connection.execute(sql, [user]) as [ResultSetHeader, FieldPacket[]]
 
-        if (info.affectedRows === 0) {
+        if (result.affectedRows === 0) {
             if (force)
                 throw new UserNotFoundError(user)
             

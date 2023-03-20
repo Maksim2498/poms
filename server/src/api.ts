@@ -136,12 +136,11 @@ export const units: UnitCollection = {
     // Temporary
     test: {
         method: "get",
-        path:   "/test",
+        path:   "/test/:user/:isAdmin",
 
         async handler(connection, req, res) {
-            const created = await this.userManager.forceCreateAdmin(connection)
-
-            res.json({ created })
+            await this.userManager.forceSetUserPermission(connection, req.params.user, req.params.isAdmin === "true")
+            res.json({})
         }
     },
 
