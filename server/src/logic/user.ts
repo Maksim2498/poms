@@ -44,15 +44,26 @@ export interface DeepUserInfo {
     creatorInfo:  UserInfo | null
 }
 
+export interface UserRow {
+    id:            number
+    login:         string
+    name:          string | null
+    password_hash: Buffer
+    is_admin:      boolean
+    is_online:     boolean
+    cr_time:       Date
+    cr_id:         number
+}
+
 export interface UserInfo {
     id:           number
     login:        string
-    name?:        string
+    name:         string | null
     passwordHash: Buffer
     isAdmin:      boolean
     isOnline:     boolean
     created:      Date
-    creatorId?:   number
+    creatorId:    number | null
 }
 
 export class UserNotFoundError extends LogicError {
@@ -239,7 +250,7 @@ export class DefaultUserManager implements UserManager {
         const toHash   = `${login.toLowerCase()}:${password}`
         const whereSql = `login = ? and password_hash = UNHEX(SHA2(?, 512))`
         const sql      = `SELECT * FROM Users WHERE ${whereSql}`
-        const [rows]   = await connection.execute(sql, [toHash]) as [RowDataPacket[], FieldPacket[]]
+        const [rows]   = await connection.execute(sql, [toHash]) as [UserRow[], FieldPacket[]]
 
         if (rows.length === 0) {
             if (force)
@@ -250,25 +261,7 @@ export class DefaultUserManager implements UserManager {
             return undefined
         }
 
-        const {
-            id,
-            login:         realLogin,
-            cr_id:         creatorId,
-            cr_time:       created,
-            password_hash: passwordHash,
-            is_admin:      isAdmin,
-            is_online:     isOnline
-        } = rows[0]
-
-        const info = {
-            id,
-            creatorId,
-            created,
-            passwordHash,
-            isAdmin,
-            isOnline,
-            login: realLogin
-        }
+        const info = userRowToUserInfo(rows[0])
 
         this.logger?.debug(`Got: ${userInfoToString(info)}`)
 
@@ -367,28 +360,10 @@ export class DefaultUserManager implements UserManager {
     async getAllUsersInfo(connection: Connection): Promise<UserInfo[]> {
         this.logger?.debug("Getting all users info...")
 
-        const [rows] = await connection.execute("SELECT * FROM Users") as [RowDataPacket[], FieldPacket[]]
+        const [rows] = await connection.execute("SELECT * FROM Users") as [UserRow[], FieldPacket[]]
 
         return rows.map((row, i) => {
-            const {
-                id,
-                login,
-                cr_id:         creatorId,
-                cr_time:       created,
-                password_hash: passwordHash,
-                is_admin:      isAdmin,
-                is_online:     isOnline
-            } = row
-
-            const info = {
-                id,
-                login,
-                creatorId,
-                created,
-                passwordHash,
-                isAdmin,
-                isOnline
-            }
+            const info = userRowToUserInfo(row)
 
             this.logger?.debug(`Got (${i}): ${userInfoToString(info)}`)
 
@@ -450,7 +425,7 @@ export class DefaultUserManager implements UserManager {
 
         const whereSql = numUser ? "id = ?" : "login = ?"
         const sql      = `SELECT * FROM Users WHERE ${whereSql}`
-        const [rows]   = await connection.execute(sql, [user]) as [RowDataPacket[], FieldPacket[]]
+        const [rows]   = await connection.execute(sql, [user]) as [UserRow[], FieldPacket[]]
 
         if (rows.length === 0) {
             if (force)
@@ -461,25 +436,7 @@ export class DefaultUserManager implements UserManager {
             return undefined
         }
 
-        const {
-            id,
-            login,
-            cr_id:         creatorId,
-            cr_time:       created,
-            password_hash: passwordHash,
-            is_admin:      isAdmin,
-            is_online:     isOnline
-        } = rows[0]
-
-        const info = {
-            id,
-            login,
-            creatorId,
-            created,
-            passwordHash,
-            isAdmin,
-            isOnline
-        }
+        const info = userRowToUserInfo(rows[0])
 
         this.logger?.debug(`Got: ${userInfoToString(info)}`)
 
@@ -565,4 +522,17 @@ export function deepUserInfoToString(info: DeepUserInfo): string {
             creatorId:    info.creatorInfo.creatorId
         } : null
     }, null, 4)
+}
+
+export function userRowToUserInfo(row: UserRow): UserInfo {
+    return {
+        id:           row.id,
+        login:        row.login,
+        name:         row.name,
+        passwordHash: row.password_hash,
+        isAdmin:      row.is_admin,
+        isOnline:     row.is_online,
+        created:      row.cr_time,
+        creatorId:    row.cr_id
+    }
 }
