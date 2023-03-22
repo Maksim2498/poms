@@ -32,14 +32,15 @@ async function main() {
 }
 
 function createLogger() {
-    const Console = winston.transports.Console
-    const fmt     = winston.format
+    const Console  = winston.transports.Console
+    const fmt      = winston.format
+    const handlers = [new Console()]
 
     return winston.createLogger({
         level:             process.env.NODE_ENV === "production" ? "http" : "debug",
-        transports:        [new Console()],
-        exceptionHandlers: [new Console()],
-        rejectionHandlers: [new Console()],
+        transports:        handlers,
+        exceptionHandlers: handlers,
+        rejectionHandlers: handlers,
         format:            fmt.combine(
             fmt.errors(),
             fmt.colorize({ all: true }),
