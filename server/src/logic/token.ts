@@ -46,7 +46,10 @@ export interface RTokenInfo {
 }
 
 export interface ATokenRow {
-    // TODO
+    id:       Buffer
+    user_id:  number
+    cr_time:  Date
+    exp_time: Date
 }
 
 export interface RTokenRow {
