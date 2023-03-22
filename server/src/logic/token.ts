@@ -230,11 +230,19 @@ export function validateTokenId(id: Buffer): string | undefined {
 }
 
 export function aTokenRowToInfo(row: ATokenRow): ATokenInfo {
-    // TODO
-    return {} as ATokenInfo
+    return {
+        id:      row.id,
+        userId:  row.user_id,
+        exp:     row.exp_time,
+        created: row.cr_time
+    }
 }
 
 export function rTokenRowToInfo(row: RTokenRow): RTokenInfo {
-    // TODO
-    return {} as RTokenInfo
+    return {
+        id:       row.id,
+        aTokenId: row.atoken_id,
+        exp:      row.exp_time,
+        created:  row.cr_time
+    }
 }
