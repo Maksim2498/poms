@@ -53,7 +53,7 @@ export class DefaultAuthManager implements AuthManager {
         const rTokenInfo = await this.tokenManager.forceGetRTokenInfo(connection, rTokenId)
 
         if (rTokenInfo.exp <= new Date())
-            throw new LogicError("Token is too old")
+            throw new LogicError("Refresh token is too old")
 
         const aTokenInfo = (await this.tokenManager.getATokenInfo(connection, rTokenInfo.aTokenId))!
         
