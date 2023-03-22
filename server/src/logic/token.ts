@@ -1,9 +1,9 @@
-import Config                from "Config"
-import LogicError            from "./LogicError"
+import Config                                                      from "Config"
+import LogicError                                                  from "./LogicError"
 
-import { Connection        } from "mysql2/promise"
-import { Logger            } from "winston"
-import { UserManager, User } from "./user"
+import { Connection, FieldPacket, RowDataPacket, ResultSetHeader } from "mysql2/promise"
+import { Logger                                                  } from "winston"
+import { UserManager, User                                       } from "./user"
 
 export interface CreationOptions {
     readonly userManager: UserManager
@@ -57,6 +57,15 @@ export interface RTokenRow {
     atoken_id: Buffer
     cr_time:   Date
     exp_time:  Date
+}
+
+export class TokenNotFound extends LogicError {
+    readonly token: Buffer
+
+    constructor(token: Buffer) {
+        super(`Token with id ${token.toString("hex")} not found`)
+        this.token = token
+    }
 }
 
 export interface TokenManager {
@@ -165,8 +174,26 @@ export class DefaultTokenManager implements TokenManager {
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):            Promise<ATokenInfo>
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<ATokenInfo | undefined>
     async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<ATokenInfo | undefined> {
-        // TODO
-        return {} as ATokenInfo
+        this.logger?.debug(`Getting info of a-token with id ${aTokenId.toString("hex")}...`)
+
+        checkTokenId(aTokenId)
+
+        const [rows] = await connection.execute("SELECT * FROM ATokens WHERE id = ?", [aTokenId]) as [ATokenRow[], FieldPacket[]]
+
+        if (rows.length === 0) {
+            if (force)
+                throw new TokenNotFound(aTokenId)
+
+            this.logger?.debug("Not found")
+            
+            return undefined
+        }
+
+        const info = aTokenRowToInfo(rows[0])
+
+        this.logger?.debug(`Got: ${aTokenInfoToString(info)}`)
+
+        return info
     }
 
     async forceGetRTokenInfo(connection: Connection, rTokenId: Buffer): Promise<RTokenInfo> {
@@ -176,8 +203,26 @@ export class DefaultTokenManager implements TokenManager {
     async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):            Promise<RTokenInfo>
     async getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean):         Promise<RTokenInfo | undefined>
     async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  boolean = false): Promise<RTokenInfo | undefined> {
-        // TODO
-        return {} as RTokenInfo
+        this.logger?.debug(`Getting info of r-token with id ${rTokenId.toString("hex")}...`)
+
+        checkTokenId(rTokenId)
+
+        const [rows] = await connection.execute("SELECT * FROM RTokens WHERE id = ?", [rTokenId]) as [RTokenRow[], FieldPacket[]]
+
+        if (rows.length === 0) {
+            if (force)
+                throw new TokenNotFound(rTokenId)
+
+            this.logger?.debug("Not found")
+            
+            return undefined
+        }
+
+        const info = rTokenRowToInfo(rows[0])
+
+        this.logger?.debug(`Got: ${rTokenInfoToString(info)}`)
+
+        return info
     }
 }
 
@@ -245,4 +290,26 @@ export function rTokenRowToInfo(row: RTokenRow): RTokenInfo {
         exp:      row.exp_time,
         created:  row.cr_time
     }
+}
+
+export function aTokenInfoToString(info: ATokenInfo): string {
+    const json = {
+        id:      info.id.toString("hex"),
+        userId:  info.userId,
+        exp:     info.exp.toISOString(),
+        created: info.created.toISOString()
+    }
+
+    return JSON.stringify(json, null, 4)
+}
+
+export function rTokenInfoToString(info: RTokenInfo): string {
+    const json = {
+        id:       info.id.toString("hex"),
+        aTokenId: info.aTokenId.toString("hex"),
+        exp:      info.exp.toISOString(),
+        created:  info.created.toISOString()
+    }
+
+    return JSON.stringify(json, null, 4)
 }
