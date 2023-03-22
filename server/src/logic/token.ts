@@ -117,8 +117,22 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async getUserATokenCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
-        // TODO
-        return 0
+        this.logger?.debug(typeof user === "string" ? `Getting a-tokens count of user "${user}"...`
+                                                    : `Getting a-tokens count of user with id ${user}...`)
+        
+        const id = await this.userManager.getUserId(connection, user, checkUser)
+
+        if (id == null) {
+            this.logger?.debug("Not found")
+            return 0
+        }
+        
+        const [rows] = await connection.execute("SELECT COUNT(*) AS count FROM ATokens WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+        const count  = rows[0].count
+
+        this.logger?.debug(`Got: ${count}`)
+
+        return count
     }
 
     async checkATokenIsActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null) {
