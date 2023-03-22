@@ -304,32 +304,48 @@ export default class Server {
                 return
 
             this.logger?.info("Initializing static content...")
-
-            const path = this.config.httpStaticPath
-
-            this.logger?.debug(`Cheking if static content at ${path} alreading already exists...`)
-
-            let exits = false
-
-            try {
-                const files = await fsp.readdir(path)
-
-                if (files.length !== 0)
-                    exits = true
-            } catch (error) {
-                if ((error as any).code !== "ENOENT")
-                    throw error
-            }
-
-            if (exits)
-                this.logger?.debug("Exits")
-            else {
-                this.logger?.debug("Doesn't exist. Creating...")
-                cp.execSync("npm run build", { cwd: this.config.logicStaticBuildPath })
-                this.logger?.debug("Created")
-            }
-
+            await createIfNeeded.call(this)
             this.logger?.info("Static content is successfully initialized")
+
+            async function createIfNeeded(this: Server) {
+                if (this.config.logicStaticForceBuild) {
+                    this.logger?.debug("Creating...")
+                    build.call(this)
+                    this.logger?.debug("Created")
+                    return
+                }
+
+                if (await exists.call(this)) {
+                    this.logger?.debug("Exits")
+                    return
+                }
+
+                this.logger?.debug("Doesn't exist. Creating...")
+                build.call(this)
+                this.logger?.debug("Created")
+
+                async function exists(this: Server): Promise<boolean> {
+                    const path = this.config.httpStaticPath
+
+                    this.logger?.debug(`Cheking if static content at ${path} alreading already exists...`)
+
+                    try {
+                        const files = await fsp.readdir(path)
+
+                        if (files.length !== 0)
+                            return true
+                    } catch (error) {
+                        if ((error as any).code !== "ENOENT")
+                            throw error
+                    }
+
+                    return false
+                }
+
+                function build(this: Server) {
+                    cp.execSync("npm run build", { cwd: this.config.logicStaticBuildPath })
+                }
+            }
         }
 
         async function initDatabase(this: Server) {
