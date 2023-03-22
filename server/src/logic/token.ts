@@ -32,10 +32,10 @@ export interface TokenJson {
 }
 
 export interface ATokenInfo {
-    id:       Buffer
-    userId:   number
-    exp:      Date
-    creation: Date
+    id:      Buffer
+    userId:  number
+    exp:     Date
+    created: Date
 }
 
 export interface RTokenInfo {
@@ -53,7 +53,10 @@ export interface ATokenRow {
 }
 
 export interface RTokenRow {
-    // TODO
+    id:        Buffer
+    atoken_id: Buffer
+    cr_time:   Date
+    exp_time:  Date
 }
 
 export interface TokenManager {
