@@ -1,5 +1,6 @@
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
+import UserNotFoundError                                           from "./UserNotFoundError"
 
 import { Connection, FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
 import { Logger                                                  } from "winston"
@@ -65,17 +66,6 @@ export interface UserInfo {
     isOnline:     boolean
     created:      Date
     creatorId:    number | null
-}
-
-export class UserNotFoundError extends LogicError {
-    readonly user: User
-
-    constructor(user: User) {
-        super(typeof user === "string" ? `User "${user}" not found`
-                                       : `User with id ${user} not found`)
-
-        this.user = user
-    }
 }
 
 export interface UserManager {

@@ -1,6 +1,7 @@
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
 import TokenExpiredError                                           from "./TokenExpiredError"
+import TokenNotFoundError                                          from "./TokenNotFoundError"
 
 import { Connection, FieldPacket, RowDataPacket, ResultSetHeader } from "mysql2/promise"
 import { Logger                                                  } from "winston"
@@ -58,15 +59,6 @@ export interface RTokenRow {
     atoken_id: Buffer
     cr_time:   Date
     exp_time:  Date
-}
-
-export class TokenNotFound extends LogicError {
-    readonly token: Buffer
-
-    constructor(token: Buffer) {
-        super(`Token with id ${token.toString("hex")} not found`)
-        this.token = token
-    }
 }
 
 export interface TokenManager {
@@ -195,7 +187,7 @@ export class DefaultTokenManager implements TokenManager {
 
         if (result.affectedRows === 0) {
             if (force)
-                throw new TokenNotFound(aTokenId)
+                throw new TokenNotFoundError(aTokenId)
 
             this.logger?.debug("Not found")
 
@@ -222,7 +214,7 @@ export class DefaultTokenManager implements TokenManager {
 
         if (rows.length === 0) {
             if (force)
-                throw new TokenNotFound(aTokenId)
+                throw new TokenNotFoundError(aTokenId)
 
             this.logger?.debug("Not found")
             
@@ -251,7 +243,7 @@ export class DefaultTokenManager implements TokenManager {
 
         if (rows.length === 0) {
             if (force)
-                throw new TokenNotFound(rTokenId)
+                throw new TokenNotFoundError(rTokenId)
 
             this.logger?.debug("Not found")
             
