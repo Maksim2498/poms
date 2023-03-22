@@ -300,7 +300,7 @@ export default class Server {
         }
 
         async function initStatic(this: Server) {
-            if (!this.config.logicBuildStatic)
+            if (!this.config.logicStaticBuild)
                 return
 
             this.logger?.info("Initializing static content...")
@@ -325,7 +325,7 @@ export default class Server {
                 this.logger?.debug("Exits")
             else {
                 this.logger?.debug("Doesn't exist. Creating...")
-                cp.execSync("npm run build", { cwd: this.config.logicBuildStaticPath })
+                cp.execSync("npm run build", { cwd: this.config.logicStaticBuildPath })
                 this.logger?.debug("Created")
             }
 

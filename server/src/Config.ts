@@ -73,10 +73,13 @@ const CONFIG_JSON_SCHEMA = z.object({
             password:         OSTRING,
         }).strict().optional(),
 
+        static: z.object({
+            build:            OBOOLEAN,
+            buildPath:        OPATH,
+        }).strict().optional(),
+
         maxTokens:            OUINT,
         maxNicknames:         OUINT,
-        buildStatic:          OBOOLEAN,
-        buildStaticPath:      OPATH,
         openBrowser:          OBOOLEAN,
         aTokenLifetime:       ODUR,
         rTokenLifetime:       ODUR,
@@ -127,8 +130,8 @@ export default class Config {
     static readonly DEFAULT_LOGIC_ADMIN_PASSWORD         = "admin"
     static readonly DEFAULT_LOGIC_MAX_TOKENS             = 10
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES          = 5
-    static readonly DEFAULT_LOGIC_BUILD_STAITC           = true
-    static readonly DEFAULT_LOGIC_BUILD_STAITC_PATH      = this.placehold("<SITE_PATH>")
+    static readonly DEFAULT_LOGIC_STAITC_BUILD           = true
+    static readonly DEFAULT_LOGIC_STAITC_BUILD_PATH      = this.placehold("<SITE_PATH>")
     static readonly DEFAULT_LOGIC_OPEN_BROWSER           = true
     static readonly DEFAULT_LOGIC_A_TOKEN_LIFETIME       = parseDuration("30m")
     static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME       = parseDuration("1w")
@@ -439,12 +442,12 @@ export default class Config {
         return this.read.logic?.maxNicknames ?? Config.DEFAULT_LOGIC_MAX_NICKNAMES
     }
 
-    get logicBuildStatic(): boolean {
-        return this.read.logic?.buildStatic ?? Config.DEFAULT_LOGIC_BUILD_STAITC
+    get logicStaticBuild(): boolean {
+        return this.read.logic?.static?.build ?? Config.DEFAULT_LOGIC_STAITC_BUILD
     }
 
-    get logicBuildStaticPath(): string {
-        return this.read.logic?.buildStaticPath ?? Config.DEFAULT_LOGIC_BUILD_STAITC_PATH
+    get logicStaticBuildPath(): string {
+        return this.read.logic?.static?.buildPath ?? Config.DEFAULT_LOGIC_STAITC_BUILD_PATH
     }
 
     get logicOpenBrowser(): boolean {
