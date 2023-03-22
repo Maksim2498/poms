@@ -51,8 +51,8 @@ is considered an error):
 | `logic.admin.password`       | `string`           | `admin`                      | No       | Default admin password. Will be set only on creation                               |
 | `logic.maxTokens`            | Unsigned `number`  | `10`                         | No       | Maximum number of tokens per user                                                  |
 | `logic.maxNicknames`         | Unsigned `number`  | `5`                          | No       | Maximum number of nicknames per user                                               |
-| `logic.staticBuild`          | `boolean`          | `true`                       | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |
-| `logic.staticBuildPath`      | Path `string`      | `<SITE_PATH>`                | No       | Path for running `npm run build` to build static content if needed                 |
+| `logic.static.build`         | `boolean`          | `true`                       | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |
+| `logic.static.buildPath`     | Path `string`      | `<SITE_PATH>`                | No       | Path for running `npm run build` to build static content if needed                 |
 | `logic.openBrowser`          | `boolean`          | `true`                       | No       | If `true` opens browser after server start                                         |
 | `logic.aTokenLifetime`       | Duration `string`  | `30m`                        | No       | Access token lifetime. Should not be too long                                      |
 | `logic.rTokenLifetime`       | Duration `string`  | `1w`                         | No       | Refresh token lifetime. Should be much longer than access token lifetime           |
