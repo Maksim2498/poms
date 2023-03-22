@@ -152,8 +152,14 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async deleteAllATokens(connection: Connection): Promise<number> {
-        // TODO
-        return 0
+        this.logger?.debug("Deleting all a-tokens...")
+
+        const [result] = await connection.execute("DELETE FROM ATokens") as [ResultSetHeader, FieldPacket[]]
+        const count    = result.affectedRows
+
+        this.logger?.debug(`Deleted (${count})`)
+
+        return count
     }
 
     async forceDeleteAToken(connection: Connection, aTokenId: Buffer) {
@@ -177,6 +183,8 @@ export class DefaultTokenManager implements TokenManager {
 
             return false
         }
+
+        this.logger?.debug("Deleted")
 
         return true
     }
