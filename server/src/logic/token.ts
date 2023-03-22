@@ -143,8 +143,22 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async deleteAllUserATokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
-        // TODO
-        return 0
+        this.logger?.debug(typeof user === "string" ? `Deleting all a-tokens of user "${user}"...`
+                                                    : `Deleting all a-tokens of user with id ${user}...`)
+
+        const id = await this.userManager.getUserId(connection, user, checkUser)
+
+        if (id == null) {
+            this.logger?.debug("Not found")
+            return 0
+        }
+
+        const [result] = await connection.execute("DELETE FROM ATokens WHERE user_id = ?", [id]) as [ResultSetHeader, FieldPacket[]]
+        const count    = result.affectedRows
+
+        this.logger?.debug(`Deleted (${count})`)
+
+        return count
     }
 
     async forceDeleteAllUserATokens(connection: Connection, user: User): Promise<number> {
