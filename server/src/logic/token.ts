@@ -108,8 +108,35 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser: boolean = false): Promise<number> {
-        // TODO
-        return 0
+        this.logger?.debug(typeof user === "string" ? `Deleting all a-tokens except last ${limit} of user "${user}"...`
+                                                    : `Deleting all a-tokens except last ${limit} of user with id ${user}...`)
+
+        const id = await this.userManager.getUserId(connection, user, checkUser)
+
+        if (id == null) {
+            this.logger?.debug("Not found")
+            return 0
+        }
+
+        const count = await this.getUserATokenCount(connection, user)
+
+        if (limit >= count) {
+            this.logger?.debug("Limit isn't exceeded")
+            return 0
+        }
+
+        const diff = count - limit
+
+        const [result] = await connection.execute(
+            "DELETE FROM ATokens WHERE user_id = ? ORDER BY cr_time ASC LIMIT ?",
+            [id, diff, diff]
+        ) as [ResultSetHeader, FieldPacket[]]
+
+        const deleted = result.affectedRows
+
+        this.logger?.debug(`Deleted (${deleted})`)
+
+        return deleted
     }
 
     async forceGetUserATokenCount(connection: Connection, user: User): Promise<number> {
