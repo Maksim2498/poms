@@ -133,17 +133,6 @@ const UPDATE_USER_PERMISSION_SCHEMA = z.object({
 })
 
 export const units: UnitCollection = {
-    // Temporary
-    test: {
-        method: "get",
-        path:   "/test/:user",
-
-        async handler(connection, req, res) {
-            const pair = await this.tokenManager.createTokenPair(connection, req.params.user, true)
-            res.json(pair)
-        }
-    },
-
     isAnonymousAccessAllowed: {
         method: "get",
         path:   "/anonym-access-allowed",
