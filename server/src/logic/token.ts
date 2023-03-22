@@ -163,8 +163,22 @@ export class DefaultTokenManager implements TokenManager {
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):            Promise<true>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<boolean>
     async deleteAToken(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<boolean> {
-        // TODO
-        return false
+        this.logger?.debug(`Deleting a-token with id ${aTokenId.toString("hex")}...`)
+
+        checkTokenId(aTokenId)
+    
+        const [result] = await connection.execute("DELETE FROM ATokens WHERE id = ?", [aTokenId]) as [ResultSetHeader, FieldPacket[]]
+
+        if (result.affectedRows === 0) {
+            if (force)
+                throw new TokenNotFound(aTokenId)
+
+            this.logger?.debug("Not found")
+
+            return false
+        }
+
+        return true
     }
 
     async forceGetATokenInfo(connection: Connection, aTokenId: Buffer): Promise<ATokenInfo> {
