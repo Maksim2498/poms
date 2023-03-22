@@ -76,6 +76,7 @@ const CONFIG_JSON_SCHEMA = z.object({
         static: z.object({
             build:            OBOOLEAN,
             buildPath:        OPATH,
+            forceBuild:       OBOOLEAN,
         }).strict().optional(),
 
         maxTokens:            OUINT,
@@ -132,6 +133,7 @@ export default class Config {
     static readonly DEFAULT_LOGIC_MAX_NICKNAMES          = 5
     static readonly DEFAULT_LOGIC_STAITC_BUILD           = true
     static readonly DEFAULT_LOGIC_STAITC_BUILD_PATH      = this.placehold("<SITE_PATH>")
+    static readonly DEFAULT_LOGIC_STAITC_FORCE_BUILD     = false
     static readonly DEFAULT_LOGIC_OPEN_BROWSER           = true
     static readonly DEFAULT_LOGIC_A_TOKEN_LIFETIME       = parseDuration("30m")
     static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME       = parseDuration("1w")
@@ -448,6 +450,10 @@ export default class Config {
 
     get logicStaticBuildPath(): string {
         return this.read.logic?.static?.buildPath ?? Config.DEFAULT_LOGIC_STAITC_BUILD_PATH
+    }
+
+    get logicStaticForceBuild(): boolean {
+        return this.read.logic?.static?.forceBuild ?? Config.DEFAULT_LOGIC_STAITC_FORCE_BUILD
     }
 
     get logicOpenBrowser(): boolean {

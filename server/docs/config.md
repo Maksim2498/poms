@@ -53,6 +53,7 @@ is considered an error):
 | `logic.maxNicknames`         | Unsigned `number`  | `5`                          | No       | Maximum number of nicknames per user                                               |
 | `logic.static.build`         | `boolean`          | `true`                       | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |
 | `logic.static.buildPath`     | Path `string`      | `<SITE_PATH>`                | No       | Path for running `npm run build` to build static content if needed                 |
+| `logic.static.forceBuild`    | `boolean`          | `true`                       | No       | Forces static content rebuild on every startup when `logic.static.build` is `true` |
 | `logic.openBrowser`          | `boolean`          | `true`                       | No       | If `true` opens browser after server start                                         |
 | `logic.aTokenLifetime`       | Duration `string`  | `30m`                        | No       | Access token lifetime. Should not be too long                                      |
 | `logic.rTokenLifetime`       | Duration `string`  | `1w`                         | No       | Refresh token lifetime. Should be much longer than access token lifetime           |
