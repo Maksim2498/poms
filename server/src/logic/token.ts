@@ -75,9 +75,9 @@ export interface TokenManager {
 
     getUserATokenCount(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
-    checkATokenIsActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<void>
+    checkATokenIsActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<void>
 
-    isATokenActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<boolean>
+    isATokenActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<boolean>
 
     createTokenPair(connection: Connection, user: User): Promise<TokenPair>
 
@@ -128,13 +128,15 @@ export class DefaultTokenManager implements TokenManager {
         return 0
     }
 
-    async checkATokenIsActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null) {
+    async checkATokenIsActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null) {
         // TODO
     }
 
-    async isATokenActive(connection: Connection, token: ATokenInfo | Buffer | undefined | null): Promise<boolean> {
-        // TODO
-        return false
+    async isATokenActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<boolean> {
+        const info = tokenId instanceof Buffer ?  await this.getATokenInfo(connection, tokenId)
+                                               : tokenId
+
+        return info != null && info.exp > new Date()
     }
 
     async createTokenPair(connection: Connection, user: User): Promise<TokenPair> {
