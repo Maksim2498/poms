@@ -1,5 +1,6 @@
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
+import TokenExpiredError                                           from "./TokenExpiredError"
 
 import { Connection, FieldPacket, RowDataPacket, ResultSetHeader } from "mysql2/promise"
 import { Logger                                                  } from "winston"
@@ -129,7 +130,8 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async checkATokenIsActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null) {
-        // TODO
+        if (!await this.isATokenActive(connection, tokenId))
+            throw new TokenExpiredError()
     }
 
     async isATokenActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<boolean> {
