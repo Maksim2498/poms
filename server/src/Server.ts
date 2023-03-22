@@ -370,6 +370,9 @@ export default class Server {
                 await createRTokensTable.call(this)
                 await createCleanUpEvent.call(this)
 
+                if (this.config.logicAdminCreate)
+                    await this.userManager.createAdmin(connection)
+
                 async function createDatabase(this: Server) {
                     const database = this.config.mysqlDatabase
 
