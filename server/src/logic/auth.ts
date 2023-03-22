@@ -40,7 +40,7 @@ export class DefaultAuthManager implements AuthManager {
 
         await this.tokenManager.deleteUserExtraATokens(connection, info.id, maxTokens - 1)
 
-        const pair = await this.tokenManager.createTokenPair(connection, info.id)
+        const pair = (await this.tokenManager.createTokenPair(connection, info.id))!
 
         this.logger?.debug("Athenticated")
 
@@ -59,7 +59,7 @@ export class DefaultAuthManager implements AuthManager {
         
         await this.tokenManager.deleteAToken(connection, aTokenInfo.id) // Refresh token will be deleted cascade
         
-        const pair = await this.tokenManager.createTokenPair(connection, aTokenInfo.userId)
+        const pair = (await this.tokenManager.createTokenPair(connection, aTokenInfo.userId))!
 
         this.logger?.debug("Reathenticated")
 

@@ -1,3 +1,4 @@
+import crypto                                                      from "crypto"
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
 import TokenExpiredError                                           from "./TokenExpiredError"
@@ -5,6 +6,7 @@ import TokenNotFoundError                                          from "./Token
 
 import { Connection, FieldPacket, RowDataPacket, ResultSetHeader } from "mysql2/promise"
 import { Logger                                                  } from "winston"
+import { dateMillisecondsAhead                                   } from "util/date"
 import { UserManager, User                                       } from "./user"
 
 export interface CreationOptions {
@@ -14,7 +16,7 @@ export interface CreationOptions {
 }
 
 export interface TokenPair {
-    id:      Token
+    access:  Token
     refresh: Token
 }
 
@@ -72,7 +74,8 @@ export interface TokenManager {
 
     isATokenActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<boolean>
 
-    createTokenPair(connection: Connection, user: User): Promise<TokenPair>
+    createTokenPair(connection: Connection, user: User, checkUser:  true):    Promise<TokenPair>
+    createTokenPair(connection: Connection, user: User, checkUser?: boolean): Promise<TokenPair | undefined>
 
     deleteAllUserATokens(connection: Connection, user: User, checkUser?: boolean): Promise<number>
 
@@ -174,9 +177,54 @@ export class DefaultTokenManager implements TokenManager {
         return info != null && info.exp > new Date()
     }
 
-    async createTokenPair(connection: Connection, user: User): Promise<TokenPair> {
-        // TODO
-        return {} as TokenPair
+    async createTokenPair(connection: Connection, user: User, checkUser:  true):            Promise<TokenPair>
+    async createTokenPair(connection: Connection, user: User, checkUser?: boolean):         Promise<TokenPair | undefined>
+    async createTokenPair(connection: Connection, user: User, checkUser:  boolean = false): Promise<TokenPair | undefined> {
+        this.logger?.debug(typeof user === "string" ? `Creating token pair for user "${user}"...`
+                                                    : `Creating token pair for user with id ${user}...`)
+        
+        const id = await this.userManager.getUserId(connection, user, checkUser)
+
+        if (id == null) {
+            this.logger?.debug("User not found")
+            return undefined
+        }
+
+        const aTokenId  = createTokenId()
+        const aTokenExp = dateMillisecondsAhead(this.config.logicATokenLifetime)
+
+        await connection.execute(
+            "INSERT INTO ATokens (id, user_id, exp_time) VALUES (?, ?, ?)",
+            [aTokenId, id, aTokenExp]
+        ) as [ResultSetHeader, FieldPacket[]]
+
+        const rTokenId  = createTokenId()
+        const rTokenExp = dateMillisecondsAhead(this.config.logicRTokenLifetime)
+
+        await connection.execute(
+            "INSERT INTO RTokens (id, atoken_id, exp_time) VALUES (?, ?, ?)",
+            [rTokenId, aTokenId, rTokenExp]
+        )
+
+        const pair = {
+            access: {
+                id:  aTokenId,
+                exp: aTokenExp
+            },
+
+            refresh: {
+                id:  rTokenId,
+                exp: rTokenExp
+            }
+        }
+
+        this.logger?.debug(`Created: ${tokenPairToString(pair)}`)
+
+        return pair
+    }
+
+    async forceDeleteAllUserATokens(connection: Connection, user: User): Promise<number> {
+        return await this.deleteAllUserATokens(connection, user, true)
     }
 
     async deleteAllUserATokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
@@ -186,7 +234,7 @@ export class DefaultTokenManager implements TokenManager {
         const id = await this.userManager.getUserId(connection, user, checkUser)
 
         if (id == null) {
-            this.logger?.debug("Not found")
+            this.logger?.debug("User not found")
             return 0
         }
 
@@ -196,10 +244,6 @@ export class DefaultTokenManager implements TokenManager {
         this.logger?.debug(`Deleted (${count})`)
 
         return count
-    }
-
-    async forceDeleteAllUserATokens(connection: Connection, user: User): Promise<number> {
-        return await this.deleteAllUserATokens(connection, user, true)
     }
 
     async deleteAllATokens(connection: Connection): Promise<number> {
@@ -319,7 +363,7 @@ export function isValidTokenIdString(string: string): boolean {
 
 export function tokenPairToJson(tokenPair: TokenPair): TokenPairJson {
     return {
-        access:  tokenToJson(tokenPair.id),
+        access:  tokenToJson(tokenPair.access),
         refresh: tokenToJson(tokenPair.refresh)
     }
 }
@@ -382,6 +426,42 @@ export function rTokenInfoToString(info: RTokenInfo): string {
         aTokenId: info.aTokenId.toString("hex"),
         exp:      info.exp.toISOString(),
         created:  info.created.toISOString()
+    }
+
+    return JSON.stringify(json, null, 4)
+}
+
+export function createTokenId(): Buffer {
+    const id      = crypto.randomBytes(64)
+    const seconds = Date.now() / 1000
+
+    id.writeUInt32BE(seconds, id.length - 4)
+
+    return id
+}
+
+export function tokenToString(token: Token): string {
+    const json = {
+        id: token.id,
+        exp: token.exp?.toISOString() ?? null
+    }
+
+    return JSON.stringify(json, null, 4)
+}
+
+export function tokenPairToString(pair: TokenPair): string {
+    const { access, refresh } = pair
+
+    const json = {
+        access: {
+            id:  access.id,
+            exp: access.exp?.toISOString() ?? null
+        },
+
+        refresh: {
+            id:  refresh.id,
+            exp: refresh.exp?.toISOString() ?? null
+        }
     }
 
     return JSON.stringify(json, null, 4)

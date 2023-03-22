@@ -83,7 +83,7 @@ export class DefaultNicknameManager implements NicknameManager {
         const id = await this.userManager.getUserId(connection, user, checkUser)
         
         if (id == null) {
-            this.logger?.debug("Not found")
+            this.logger?.debug("User not found")
             return 0
         }
 
@@ -120,7 +120,7 @@ export class DefaultNicknameManager implements NicknameManager {
         const id = await this.userManager.getUserId(connection, user, options.checkUser)
 
         if (id == null) {
-            this.logger?.debug("Not deleted")
+            this.logger?.debug("User not deleted")
             return false
         }
 
@@ -134,7 +134,7 @@ export class DefaultNicknameManager implements NicknameManager {
                 throw new LogicError(message)
             }
 
-            this.logger?.debug("Not deleted")
+            this.logger?.debug("Nickname not found")
 
             return false
         }
@@ -160,7 +160,7 @@ export class DefaultNicknameManager implements NicknameManager {
             if (force)
                 throw new LogicError(`Nickname "${nickname}" not found`)
 
-            this.logger?.debug("Not deleted")
+            this.logger?.debug("Nickname not found")
             
             return false
         }
@@ -230,8 +230,10 @@ export class DefaultNicknameManager implements NicknameManager {
 
         const id = await this.userManager.getUserId(connection, user, checkUser)
 
-        if (id == null)
+        if (id == null) {
+            this.logger?.debug("User not found")
             return 0
+        }
 
         const [rows] = await connection.execute("SELECT COUNT(*) AS count FROM NICKNAMES WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
         const count  = rows[0].count
@@ -256,7 +258,7 @@ export class DefaultNicknameManager implements NicknameManager {
         const id = await this.userManager.getUserId(connection, user, options?.checkUser)
 
         if (id == null) {
-            this.logger?.debug("Not added")
+            this.logger?.debug("User not found")
             return false
         }
 
@@ -266,7 +268,7 @@ export class DefaultNicknameManager implements NicknameManager {
             if (options?.throwOnLimit)
                 throw new LogicError("Too many nicknames")
 
-            this.logger?.debug("Not added")
+            this.logger?.debug("Too many nicknames")
 
             return false
         }
@@ -284,7 +286,7 @@ export class DefaultNicknameManager implements NicknameManager {
                     throw new LogicError(message)
                 }
 
-                this.logger?.debug("Not added")
+                this.logger?.debug("Nickname already exists")
 
                 return false
             }

@@ -158,7 +158,7 @@ export class DefaultUserManager implements UserManager {
             if (force)
                 throw new UserNotFoundError(user)
 
-            this.logger?.debug("Not set")
+            this.logger?.debug("User not found")
 
             return false
         }
@@ -183,7 +183,7 @@ export class DefaultUserManager implements UserManager {
         const login = await this.getUserLogin(connection, user, force)
 
         if (login == null) {
-            this.logger?.debug("Not set")
+            this.logger?.debug("User not found")
             return false
         }
 
@@ -218,7 +218,7 @@ export class DefaultUserManager implements UserManager {
             if (force)
                 throw new UserNotFoundError(user)
 
-            this.logger?.debug("Not set")
+            this.logger?.debug("User not found")
 
             return false
         }
@@ -273,7 +273,7 @@ export class DefaultUserManager implements UserManager {
         const creatorId = await getCreatorId.call(this)
 
         if (creatorId === "not-found") {
-            this.logger?.debug("Not created (creator not found)")
+            this.logger?.debug("Creator not found")
             return false
         }
 
@@ -296,7 +296,7 @@ export class DefaultUserManager implements UserManager {
                     throw new LogicError(`User "${login}" already exists`)
             }
 
-            this.logger?.debug("Not created (exists)")
+            this.logger?.debug("User already exists")
 
             return false
         }
@@ -349,7 +349,7 @@ export class DefaultUserManager implements UserManager {
             if (force)
                 throw new UserNotFoundError(user)
             
-            this.logger?.debug("Not deleted")
+            this.logger?.debug("Not found")
 
             return false
         }
@@ -369,7 +369,7 @@ export class DefaultUserManager implements UserManager {
         const toHash   = `${login.toLowerCase()}:${password}`
         const whereSql = `login = ? and password_hash = UNHEX(SHA2(?, 512))`
         const sql      = `SELECT * FROM Users WHERE ${whereSql}`
-        const [rows]   = await connection.execute(sql, [toHash]) as [UserRow[], FieldPacket[]]
+        const [rows]   = await connection.execute(sql, [login, toHash]) as [UserRow[], FieldPacket[]]
 
         if (rows.length === 0) {
             if (force)
@@ -456,16 +456,16 @@ export class DefaultUserManager implements UserManager {
             login:        t.login,
             name:         t.name,
             passwordHash: t.password_hash,
-            isAdmin:      t.is_admin,
-            isOnline:     t.is_online,
+            isAdmin:      Boolean(t.is_admin),
+            isOnline:     Boolean(t.is_online),
             created:      t.cr_time,
             creatorInfo:  t.cr_id != null ? {
                 id:            c.id,
                 login:         c.login,
                 name:          c.name,
                 passwordHash:  c.password_hash,
-                isAdmin:       c.is_admin,
-                isOnline:      c.is_online,
+                isAdmin:       Boolean(c.is_admin),
+                isOnline:      Boolean(c.is_online),
                 created:       c.cr_time,
                 creatorId:     c.cr_id
             } : null
@@ -649,8 +649,8 @@ export function userRowToUserInfo(row: UserRow): UserInfo {
         login:        row.login,
         name:         row.name,
         passwordHash: row.password_hash,
-        isAdmin:      row.is_admin,
-        isOnline:     row.is_online,
+        isAdmin:      Boolean(row.is_admin),
+        isOnline:     Boolean(row.is_online),
         created:      row.cr_time,
         creatorId:    row.cr_id
     }
