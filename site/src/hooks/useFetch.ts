@@ -1,6 +1,4 @@
-import useEffectOnce from "./useEffectOnce"
-
-import { useState  } from "react"
+import { useEffect, useState  } from "react"
 
 export type UseFetchResult = [
     null,      // Fetch result
@@ -21,27 +19,32 @@ export default function useFetch(url: string, options?: RequestInit): UseFetchRe
     const [loading,  setLoading ] = useState(true)
     const [error,    setError   ] = useState(null as string   | null)
 
-    useEffectOnce(async () => {
-        try {
-            const response = await fetch(url, options)
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(url, options)
 
-            if (response.ok) {
-                setResponse(response)
-                return
+                if (response.ok) {
+                    setResponse(response)
+                    return
+                }
+
+                setError(response.statusText)
+            } catch (error) {
+                if (error instanceof Error) {
+                    setError(error.message)
+                    return
+                }
+
+                setError(String(error))
+            } finally {
+                setLoading(false)
             }
-
-            setError(response.statusText)
-        } catch (error) {
-            if (error instanceof Error) {
-                setError(error.message)
-                return
-            }
-
-            setError(String(error))
-        } finally {
-            setLoading(false)
         }
-    })
+
+        fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return [response, loading, error] as UseFetchResult
 }

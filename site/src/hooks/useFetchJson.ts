@@ -33,9 +33,22 @@ export default function useFetchJson(url: string, options?: RequestInit): UseFet
             return
         }
 
-        response!.json()
-            .then(json => { setJsonLoading(false); setJson(json) })
-            .catch(error => setJsonError(String(error)))
+        const parseResponse = async () => {
+            try {
+                const json = await response!.json()
+                setJson(json)
+            } catch (error) {
+                if (error instanceof Error) {
+                    setJsonError(error.message)
+                    return
+                }
+                setJsonError(String(error))
+            } finally {
+                setJsonLoading(false)
+            }
+        }
+
+        parseResponse()
     }, [error, loading, response])
 
     return [json, jsonLoading, jsonError] as UseFetchJsonResult
