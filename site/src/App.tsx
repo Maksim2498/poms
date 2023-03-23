@@ -1,11 +1,11 @@
-import GitHub from "ui/GitHub/component"
+import Footer from "ui/Footer/component"
 
 import "./App.css"
 
 export default function App() {
     return <div className="App">
         <footer>
-            <GitHub />
+            <Footer />
         </footer>
     </div>
 }
