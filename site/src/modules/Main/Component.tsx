@@ -1,29 +1,29 @@
-import User                         from "logic/User"
-import ContentSelector              from "components/ContentSelector/Component"
-import ContentWindow                from "components/ContentWindow/Component"
-import Welcome                      from "components/Welcome/Component"
-import Server                       from "components/Server/Component"
-import Users                        from "components/Users/Component"
-import Profile                      from "components/Profile/Component"
-import Console                      from "components/Console/Component"
+import ContentSelector                               from "components/ContentSelector/Component"
+import ContentWindow                                 from "components/ContentWindow/Component"
+import Welcome                                       from "components/Welcome/Component"
+import Server                                        from "components/Server/Component"
+import Users                                         from "components/Users/Component"
+import Profile                                       from "components/Profile/Component"
+import Console                                       from "components/Console/Component"
 
-import { useContext, useState     } from "react"
-import { AllowAnonymAccessContext } from "pages/App/Component"
-import { Content                  } from "components/ContentSelector/Component"
+import { useContext, useEffect, useState                      } from "react"
+import { AllowAnonymAccessContext, AuthInfoContext } from "pages/App/Component"
+import { Content                                   } from "components/ContentSelector/Component"
 
 import "./style.css"
 
 export interface Props {
     content?: Content
-    user?:    User
 }
 
 export default function Main(props: Props) {
     const isAnonymAccessAllowed = useContext(AllowAnonymAccessContext)
-    const { user }              = props
+    const user                  = useContext(AuthInfoContext)?.user
     const contentList           = makeContentList()
     const initContent           = props.content ?? contentList[0]
     const [content, setContent] = useState(initContent)
+
+    useEffect(() => props.content && setContent(props.content), [props.content])
 
     return <main className="Main">
         <ContentSelector contentList={contentList} onSelect={c => setContent(c)}/>
