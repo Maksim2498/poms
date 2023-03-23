@@ -9,14 +9,18 @@ import { Content     } from "components/ContentSelector/Component"
 
 import "./style.css"
 
-export default function Main() {
+export interface Props {
+    content?: Content
+}
+
+export default function Main(props: Props) {
     const contentList = [
-        { name: "Welcome",                             component: Welcome },
+        { name: "Home",                                component: Welcome },
         { name: "Server Status", selectName: "Server", component: Server  },
         { name: "Users List",    selectName: "User",   component: Users   },
     ] satisfies Content[]
 
-    const [content, setContent] = useState(contentList[0])
+    const [content, setContent] = useState(props.content ?? contentList[0])
 
     return <main className="Main">
         <ContentSelector contentList={contentList} onSelect={c => setContent(c)}/>
