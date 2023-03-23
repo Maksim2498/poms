@@ -1,0 +1,13 @@
+.UserButton > .signed-in {
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+.UserButton > .signed-in > * {
+    margin: 0 1rem
+}
+
+.UserButton > .signed-in > .UserName {
+    font-size: 1.2rem
+}
