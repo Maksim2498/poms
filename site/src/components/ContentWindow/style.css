@@ -1,0 +1,24 @@
+.ContentWindow {
+    width: 100%;
+    height: 100%
+}
+
+.ContentWindow > * {
+    padding: .8rem
+}
+
+.ContentWindow > .main {
+    background-color: #222;
+    border-radius: 0 0 .4rem .4rem;
+    height: calc(100% - 2.8rem);
+}
+
+.ContentWindow > .header {
+    background-color: #333;
+    border-radius: .4rem .4rem 0 0;
+    height: 2.8rem;
+}
+
+.ContentWindow > .header > h2 {
+    text-align: center
+}

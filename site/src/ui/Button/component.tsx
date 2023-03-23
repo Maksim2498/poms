@@ -8,10 +8,10 @@ export const DEFAULT_TYPE  = "regular"
 export const DEFAULT_STATE = "active"
 
 export interface Props {
-    type?:    Type
-    state?:   State
-    onClick?: OnClick
-    children: any
+    type?:     Type
+    state?:    State
+    onClick?:  OnClick
+    children?: any
 }
 
 export type Type    = "regular" | "submit"   | "cancel"
