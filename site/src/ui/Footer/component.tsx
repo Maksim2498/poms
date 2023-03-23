@@ -1,4 +1,4 @@
-import GitHub from "ui/GitHub/component";
+import GitHub from "ui/GitHub/Component"
 
 import "./style.css"
 

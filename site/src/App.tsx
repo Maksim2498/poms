@@ -1,11 +1,9 @@
-import Footer from "ui/Footer/component"
+import Footer from "ui/Footer/Component"
 
 import "./App.css"
 
 export default function App() {
     return <div className="App">
-        <footer>
-            <Footer />
-        </footer>
+        <Footer />
     </div>
 }

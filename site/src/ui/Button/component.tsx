@@ -1,7 +1,8 @@
-import Loading from "ui/Loading/component"
+import Loading from "ui/Loading/Component"
+
+import { useState } from "react"
 
 import "./style.css"
-import { useState } from "react"
 
 export const DEFAULT_TYPE  = "regular"
 export const DEFAULT_STATE = "active"

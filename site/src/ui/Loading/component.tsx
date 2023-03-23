@@ -1,5 +1,5 @@
-import LoadingIndicator from "ui/LoadingIndicator/component"
-import Dim              from "ui/Dim/component"
+import LoadingIndicator from "ui/LoadingIndicator/Component"
+import Dim              from "ui/Dim/Component"
 
 import "./style.css"
 
