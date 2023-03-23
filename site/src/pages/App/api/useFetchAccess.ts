@@ -16,8 +16,8 @@ export type UseFetchAccessResult = [
 ]
 
 export default function useFetchAccess(): UseFetchAccessResult {
-    const [json,    loading,   error] = useFetchJson("/api/anonym-access-allowed", { cache: "no-store" })
-    const [allowed, setAllowed      ] = useState(null as boolean | null)
+    const [json,    loading,    error] = useFetchJson("/api/anonym-access-allowed", { cache: "no-store" })
+    const [allowed, setAllowed       ] = useState(null as boolean | null)
 
     useEffect(() => {
         if (loading)
