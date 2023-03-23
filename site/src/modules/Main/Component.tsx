@@ -13,9 +13,9 @@ import { Content     } from "components/ContentSelector/Component"
 import "./style.css"
 
 export interface Props {
-    allowAnonymAccess?: boolean
-    content?:           Content
-    user?:              User
+    isAnonymAccessAllowed?: boolean
+    content?:              Content
+    user?:                 User
 }
 
 export default function Main(props: Props) {
@@ -29,13 +29,13 @@ export default function Main(props: Props) {
     </main>
 
     function makeContentList() {
-        const { allowAnonymAccess, user } = props
+        const { isAnonymAccessAllowed, user } = props
 
         const contentList = [
             { name: "Home", component: Welcome },
         ] as Content[]
 
-        if (allowAnonymAccess)
+        if (isAnonymAccessAllowed)
             addCommonContent()
 
         if (user != null) {
@@ -45,7 +45,7 @@ export default function Main(props: Props) {
                 component:  () => Profile({ user })
             })
 
-            if (!allowAnonymAccess)
+            if (!isAnonymAccessAllowed)
                 addCommonContent()
 
             if (user.isAdmin)
