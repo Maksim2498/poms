@@ -1,14 +1,14 @@
-import AuthInfo          from "logic/AuthInfo"
-import Header            from "modules/Header/Component"
-import Main              from "modules/Main/Component"
-import Footer            from "modules/Footer/Component"
-import AuthFrom          from "components/AuthForm/Component"
-import Loading           from "ui/Loading/Component"
-import useFetchAccess    from "./api/useFetchAccess"
-
-import "./style.css"
+import AuthInfo                    from "logic/AuthInfo"
+import Header                      from "modules/Header/Component"
+import Main                        from "modules/Main/Component"
+import Footer                      from "modules/Footer/Component"
+import AuthFrom                    from "components/AuthForm/Component"
+import Loading                     from "ui/Loading/Component"
+import useFetchAccess              from "./api/useFetchAccess"
 
 import { createContext, useState } from "react"
+
+import "./style.css"
 
 export const AllowAnonymAccessContext = createContext(false)
 export const AuthInfoContext          = createContext(null as AuthInfo | null)
