@@ -9,4 +9,8 @@ export default class AuthInfo {
         this.user      = user
         this.tokenPair = tokenPair
     }
+
+    save() {
+
+    }
 }

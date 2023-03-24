@@ -45,10 +45,20 @@ export default function App() {
 
     function main() {
         if (showAuthForm) {
-            const component = () => AuthFrom({ onAuth: info => setAuthInfo(info)})
+            const component = () => AuthFrom({ onAuth })
             const name      = "Sign In"
 
-            return <Main content={{ name, component }} onContentChange={() => setShowAuthForm(false)} />
+            return <Main content={{ name, component }} onContentChange={onContentChange} />
+
+            function onAuth(info: AuthInfo) {
+                setAuthInfo(info)
+                setShowAuthForm(false)
+                info.save()
+            }
+
+            function onContentChange() {
+                setShowAuthForm(false)
+            }
         }
 
         return <Main />
