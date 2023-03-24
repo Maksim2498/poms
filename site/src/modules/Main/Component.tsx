@@ -6,19 +6,23 @@ import Users                                         from "components/Users/Comp
 import Profile                                       from "components/Profile/Component"
 import Console                                       from "components/Console/Component"
 
-import { useContext, useEffect, useState                      } from "react"
+import { useContext, useEffect, useState           } from "react"
 import { AllowAnonymAccessContext, AuthInfoContext } from "pages/App/Component"
 import { Content                                   } from "components/ContentSelector/Component"
 
 import "./style.css"
 
 export interface Props {
-    content?: Content
+    onContentChange?: OnContentChange
+    content?:         Content
 }
+
+export type OnContentChange = (newContent: Content, oldContent: Content) => void
 
 export default function Main(props: Props) {
     const isAnonymAccessAllowed = useContext(AllowAnonymAccessContext)
     const user                  = useContext(AuthInfoContext)?.user
+    const { onContentChange }   = props
     const contentList           = makeContentList()
     const initContent           = props.content ?? contentList[0]
     const [content, setContent] = useState(initContent)
@@ -26,7 +30,7 @@ export default function Main(props: Props) {
     useEffect(() => props.content && setContent(props.content), [props.content])
 
     return <main className="Main">
-        <ContentSelector contentList={contentList} onSelect={c => setContent(c)}/>
+        <ContentSelector contentList={contentList} onSelect={onSelect}/>
         <ContentWindow content={content} />
     </main>
 
@@ -64,5 +68,11 @@ export default function Main(props: Props) {
                 { name: "Users List",    selectName: "Users",  component: Users  },
             )
         }
+    }
+
+    function onSelect(newContent: Content) {
+        const oldContent = content
+        setContent(newContent)
+        onContentChange?.(newContent, oldContent)
     }
 }

@@ -48,7 +48,7 @@ export default function App() {
             const component = () => AuthFrom({ onAuth: info => setAuthInfo(info)})
             const name      = "Sign In"
 
-            return <Main content={{ name, component }} />
+            return <Main content={{ name, component }} onContentChange={() => setShowAuthForm(false)} />
         }
 
         return <Main />
