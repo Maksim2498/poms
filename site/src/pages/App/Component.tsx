@@ -2,7 +2,6 @@ import AuthInfo                    from "logic/AuthInfo"
 import Header                      from "modules/Header/Component"
 import Main                        from "modules/Main/Component"
 import Footer                      from "modules/Footer/Component"
-import AuthFrom                    from "components/AuthForm/Component"
 import Loading                     from "ui/Loading/Component"
 import useFetchAccess              from "./api/useFetchAccess"
 
@@ -45,10 +44,7 @@ export default function App() {
 
     function main() {
         if (showAuthForm) {
-            const component = () => AuthFrom({ onAuth })
-            const name      = "Sign In"
-
-            return <Main content={{ name, component }} onContentChange={onContentChange} />
+            return <Main show="auth" onAuth={onAuth} onCancel={onCancel} />
 
             function onAuth(info: AuthInfo) {
                 setAuthInfo(info)
@@ -56,11 +52,11 @@ export default function App() {
                 info.save()
             }
 
-            function onContentChange() {
+            function onCancel() {
                 setShowAuthForm(false)
             }
         }
 
-        return <Main />
+        return <Main show="content" />
     }
 }

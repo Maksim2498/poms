@@ -1,0 +1,32 @@
+.AuthForm > fieldset {
+    border-radius: .4rem;
+    background-color: #222;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%)
+}
+
+.AuthForm > fieldset > * {
+    margin: 1rem
+}
+
+.AuthForm fieldset > legend {
+    font-size: 1.5rem;
+    padding: 1rem;
+    width: 7rem;
+    height: 4rem;
+    text-align: center;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+    transform: translateY(2rem)
+}
+
+.AuthForm > fieldset > .buttons {
+    display: flex;
+    justify-content: space-between
+}

@@ -1,0 +1,12 @@
+.ContentViewer {
+    height: 100%;
+    display: flex;
+    padding-left: max(2rem, calc((100% - 60rem) / 2));
+    padding-right: max(8rem, calc((100% - 48rem) / 2));
+    padding-top: 1rem;
+    padding-bottom: 1rem
+}
+
+.ContentViewer > .ContentWindow {
+    margin: 0 1rem
+}

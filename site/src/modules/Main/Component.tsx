@@ -1,78 +1,37 @@
-import ContentSelector                               from "components/ContentSelector/Component"
-import ContentWindow                                 from "components/ContentWindow/Component"
-import Welcome                                       from "components/Welcome/Component"
-import Server                                        from "components/Server/Component"
-import Users                                         from "components/Users/Component"
-import Profile                                       from "components/Profile/Component"
-import Console                                       from "components/Console/Component"
+import AuthFrom             from "./children/AuthForm/Component"
+import ContentViewer        from "./children/ContentViewer/Component"
 
-import { useContext, useEffect, useState           } from "react"
-import { AllowAnonymAccessContext, AuthInfoContext } from "pages/App/Component"
-import { Content                                   } from "components/ContentSelector/Component"
+import { Props as AProps  } from "./children/AuthForm/Component"
+import { Props as CVProps } from "./children/ContentViewer/Component"
 
 import "./style.css"
 
-export interface Props {
-    onContentChange?: OnContentChange
-    content?:         Content
+export type Props = ContentProps
+                  | AuthProps
+
+export interface ContentProps extends CVProps {
+    show: "content"
 }
 
-export type OnContentChange = (newContent: Content, oldContent: Content) => void
+export interface AuthProps extends AProps {
+    show: "auth"
+}
+
+export type Show = "content"
+                 | "auth"
 
 export default function Main(props: Props) {
-    const isAnonymAccessAllowed = useContext(AllowAnonymAccessContext)
-    const user                  = useContext(AuthInfoContext)?.user
-    const { onContentChange }   = props
-    const contentList           = makeContentList()
-    const initContent           = props.content ?? contentList[0]
-    const [content, setContent] = useState(initContent)
-
-    useEffect(() => props.content && setContent(props.content), [props.content])
-
     return <main className="Main">
-        <ContentSelector contentList={contentList} onSelect={onSelect}/>
-        <ContentWindow content={content} />
+        {body()}
     </main>
 
-    function makeContentList() {
-        const contentList = [
-            { name: "Home", component: Welcome },
-        ] as Content[]
+    function body() {
+        switch (props.show) {
+            case "auth":
+                return <AuthFrom onAuth={props.onAuth} onCancel={props.onCancel} />
 
-        if (isAnonymAccessAllowed)
-            addCommonContent()
-
-        if (user != null) {
-            contentList.push({
-                name:       "Your Profile",
-                selectName: "Profile",
-                component:  () => Profile({ user })
-            })
-
-            if (!isAnonymAccessAllowed)
-                addCommonContent()
-
-            if (user.isAdmin)
-                contentList.push({
-                    name:       "Server Console",
-                    selectName: "Console",
-                    component:  Console
-                })
+            case "content":
+                return <ContentViewer content={props.content} onContentChange={props.onContentChange} />
         }
-
-        return contentList
-
-        function addCommonContent() {
-            contentList.push(
-                { name: "Server Status", selectName: "Server", component: Server },
-                { name: "Users List",    selectName: "Users",  component: Users  },
-            )
-        }
-    }
-
-    function onSelect(newContent: Content) {
-        const oldContent = content
-        setContent(newContent)
-        onContentChange?.(newContent, oldContent)
     }
 }

@@ -1,4 +1,4 @@
-import { Content } from "components/ContentSelector/Component"
+import { Content } from "../ContentSelector/Component"
 
 import "./style.css"
 
