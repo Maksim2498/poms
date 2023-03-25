@@ -1,5 +1,5 @@
 import AuthInfo      from "logic/AuthInfo"
-import Input         from "ui/Input/Components"
+import Input         from "ui/Input/Component"
 import Button        from "ui/Button/Component"
 
 import { FormEvent } from "react"
