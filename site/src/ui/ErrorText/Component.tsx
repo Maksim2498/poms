@@ -4,7 +4,7 @@ export interface Props {
     children?: any
 }
 
-export default function Error(props: Props) {
+export default function ErrorText(props: Props) {
     const { children } = props
 
     if (children == null)

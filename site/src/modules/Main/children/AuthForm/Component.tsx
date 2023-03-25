@@ -2,7 +2,8 @@ import AuthInfo      from "logic/AuthInfo"
 import User          from "logic/User"
 import Input         from "ui/Input/Component"
 import Button        from "ui/Button/Component"
-import Error         from "ui/Error/Component"
+import ErrorText     from "ui/ErrorText/Component"
+import auth          from "./api/auth"
 
 import { FormEvent, useState } from "react"
 
@@ -54,8 +55,13 @@ export default function AuthFrom(props: Props) {
 
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+
         setLoading(true)
-        console.log(signInState)
+
+        auth(login, password)
+            .then(info   => onAuth?.(info))
+            .catch(error => setCommonError(error instanceof Error ? error.message : String(error)))
+            .finally(()  => setLoading(false))
     }
 
     const onLoginChange = (e: FormEvent<HTMLInputElement>) => {
@@ -65,6 +71,7 @@ export default function AuthFrom(props: Props) {
         setLogin(login)
         setLoginError(error)
         setLoginChanged(true)
+        setCommonError(null)
     }
 
     const onPasswordChange = (e: FormEvent<HTMLInputElement>) => {
@@ -74,20 +81,21 @@ export default function AuthFrom(props: Props) {
         setPassword(password)
         setPasswordError(error)
         setPasswordChanged(true)
+        setCommonError(null)
     }
 
     return <form className="AuthForm" onSubmit={onSubmit}>
         <fieldset>
             <legend>Sign In</legend>
             <Input placeholder="Login" onChange={onLoginChange} invalid={loginInvalid} />
-            <Error>{loginError}</Error>
+            <ErrorText>{loginError}</ErrorText>
             <Input placeholder="Password" onChange={onPasswordChange} invalid={passwordInvalid} type="password" />
-            <Error>{passwordError}</Error>
+            <ErrorText>{passwordError}</ErrorText>
             <div className="buttons">
                 <Button type="cancel" state={cancelState} onClick={onCancel}>Cancel</Button>
                 <Button type="submit" state={signInState}>Sign In</Button>
             </div>
-            <Error>{commonError}</Error>
+            <ErrorText>{commonError}</ErrorText>
         </fieldset>
     </form>
 
