@@ -29,24 +29,30 @@ export default function AuthFrom(props: Props) {
     const [loginChanged,    setLoginChanged   ] = useState(false)
     const [passwordChanged, setPasswordChanged] = useState(false)
 
-    const bothChanged     =  loginChanged
-                          && passwordChanged
+    const [loading,         setLoading        ] = useState(false)
 
-    const loginInvalid    = loginError  != null
-    const passwordInvalid = loginError  != null
-    const allInvalid      = commonError != null
+    const bothChanged      =  loginChanged
+                           && passwordChanged
 
-    const hasError        =  loginInvalid
-                          || passwordInvalid
-                          || allInvalid
+    const loginInvalid     = loginError    != null
+    const passwordInvalid  = passwordError != null
+    const somethingInvalid = commonError   != null
 
-    const disabled        = !bothChanged
-                          || hasError
+    const hasError         =  loginInvalid
+                           || passwordInvalid
+                           || somethingInvalid
 
-    const state           =  disabled ? "disabled" : "active"
+    const disabled         = !bothChanged
+                           || hasError
+
+    const state            =  loading ? "loading"
+                                      : disabled ? "disabled"
+                                                 : "active"
 
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+        setLoading(true)
+        console.log(state)
     }
 
     const onLoginChange = (e: FormEvent<HTMLInputElement>) => {
@@ -84,6 +90,6 @@ export default function AuthFrom(props: Props) {
 
     function formatError(error: string | null): string | null {
         return error?.replaceAll(/\.\s*/g, ".\n")
-                    ?.replaceAll(/\.?$/g, ".") ?? null
+                    ?.replaceAll(/\.?$/g,  ".") ?? null
     }
 }
