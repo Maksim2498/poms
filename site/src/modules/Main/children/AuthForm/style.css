@@ -16,6 +16,7 @@
 }
 
 .AuthForm > fieldset > .Error {
+    text-align: center;
     font-size: small;
     white-space: pre;
     margin:.5rem 1rem 

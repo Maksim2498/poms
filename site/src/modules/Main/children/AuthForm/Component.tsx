@@ -17,14 +17,14 @@ export type OnAuth       = (authInfo: AuthInfo) => void
 export type OnCancelAuth = () => void
 
 export default function AuthFrom(props: Props) {
-    const { onCancel } = props
+    const { onAuth, onCancel } = props
 
     const [login,           setLogin          ] = useState("")
     const [password,        setPassword       ] = useState("")
 
     const [loginError,      setLoginError     ] = useState(null as string | null)
     const [passwordError,   setPasswordError  ] = useState(null as string | null)
-    const [commonError,     setCommonError    ] = useState(null as string | null)
+    const [commonError,     setCommonError    ] = useState("Invalid login or password" as string | null)
 
     const [loginChanged,    setLoginChanged   ] = useState(false)
     const [passwordChanged, setPasswordChanged] = useState(false)
@@ -78,10 +78,12 @@ export default function AuthFrom(props: Props) {
                 <Button type="cancel" onClick={onCancel}>Cancel</Button>
                 <Button type="submit" state={state}>Sign In</Button>
             </div>
+            <Error>{commonError}</Error>
         </fieldset>
     </form>
 
     function formatError(error: string | null): string | null {
-        return error?.replaceAll(/\.\s*/g, ".\n") ?? null
+        return error?.replaceAll(/\.\s*/g, ".\n")
+                    ?.replaceAll(/\.?$/g, ".") ?? null
     }
 }
