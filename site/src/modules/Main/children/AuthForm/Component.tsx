@@ -42,17 +42,20 @@ export default function AuthFrom(props: Props) {
                            || passwordInvalid
                            || somethingInvalid
 
-    const disabled         = !bothChanged
+    const signInDisabled   = !bothChanged
                            || hasError
 
-    const state            =  loading ? "loading"
-                                      : disabled ? "disabled"
-                                                 : "active"
+    const cancelState      = loading  ? "disabled"
+                                      : "active"
+
+    const signInState      =  loading ? "loading"
+                                      : signInDisabled ? "disabled"
+                                                       : "active"
 
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setLoading(true)
-        console.log(state)
+        console.log(signInState)
     }
 
     const onLoginChange = (e: FormEvent<HTMLInputElement>) => {
@@ -81,8 +84,8 @@ export default function AuthFrom(props: Props) {
             <Input placeholder="Password" onChange={onPasswordChange} invalid={passwordInvalid} type="password" />
             <Error>{passwordError}</Error>
             <div className="buttons">
-                <Button type="cancel" onClick={onCancel}>Cancel</Button>
-                <Button type="submit" state={state}>Sign In</Button>
+                <Button type="cancel" state={cancelState} onClick={onCancel}>Cancel</Button>
+                <Button type="submit" state={signInState}>Sign In</Button>
             </div>
             <Error>{commonError}</Error>
         </fieldset>
