@@ -1,6 +1,6 @@
 import Loading from "ui/Loading/Component"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import "./style.css"
 
@@ -24,11 +24,21 @@ export default function Button(props: Props) {
 
     const [loading, setLoading] = useState(state === "loading")
 
+    useEffect(() => setLoading(state === "loading"), [state])
+
     const className = `${type} Button`
     const domType   = type  === "submit" ? "submit" : "button"
     const disabled  = state === "disabled" || loading
 
-    const onClick = () => {
+    return <button className={className} type={domType} disabled={disabled} onClick={onClick}>
+        {loading && <Loading />}
+
+        <div className="children">
+            {props.children}
+        </div>
+    </button>
+
+    function onClick() {
         if (!props.onClick)
             return
 
@@ -40,12 +50,4 @@ export default function Button(props: Props) {
             result.then(() => setLoading(false))
         }
     }
-
-    return <button className={className} type={domType} disabled={disabled} onClick={onClick}>
-        {loading && <Loading />}
-
-        <div className="children">
-            {props.children}
-        </div>
-    </button>
 }
