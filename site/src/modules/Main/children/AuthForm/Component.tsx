@@ -24,7 +24,7 @@ export default function AuthFrom(props: Props) {
 
     const [loginError,      setLoginError     ] = useState(null as string | null)
     const [passwordError,   setPasswordError  ] = useState(null as string | null)
-    const [commonError,     setCommonError    ] = useState("Invalid login or password" as string | null)
+    const [commonError,     setCommonError    ] = useState(null as string | null)
 
     const [loginChanged,    setLoginChanged   ] = useState(false)
     const [passwordChanged, setPasswordChanged] = useState(false)
