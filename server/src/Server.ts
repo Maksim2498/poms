@@ -283,13 +283,18 @@ export default class Server {
         this.checkState("created", "initialize")
         this._state = "initializing"
 
-        this.logger?.info("Initializing server...")
-        initWorkingDirectory.call(this)
-        await initStatic.call(this)
-        await initDatabase.call(this)
-        this.logger?.info("Server is successfully initialized")
+        try {
+            this.logger?.info("Initializing server...")
+            initWorkingDirectory.call(this)
+            await initStatic.call(this)
+            await initDatabase.call(this)
+            this.logger?.info("Server is successfully initialized")
 
-        this._state = "initialized"
+            this._state = "initialized"
+        } catch (error) {
+            this._state = "created"
+            throw error
+        }
 
         function initWorkingDirectory(this: Server) {
             const wd = dirname(this.config.path)
@@ -492,13 +497,18 @@ export default class Server {
         this.checkState("initialized", "start")
         this._state = "starting"
 
-        log.call(this)
-        initRunPromise.call(this)
-        await listen.call(this)
+        try {
+            log.call(this)
+            initRunPromise.call(this)
+            await listen.call(this)
 
-        this._state = "running"
+            this._state = "running"
 
-        await onStarted(this)
+            await onStarted(this)
+        } catch (error) {
+            this._state = "initialized"
+            throw error
+        }
 
         function log(this: Server) {
             if (!this.logger)
