@@ -1,19 +1,27 @@
-import Cookies   from "js-cookie"
-import TokenPair from "./TokenPair"
+import z          from "zod"
+import Cookies    from "js-cookie"
+import AuthInfo   from "./AuthInfo"
+import LogicError from "./LogicError"
 
-export interface CreationOptions {
-    readonly login:      string
-    readonly name?:      string
-    readonly nicknames?: string[]
-    readonly isAdmin?:   boolean
-    readonly isOnline?:  boolean
-    readonly reg?: {
-        readonly time?:  Date
-        readonly login?: string | null
-    }
-}
+export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
 export default class User {
+    static readonly JSON_SCHEMA = z.object({
+        login:     z.string(),
+        name:      z.string().nullish(),
+        nicknames: z.string().array().nullish(),
+        isAdmin:   z.boolean().nullish(),
+        isOnline:  z.boolean().nullish(),
+        reg:       z.object({
+            time:  z.coerce.date().nullish(),
+            login: z.string().nullish()
+        }).nullish()
+    })
+
+    static fromJson(json: any): User {
+        return new User(this.JSON_SCHEMA.parse(json))
+    }
+
     static readonly LOGIN_COOKIE_NAME = "login"
 
     static checkLogin(login: string) {
@@ -23,7 +31,7 @@ export default class User {
             throw new Error(invalidReason)
     }
 
-    static validateLogin(login: string): string | null {
+    static validateLogin(login: string): string | undefined {
         const MIN_LENGTH = 4
 
         if (login.length < MIN_LENGTH)
@@ -37,7 +45,7 @@ export default class User {
         if (login.match(/\s/))
             return `Login "${login}" contains whitespace`
 
-        return null
+        return undefined
     }
 
     static checkPassword(password: string) {
@@ -47,7 +55,7 @@ export default class User {
             throw new Error(invalidReason)
     }
 
-    static validatePassword(password: string): string | null {
+    static validatePassword(password: string): string | undefined {
         const MIN_LENGTH = 4
 
         if (password.length < MIN_LENGTH)
@@ -58,15 +66,15 @@ export default class User {
         if (password.length > MAX_LENGTH)
             return `Password is too long. Maximum ${MAX_LENGTH} characters allowed`
 
-        return null
+        return undefined
     }
 
     static remove() {
-        this.removeLogin()
+        Cookies.remove(this.LOGIN_COOKIE_NAME, { sameSite: "strict" })
     }
 
-    static async load(tokenPair: TokenPair): Promise<User> {
-        const user = await this.safeLoad(tokenPair)
+    static load(): User {
+        const user = this.safeLoad()
 
         if (user == null)
             throw new Error("Failed to load user")
@@ -74,60 +82,58 @@ export default class User {
         return user
     }
 
-    static async safeLoad(tokenPair: TokenPair): Promise<User | null> {
-        const login = this.safeLoadLogin()
+    static safeLoad(): User | undefined {
+        const login = Cookies.get(this.LOGIN_COOKIE_NAME)
 
         if (login == null)
-            return null
+            return undefined
+
+        if (this.validateLogin(login) != null) {
+            this.remove()
+            return undefined
+        }
 
         return new User({ login })
     }
 
-    private static safeLoadLogin(): string | null {
-        const login = Cookies.get(this.LOGIN_COOKIE_NAME)
-
-        if (login == null)
-            return null
-
-        if (this.validateLogin(login) != null) {
-            this.removeLogin()
-            return null
-        }
-
-        return login
-    }
-
-    private static removeLogin() {
-        Cookies.remove(this.LOGIN_COOKIE_NAME, { sameSite: "strict" })
-    }
-
-    readonly login:     string
-    readonly name:      string | null
-    readonly nicknames: string[]
-    readonly isAdmin:   boolean
-    readonly isOnline:  boolean
-    readonly reg: {
-        readonly time:  Date
-        readonly login: string | null
+    readonly login:      string
+    readonly name?:      string
+    readonly nicknames:  string[]
+    readonly isAdmin:    boolean
+    readonly isOnline:   boolean
+    readonly reg:        {
+        readonly time:   Date
+        readonly login?: string
     }
 
     constructor(options: CreationOptions) {
         this.login     = options.login
-        this.name      = options.name      ?? null
+        this.name      = options.name      ?? undefined
         this.nicknames = options.nicknames ?? []
         this.isAdmin   = options.isAdmin   ?? false
         this.isOnline  = options.isOnline  ?? false
         this.reg       =  {
             time:  options.reg?.time       ?? new Date(),
-            login: options.reg?.login      ?? null
+            login: options.reg?.login      ?? undefined
         }
     }
 
-    save() {
-        this.saveLogin()
+    async updated(info: AuthInfo): Promise<User> {
+        const headers  = info.toHeaders()
+        const response = await fetch(`/api/users/${this.login}`, { headers, cache: "no-store" })
+
+        if (!response.ok)
+            throw new Error(response.statusText)
+
+        const json = await response.json()
+
+        if (json.error)
+            throw new LogicError(String(json.error))
+
+        return User.fromJson(json)
     }
 
-    private saveLogin() {
+    save() {
         Cookies.set(User.LOGIN_COOKIE_NAME, this.login, {
             expires:  3650,
             sameSite: "strict"

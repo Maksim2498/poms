@@ -1,4 +1,3 @@
-import ApiManager                          from "logic/ApiManager"
 import User                                from "logic/User"
 import LogicError                          from "logic/LogicError"
 import Input                               from "ui/Input/Component"
@@ -6,7 +5,8 @@ import Button                              from "ui/Button/Component"
 import ErrorText                           from "ui/ErrorText/Component"
 
 import { FormEvent, useState, useContext } from "react"
-import { UserContext                     } from "pages/App/Component"
+import { AuthInfoContext, UserContext    } from "pages/App/Component"
+import { auth                            } from "./api"
 
 import "./style.css"
 
@@ -22,13 +22,14 @@ export default function AuthFrom(props: Props) {
     const { onAuth, onCancel } = props
 
     const [,                setUser           ] = useContext(UserContext)
+    const [authInfo,        setAuthInfo       ] = useContext(AuthInfoContext)
 
     const [login,           setLogin          ] = useState("")
     const [password,        setPassword       ] = useState("")
 
-    const [loginError,      setLoginError     ] = useState(null as string | null)
-    const [passwordError,   setPasswordError  ] = useState(null as string | null)
-    const [commonError,     setCommonError    ] = useState(null as string | null)
+    const [loginError,      setLoginError     ] = useState(undefined as string | undefined)
+    const [passwordError,   setPasswordError  ] = useState(undefined as string | undefined)
+    const [commonError,     setCommonError    ] = useState(undefined as string | undefined)
 
     const [loginChanged,    setLoginChanged   ] = useState(false)
     const [passwordChanged, setPasswordChanged] = useState(false)
@@ -61,11 +62,18 @@ export default function AuthFrom(props: Props) {
 
         setLoading(true)
 
-        const apiManager = ApiManager.instance
+        auth(login, password)
+            .then(tokenPair => {
+                const newAuthInfo = authInfo.withTokenPair(tokenPair)
 
-        apiManager.auth(login, password)
-            .then(() => {
-                setUser(apiManager.user)
+                setAuthInfo(newAuthInfo)
+                newAuthInfo.save()
+
+                const newUser = new User({ login })
+
+                setUser(newUser)
+                newUser.save()
+
                 onAuth?.()
             })
             .catch(error => {
@@ -87,7 +95,7 @@ export default function AuthFrom(props: Props) {
         setLogin(login)
         setLoginError(error)
         setLoginChanged(true)
-        setCommonError(null)
+        setCommonError(undefined)
     }
 
     const onPasswordChange = (e: FormEvent<HTMLInputElement>) => {
@@ -97,7 +105,7 @@ export default function AuthFrom(props: Props) {
         setPassword(password)
         setPasswordError(error)
         setPasswordChanged(true)
-        setCommonError(null)
+        setCommonError(undefined)
     }
 
     return <form className="AuthForm" onSubmit={onSubmit}>
@@ -115,8 +123,8 @@ export default function AuthFrom(props: Props) {
         </fieldset>
     </form>
 
-    function formatError(error: string | null): string | null {
+    function formatError(error?: string): string | undefined {
         return error?.replaceAll(/\.\s*/g, ".\n")
-                    ?.replaceAll(/\.?$/g,  ".") ?? null
+                    ?.replaceAll(/\.?$/g,  ".")
     }
 }

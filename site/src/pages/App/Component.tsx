@@ -1,39 +1,49 @@
-import ApiManager                  from "logic/ApiManager"
 import User                        from "logic/User"
 import useAsync                    from "hooks/useAsync"
 import Header                      from "modules/Header/Component"
 import Main                        from "modules/Main/Component"
 import Footer                      from "modules/Footer/Component"
 import Loading                     from "ui/Loading/Component"
+import AuthInfo                    from "logic/AuthInfo"
 
-import { createContext, useEffect, useState } from "react"
+import { createContext, useState } from "react"
 
 import "./style.css"
 
-export const AllowAnonymConxtext = createContext(false)
-export const UserContext         = createContext([null, defaultSetNullableUser] as UserContextType)
+export const UserContext         = createContext([undefined,      defaultSetNullableUser] as UserContextType    )
+export const AuthInfoContext     = createContext([new AuthInfo(), defaultSetAuthInfo    ] as AuthInfoContextType)
 
 function defaultSetNullableUser() {
     throw new Error("Missing UserContext.Provider")
 }
 
-export type UserContextType = [NullableUser, SetNullableUser]
-export type SetNullableUser = (user: NullableUser) => void
-export type NullableUser    = User | null
+function defaultSetAuthInfo() {
+    throw new Error("Missing AuthInfoContext.Provider")
+}
+
+export type UserContextType     = [OptionalUser, SetNullableUser]
+export type SetNullableUser     = (user: OptionalUser) => void
+export type OptionalUser        = User | undefined
+
+export type AuthInfoContextType = [AuthInfo, SetAuthInfo]
+export type SetAuthInfo         = (info: AuthInfo) => void
 
 export default function App() {
-    const [apiManager,   loading        ] = useAsync(async () => ApiManager.laod())
-    const [user,         setUser        ] = useState(null as User | null)
+    const [authInfo,     setAuthInfo    ] = useState(AuthInfo.loadOrDefault())
+    const [user,         setUser        ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
     const [showAuthForm, setShowAuthForm] = useState(false)
+    const [,             authInfoLoading] = useAsync(updateAuthInfo)
+    const [,             userLoading    ] = useAsync(updateUser, [authInfo])
 
-    useEffect(() => setUser(apiManager?.user ?? null), [apiManager])
+    const loading =  authInfoLoading
+                  || userLoading
 
     if (loading)
         return <div className="App">
             <Loading />
         </div>
 
-    return <AllowAnonymConxtext.Provider value={apiManager?.isAnonymAccessAllowed ?? false}>
+    return <AuthInfoContext.Provider value={[authInfo, setAuthInfo]}>
         <UserContext.Provider value={[user, setUser]}>
             <div className="App">
                 {header()}
@@ -41,7 +51,23 @@ export default function App() {
                 <Footer />
             </div>
         </UserContext.Provider>
-    </AllowAnonymConxtext.Provider>
+    </AuthInfoContext.Provider>
+
+    async function updateAuthInfo() {
+        try {
+            setAuthInfo(await authInfo.withUpdatedAllowAnonymAccess())
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    async function updateUser() {
+        try {
+            setUser(await user?.updated(authInfo))
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
     function header() {
         if (showAuthForm)

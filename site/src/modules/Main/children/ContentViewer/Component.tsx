@@ -7,7 +7,7 @@ import Users                                from "./children/Users/Component"
 import Home                                 from "./children/Home/Component"
 
 import { useEffect, useState, useContext  } from "react"
-import { UserContext, AllowAnonymConxtext } from "pages/App/Component"
+import { UserContext, AuthInfoContext     } from "pages/App/Component"
 import { Content                          } from "./children/ContentSelector/Component"
 
 import "./style.css"
@@ -21,7 +21,7 @@ export type OnContentChange = (newContent: Content, oldContent: Content) => void
 
 export default function ContentViewer(props: Props) {
     const [user               ] = useContext(UserContext)
-    const allowAnonym           = useContext(AllowAnonymConxtext)
+    const [authInfo           ] = useContext(AuthInfoContext)
     const { onContentChange   } = props
     const contentList           = makeContentList()
     const [content, setContent] = useState(props.content ?? contentList[0])
@@ -37,7 +37,7 @@ export default function ContentViewer(props: Props) {
     function makeContentList() {
         const contentList = createBasicContent()
 
-        if (allowAnonym)
+        if (authInfo.allowAnonymAccess)
             addCommonContent()
 
         addUserContent()
@@ -67,7 +67,7 @@ export default function ContentViewer(props: Props) {
                 component:  () => Profile({ user })
             })
 
-            if (!allowAnonym)
+            if (!authInfo.allowAnonymAccess)
                 addCommonContent()
 
             if (user.isAdmin)

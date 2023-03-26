@@ -1,9 +1,11 @@
-import ApiManager      from "logic/ApiManager"
-import UserName        from "ui/UserName/Component"
-import Button          from "ui/Button/Component"
+import AuthInfo                         from "logic/AuthInfo"
+import User                             from "logic/User"
+import UserName                         from "ui/UserName/Component"
+import Button                           from "ui/Button/Component"
 
-import { useContext  } from "react"
-import { UserContext } from "pages/App/Component"
+import { useContext                   } from "react"
+import { AuthInfoContext, UserContext } from "pages/App/Component"
+import { deauth                       } from "./api"
 
 import "./style.css"
 
@@ -14,7 +16,8 @@ export interface Props {
 export type OnSignIn = () => void
 
 export default function UserButton(props: Props) {
-    const [user, setUser] = useContext(UserContext)
+    const [authInfo, setAuthInfo] = useContext(AuthInfoContext)
+    const [user,     setUser    ] = useContext(UserContext)
 
     return <div className="UserButton">
         {body()}
@@ -33,11 +36,15 @@ export default function UserButton(props: Props) {
 
         async function onSignOut() {
             try {
-                await ApiManager.instance.deauth()
+                await deauth(authInfo)
             } catch (error) {
                 console.error(error)
             } finally {
-                setUser(null)
+                setAuthInfo(authInfo.withoutTokenPair())
+                AuthInfo.remove()
+
+                setUser(undefined)
+                User.remove()
             }
         }
     }

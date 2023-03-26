@@ -1,6 +1,5 @@
 import z from "zod"
 
-
 export default class Token {
     static readonly JSON_SCHEMA = z.object({
         id:  z.string().regex(/^[0-9a-fA-F]{128}$/),
