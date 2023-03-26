@@ -1,11 +1,12 @@
-import AuthInfo      from "logic/AuthInfo"
-import User          from "logic/User"
-import Input         from "ui/Input/Component"
-import Button        from "ui/Button/Component"
-import ErrorText     from "ui/ErrorText/Component"
-import auth          from "./api/auth"
+import ApiManager                          from "logic/ApiManager"
+import User                                from "logic/User"
+import LogicError                          from "logic/LogicError"
+import Input                               from "ui/Input/Component"
+import Button                              from "ui/Button/Component"
+import ErrorText                           from "ui/ErrorText/Component"
 
-import { FormEvent, useState } from "react"
+import { FormEvent, useState, useContext } from "react"
+import { UserContext                     } from "pages/App/Component"
 
 import "./style.css"
 
@@ -14,11 +15,13 @@ export interface Props {
     onCancel?: OnCancelAuth
 }
 
-export type OnAuth       = (authInfo: AuthInfo) => void
+export type OnAuth       = () => void
 export type OnCancelAuth = () => void
 
 export default function AuthFrom(props: Props) {
     const { onAuth, onCancel } = props
+
+    const [,                setUser           ] = useContext(UserContext)
 
     const [login,           setLogin          ] = useState("")
     const [password,        setPassword       ] = useState("")
@@ -58,10 +61,23 @@ export default function AuthFrom(props: Props) {
 
         setLoading(true)
 
-        auth(login, password)
-            .then(info   => onAuth?.(info))
-            .catch(error => setCommonError(error instanceof Error ? error.message : String(error)))
-            .finally(()  => setLoading(false))
+        const apiManager = ApiManager.instance
+
+        apiManager.auth(login, password)
+            .then(() => {
+                setUser(apiManager.user)
+                onAuth?.()
+            })
+            .catch(error => {
+                if (error instanceof LogicError) {
+                    setCommonError(error.message)
+                    return
+                }
+
+                setCommonError("Internal error")
+                console.error(error)
+            })
+            .finally(() => setLoading(false))
     }
 
     const onLoginChange = (e: FormEvent<HTMLInputElement>) => {

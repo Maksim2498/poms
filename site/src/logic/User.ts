@@ -1,3 +1,6 @@
+import Cookies   from "js-cookie"
+import TokenPair from "./TokenPair"
+
 export interface CreationOptions {
     readonly login:      string
     readonly name?:      string
@@ -11,6 +14,8 @@ export interface CreationOptions {
 }
 
 export default class User {
+    static readonly LOGIN_COOKIE_NAME = "login"
+
     static checkLogin(login: string) {
         const invalidReason = this.validateLogin(login)
 
@@ -56,6 +61,46 @@ export default class User {
         return null
     }
 
+    static remove() {
+        this.removeLogin()
+    }
+
+    static async load(tokenPair: TokenPair): Promise<User> {
+        const user = await this.safeLoad(tokenPair)
+
+        if (user == null)
+            throw new Error("Failed to load user")
+
+        return user
+    }
+
+    static async safeLoad(tokenPair: TokenPair): Promise<User | null> {
+        const login = this.safeLoadLogin()
+
+        if (login == null)
+            return null
+
+        return new User({ login })
+    }
+
+    private static safeLoadLogin(): string | null {
+        const login = Cookies.get(this.LOGIN_COOKIE_NAME)
+
+        if (login == null)
+            return null
+
+        if (this.validateLogin(login) != null) {
+            this.removeLogin()
+            return null
+        }
+
+        return login
+    }
+
+    private static removeLogin() {
+        Cookies.remove(this.LOGIN_COOKIE_NAME, { sameSite: "strict" })
+    }
+
     readonly login:     string
     readonly name:      string | null
     readonly nicknames: string[]
@@ -76,5 +121,16 @@ export default class User {
             time:  options.reg?.time       ?? new Date(),
             login: options.reg?.login      ?? null
         }
+    }
+
+    save() {
+        this.saveLogin()
+    }
+
+    private saveLogin() {
+        Cookies.set(User.LOGIN_COOKIE_NAME, this.login, {
+            expires:  3650,
+            sameSite: "strict"
+        })
     }
 }

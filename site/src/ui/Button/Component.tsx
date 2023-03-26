@@ -47,7 +47,9 @@ export default function Button(props: Props) {
         if (result instanceof Promise) {
             setLoading(true)
 
-            result.then(() => setLoading(false))
+            result
+                .catch(error => console.error(error))
+                .finally(()  => setLoading(false))
         }
     }
 }

@@ -1,62 +1,48 @@
-import User     from "logic/User"
-import UserName from "ui/UserName/Component"
-import Button   from "ui/Button/Component"
+import ApiManager      from "logic/ApiManager"
+import UserName        from "ui/UserName/Component"
+import Button          from "ui/Button/Component"
+
+import { useContext  } from "react"
+import { UserContext } from "pages/App/Component"
 
 import "./style.css"
 
-export type Props = NoneProps
-                  | NotSignedInProps
-                  | SignedInProps
-
-export interface NoneProps {
-    show?: "none"
-}
-
-export interface NotSignedInProps {
-    show:      "not-signed-in"
+export interface Props {
     onSignIn?: OnSignIn
 }
 
-export interface SignedInProps {
-    show: "signed-in"
-    user: User
-}
-
-export type Show      = "signed-in" | "not-signed-in" | "none"
-export type OnSignIn  = () => void
-export type OnSignOut = () => Promise<void>
+export type OnSignIn = () => void
 
 export default function UserButton(props: Props) {
+    const [user, setUser] = useContext(UserContext)
+
     return <div className="UserButton">
-        {show()}
+        {body()}
     </div>
 
-    function show() {
-        switch (props.show) {
-            case undefined:
-            case "none":
-                return none(props)
+    function body() {
+        return user != null ? signedIn()
+                            : notSignedIn()
+    }
 
-            case "signed-in":
-                return signedIn(props)
+    function signedIn() {
+        return <div className="signed-in">
+            <UserName user={user!} />
+            <Button type="cancel" onClick={onSignOut}>Sign Out</Button>
+        </div>
 
-            case "not-signed-in":
-                return notSignedIn(props)
+        async function onSignOut() {
+            try {
+                await ApiManager.instance.deauth()
+            } catch (error) {
+                console.error(error)
+            } finally {
+                setUser(null)
+            }
         }
     }
 
-    function none(props: NoneProps): JSX.Element {
-        return <div className="none" />
-    }
-
-    function signedIn(props: SignedInProps) {
-        return <div className="signed-in">
-            <UserName user={props.user} />
-            <Button type="cancel">Sign Out</Button>
-        </div>
-    }
-
-    function notSignedIn(props: NotSignedInProps) {
+    function notSignedIn() {
         return <div className="not-signed-in">
             <Button type="submit" onClick={props.onSignIn}>Sign In</Button>
         </div>

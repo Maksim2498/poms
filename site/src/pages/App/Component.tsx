@@ -1,58 +1,64 @@
-import AuthInfo                    from "logic/AuthInfo"
+import ApiManager                  from "logic/ApiManager"
+import User                        from "logic/User"
+import useAsync                    from "hooks/useAsync"
 import Header                      from "modules/Header/Component"
 import Main                        from "modules/Main/Component"
 import Footer                      from "modules/Footer/Component"
 import Loading                     from "ui/Loading/Component"
-import useFetchAccess              from "./api/useFetchAccess"
 
-import { createContext, useState } from "react"
+import { createContext, useEffect, useState } from "react"
 
 import "./style.css"
 
-export const AllowAnonymAccessContext = createContext(false)
-export const AuthInfoContext          = createContext(null as AuthInfo | null)
+export const AllowAnonymConxtext = createContext(false)
+export const UserContext         = createContext([null, defaultSetNullableUser] as UserContextType)
+
+function defaultSetNullableUser() {
+    throw new Error("Missing UserContext.Provider")
+}
+
+export type UserContextType = [NullableUser, SetNullableUser]
+export type SetNullableUser = (user: NullableUser) => void
+export type NullableUser    = User | null
 
 export default function App() {
-    const [isAnonymAccessAllowed, loading        ] = useFetchAccess()
-    const [showAuthForm,          setShowAuthForm] = useState(false)
-    const [authInfo,              setAuthInfo    ] = useState(null as AuthInfo | null)
+    const [apiManager,   loading        ] = useAsync(async () => ApiManager.laod())
+    const [user,         setUser        ] = useState(null as User | null)
+    const [showAuthForm, setShowAuthForm] = useState(false)
+
+    useEffect(() => setUser(apiManager?.user ?? null), [apiManager])
 
     if (loading)
         return <div className="App">
             <Loading />
         </div>
 
-    return <AllowAnonymAccessContext.Provider value={isAnonymAccessAllowed}>
-        <AuthInfoContext.Provider value={null}>
+    return <AllowAnonymConxtext.Provider value={apiManager?.isAnonymAccessAllowed ?? false}>
+        <UserContext.Provider value={[user, setUser]}>
             <div className="App">
                 {header()}
                 {main()}
                 <Footer />
             </div>
-        </AuthInfoContext.Provider>
-    </AllowAnonymAccessContext.Provider>
+        </UserContext.Provider>
+    </AllowAnonymConxtext.Provider>
 
     function header() {
         if (showAuthForm)
             return <Header show="none" />
 
-        if (authInfo != null)
-            return <Header show="signed-in" user={authInfo.user} />
+        return <Header show="user" onSignIn={revealAuthForm} />
 
-        return <Header show="not-signed-in" onSignIn={() => setShowAuthForm(true)} />
+        function revealAuthForm() {
+            setShowAuthForm(true)
+        }
     }
 
     function main() {
         if (showAuthForm) {
-            return <Main show="auth" onAuth={onAuth} onCancel={onCancel} />
+            return <Main show="auth" onAuth={hideAuthForm} onCancel={hideAuthForm} />
 
-            function onAuth(info: AuthInfo) {
-                setAuthInfo(info)
-                setShowAuthForm(false)
-                info.save()
-            }
-
-            function onCancel() {
+            function hideAuthForm() {
                 setShowAuthForm(false)
             }
         }

@@ -1,14 +1,14 @@
-import ContentSelector                               from "./children/ContentSelector/Component"
-import ContentWindow                                 from "./children/ContentWindow/Component"
-import Console                                       from "./children/Console/Component"
-import Profile                                       from "./children/Profile/Component"
-import Server                                        from "./children/Server/Component"
-import Users                                         from "./children/Users/Component"
-import Home                                          from "./children/Home/Component"
+import ContentSelector                      from "./children/ContentSelector/Component"
+import ContentWindow                        from "./children/ContentWindow/Component"
+import Console                              from "./children/Console/Component"
+import Profile                              from "./children/Profile/Component"
+import Server                               from "./children/Server/Component"
+import Users                                from "./children/Users/Component"
+import Home                                 from "./children/Home/Component"
 
-import { useContext, useEffect, useState           } from "react"
-import { AllowAnonymAccessContext, AuthInfoContext } from "pages/App/Component"
-import { Content                                   } from "./children/ContentSelector/Component"
+import { useEffect, useState, useContext  } from "react"
+import { UserContext, AllowAnonymConxtext } from "pages/App/Component"
+import { Content                          } from "./children/ContentSelector/Component"
 
 import "./style.css"
 
@@ -20,9 +20,9 @@ export interface Props {
 export type OnContentChange = (newContent: Content, oldContent: Content) => void
 
 export default function ContentViewer(props: Props) {
-    const isAnonymAccessAllowed = useContext(AllowAnonymAccessContext)
-    const user                  = useContext(AuthInfoContext)?.user
-    const { onContentChange }   = props
+    const [user               ] = useContext(UserContext)
+    const allowAnonym           = useContext(AllowAnonymConxtext)
+    const { onContentChange   } = props
     const contentList           = makeContentList()
     const [content, setContent] = useState(props.content ?? contentList[0])
 
@@ -35,21 +35,39 @@ export default function ContentViewer(props: Props) {
     </div>
 
     function makeContentList() {
-        const contentList = [
-            { name: "Home", component: Home },
-        ] as Content[]
+        const contentList = createBasicContent()
 
-        if (isAnonymAccessAllowed)
+        if (allowAnonym)
             addCommonContent()
 
-        if (user != null) {
+        addUserContent()
+
+        return contentList
+
+        function createBasicContent(): Content[] {
+            return [
+                { name: "Home", component: Home }
+            ]
+        }
+
+        function addCommonContent() {
+            contentList.push(
+                { name: "Server Status", selectName: "Server", component: Server },
+                { name: "Users List",    selectName: "Users",  component: Users  },
+            )
+        }
+
+        function addUserContent() {
+            if (user == null)
+                return
+
             contentList.push({
                 name:       "Your Profile",
                 selectName: "Profile",
                 component:  () => Profile({ user })
             })
 
-            if (!isAnonymAccessAllowed)
+            if (!allowAnonym)
                 addCommonContent()
 
             if (user.isAdmin)
@@ -58,15 +76,6 @@ export default function ContentViewer(props: Props) {
                     selectName: "Console",
                     component:  Console
                 })
-        }
-
-        return contentList
-
-        function addCommonContent() {
-            contentList.push(
-                { name: "Server Status", selectName: "Server", component: Server },
-                { name: "Users List",    selectName: "Users",  component: Users  },
-            )
         }
     }
 
