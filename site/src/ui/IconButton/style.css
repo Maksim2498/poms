@@ -1,0 +1,18 @@
+.IconButton {
+    width: 2rem;
+    height: 2rem;
+    background-size: contain;
+    filter: brightness(.8)
+}
+
+.IconButton:hover {
+    filter: brightness(1)
+}
+
+.IconButton:active {
+    filter: brightness(.6)
+}
+
+.IconButton > .Button {
+    display: none
+}

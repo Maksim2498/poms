@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="1024.0px" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="1024.0px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<path d="M400 140L20 520L400 900L400.32 620L400 620L580 620C607.267 620 788.193 614.506 860 660C944.926 713.805 1000 820 1000 820C1000 820 1013.79 612.965 940 520C855.734 413.843 601.325 420 580 420C542.37 420 400 415.93 400 420L400 140Z" id="Fill"/>
+</defs>
+<g id="Layer-2" visibility="hidden">
+<path d="M0 0L1024 0L1024 1024L0 1024L0 0Z" fill="#000000" fill-rule="nonzero" opacity="1" stroke="none"/>
+</g>
+<g id="Layer-1">
+<g opacity="1">
+<use fill="#ffffff" fill-rule="nonzero" stroke="none" xlink:href="#Fill"/>
+<mask height="792" id="StrokeMask" maskUnits="userSpaceOnUse" width="1013.02" x="4" y="124">
+<rect fill="#ffffff" height="792" stroke="none" width="1013.02" x="4" y="124"/>
+<use fill="#000000" fill-rule="evenodd" stroke="none" xlink:href="#Fill"/>
+</mask>
+<use fill="none" mask="url(#StrokeMask)" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" xlink:href="#Fill"/>
+</g>
+</g>
+</svg>

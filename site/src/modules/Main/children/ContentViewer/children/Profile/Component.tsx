@@ -6,24 +6,27 @@ import UserTag             from "ui/UserTag/Component";
 import UserNicknames       from "ui/UserNicknames/Component";
 import Field               from "ui/Field/Component";
 
+import { OnUserTagClick  } from "ui/UserTag/Component";
+
 import "./style.css"
 
 export interface Props {
-    user: User
+    onUserTagClick?: OnUserTagClick
+    user:            User
 }
 
 export default function Profile(props: Props) {
-    const { user } = props
+    const { onUserTagClick, user } = props
 
     return <div className="Profile">
         <UserIcon            user={user} />
-        <TaggedUserName      user={user} />
+        <TaggedUserName      user={user} onTagClick={onUserTagClick} />
         <UserOnlineIndicator user={user} />
 
         <div className="section">
             <h3>Registration info</h3>
             <Field label="Registrar">
-                {user.reg.login != null ? <UserTag login={user.reg.login} /> : "System"}
+                {user.reg.login != null ? <UserTag login={user.reg.login} onClick={onUserTagClick} /> : "System"}
             </Field>
             <Field label="Time">
                 {user.reg.time.toLocaleDateString()}

@@ -12,11 +12,15 @@
     background-color: #222;
     border-radius: 0 0 .4rem .4rem;
     overflow: scroll;
-    height: calc(100% - 2.8rem)
+    height: calc(100% - 3.5rem)
 }
 
 .ContentWindow > .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background-color: #333;
+    height: 3.5rem;
     border-radius: .4rem .4rem 0 0
 }
 

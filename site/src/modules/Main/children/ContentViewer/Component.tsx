@@ -31,7 +31,7 @@ export default function ContentViewer(props: Props) {
 
     return <div className="ContentViewer">
         <ContentSelector contentList={contentList} onSelect={onSelect}/>
-        <ContentWindow content={content} />
+        <ContentWindow content={content} showBack={true} showEdit={true} />
     </div>
 
     function makeContentList() {
