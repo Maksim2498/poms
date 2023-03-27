@@ -88,6 +88,7 @@ const CONFIG_JSON_SCHEMA = z.object({
     }).strict().optional(),
 
     rcon: z.object({
+        enable:               OBOOLEAN,
         host:                 OHOST,
         port:                 OPORT,
         password:             OSTRING,
@@ -139,6 +140,7 @@ export default class Config {
     static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME       = parseDuration("1w")
     static readonly DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS = true
 
+    static readonly DEFAULT_RCON_ENABLE                  = false
     static readonly DEFAULT_RCON_HOST                    = "localhost"
     static readonly DEFAULT_RCON_PORT                    = 25575
 
@@ -464,6 +466,10 @@ export default class Config {
         return this.read.logic?.allowAnonymousAccess ?? Config.DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS
     }
 
+    get rconEnable(): boolean {
+        return this.read.rcon?.enable ?? Config.DEFAULT_RCON_ENABLE
+    }
+
     get rconAddress(): string {
         return `${this.rconHost}:${this.rconPort}`
     }
@@ -477,7 +483,8 @@ export default class Config {
     }
 
     get rconAvailable(): boolean {
-        return this.read.rcon?.password != null
+        return this.rconEnable
+            && this.read.rcon?.password != null
     }
 
     get mcAddress(): string {

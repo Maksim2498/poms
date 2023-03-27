@@ -154,6 +154,17 @@ export const units: UnitCollection = {
         }
     },
 
+    isConsoleAvailable: {
+        permission: "admin",
+        method:     "get",
+        path:       "/console-available",
+
+        async handler(this: Server, req: Request, res: Response) {
+            const available = this.config.rconAvailable
+            res.json({ available })
+        }
+    },
+
     getMaxTokens: {
         permission: "user",
         method:     "get",

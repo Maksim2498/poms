@@ -58,6 +58,7 @@ is considered an error):
 | `logic.aTokenLifetime`       | Duration `string`  | `30m`                        | No       | Access token lifetime. Should not be too long                                      |
 | `logic.rTokenLifetime`       | Duration `string`  | `1w`                         | No       | Refresh token lifetime. Should be much longer than access token lifetime           |
 | `logic.allowAnonymousAccess` | `boolean`          | `true`                       | No       | Allowes access to most API methods without authorization                           |
+| `rcon.enable`                | `boolean`          | `false`                      | No       | Enables RCON console                                                               |
 | `rcon.host`                  | `string`           | `localhost`                  | No       | RCON server's address                                                              |
 | `rcon.port`                  | Port `number`      | `25575`                      | No       | RCON server's port                                                                 |
 | `rcon.password`              | `string`           | -                            | No       | RCON server's password                                                             |

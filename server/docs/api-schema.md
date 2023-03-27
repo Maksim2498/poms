@@ -9,6 +9,7 @@
 - [Methods](#methods);
   - [Is Anonymous Access Allowed](#is-anonymous-access-allowed);
   - [Get Max Nicknames](#get-max-nicknames);
+  - [Is Console Available](#is-console-available);
   - [Get Max Toknes](#get-max-tokens);
   - [Authentication](#authoriztion);
   - [Reauthentication](#reauthenticate);
@@ -137,6 +138,32 @@ __Response__:
     max: number
 }
 ```
+
+<hr />
+
+### __Is Console Available__
+
+Returns a value indicating wheter server console is available.
+This method is for admins only.
+
+__Request__:
+
+```http
+GET /console-available
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    available: boolean
+}
+```
+
 
 <hr />
 
