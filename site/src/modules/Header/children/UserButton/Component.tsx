@@ -1,5 +1,3 @@
-import AuthInfo                         from "logic/AuthInfo"
-import User                             from "logic/User"
 import UserName                         from "ui/UserName/Component"
 import Button                           from "ui/Button/Component"
 
@@ -41,10 +39,7 @@ export default function UserButton(props: Props) {
                 console.error(error)
             } finally {
                 setAuthInfo(authInfo.withoutTokenPair())
-                AuthInfo.remove()
-
                 setUser(undefined)
-                User.remove()
             }
         }
     }

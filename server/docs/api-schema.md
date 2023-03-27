@@ -11,6 +11,7 @@
   - [Get Max Nicknames](#get-max-nicknames);
   - [Get Max Toknes](#get-max-tokens);
   - [Authentication](#authoriztion);
+  - [Reauthentication](#reauthenticate);
   - [Deauthentication](#deauthentication);
   - [Get All Users Info](#get-all-users-info);
   - [Get User Info](#get-user-info);

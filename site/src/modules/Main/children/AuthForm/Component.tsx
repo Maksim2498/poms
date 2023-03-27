@@ -64,16 +64,8 @@ export default function AuthFrom(props: Props) {
 
         auth(login, password)
             .then(tokenPair => {
-                const newAuthInfo = authInfo.withTokenPair(tokenPair)
-
-                setAuthInfo(newAuthInfo)
-                newAuthInfo.save()
-
-                const newUser = new User({ login })
-
-                setUser(newUser)
-                newUser.save()
-
+                setAuthInfo(authInfo.withTokenPair(tokenPair))
+                setUser(new User({ login }))
                 onAuth?.()
             })
             .catch(error => {

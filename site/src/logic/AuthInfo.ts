@@ -1,6 +1,7 @@
-import z         from "zod"
-import Cookies   from "js-cookie";
-import TokenPair from "./TokenPair";
+import z          from "zod"
+import Cookies    from "js-cookie";
+import TokenPair  from "./TokenPair";
+import LogicError from "./LogicError";
 
 export interface CreationOptions {
     readonly allowAnonymAccess?: boolean
@@ -31,12 +32,8 @@ export default class AuthInfo {
     }
 
     static safeLoad(): AuthInfo | undefined {
-        const tokenPair = TokenPair.safeLoad()
-
-        if (tokenPair == null)
-            return undefined
-
         const allowAnonymAccess = loadAllowAnonymAccessOrDefault()
+        const tokenPair         = TokenPair.safeLoad()
 
         return new AuthInfo({
             allowAnonymAccess,
@@ -96,8 +93,29 @@ export default class AuthInfo {
         return this.withAllowAnonymAccess(allowed)
     }
 
+    async withRefreshedTokenPair(): Promise<AuthInfo> {
+        const headers  = this.toHeaders("refresh")
+        const response = await fetch("/api/reauth", { method: "POST", headers })
+
+        if (!response.ok)
+            throw new Error(response.statusText)
+
+        const json = await response.json()
+
+        if (json.error)
+            throw new LogicError(String(json.error))
+
+        const tokenPair = TokenPair.fromJson(json)
+
+        return this.withTokenPair(tokenPair)
+    }
+
     save() {
-        this.tokenPair?.save()
+        if (this.tokenPair == null)
+            TokenPair.remove()
+        else
+            this.tokenPair.save()
+
         saveAllowAnonymAccess.call(this)
 
         function saveAllowAnonymAccess(this: AuthInfo) {
@@ -112,12 +130,16 @@ export default class AuthInfo {
     toHeaders(type: HeadersType = "access"): Headers {
         const headers = new Headers()
 
-        if (!this.allowAnonymAccess) {
+        if (type === "refresh") {
+            if (this.tokenPair == null)
+                throw new Error("Missing refresh token")
+
+            headers.set("Authorization", this.tokenPair.refresh.id)
+        } else if (!this.allowAnonymAccess) {
             if (this.tokenPair == null)
                 throw new Error("Missing access token")
 
-            headers.set("Authorization", type === "access" ? this.tokenPair.access.id
-                                                           : this.tokenPair.refresh.id)
+            headers.set("Authorization", this.tokenPair.access.id)
         }
 
         return headers

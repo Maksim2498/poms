@@ -175,6 +175,7 @@ export default class Server {
 
                                         await connection.commit()
                                     } finally {
+                                        await connection.rollback()
                                         connection.release()
                                     }
                                 } catch (error) {
@@ -549,13 +550,19 @@ export default class Server {
         this.checkState("running", "stop")
         this._state = "stopping"
 
-        this.logger?.info("Stopping...")
+        this.logger?.info("Stopping server...")
 
+        this.logger?.debug("Closing all pooled MySQL connections...")
+        await this.pool.end()
+        this.logger?.debug("Closed")
+
+        this.logger?.debug("Stopping HTTP server")
         this.httpServer?.close(error => {
             if (error)
                 this.logger?.error(error)
 
-            this.logger?.info("Stopped")
+            this.logger?.debug("Stopped")
+            this.logger?.info("Server is stopped")
 
             this._state = "initialized"
 

@@ -6,7 +6,7 @@ import Footer                      from "modules/Footer/Component"
 import Loading                     from "ui/Loading/Component"
 import AuthInfo                    from "logic/AuthInfo"
 
-import { createContext, useState } from "react"
+import { createContext, useEffect, useState } from "react"
 
 import "./style.css"
 
@@ -35,6 +35,20 @@ export default function App() {
     const [,             authInfoLoading] = useAsync(updateAuthInfo)
     const [,             userLoading    ] = useAsync(updateUser, [authInfo])
 
+    useEffect(() => {
+        if (authInfo.tokenPair == null)
+            setUser(undefined)
+
+        authInfo.save()
+    }, [authInfo])
+
+    useEffect(() => {
+        if (user == null)
+            User.remove()
+        else
+            user.save()
+    }, [user])
+
     const loading =  authInfoLoading
                   || userLoading
 
@@ -54,11 +68,24 @@ export default function App() {
     </AuthInfoContext.Provider>
 
     async function updateAuthInfo() {
+        let newAuthInfo = authInfo
+
         try {
-            setAuthInfo(await authInfo.withUpdatedAllowAnonymAccess())
+            newAuthInfo = await newAuthInfo.withUpdatedAllowAnonymAccess()
         } catch (error) {
             console.error(error)
         }
+
+        if (authInfo.tokenPair != null)
+            try {
+                newAuthInfo = await newAuthInfo.withRefreshedTokenPair()
+            } catch (error) {
+                newAuthInfo = newAuthInfo.withoutTokenPair()
+                setUser(undefined)
+                console.error(error)
+            }
+
+        setAuthInfo(newAuthInfo)
     }
 
     async function updateUser() {

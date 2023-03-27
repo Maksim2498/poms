@@ -77,7 +77,8 @@ export default class TokenPair {
             })
 
             return pair
-        } catch {
+        } catch (error) {
+            console.log(error)
             TokenPair.remove()
             return undefined
         }

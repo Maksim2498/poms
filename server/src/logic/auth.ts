@@ -20,6 +20,8 @@ export interface AuthManager {
 }
 
 export class DefaultAuthManager implements AuthManager {
+    private reauthing: Set<string> = new Set()
+
     readonly tokenManager: TokenManager
     readonly userManager:  UserManager
     readonly config:       Config
@@ -50,16 +52,23 @@ export class DefaultAuthManager implements AuthManager {
     async reauth(connection: Connection, rTokenId: Buffer): Promise<TokenPair> {
         this.logger?.debug(`Reauthenticating token ${rTokenId.toString("hex")}...`)
 
+        const rTokenIdString = rTokenId.toString("hex")
+
+        if (this.reauthing.has(rTokenIdString))
+            throw new LogicError("Already reauthenticating this token")
+
+        this.reauthing.add(rTokenIdString)
+
         const rTokenInfo = await this.tokenManager.forceGetRTokenInfo(connection, rTokenId)
 
         if (rTokenInfo.exp <= new Date())
             throw new LogicError("Refresh token is too old")
+        
+        const { aTokenId } = rTokenInfo
+        const aTokenInfo   = (await this.tokenManager.getATokenInfo(connection, aTokenId))!
+        const pair         = (await this.tokenManager.createTokenPair(connection, aTokenInfo.userId))!
 
-        const aTokenInfo = (await this.tokenManager.getATokenInfo(connection, rTokenInfo.aTokenId))!
-        
-        await this.tokenManager.deleteAToken(connection, aTokenInfo.id) // Refresh token will be deleted cascade
-        
-        const pair = (await this.tokenManager.createTokenPair(connection, aTokenInfo.userId))!
+        await this.tokenManager.deleteAToken(connection, aTokenId) // Refresh token will be deleted cascade
 
         this.logger?.debug("Reathenticated")
 

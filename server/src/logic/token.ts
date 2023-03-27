@@ -454,12 +454,12 @@ export function tokenPairToString(pair: TokenPair): string {
 
     const json = {
         access: {
-            id:  access.id,
+            id:  access.id.toString("hex"),
             exp: access.exp?.toISOString() ?? null
         },
 
         refresh: {
-            id:  refresh.id,
+            id:  refresh.id.toString("hex"),
             exp: refresh.exp?.toISOString() ?? null
         }
     }
