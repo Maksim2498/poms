@@ -3,6 +3,8 @@ import Cookies    from "js-cookie";
 import TokenPair  from "./TokenPair";
 import LogicError from "./LogicError";
 
+import { reauth } from "./api";
+
 export interface CreationOptions {
     readonly allowAnonymAccess?: boolean
     readonly tokenPair?:         TokenPair
@@ -94,18 +96,11 @@ export default class AuthInfo {
     }
 
     async withRefreshedTokenPair(): Promise<AuthInfo> {
-        const headers  = this.toHeaders("refresh")
-        const response = await fetch("/api/reauth", { method: "POST", headers })
+        if (this.tokenPair == null)
+            throw new Error("Missing refresh token")
 
-        if (!response.ok)
-            throw new Error(response.statusText)
-
-        const json = await response.json()
-
-        if (json.error)
-            throw new LogicError(String(json.error))
-
-        const tokenPair = TokenPair.fromJson(json)
+        const refreshTokenId = this.tokenPair.refresh.id
+        const tokenPair      = await reauth(refreshTokenId)
 
         return this.withTokenPair(tokenPair)
     }

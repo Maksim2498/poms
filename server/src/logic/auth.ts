@@ -59,20 +59,24 @@ export class DefaultAuthManager implements AuthManager {
 
         this.reauthing.add(rTokenIdString)
 
-        const rTokenInfo = await this.tokenManager.forceGetRTokenInfo(connection, rTokenId)
+        try {
+            const rTokenInfo = await this.tokenManager.forceGetRTokenInfo(connection, rTokenId)
 
-        if (rTokenInfo.exp <= new Date())
-            throw new LogicError("Refresh token is too old")
-        
-        const { aTokenId } = rTokenInfo
-        const aTokenInfo   = (await this.tokenManager.getATokenInfo(connection, aTokenId))!
-        const pair         = (await this.tokenManager.createTokenPair(connection, aTokenInfo.userId))!
+            if (rTokenInfo.exp <= new Date())
+                throw new LogicError("Refresh token is too old")
+            
+            const { aTokenId } = rTokenInfo
+            const aTokenInfo   = (await this.tokenManager.getATokenInfo(connection, aTokenId))!
+            const pair         = (await this.tokenManager.createTokenPair(connection, aTokenInfo.userId))!
 
-        await this.tokenManager.deleteAToken(connection, aTokenId) // Refresh token will be deleted cascade
+            await this.tokenManager.deleteAToken(connection, aTokenId) // Refresh token will be deleted cascade
 
-        this.logger?.debug("Reathenticated")
+            this.logger?.debug("Reathenticated")
 
-        return pair
+            return pair
+        } finally {
+            this.reauthing.delete(rTokenIdString)
+        }
     }
 
     async deauth(connection: Connection, aTokenId: Buffer) {
