@@ -1,7 +1,6 @@
 import z          from "zod"
 import Cookies    from "js-cookie";
 import TokenPair  from "./TokenPair";
-import LogicError from "./LogicError";
 
 import { reauth } from "./api";
 
