@@ -1,5 +1,7 @@
 import User from "logic/User";
 
+import "./style.css"
+
 export interface Props {
     user: User
 }

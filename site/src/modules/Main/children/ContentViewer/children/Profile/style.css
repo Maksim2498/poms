@@ -1,0 +1,49 @@
+.Profile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center
+}
+
+.Profile > .TaggedUserName {
+    display: flex;
+    flex-direction: column;
+    align-items: center
+}
+
+.Profile > .TaggedUserName > * {
+    margin: .25rem
+}
+
+.Profile > * {
+    margin: 1rem
+}
+
+.Profile > .UserIcon {
+    width: 10rem;
+    height: 10rem
+}
+
+.Profile > .UserOnlineIndicator {
+    margin: 0
+}
+
+.Profile > .section {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 1rem
+}
+
+.Profile > .section > * {
+    margin: .5rem
+}
+
+.Profile > .section > h3 {
+    margin: 1rem;
+    font-size: 1rem;
+    text-align: center
+}
+
+.Profile > .section > .Field {
+    font-size: .8rem
+}

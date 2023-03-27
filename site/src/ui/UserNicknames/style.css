@@ -1,0 +1,9 @@
+.UserNicknames {
+    list-style: none
+}
+
+.UserNicknames > li {
+    color: gray;
+    margin: .5rem;
+    text-align: center
+}

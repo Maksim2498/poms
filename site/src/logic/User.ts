@@ -5,6 +5,10 @@ import LogicError from "./LogicError"
 
 export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
+export interface UpdatedOptions {
+    updateNicknames?: boolean
+}
+
 export default class User {
     static readonly JSON_SCHEMA = z.object({
         login:     z.string(),
@@ -118,9 +122,15 @@ export default class User {
         }
     }
 
-    async updated(info: AuthInfo): Promise<User> {
-        const headers  = info.toHeaders()
-        const response = await fetch(`/api/users/${this.login}`, { headers, cache: "no-store" })
+    static updatedOptionsToString(options: UpdatedOptions): string {
+        return options.updateNicknames ? "nicknames" : ""
+    }
+
+    async updated(info: AuthInfo, options: UpdatedOptions = {}): Promise<User> {
+        const headers    = info.toHeaders()
+        const urlOptions = User.updatedOptionsToString(options)
+        const url        = `/api/users/${this.login}?${urlOptions}`
+        const response   = await fetch(url, { headers, cache: "no-store" })
 
         if (!response.ok)
             throw new Error(response.statusText)

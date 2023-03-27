@@ -1,0 +1,12 @@
+.UserIcon {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    border: thin solid #666;
+    background-color: black
+}
+
+.admin.UserIcon {
+    border: thin solid gold;
+    box-shadow: gold 0 0 .5rem;
+}

@@ -1,0 +1,11 @@
+.UserOnlineIndicator {
+    font-size: .8rem
+}
+
+.online.UserOnlineIndicator {
+    color: lime
+}
+
+.offline.UserOnlineIndicator {
+    color: firebrick
+}

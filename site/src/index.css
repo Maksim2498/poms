@@ -6,16 +6,11 @@
     color: white
 }
 
-html {
-    height: 100%
-}
-
-body {
-    background-color: black;
+html, body, #root {
     overflow: hidden;
     height: 100%
 }
 
-#root {
-    height: 100%
+body {
+    background-color: black
 }
