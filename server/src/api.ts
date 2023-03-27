@@ -94,6 +94,8 @@ export async function checkPermission(this: Server, permission: Permission, req:
 
                 if (reqUserLogin !== targetUserLogin && !isReqUserAdmin)
                     res.sendStatus(403)
+
+                break
             }
 
             case "admin": {
