@@ -1,15 +1,14 @@
-import AuthFrom             from "./children/AuthForm/Component"
-import ContentViewer        from "./children/ContentViewer/Component"
+import AuthFrom            from "./children/AuthForm/Component"
+import ContentViewer       from "./children/ContentViewer/Component"
 
-import { Props as AProps  } from "./children/AuthForm/Component"
-import { Props as CVProps } from "./children/ContentViewer/Component"
+import { Props as AProps } from "./children/AuthForm/Component"
 
 import "./style.css"
 
 export type Props = ContentProps
                   | AuthProps
 
-export interface ContentProps extends CVProps {
+export interface ContentProps {
     show: "content"
 }
 
@@ -31,7 +30,7 @@ export default function Main(props: Props) {
                 return <AuthFrom onAuth={props.onAuth} onCancel={props.onCancel} />
 
             case "content":
-                return <ContentViewer content={props.content} onContentChange={props.onContentChange} />
+                return <ContentViewer />
         }
     }
 }

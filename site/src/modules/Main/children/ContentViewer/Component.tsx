@@ -1,41 +1,33 @@
-import ContentSelector                      from "./children/ContentSelector/Component"
-import ContentWindow                        from "./children/ContentWindow/Component"
-import Console                              from "./children/Console/Component"
-import Profile                              from "./children/Profile/Component"
-import Server                               from "./children/Server/Component"
-import Users                                from "./children/Users/Component"
-import Home                                 from "./children/Home/Component"
+import useStateRef                      from "react-usestateref"
+import ContentSelector                  from "./children/ContentSelector/Component"
+import ContentWindow                    from "./children/ContentWindow/Component"
+import Console                          from "./children/Console/Component"
+import Profile                          from "./children/Profile/Component"
+import Server                           from "./children/Server/Component"
+import Users                            from "./children/Users/Component"
+import Home                             from "./children/Home/Component"
 
-import { useEffect, useState, useContext  } from "react"
-import { UserContext, AuthInfoContext     } from "pages/App/Component"
-import { Content                          } from "./children/ContentSelector/Component"
+import { useContext                   } from "react"
+import { UserContext, AuthInfoContext } from "pages/App/Component"
+import { Content                      } from "./children/ContentSelector/Component"
 
 import "./style.css"
 
-export interface Props {
-    onContentChange?: OnContentChange
-    content?:         Content
-}
-
-export type OnContentChange = (newContent: Content, oldContent: Content) => void
-
-export default function ContentViewer(props: Props) {
-    const [user               ] = useContext(UserContext)
-    const [authInfo           ] = useContext(AuthInfoContext)
-    const { onContentChange   } = props
-    const contentList           = makeContentList()
-    const [content, setContent] = useState(props.content ?? contentList[0])
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => setContent(props.content ?? contentList[0]), [props.content])
+export default function ContentViewer() {
+    const [user                                          ] = useContext(UserContext)
+    const [authInfo                                      ] = useContext(AuthInfoContext)
+    const contentSelectionList                             = makeContentSelectionList()
+    const [contentStack, setContentStack, contentStackRef] = useStateRef([contentSelectionList[0]])
+    const topContent                                       = contentStack[contentStack.length - 1]
+    const showBack                                         = contentStack.length > 1
 
     return <div className="ContentViewer">
-        <ContentSelector contentList={contentList} onSelect={onSelect}/>
-        <ContentWindow content={content} showBack={true} showEdit={true} />
+        <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
+        <ContentWindow content={topContent} showBack={showBack} onBack={onBack} />
     </div>
 
-    function makeContentList() {
-        const contentList = createBasicContent()
+    function makeContentSelectionList() {
+        const contentList = makeBasicContent()
 
         if (authInfo.allowAnonymAccess)
             addCommonContent()
@@ -44,7 +36,7 @@ export default function ContentViewer(props: Props) {
 
         return contentList
 
-        function createBasicContent(): Content[] {
+        function makeBasicContent(): Content[] {
             return [
                 { name: "Home", component: Home }
             ]
@@ -53,7 +45,7 @@ export default function ContentViewer(props: Props) {
         function addCommonContent() {
             contentList.push(
                 { name: "Server Status", selectName: "Server", component: Server },
-                { name: "Users List",    selectName: "Users",  component: Users  },
+                { name: "Users List",    selectName: "Users",  component: Users  }
             )
         }
 
@@ -61,11 +53,7 @@ export default function ContentViewer(props: Props) {
             if (user == null)
                 return
 
-            contentList.push({
-                name:       "Your Profile",
-                selectName: "Profile",
-                component:  () => Profile({ user })
-            })
+            contentList.push(createProfileContent())
 
             if (!authInfo.allowAnonymAccess)
                 addCommonContent()
@@ -76,12 +64,33 @@ export default function ContentViewer(props: Props) {
                     selectName: "Console",
                     component:  Console
                 })
+
+            function createProfileContent(): Content {
+                const name       = "Your Profile"
+                const selectName = "Profile"
+                const component  = () => Profile({ user: user!, onUserTagClick })
+
+                return { name, selectName, component }
+
+                function onUserTagClick(login: string) {
+                    if (login.toLocaleLowerCase() === user!.login.toLocaleLowerCase())
+                        return
+
+                    const component  = () => Profile({ login })
+                    const name       = `${login}'s Profile`
+                    const newContent = { name, component }
+
+                    setContentStack([...contentStackRef.current, newContent])
+                }
+            }
         }
     }
 
     function onSelect(newContent: Content) {
-        const oldContent = content
-        setContent(newContent)
-        onContentChange?.(newContent, oldContent)
+        setContentStack([newContent])
+    }
+
+    function onBack() {
+        setContentStack(contentStack.slice(0, contentStack.length - 1))
     }
 }

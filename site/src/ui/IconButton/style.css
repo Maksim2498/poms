@@ -2,7 +2,8 @@
     width: 2rem;
     height: 2rem;
     background-size: contain;
-    filter: brightness(.8)
+    filter: brightness(.8);
+    color: transparent
 }
 
 .IconButton:hover {
@@ -11,8 +12,4 @@
 
 .IconButton:active {
     filter: brightness(.6)
-}
-
-.IconButton > .Button {
-    display: none
 }

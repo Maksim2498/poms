@@ -24,7 +24,7 @@ export default function ContentWindow(props: Props) {
             {showEdit ? <EditButton onClick={onEdit} /> : <div />}
         </div>
         <div className="main">
-            {content.component()}
+            <content.component />
         </div>
     </div>
 }
