@@ -1,4 +1,5 @@
 import useStateRef                            from "react-usestateref"
+import User                                   from "logic/User"
 import ContentSelector                        from "./children/ContentSelector/Component"
 import ContentWindow                          from "./children/ContentWindow/Component"
 import Console                                from "./children/Console/Component"
@@ -45,8 +46,20 @@ export default function ContentViewer() {
         function addCommonContent() {
             contentList.push(
                 { name: "Server Status", selectName: "Server", component: Server },
-                { name: "Users List",    selectName: "Users",  component: Users  }
+                createUsersContent()
             )
+
+            function createUsersContent(): Content {
+                const name       = "Users List"
+                const selectName = "Users"
+                const component  = () => Users({ onUserClick })
+
+                return { name, selectName, component}
+
+                function onUserClick(user: User) {
+                    pushUserContent(user.login)
+                }
+            }
         }
 
         function addUserContent() {
@@ -71,18 +84,22 @@ export default function ContentViewer() {
                 const component  = () => Profile({ user: user!, onTagClick })
 
                 return { name, selectName, component }
-
-                function onTagClick(newLogin: string, oldLogin: string) {
-                    if (oldLogin.toLocaleLowerCase() === newLogin.toLocaleLowerCase())
-                        return
-
-                    const component  = () => Profile({ login: newLogin, onTagClick })
-                    const name       = `${newLogin}'s Profile`
-                    const newContent = { name, component }
-
-                    setContentStack([...contentStackRef.current, newContent])
-                }
             }
+        }
+
+        function pushUserContent(login: string) {
+            const component  = () => Profile({ login: login, onTagClick })
+            const name       = `${login}'s Profile`
+            const newContent = { name, component }
+
+            setContentStack([...contentStackRef.current, newContent])
+        }
+
+        function onTagClick(newLogin: string, oldLogin: string) {
+            if (oldLogin.toLocaleLowerCase() === newLogin.toLocaleLowerCase())
+                return
+
+            pushUserContent(newLogin)
         }
     }
 

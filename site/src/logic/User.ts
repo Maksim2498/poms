@@ -1,10 +1,15 @@
 import z                       from "zod"
 import Cookies                 from "js-cookie"
-import LogicError              from "./LogicError"
+import AuthInfo                from "./AuthInfo"
 
 import { AuthController, get } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
+
+export interface FetchAllOptions {
+    authController:  AuthController
+    fetchNicknames?: boolean
+}
 
 export interface FetchOptions {
     login:           string
@@ -29,6 +34,22 @@ export default class User {
             login: z.string().nullish()
         }).nullish()
     })
+
+    static async fetchAll(options: FetchAllOptions): Promise<User[]> {
+        const { authController, fetchNicknames } = options
+
+        const url     = `users?${fetchNicknames ? "nicknames" : ""}`
+        const [jsons] = (await get(authController, url)) as [any[], AuthInfo]
+
+        return jsons.map(json => {
+            try {
+                return User.fromJson(json)
+            } catch (error) {
+                console.error(error)
+                return undefined
+            }
+        }).filter(user => user != null) as User[]
+    }
 
     static async fetch(options: FetchOptions): Promise<User> {
         const { login, authController, fetchNicknames } = options

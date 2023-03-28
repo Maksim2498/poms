@@ -1,0 +1,9 @@
+ul.Users {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+}
+
+ul.Users > li {
+    margin: 1rem;
+}
