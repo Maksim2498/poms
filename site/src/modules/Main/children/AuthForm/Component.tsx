@@ -1,12 +1,12 @@
-import User                                from "logic/User"
-import LogicError                          from "logic/LogicError"
-import Input                               from "ui/Input/Component"
-import Button                              from "ui/Button/Component"
-import ErrorText                           from "ui/ErrorText/Component"
+import User                                   from "logic/User"
+import LogicError                             from "logic/LogicError"
+import Input                                  from "ui/Input/Component"
+import Button                                 from "ui/Button/Component"
+import ErrorText                              from "ui/ErrorText/Component"
 
-import { FormEvent, useState, useContext } from "react"
-import { AuthInfoContext, UserContext    } from "pages/App/Component"
-import { auth                            } from "logic/api"
+import { FormEvent, useState, useContext    } from "react"
+import { AuthControllerContext, UserContext } from "pages/App/Component"
+import { auth                               } from "logic/api"
 
 import "./style.css"
 
@@ -22,7 +22,7 @@ export default function AuthFrom(props: Props) {
     const { onAuth, onCancel } = props
 
     const [,                setUser           ] = useContext(UserContext)
-    const [authInfo,        setAuthInfo       ] = useContext(AuthInfoContext)
+    const authController                        = useContext(AuthControllerContext)
 
     const [login,           setLogin          ] = useState("")
     const [password,        setPassword       ] = useState("")
@@ -62,9 +62,8 @@ export default function AuthFrom(props: Props) {
 
         setLoading(true)
 
-        auth(login, password)
+        auth(authController, login, password)
             .then(tokenPair => {
-                setAuthInfo(authInfo.withTokenPair(tokenPair))
                 setUser(new User({ login }))
                 onAuth?.()
             })

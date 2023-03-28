@@ -106,4 +106,12 @@ export default class TokenPair {
             }
         }
     }
+
+    get accessExpired(): boolean {
+        return this.access.exp <= new Date()
+    }
+
+    get refreshExpired(): boolean {
+        return this.refresh.exp <= new Date()
+    }
 }

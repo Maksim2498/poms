@@ -1,21 +1,21 @@
-import useStateRef                      from "react-usestateref"
-import ContentSelector                  from "./children/ContentSelector/Component"
-import ContentWindow                    from "./children/ContentWindow/Component"
-import Console                          from "./children/Console/Component"
-import Profile                          from "./children/Profile/Component"
-import Server                           from "./children/Server/Component"
-import Users                            from "./children/Users/Component"
-import Home                             from "./children/Home/Component"
+import useStateRef                            from "react-usestateref"
+import ContentSelector                        from "./children/ContentSelector/Component"
+import ContentWindow                          from "./children/ContentWindow/Component"
+import Console                                from "./children/Console/Component"
+import Profile                                from "./children/Profile/Component"
+import Server                                 from "./children/Server/Component"
+import Users                                  from "./children/Users/Component"
+import Home                                   from "./children/Home/Component"
 
-import { useContext                   } from "react"
-import { UserContext, AuthInfoContext } from "pages/App/Component"
-import { Content                      } from "./children/ContentSelector/Component"
+import { useContext                         } from "react"
+import { UserContext, AuthControllerContext } from "pages/App/Component"
+import { Content                            } from "./children/ContentSelector/Component"
 
 import "./style.css"
 
 export default function ContentViewer() {
     const [user                                          ] = useContext(UserContext)
-    const [authInfo                                      ] = useContext(AuthInfoContext)
+    const [authInfo                                      ] = useContext(AuthControllerContext)
     const contentSelectionList                             = makeContentSelectionList()
     const [contentStack, setContentStack, contentStackRef] = useStateRef([contentSelectionList[0]])
     const topContent                                       = contentStack[contentStack.length - 1]

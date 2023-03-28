@@ -1,13 +1,16 @@
-import useAsync            from "hooks/useAsync";
-import User                from "logic/User";
-import TaggedUserName      from "ui/TaggedUserName/Component";
-import UserIcon            from "ui/UserIcon/Component";
-import UserOnlineIndicator from "ui/UserOnlineIndicator/Component";
-import UserTag             from "ui/UserTag/Component";
-import UserNicknames       from "ui/UserNicknames/Component";
-import Field               from "ui/Field/Component";
-import Loading             from "ui/Loading/Component";
-import ErrorText           from "ui/ErrorText/Component";
+import useAsync                  from "hooks/useAsync"
+import User                      from "logic/User"
+import TaggedUserName            from "ui/TaggedUserName/Component"
+import UserIcon                  from "ui/UserIcon/Component"
+import UserOnlineIndicator       from "ui/UserOnlineIndicator/Component"
+import UserTag                   from "ui/UserTag/Component"
+import UserNicknames             from "ui/UserNicknames/Component"
+import Field                     from "ui/Field/Component"
+import Loading                   from "ui/Loading/Component"
+import ErrorText                 from "ui/ErrorText/Component"
+
+import { useContext            } from "react"
+import { AuthControllerContext } from "pages/App/Component"
 
 import "./style.css"
 
@@ -27,6 +30,7 @@ export interface LoginProps {
 export type OnTagClick = (newLogin: string, oldLogin: string) => void
 
 export default function Profile(props: Props) {
+    const authController         = useContext(AuthControllerContext)
     const [user, loading, error] = useAsync(getUser)
     const { onTagClick         } = props
     const className              = "Profile"
@@ -63,7 +67,11 @@ export default function Profile(props: Props) {
         if ("user" in props)
             return props.user
 
-        return new User({ login: props.login })
+        return await User.fetch({
+            fetchNicknames: true,
+            login:          props.login,
+            authController
+        })
     }
 
     function nicknames() {

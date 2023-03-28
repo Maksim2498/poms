@@ -1,18 +1,21 @@
 import AuthInfo   from "./AuthInfo";
 import LogicError from "./LogicError";
-import Token      from "./Token";
 import TokenPair  from "./TokenPair";
 
 import { encode } from "js-base64";
 
-export interface AuthControler {
-    authInfo:    AuthInfo
-    setAuthInfo: SetAuthInfo
-}
+export type AuthController = [AuthInfo, SetAuthInfo]
 
 export type SetAuthInfo = (authInfo: AuthInfo) => void
 
-export async function auth(login: string, password: string, authControl?: AuthControler): Promise<TokenPair> {
+export type Method = "get"
+                   | "post"
+                   | "update"
+                   | "delete"
+
+export type ApiResult = [Response, AuthInfo]
+
+export async function auth(authController: AuthController, login: string, password: string): Promise<AuthInfo> {
     const base64Login    = encode(login)
     const base64Password = encode(password)
     const Authorization  = `${base64Login}:${base64Password}`
@@ -28,22 +31,26 @@ export async function auth(login: string, password: string, authControl?: AuthCo
     if (json.error)
         throw new LogicError(String(json.error))
 
-    const tokenPair = TokenPair.fromJson(json)
+    const tokenPair               = TokenPair.fromJson(json)
+    const [authInfo, setAuthInfo] = authController
+    const newAuthInfo             = authInfo.withTokenPair(tokenPair)
 
-    if (authControl != null) {
-        const { setAuthInfo, authInfo} = authControl
-        setAuthInfo(authInfo.withTokenPair(tokenPair))
-    }
+    setAuthInfo(newAuthInfo)
 
-    return tokenPair
+    return newAuthInfo
 }
 
-const reauthingIds = new Map<string, Promise<TokenPair>>()
+const reauthingIds = new Map<string, Promise<AuthInfo>>()
 
-export async function reauth(rTokenId: string): Promise<TokenPair> {
-    rTokenId = Token.normId(rTokenId)
+export async function reauth(authController: AuthController): Promise<AuthInfo> {
+    const [authInfo, setAuthInfo] = authController
+    const { tokenPair           } = authInfo
 
-    let promise = reauthingIds.get(rTokenId)
+    if (tokenPair == null)
+        throw new Error("Not authorized")
+
+    const rTokenId = tokenPair.refresh.id
+    let   promise  = reauthingIds.get(rTokenId)
 
     if (promise == null) {
         promise = reauthPromise()
@@ -56,7 +63,7 @@ export async function reauth(rTokenId: string): Promise<TokenPair> {
         reauthingIds.delete(rTokenId)
     }
 
-    async function reauthPromise(): Promise<TokenPair> {
+    async function reauthPromise(): Promise<AuthInfo> {
         const method   = "POST"
         const headers  = new Headers({ Authorization: rTokenId })
         const response = await fetch("/api/reauth", { method, headers })
@@ -69,15 +76,21 @@ export async function reauth(rTokenId: string): Promise<TokenPair> {
         if (json.error)
             throw new LogicError(String(json.error))
 
-        return TokenPair.fromJson(json)
+        const newTokenPair = TokenPair.fromJson(json)
+        const newAuthInfo  = authInfo.withTokenPair(newTokenPair)
+
+        setAuthInfo(newAuthInfo)
+
+        return newAuthInfo
     }
 }
 
-export async function deauth(authInfo: AuthInfo, setAuthInfo?: SetAuthInfo) {
-    const { tokenPair } = authInfo
+export async function deauth(authController: AuthController): Promise<AuthInfo> {
+    const [authInfo, setAuthInfo] = authController
+    const { tokenPair           } = authInfo
 
     if (tokenPair == null)
-        return
+        return authInfo
 
     const method        = "POST"
     const Authorization = tokenPair.access.id
@@ -92,5 +105,80 @@ export async function deauth(authInfo: AuthInfo, setAuthInfo?: SetAuthInfo) {
     if (json.error)
         throw new LogicError(String(json.error))
 
-    setAuthInfo?.(authInfo.withoutTokenPair())
+    const newAuthInfo = authInfo.withoutTokenPair()
+
+    setAuthInfo(newAuthInfo)
+
+    return newAuthInfo
+}
+
+export async function get(authController: AuthController, url: string) {
+    return await api(authController, "get", url)
+}
+
+export async function post(authController: AuthController, url: string) {
+    return await api(authController, "post", url)
+}
+
+export async function update(authController: AuthController, url: string) {
+    return await api(authController, "update", url)
+}
+
+export async function del(authController: AuthController, url: string) {
+    return await api(authController, "delete", url)
+}
+
+export async function api(authController: AuthController, method: Method, url: string): Promise<ApiResult> {
+    url = "/api/" + url
+
+    const [authInfo, setAuthInfo] = authController
+    const { tokenPair           } = authInfo
+
+    let newerAuthInfo: AuthInfo | undefined
+
+    if (tokenPair == null)
+        return await tryFetchAsAnonym()
+
+    if (tokenPair.refreshExpired)
+        refreshExpired()
+
+    if (tokenPair.accessExpired)
+        await accessExpired()
+
+    return await tryFetch()
+
+    async function tryFetchAsAnonym(): Promise<ApiResult> {
+        if (!authInfo.allowAnonymAccess)
+            throw new Error("Anonymous access is forbidden")
+
+        const response = await fetch(url, { method, cache: "no-store" })
+
+        if (!response.ok)
+            throw new Error(response.statusText)
+
+        return [response, authInfo]
+    }
+
+    function refreshExpired() {
+        const newAuthInfo = authInfo.withoutTokenPair()
+
+        setAuthInfo(newAuthInfo)
+
+        throw new Error("Need to reauthenticate")
+    }
+
+    async function accessExpired() {
+        newerAuthInfo = await reauth(authController)
+    }
+
+    async function tryFetch(): Promise<ApiResult> {
+        const effectiveAuthInfo = newerAuthInfo ?? authInfo
+        const headers           = effectiveAuthInfo.toHeaders()
+        const response          = await fetch(url, { method, headers, cache: "no-store" })
+
+        if (!response.ok)
+            throw new Error(response.statusText)
+
+        return [response, effectiveAuthInfo]
+    }
 }

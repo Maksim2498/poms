@@ -1,9 +1,9 @@
-import UserName                         from "ui/UserName/Component"
-import Button                           from "ui/Button/Component"
+import UserName                               from "ui/UserName/Component"
+import Button                                 from "ui/Button/Component"
 
-import { useContext                   } from "react"
-import { AuthInfoContext, UserContext } from "pages/App/Component"
-import { deauth                       } from "logic/api"
+import { useContext                         } from "react"
+import { AuthControllerContext, UserContext } from "pages/App/Component"
+import { deauth                             } from "logic/api"
 
 import "./style.css"
 
@@ -14,8 +14,8 @@ export interface Props {
 export type OnSignIn = () => void
 
 export default function UserButton(props: Props) {
-    const [authInfo, setAuthInfo] = useContext(AuthInfoContext)
-    const [user,     setUser    ] = useContext(UserContext)
+    const authController  = useContext(AuthControllerContext)
+    const [user, setUser] = useContext(UserContext)
 
     return <div className="UserButton">
         {body()}
@@ -34,7 +34,7 @@ export default function UserButton(props: Props) {
 
         async function onSignOut() {
             try {
-                await deauth(authInfo, setAuthInfo)
+                await deauth(authController)
             } catch (error) {
                 console.error(error)
             } finally {

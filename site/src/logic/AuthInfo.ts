@@ -2,8 +2,6 @@ import z          from "zod"
 import Cookies    from "js-cookie";
 import TokenPair  from "./TokenPair";
 
-import { reauth } from "./api";
-
 export interface CreationOptions {
     readonly allowAnonymAccess?: boolean
     readonly tokenPair?:         TokenPair
@@ -92,16 +90,6 @@ export default class AuthInfo {
         const { allowed } = AuthInfo.IS_ANONYM_ACCESS_ALLOWED_SCHEMA.parse(json)
 
         return this.withAllowAnonymAccess(allowed)
-    }
-
-    async withRefreshedTokenPair(): Promise<AuthInfo> {
-        if (this.tokenPair == null)
-            throw new Error("Missing refresh token")
-
-        const refreshTokenId = this.tokenPair.refresh.id
-        const tokenPair      = await reauth(refreshTokenId)
-
-        return this.withTokenPair(tokenPair)
     }
 
     save() {

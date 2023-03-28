@@ -1,13 +1,20 @@
-import z          from "zod"
-import Cookies    from "js-cookie"
-import AuthInfo   from "./AuthInfo"
-import LogicError from "./LogicError"
+import z                       from "zod"
+import Cookies                 from "js-cookie"
+import LogicError              from "./LogicError"
+
+import { AuthController, get } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
+export interface FetchOptions {
+    login:           string
+    authController:  AuthController
+    fetchNicknames?: boolean
+}
+
 export interface UpdatedOptions {
     updateNicknames?: boolean
-    authInfo:         AuthInfo
+    authController:   AuthController
 }
 
 export default class User {
@@ -22,6 +29,19 @@ export default class User {
             login: z.string().nullish()
         }).nullish()
     })
+
+    static async fetch(options: FetchOptions): Promise<User> {
+        const { login, authController, fetchNicknames } = options
+
+        const url        = `users/${encodeURIComponent(login)}?${fetchNicknames ? "nicknames" : ""}`
+        const [response] = await get(authController, url)
+        const json       = await response.json()
+
+        if (json.error)
+            throw new LogicError(json.error)
+        
+        return User.fromJson(json)
+    }
 
     static fromJson(json: any): User {
         return new User(this.JSON_SCHEMA.parse(json))
@@ -123,26 +143,14 @@ export default class User {
         }
     }
 
-    static updatedOptionsToQueryOptionsString(options: UpdatedOptions): string {
-        return options.updateNicknames ? "nicknames" : ""
-    }
-
     async updated(options: UpdatedOptions): Promise<User> {
-        const { authInfo} = options
-        const headers     = authInfo.toHeaders()
-        const urlOptions  = User.updatedOptionsToQueryOptionsString(options)
-        const url         = `/api/users/${this.login}?${urlOptions}`
-        const response    = await fetch(url, { headers, cache: "no-store" })
+        const { authController, updateNicknames } = options
 
-        if (!response.ok)
-            throw new Error(response.statusText)
-
-        const json = await response.json()
-
-        if (json.error)
-            throw new LogicError(String(json.error))
-
-        return User.fromJson(json)
+        return await User.fetch({
+            authController,
+            login:          this.login,
+            fetchNicknames: updateNicknames
+        })
     }
 
     save() {

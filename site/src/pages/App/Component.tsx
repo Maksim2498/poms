@@ -1,32 +1,30 @@
-import User                        from "logic/User"
-import useAsync                    from "hooks/useAsync"
-import Header                      from "modules/Header/Component"
-import Main                        from "modules/Main/Component"
-import Footer                      from "modules/Footer/Component"
-import Loading                     from "ui/Loading/Component"
-import AuthInfo                    from "logic/AuthInfo"
+import User                                   from "logic/User"
+import useAsync                               from "hooks/useAsync"
+import Header                                 from "modules/Header/Component"
+import Main                                   from "modules/Main/Component"
+import Footer                                 from "modules/Footer/Component"
+import Loading                                from "ui/Loading/Component"
+import AuthInfo                               from "logic/AuthInfo"
 
 import { createContext, useEffect, useState } from "react"
+import { AuthController, reauth                     } from "logic/api"
 
 import "./style.css"
 
-export const UserContext         = createContext([undefined,      defaultSetNullableUser] as UserContextType    )
-export const AuthInfoContext     = createContext([new AuthInfo(), defaultSetAuthInfo    ] as AuthInfoContextType)
+export const UserContext           = createContext([undefined,      defaultSetNullableUser] as UserContextType)
+export const AuthControllerContext = createContext([new AuthInfo(), defaultSetAuthInfo    ] as AuthController )
 
 function defaultSetNullableUser() {
     throw new Error("Missing UserContext.Provider")
 }
 
 function defaultSetAuthInfo() {
-    throw new Error("Missing AuthInfoContext.Provider")
+    throw new Error("Missing AuthControllerContext.Provider")
 }
 
 export type UserContextType     = [OptionalUser, SetNullableUser]
 export type SetNullableUser     = (user: OptionalUser) => void
 export type OptionalUser        = User | undefined
-
-export type AuthInfoContextType = [AuthInfo, SetAuthInfo]
-export type SetAuthInfo         = (info: AuthInfo) => void
 
 export default function App() {
     const [authInfo,     setAuthInfo    ] = useState(AuthInfo.loadOrDefault())
@@ -57,7 +55,7 @@ export default function App() {
             <Loading />
         </div>
 
-    return <AuthInfoContext.Provider value={[authInfo, setAuthInfo]}>
+    return <AuthControllerContext.Provider value={[authInfo, setAuthInfo]}>
         <UserContext.Provider value={[user, setUser]}>
             <div className="App">
                 {header()}
@@ -65,7 +63,7 @@ export default function App() {
                 <Footer />
             </div>
         </UserContext.Provider>
-    </AuthInfoContext.Provider>
+    </AuthControllerContext.Provider>
 
     async function updateAuthInfo() {
         let newAuthInfo = authInfo
@@ -76,21 +74,27 @@ export default function App() {
             console.error(error)
         }
 
-        if (authInfo.tokenPair != null)
+        if (newAuthInfo.tokenPair != null)
             try {
-                newAuthInfo = await newAuthInfo.withRefreshedTokenPair()
+                await reauth([newAuthInfo, setAuthInfo])
             } catch (error) {
                 newAuthInfo = newAuthInfo.withoutTokenPair()
+
+                setAuthInfo(newAuthInfo)
                 setUser(undefined)
+
                 console.error(error)
             }
-
-        setAuthInfo(newAuthInfo)
     }
 
     async function updateUser() {
         try {
-            setUser(await user?.updated({ authInfo, updateNicknames: true }))
+            const updatedUser = await user?.updated({
+                updateNicknames: true,
+                authController:  [authInfo, setAuthInfo]
+            })
+
+            setUser(updatedUser)
         } catch (error) {
             console.error(error)
         }
