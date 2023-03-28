@@ -1,4 +1,5 @@
 .IconButton {
+    cursor: pointer;
     width: 2rem;
     height: 2rem;
     background-size: contain;
