@@ -9,26 +9,26 @@ import Field               from "ui/Field/Component";
 import Loading             from "ui/Loading/Component";
 import ErrorText           from "ui/ErrorText/Component";
 
-import { OnUserTagClick  } from "ui/UserTag/Component";
-
 import "./style.css"
 
 export type Props = UserProps
                   | LoginProps
 
 export interface UserProps {
-    onUserTagClick?: OnUserTagClick
-    user:            User
+    onTagClick?: OnTagClick
+    user:        User
 }
 
 export interface LoginProps {
-    onUserTagClick?: OnUserTagClick
-    login:           string
+    onTagClick?: OnTagClick
+    login:       string
 }
+
+export type OnTagClick = (newLogin: string, oldLogin: string) => void
 
 export default function Profile(props: Props) {
     const [user, loading, error] = useAsync(getUser)
-    const { onUserTagClick     } = props
+    const { onTagClick         } = props
     const className              = "Profile"
 
     if (loading)
@@ -43,13 +43,13 @@ export default function Profile(props: Props) {
 
     return <div className={className}>
         <UserIcon            user={user!} />
-        <TaggedUserName      user={user!} onTagClick={onUserTagClick} />
+        <TaggedUserName      user={user!} onTagClick={innerOnTagClick} />
         <UserOnlineIndicator user={user!} />
 
         <div className="section">
             <h3>Registration info</h3>
             <Field label="Registrar">
-                {user!.reg.login != null ? <UserTag login={user!.reg.login} onClick={onUserTagClick} /> : "System"}
+                {user!.reg.login != null ? <UserTag login={user!.reg.login} onClick={innerOnTagClick} /> : "System"}
             </Field>
             <Field label="Time">
                 {user!.reg.time.toLocaleDateString()}
@@ -74,5 +74,9 @@ export default function Profile(props: Props) {
             <h3>Nicknames</h3>
             <UserNicknames user={user!} />
         </div>
+    }
+
+    function innerOnTagClick(login: string) {
+        onTagClick?.(login, user!.login)
     }
 }

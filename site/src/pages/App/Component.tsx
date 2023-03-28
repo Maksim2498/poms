@@ -90,7 +90,7 @@ export default function App() {
 
     async function updateUser() {
         try {
-            setUser(await user?.updated(authInfo, { updateNicknames: true }))
+            setUser(await user?.updated({ authInfo, updateNicknames: true }))
         } catch (error) {
             console.error(error)
         }

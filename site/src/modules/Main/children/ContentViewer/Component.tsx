@@ -68,16 +68,16 @@ export default function ContentViewer() {
             function createProfileContent(): Content {
                 const name       = "Your Profile"
                 const selectName = "Profile"
-                const component  = () => Profile({ user: user!, onUserTagClick })
+                const component  = () => Profile({ user: user!, onTagClick })
 
                 return { name, selectName, component }
 
-                function onUserTagClick(login: string) {
-                    if (login.toLocaleLowerCase() === user!.login.toLocaleLowerCase())
+                function onTagClick(newLogin: string, oldLogin: string) {
+                    if (oldLogin.toLocaleLowerCase() === newLogin.toLocaleLowerCase())
                         return
 
-                    const component  = () => Profile({ login })
-                    const name       = `${login}'s Profile`
+                    const component  = () => Profile({ login: newLogin, onTagClick })
+                    const name       = `${newLogin}'s Profile`
                     const newContent = { name, component }
 
                     setContentStack([...contentStackRef.current, newContent])

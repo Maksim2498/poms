@@ -7,6 +7,7 @@ export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
 export interface UpdatedOptions {
     updateNicknames?: boolean
+    authInfo:         AuthInfo
 }
 
 export default class User {
@@ -122,15 +123,16 @@ export default class User {
         }
     }
 
-    static updatedOptionsToString(options: UpdatedOptions): string {
+    static updatedOptionsToQueryOptionsString(options: UpdatedOptions): string {
         return options.updateNicknames ? "nicknames" : ""
     }
 
-    async updated(info: AuthInfo, options: UpdatedOptions = {}): Promise<User> {
-        const headers    = info.toHeaders()
-        const urlOptions = User.updatedOptionsToString(options)
-        const url        = `/api/users/${this.login}?${urlOptions}`
-        const response   = await fetch(url, { headers, cache: "no-store" })
+    async updated(options: UpdatedOptions): Promise<User> {
+        const { authInfo} = options
+        const headers     = authInfo.toHeaders()
+        const urlOptions  = User.updatedOptionsToQueryOptionsString(options)
+        const url         = `/api/users/${this.login}?${urlOptions}`
+        const response    = await fetch(url, { headers, cache: "no-store" })
 
         if (!response.ok)
             throw new Error(response.statusText)
