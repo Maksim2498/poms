@@ -1,13 +1,36 @@
 .UserButton > .signed-in {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between
 }
 
 .UserButton > .signed-in > * {
-    margin: 0 1rem
+    margin: 0 .5rem
 }
 
 .UserButton > .signed-in > .UserName {
     font-size: 1.2rem
+}
+
+.UserButton > .signed-in > div > .UserIcon {
+    width: 2.25rem;
+    height: 2.25rem;
+    cursor: pointer
+}
+
+.UserButton > .signed-in > .options {
+    position: absolute;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
+    top: 2.8rem;
+    border-radius: 0 0 .4rem .4rem;
+    padding: .4rem;
+    background-color: #151515;
+    width: calc(100% - .5rem);
+}
+
+.UserButton > .signed-in > .options > .Button {
+    width: 100%
 }

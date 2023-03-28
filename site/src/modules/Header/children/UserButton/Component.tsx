@@ -1,7 +1,8 @@
 import UserName                               from "ui/UserName/Component"
 import Button                                 from "ui/Button/Component"
+import UserIcon                               from "ui/UserIcon/Component"
 
-import { useContext                         } from "react"
+import { useContext, useState               } from "react"
 import { AuthControllerContext, UserContext } from "pages/App/Component"
 import { deauth                             } from "logic/api"
 
@@ -14,8 +15,9 @@ export interface Props {
 export type OnSignIn = () => void
 
 export default function UserButton(props: Props) {
-    const authController  = useContext(AuthControllerContext)
-    const [user, setUser] = useContext(UserContext)
+    const authController                = useContext(AuthControllerContext)
+    const [user,        setUser       ] = useContext(UserContext)
+    const [showSignOut, setShowSignOut] = useState(false)
 
     return <div className="UserButton">
         {body()}
@@ -29,7 +31,12 @@ export default function UserButton(props: Props) {
     function signedIn() {
         return <div className="signed-in">
             <UserName user={user!} />
-            <Button type="cancel" onClick={onSignOut}>Sign Out</Button>
+            <div onClick={() => setShowSignOut(!showSignOut)}>
+                <UserIcon user={user!} />
+            </div>
+            <div className="options" style={{ display: showSignOut ? "block" : "none" }}>
+                <Button type="cancel" onClick={onSignOut}>Sign Out</Button>
+            </div>
         </div>
 
         async function onSignOut() {
