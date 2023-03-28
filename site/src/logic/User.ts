@@ -33,12 +33,8 @@ export default class User {
     static async fetch(options: FetchOptions): Promise<User> {
         const { login, authController, fetchNicknames } = options
 
-        const url        = `users/${encodeURIComponent(login)}?${fetchNicknames ? "nicknames" : ""}`
-        const [response] = await get(authController, url)
-        const json       = await response.json()
-
-        if (json.error)
-            throw new LogicError(json.error)
+        const url    = `users/${encodeURIComponent(login)}?${fetchNicknames ? "nicknames" : ""}`
+        const [json] = await get(authController, url)
         
         return User.fromJson(json)
     }

@@ -13,7 +13,7 @@ export type Method = "get"
                    | "update"
                    | "delete"
 
-export type ApiResult = [Response, AuthInfo]
+export type ApiResult = [any, AuthInfo]
 
 export async function auth(authController: AuthController, login: string, password: string): Promise<AuthInfo> {
     const base64Login    = encode(login)
@@ -156,7 +156,12 @@ export async function api(authController: AuthController, method: Method, url: s
         if (!response.ok)
             throw new Error(response.statusText)
 
-        return [response, authInfo]
+        const json = await response.json()
+
+        if (json.error)
+            throw new LogicError(String(json.error))
+
+        return [json, authInfo]
     }
 
     function refreshExpired() {
@@ -172,13 +177,38 @@ export async function api(authController: AuthController, method: Method, url: s
     }
 
     async function tryFetch(): Promise<ApiResult> {
-        const effectiveAuthInfo = newerAuthInfo ?? authInfo
-        const headers           = effectiveAuthInfo.toHeaders()
-        const response          = await fetch(url, { method, headers, cache: "no-store" })
+        let effectiveAuthInfo = newerAuthInfo ?? authInfo
+        let response          = await fetch()
 
         if (!response.ok)
             throw new Error(response.statusText)
 
-        return [response, effectiveAuthInfo]
+        let json = await response.json()
+
+        if (json.error) {
+            if (!json.needRefresh)
+                throw new LogicError(String(json.error))
+
+            effectiveAuthInfo = await reauth([effectiveAuthInfo, setAuthInfo])
+            response          = await fetch()
+
+            if (!response.ok)
+                throw new Error(response.statusText)
+
+            json = await response.json()
+
+            if (json.error)
+                throw new LogicError(String(json.error))
+        }
+
+        return [json, effectiveAuthInfo]
+
+        async function fetch() {
+            return await window.fetch(url, {
+                method,
+                headers: effectiveAuthInfo.toHeaders(),
+                cache:   "no-store"
+            })
+        }
     }
 }
