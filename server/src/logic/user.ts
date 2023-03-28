@@ -403,16 +403,16 @@ export class DefaultUserManager implements UserManager {
                 login:        t.login,
                 name:         t.name,
                 passwordHash: t.password_hash,
-                isAdmin:      t.is_admin,
-                isOnline:     t.is_online,
+                isAdmin:      Boolean(t.is_admin),
+                isOnline:     Boolean(t.is_online),
                 created:      t.cr_time,
                 creatorInfo:  t.cr_id != null ? {
                     id:            c.id,
                     login:         c.login,
                     name:          c.name,
                     passwordHash:  c.password_hash,
-                    isAdmin:       c.is_admin,
-                    isOnline:      c.is_online,
+                    isAdmin:       Boolean(c.is_admin),
+                    isOnline:      Boolean(c.is_online),
                     created:       c.cr_time,
                     creatorId:     c.cr_id
                 } : null
