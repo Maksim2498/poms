@@ -6,7 +6,7 @@ import ErrorText                           from "ui/ErrorText/Component"
 
 import { FormEvent, useState, useContext } from "react"
 import { AuthInfoContext, UserContext    } from "pages/App/Component"
-import { auth                            } from "./api"
+import { auth                            } from "logic/api"
 
 import "./style.css"
 

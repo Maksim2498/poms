@@ -3,7 +3,7 @@ import Button                           from "ui/Button/Component"
 
 import { useContext                   } from "react"
 import { AuthInfoContext, UserContext } from "pages/App/Component"
-import { deauth                       } from "./api"
+import { deauth                       } from "logic/api"
 
 import "./style.css"
 
@@ -34,11 +34,10 @@ export default function UserButton(props: Props) {
 
         async function onSignOut() {
             try {
-                await deauth(authInfo)
+                await deauth(authInfo, setAuthInfo)
             } catch (error) {
                 console.error(error)
             } finally {
-                setAuthInfo(authInfo.withoutTokenPair())
                 setUser(undefined)
             }
         }
