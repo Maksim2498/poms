@@ -4,12 +4,18 @@ import defaultIconSrc from "./default-icon.svg"
 import "./style.css"
 
 export interface Props {
-    user: User
+    onClick?: OnUserIconClick
+    user:     User
 }
 
-export default function UserIcon(props: Props) {
-    const { user }  = props
-    const className = user.isAdmin ? "admin UserIcon" : "UserIcon"
+export type OnUserIconClick = (user: User) => void
 
-    return <img className={className} src={defaultIconSrc} alt="User profile icon" />
+export default function UserIcon(props: Props) {
+    const { onClick, user } = props
+    const className         = user.isAdmin ? "admin UserIcon" : "UserIcon"
+
+    return <img className = {className}
+                src       = {defaultIconSrc}
+                alt       = "User profile icon"
+                onClick   = {() => onClick?.(user)} />
 }

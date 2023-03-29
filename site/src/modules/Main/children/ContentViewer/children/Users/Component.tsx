@@ -18,19 +18,18 @@ export default function Users(props: Props) {
     const { onUserClick         } = props
     const authController          = useContext(AuthControllerContext)
     const [users, loading, error] = useAsync(async () => User.fetchAll({ authController }))
-    const className               = "Users"
 
     if (loading)
-        return <div className={className}>
+        return <div className="loading Users">
             <Loading />
         </div>
 
     if (error != null)
-        return <div className={className}>
+        return <div className="error Users">
             <ErrorText>{error}</ErrorText>
         </div>
 
-    return <ul className={className}>
+    return <ul className="Users">
         {users.map(user =>
             <li key={user.login}>
                 <UserCard user={user} onClick={onUserClick} />

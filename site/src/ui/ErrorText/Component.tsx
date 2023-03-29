@@ -10,7 +10,7 @@ export default function ErrorText(props: Props) {
     if (children == null)
         return null
 
-    return <div className="Error">
+    return <div className="ErrorText">
         {children}
     </div>
 }

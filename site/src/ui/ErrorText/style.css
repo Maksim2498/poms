@@ -1,3 +1,4 @@
-.Error {
+.ErrorText {
+    overflow-wrap: break-word;
     color: red
 }

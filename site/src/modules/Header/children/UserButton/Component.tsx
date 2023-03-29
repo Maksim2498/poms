@@ -31,9 +31,7 @@ export default function UserButton(props: Props) {
     function signedIn() {
         return <div className="signed-in">
             <UserName user={user!} />
-            <div onClick={() => setShowSignOut(!showSignOut)}>
-                <UserIcon user={user!} />
-            </div>
+            <UserIcon user={user!} onClick={() => setShowSignOut(!showSignOut)} />
             <div className="options" style={{ display: showSignOut ? "block" : "none" }}>
                 <Button type="cancel" onClick={onSignOut}>Sign Out</Button>
             </div>

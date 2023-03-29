@@ -13,7 +13,7 @@
     font-size: 1.2rem
 }
 
-.UserButton > .signed-in > div > .UserIcon {
+.UserButton > .signed-in > .UserIcon {
     width: 2.25rem;
     height: 2.25rem;
     cursor: pointer

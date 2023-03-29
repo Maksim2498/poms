@@ -33,19 +33,18 @@ export default function Profile(props: Props) {
     const authController         = useContext(AuthControllerContext)
     const [user, loading, error] = useAsync(getUser)
     const { onTagClick         } = props
-    const className              = "Profile"
 
     if (loading)
-        return <div className={className}>
+        return <div className="loading Profile">
             <Loading />
         </div>
 
     if (error != null)
-        return <div className={className}>
+        return <div className="error Profile">
             <ErrorText>{error}</ErrorText>
         </div>
 
-    return <div className={className}>
+    return <div className="Profile">
         <UserIcon            user={user!} />
         <TaggedUserName      user={user!} onTagClick={innerOnTagClick} />
         <UserOnlineIndicator user={user!} />
