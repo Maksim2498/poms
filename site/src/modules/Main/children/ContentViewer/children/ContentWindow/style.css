@@ -3,19 +3,8 @@
     height: 100%
 }
 
-.ContentWindow > * {
-    padding: .8rem
-}
-
-.ContentWindow > .main {
-    position: relative;
-    background-color: #222;
-    border-radius: 0 0 .4rem .4rem;
-    overflow: scroll;
-    height: calc(100% - 3.5rem)
-}
-
 .ContentWindow > .header {
+    padding: .8rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -26,4 +15,12 @@
 
 .ContentWindow > .header > h2 {
     text-align: center
+}
+
+.ContentWindow > .main {
+    position: relative;
+    background-color: #222;
+    border-radius: 0 0 .4rem .4rem;
+    overflow: scroll;
+    height: calc(100% - 3.5rem)
 }

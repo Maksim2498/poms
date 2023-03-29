@@ -1,3 +1,7 @@
+.Users {
+    height: 100%
+}
+
 .loaded.Users {
     position: absolute;
     left: 50%;

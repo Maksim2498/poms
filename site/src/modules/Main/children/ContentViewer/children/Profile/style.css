@@ -1,7 +1,10 @@
+.Profile {
+    height: 100%
+}
+
 .loaded.Profile {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
     align-items: center
 }
 
