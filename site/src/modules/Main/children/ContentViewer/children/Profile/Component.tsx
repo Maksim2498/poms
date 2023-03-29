@@ -9,7 +9,7 @@ import Field                     from "ui/Field/Component"
 import Loading                   from "ui/Loading/Component"
 import ErrorText                 from "ui/ErrorText/Component"
 
-import { useContext            } from "react"
+import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
 
 import "./style.css"
@@ -34,6 +34,11 @@ export default function Profile(props: Props) {
     const [user, loading, error] = useAsync(getUser)
     const { onTagClick         } = props
 
+    useEffect(() => {
+        if (error != null)
+            error != null && console.error(error)
+    }, [error])
+
     if (loading)
         return <div className="loading Profile">
             <Loading />
@@ -41,15 +46,15 @@ export default function Profile(props: Props) {
 
     if (error != null)
         return <div className="error Profile">
-            <ErrorText>{error}</ErrorText>
+            <ErrorText>Loading failed</ErrorText>
         </div>
 
-    return <div className="Profile">
+    return <div className="loaded Profile">
         <UserIcon            user={user!} />
         <TaggedUserName      user={user!} onTagClick={innerOnTagClick} />
         <UserOnlineIndicator user={user!} />
 
-        <div className="section">
+        <div className="reg section">
             <h3>Registration info</h3>
             <Field label="Registrar">
                 {user!.reg.login != null ? <UserTag login={user!.reg.login} onClick={innerOnTagClick} /> : "System"}

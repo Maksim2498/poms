@@ -4,7 +4,7 @@ import UserCard                  from "ui/UserCard/Component"
 import Loading                   from "ui/Loading/Component"
 import ErrorText                 from "ui/ErrorText/Component"
 
-import { useContext            } from "react"
+import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
 import { OnUserCardClick       } from "ui/UserCard/Component"
 
@@ -19,6 +19,11 @@ export default function Users(props: Props) {
     const authController          = useContext(AuthControllerContext)
     const [users, loading, error] = useAsync(async () => User.fetchAll({ authController }))
 
+    useEffect(() => {
+        if (error != null)
+            error != null && console.error(error)
+    }, [error])
+
     if (loading)
         return <div className="loading Users">
             <Loading />
@@ -26,10 +31,10 @@ export default function Users(props: Props) {
 
     if (error != null)
         return <div className="error Users">
-            <ErrorText>{error}</ErrorText>
+            <ErrorText>Loading failed</ErrorText>
         </div>
 
-    return <ul className="Users">
+    return <ul className="loaded Users">
         {users.map(user =>
             <li key={user.login}>
                 <UserCard user={user} onClick={onUserClick} />

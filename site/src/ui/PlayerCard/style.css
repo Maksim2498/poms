@@ -1,0 +1,31 @@
+.PlayerCard {
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 5rem auto;
+    grid-template-rows: 2.5rem 2.5rem
+}
+
+.PlayerCard > .UserIcon {
+    grid-column: 1;
+    grid-row: 1/2;
+    margin: .5rem;
+    width: 4rem;
+    height: 4rem
+}
+
+.PlayerCard > .anonym,
+.PlayerCard > .TaggedUserName {
+    align-self: end;
+    grid-column: 2;
+    grid-row: 1
+}
+
+.PlayerCard > .nickname {
+    align-self: start;
+    grid-column: 2;
+    grid-row: 2
+}
+
+.PlayerCard > .nickname > .value{
+    color: gray
+}

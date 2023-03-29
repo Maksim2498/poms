@@ -1,49 +1,49 @@
-.Profile {
+.loaded.Profile {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
     align-items: center
 }
 
-.Profile > .TaggedUserName {
+.loaded.Profile > .TaggedUserName {
     display: flex;
     flex-direction: column;
     align-items: center
 }
 
-.Profile > .TaggedUserName > * {
+.loaded.Profile > .TaggedUserName > * {
     margin: .25rem
 }
 
-.Profile > * {
+.loaded.Profile > * {
     margin: 1rem
 }
 
-.Profile > .UserIcon {
+.loaded.Profile > .UserIcon {
     width: 10rem;
     height: 10rem
 }
 
-.Profile > .UserOnlineIndicator {
+.loaded.Profile > .UserOnlineIndicator {
     margin: 0
 }
 
-.Profile > .section {
+.loaded.Profile > .section {
     margin-top: 0;
     margin-bottom: 0;
     padding: 1rem
 }
 
-.Profile > .section > * {
+.loaded.Profile > .section > * {
     margin: .5rem
 }
 
-.Profile > .section > h3 {
+.loaded.Profile > .section > h3 {
     margin: 1rem;
     font-size: 1rem;
     text-align: center
 }
 
-.Profile > .section > .Field {
+.loaded.Profile > .section > .Field {
     font-size: .8rem
 }

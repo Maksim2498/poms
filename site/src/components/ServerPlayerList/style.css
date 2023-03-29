@@ -1,0 +1,7 @@
+.loaded.ServerPlayerList {
+    list-style: none
+}
+
+.loaded.ServerPlayerList > li {
+    margin: 1rem
+}

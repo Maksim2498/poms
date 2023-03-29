@@ -1,10 +1,11 @@
 import useStateRef                            from "react-usestateref"
 import User                                   from "logic/User"
+import Player                                 from "logic/Player"
 import ContentSelector                        from "./children/ContentSelector/Component"
 import ContentWindow                          from "./children/ContentWindow/Component"
 import Console                                from "./children/Console/Component"
 import Profile                                from "./children/Profile/Component"
-import Server                                 from "./children/Server/Component"
+import Server                                 from "./children/ServerViewer/Component"
 import Users                                  from "./children/Users/Component"
 import Home                                   from "./children/Home/Component"
 
@@ -45,9 +46,24 @@ export default function ContentViewer() {
 
         function addCommonContent() {
             contentList.push(
-                { name: "Server Status", selectName: "Server", component: Server },
+                createServerContent(),
                 createUsersContent()
             )
+
+            function createServerContent(): Content {
+                const name       = "Server Status"
+                const selectName = "Server"
+                const component  = () => Server({ onPlayerClick })
+
+                return { name, selectName, component }
+
+                function onPlayerClick(player: Player) {
+                    const { user } = player
+
+                    if (user)
+                        pushUserContent(user.login)
+                }
+            }
 
             function createUsersContent(): Content {
                 const name       = "Users List"

@@ -1,9 +1,10 @@
-ul.Users {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
+.loaded.Users {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    list-style: none
 }
 
-ul.Users > li {
-    margin: 1rem;
+.loaded.Users > li {
+    margin: 1rem
 }

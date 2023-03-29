@@ -5,14 +5,15 @@ import "./style.css"
 
 export interface Props {
     onClick?: OnUserIconClick
-    user:     User
+    user?:    User
 }
 
-export type OnUserIconClick = (user: User) => void
+export type OnUserIconClick = (user?: User) => void
 
 export default function UserIcon(props: Props) {
     const { onClick, user } = props
-    const className         = user.isAdmin ? "admin UserIcon" : "UserIcon"
+    const className         = user?.isAdmin ? "admin UserIcon"
+                                            : "regular UserIcon"
 
     return <img className = {className}
                 src       = {defaultIconSrc}

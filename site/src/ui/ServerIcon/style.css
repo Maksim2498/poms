@@ -1,0 +1,8 @@
+.ServerIcon {
+    background-color: black;
+    border-radius: 50%;
+    border: thin solid #666;
+    image-rendering: pixelated;
+    width: 4rem;
+    height: 4rem
+}

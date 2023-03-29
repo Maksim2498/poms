@@ -22,5 +22,5 @@
         ]
     },
     "include": ["src"],
-    "files":   ["./src/types/asserts.d.ts"]
+    "files":   ["./src/types/assets.d.ts"]
 }
