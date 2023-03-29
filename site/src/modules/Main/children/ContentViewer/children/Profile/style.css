@@ -50,3 +50,9 @@
 .loaded.Profile > .section > .Field {
     font-size: .8rem
 }
+
+.error.Profile {
+    display: flex;
+    align-items: center;
+    justify-content: center
+}

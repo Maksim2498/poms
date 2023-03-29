@@ -12,3 +12,9 @@
 .loaded.Users > li {
     margin: 1rem
 }
+
+.error.Users {
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
