@@ -1,0 +1,44 @@
+.Terminal {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%
+}
+
+.Terminal > .output > li > *,
+.Terminal > form > .Input,
+.Terminal > form > .Button > * {
+    font-family: monospace
+}
+
+.Terminal > .output {
+    list-style: none;
+    color: white;
+    flex-grow: 1;
+    overflow-x: scroll;
+    background-color: black;
+    border-radius: .5rem;
+    margin: .5rem
+}
+
+.Terminal > .output > li {
+    margin: .5rem;
+    word-wrap: break-word;
+    line-height: 1.25rem;
+}
+
+.Terminal > .output > li > .prefix {
+    color: lime;
+}
+
+.Terminal > form {
+    display: flex
+}
+
+.Terminal > form > .Input {
+    flex-grow: 1
+}
+
+.Terminal > form > * {
+    margin: .5rem
+}

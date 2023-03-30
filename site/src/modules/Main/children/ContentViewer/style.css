@@ -8,5 +8,7 @@
 }
 
 .ContentViewer > .ContentWindow {
+    flex-grow: 1;
+    max-width: calc(100% - 8rem);
     margin: 0 1rem
 }

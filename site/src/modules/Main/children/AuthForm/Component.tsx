@@ -79,21 +79,19 @@ export default function AuthFrom(props: Props) {
             .finally(() => setLoading(false))
     }
 
-    const onLoginChange = (e: FormEvent<HTMLInputElement>) => {
-        const login = e.currentTarget.value
-        const error = formatError(User.validateLogin(login))
+    const onLoginChange = (newLogin: string) => {
+        const error = formatError(User.validateLogin(newLogin))
 
-        setLogin(login)
+        setLogin(newLogin)
         setLoginError(error)
         setLoginChanged(true)
         setCommonError(undefined)
     }
 
-    const onPasswordChange = (e: FormEvent<HTMLInputElement>) => {
-        const password = e.currentTarget.value
-        const error    = formatError(User.validatePassword(password))
+    const onPasswordChange = (newPassword: string) => {
+        const error = formatError(User.validatePassword(newPassword))
 
-        setPassword(password)
+        setPassword(newPassword)
         setPasswordError(error)
         setPasswordChanged(true)
         setCommonError(undefined)

@@ -15,7 +15,7 @@ export interface Props {
 }
 
 export type Type     = "text" | "password"
-export type OnChange = (event: FormEvent<HTMLInputElement>) => void
+export type OnChange = (value: string) => void
 
 export default function Input(props: Props) {
     const { type, invalid, value, onChange, disabled, placeholder, autoFocus } = props
@@ -25,8 +25,17 @@ export default function Input(props: Props) {
     return <input className   = {className}
                   type        = {type}
                   value       = {value}
-                  onChange    = {onChange}
+                  onChange    = {rawOnChange}
                   disabled    = {disabled}
                   placeholder = {placeholder}
                   autoFocus   = {autoFocus} />
+
+    function rawOnChange(event: FormEvent<HTMLInputElement>) {
+        if (!onChange)
+            return
+
+        const value = event.currentTarget.value
+
+        onChange(value)
+    }
 }
