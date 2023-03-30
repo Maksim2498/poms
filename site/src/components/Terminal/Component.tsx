@@ -43,7 +43,7 @@ export default function Terminal(props: Props) {
     function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
 
-        const record = makeInputRecord(input)
+        const record = makeRecord("input", input)
 
         onEnter?.(record)
         pushRecords(record)
@@ -70,7 +70,7 @@ export default function Terminal(props: Props) {
                 const curDate  = cur.time.getDate()
 
                 if (prevDate !== curDate) {
-                    const info = makeInfoRecord(cur.time.toLocaleDateString())
+                    const info = makeRecord("info", cur.time.toLocaleDateString())
                     prepared.push(info)
                 }
 
@@ -99,28 +99,12 @@ export default function Terminal(props: Props) {
     function pushRecords(...newRecords: Record[]) {
         setRecords([...records, ...newRecords])
     }
+}
 
-    function makeInfoRecord(text: string): Record {
-        return makeRecord("info", text)
-    }
-
-    function makeErrorRecord(text: string): Record {
-        return makeRecord("error", text)
-    }
-
-    function makeSuccessRecord(text: string): Record {
-        return makeRecord("success", text)
-    }
-
-    function makeInputRecord(text: string): Record {
-        return makeRecord("input", text)
-    }
-
-    function makeRecord(type: Type, text: string): Record {
-        return {
-            type,
-            text,
-            time: new Date()
-        }
+export function makeRecord(type: Type, text: string): Record {
+    return {
+        type,
+        text,
+        time: new Date()
     }
 }
