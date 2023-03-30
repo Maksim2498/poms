@@ -19,6 +19,7 @@ export interface Record {
 }
 
 export type Type  = "input"
+                  | "output"
                   | "info"
                   | "success"
                   | "error"
@@ -46,7 +47,7 @@ export default function Terminal(props: Props) {
         const record = makeRecord("input", input)
 
         onEnter?.(record)
-        pushRecords(record)
+        pushRecord(record)
         setInput("")
     }
 
@@ -96,8 +97,8 @@ export default function Terminal(props: Props) {
         }
     }
 
-    function pushRecords(...newRecords: Record[]) {
-        setRecords([...records, ...newRecords])
+    function pushRecord(newRecord: Record) {
+        setRecords([...records, newRecord])
     }
 }
 

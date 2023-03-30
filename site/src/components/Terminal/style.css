@@ -45,13 +45,24 @@
     color: firebrick
 }
 
+.Terminal > .output > .info.record > .text {
+    color: gray;
+}
+
+.Terminal > .output > .output.record > .text {
+    color: lightgreen;
+}
+
+.Terminal > .output > .success.record > .time,
+.Terminal > .output > .error.record > .time,
 .Terminal > .output > .info.record > .time {
     display: none
 }
 
+.Terminal > .output > .success.record > .text,
+.Terminal > .output > .error.record > .text,
 .Terminal > .output > .info.record > .text {
     display: block;
-    color: gray;
     text-align: center
 }
 
