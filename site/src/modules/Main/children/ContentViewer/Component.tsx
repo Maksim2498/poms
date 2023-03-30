@@ -97,7 +97,7 @@ export default function ContentViewer() {
             function createProfileContent(): Content {
                 const name       = "Your Profile"
                 const selectName = "Profile"
-                const component  = () => Profile({ user: user!, onTagClick })
+                const component  = () => Profile({ login: user!.login, onTagClick })
 
                 return { name, selectName, component }
             }

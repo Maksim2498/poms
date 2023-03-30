@@ -1,16 +1,16 @@
-import useAsync                  from "hooks/useAsync"
-import User                      from "logic/User"
-import TaggedUserName            from "ui/TaggedUserName/Component"
-import UserIcon                  from "ui/UserIcon/Component"
-import UserOnlineIndicator       from "ui/UserOnlineIndicator/Component"
-import UserTag                   from "ui/UserTag/Component"
-import UserNicknames             from "ui/UserNicknames/Component"
-import Field                     from "ui/Field/Component"
-import Loading                   from "ui/Loading/Component"
-import ErrorText                 from "ui/ErrorText/Component"
+import useAsync                               from "hooks/useAsync"
+import User                                   from "logic/User"
+import TaggedUserName                         from "ui/TaggedUserName/Component"
+import UserIcon                               from "ui/UserIcon/Component"
+import UserOnlineIndicator                    from "ui/UserOnlineIndicator/Component"
+import UserTag                                from "ui/UserTag/Component"
+import UserNicknames                          from "ui/UserNicknames/Component"
+import Field                                  from "ui/Field/Component"
+import Loading                                from "ui/Loading/Component"
+import ErrorText                              from "ui/ErrorText/Component"
 
-import { useContext, useEffect } from "react"
-import { AuthControllerContext } from "pages/App/Component"
+import { useContext, useEffect              } from "react"
+import { AuthControllerContext, UserContext } from "pages/App/Component"
 
 import "./style.css"
 
@@ -30,14 +30,26 @@ export interface LoginProps {
 export type OnTagClick = (newLogin: string, oldLogin: string) => void
 
 export default function Profile(props: Props) {
-    const authController         = useContext(AuthControllerContext)
-    const [user, loading, error] = useAsync(getUser)
-    const { onTagClick         } = props
+    const authController                = useContext(AuthControllerContext)
+    const [contextUser, setContextUser] = useContext(UserContext)
+    const [user,        loading, error] = useAsync(getUser)
+    const { onTagClick                } = props
 
     useEffect(() => {
         if (error != null)
             error != null && console.error(error)
     }, [error])
+
+    useEffect(() => {
+        if (!user || !contextUser)
+            return
+
+        const userLogin        = user.login.trim().toLowerCase()
+        const contextUserLogin = contextUser.login.trim().toLowerCase()
+
+        if (userLogin === contextUserLogin)
+            setContextUser(user)
+    }, [user, contextUser, setContextUser])
 
     if (loading)
         return <div className="loading Profile">

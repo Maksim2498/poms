@@ -89,11 +89,7 @@ export default function App() {
 
     async function updateUser() {
         try {
-            const updatedUser = await user?.updated({
-                updateNicknames: true,
-                authController:  [authInfo, setAuthInfo]
-            })
-
+            const updatedUser = await user?.updated({ authController:  [authInfo, setAuthInfo] })
             setUser(updatedUser)
         } catch (error) {
             console.error(error)
