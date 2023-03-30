@@ -1,7 +1,7 @@
-import Button                             from "ui/Button/Component"
-import Input                              from "ui/Input/Component"
+import Button                                     from "ui/Button/Component"
+import Input                                      from "ui/Input/Component"
 
-import { FormEvent, useState, useEffect } from "react"
+import { FormEvent, useState, useEffect, useRef } from "react"
 
 import "./style.css"
 
@@ -28,12 +28,17 @@ export default function Terminal(props: Props) {
     const { onEnter             } = props
     const [ records, setRecords ] = useState([] as Record[])
     const [ input,   setInput   ] = useState("")
+    const endRef                  = useRef(null as HTMLDivElement | null)
 
-    useEffect(() => setRecords(props.records ?? []), [props.records])
+    useEffect(() => {
+        setRecords(props.records ?? [])
+        endRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, [props.records])
 
     return <div className="Terminal">
         <ol className="output">
             {recordsToElementList(records)}
+            <div className="end" ref={endRef} />
         </ol>
         <form onSubmit={onSubmit}>
             <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} />
