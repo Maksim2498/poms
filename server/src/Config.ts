@@ -141,7 +141,6 @@ export default class Config {
     static readonly DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS = true
 
     static readonly DEFAULT_RCON_ENABLE                  = false
-    static readonly DEFAULT_RCON_HOST                    = "localhost"
     static readonly DEFAULT_RCON_PORT                    = 25575
 
     static readonly DEFAULT_MC_HOST                      = "localhost"
@@ -475,7 +474,7 @@ export default class Config {
     }
 
     get rconHost(): string {
-        return this.read.rcon?.host ?? Config.DEFAULT_RCON_HOST
+        return this.read.rcon?.host ?? this.mcHost
     }
 
     get rconPort(): number {
