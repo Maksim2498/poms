@@ -5,29 +5,32 @@ import { FormEvent, useState } from "react"
 
 import "./style.css"
 
-export const DEFAULT_PREFIX = "⮁ "
-
 export interface Props {
-    prefix?:       string
-    output?:       string[]
+    records?:      Record[]
     input?:        string
     onEnter?:      OnEnter
     printEntered?: boolean
 }
 
-export type OnEnter = (value: string) => void
+export type OnEnter = (record: Record) => void
+
+export interface Record {
+    level: Level
+    time:  Date
+    text:  string
+}
+
+export type Level = "info" | "error"
 
 export default function Terminal(props: Props) {
-    const prefix                    = props.prefix ?? DEFAULT_PREFIX
     const { onEnter, printEntered } = props
-    const [ output,  setOutput    ] = useState(props.output ?? [])
+    const [ records, setRecords   ] = useState(props.records ?? [])
     const [ input,   setInput     ] = useState(props.input  ?? "")
 
     return <div className="Terminal">
         <ul className="output">
-            {output.map((line, index) => <li key={`${index}: ${line}`}>
-                <span className="prefix">{prefix}</span>
-                <span className="value">{line}</span>
+            {records.map((record, index) => <li key={recordToKey(record, index)}>
+                {fmtRecord(record)}
             </li>)}
         </ul>
         <form onSubmit={onSubmit}>
@@ -39,11 +42,33 @@ export default function Terminal(props: Props) {
     function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
 
-        onEnter?.(input)
+        const record = inputToRecrod()
+
+        onEnter?.(record)
 
         if (printEntered)
-            setOutput([...output, input])
+            setRecords([...records, record])
 
         setInput("")
+    }
+
+    function recordToKey(record: Record, index: number = 0): string {
+        return `${index}/${record.time.toISOString()}`
+    }
+
+    function fmtRecord(record: Record): JSX.Element {
+        const { time, level, text } = record
+
+        return <span className={`${level} record`}>
+            [<span className="time">{time.toLocaleString()}</span>] <span className={`${level} level`}>{level}</span>: <span className="text">{text}</span>
+        </span>
+    }
+
+    function inputToRecrod(): Record {
+        return {
+            level: "info",
+            time:  new Date(),
+            text:  input
+        }
     }
 }

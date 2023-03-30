@@ -5,9 +5,7 @@
     height: 100%
 }
 
-.Terminal > .output > li > *,
-.Terminal > form > .Input,
-.Terminal > form > .Button > * {
+.Terminal * {
     font-family: monospace
 }
 
@@ -27,8 +25,9 @@
     line-height: 1.25rem;
 }
 
-.Terminal > .output > li > .prefix {
-    color: lime;
+.Terminal > .output > li > .info.record > .level,
+.Terminal > .output > li > .info.record > .text {
+    color: lime
 }
 
 .Terminal > form {
