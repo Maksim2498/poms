@@ -1,16 +1,27 @@
-import Terminal                  from "components/Terminal/Component"
-import useAsync                  from "hooks/useAsync"
-import Loading                   from "ui/Loading/Component"
-import ErrorText                 from "ui/ErrorText/Component"
+import Terminal                                 from "components/Terminal/Component"
+import useAsync                                 from "hooks/useAsync"
+import Loading                                  from "ui/Loading/Component"
+import ErrorText                                from "ui/ErrorText/Component"
 
-import { useContext, useEffect } from "react"
-import { isConsoleAvailable    } from "./api"
-import { AuthControllerContext } from "pages/App/Component"
+import { useContext, useEffect, createContext } from "react"
+import { AuthControllerContext                } from "pages/App/Component"
+import { Record                               } from "components/Terminal/Component"
+import { isConsoleAvailable                   } from "./api"
 
 import "./style.css"
 
+export const ConsoleContext = createContext([[], defaultSetRecords] as ConsoleContextType)
+
+function defaultSetRecords() {
+    throw new Error("Missing ConsoleContext.Provider")
+}
+
+export type ConsoleContextType = [Record[], SetRecords]
+export type SetRecords         = (newRecords: Record[]) => void
+
 export default function Console() {
     const authController              = useContext(AuthControllerContext)
+    const [records,   setRecords    ] = useContext(ConsoleContext)
     const [available, loading, error] = useAsync(async () => isConsoleAvailable(authController))
 
     useEffect(() => {
@@ -34,6 +45,10 @@ export default function Console() {
         </div>
 
     return <div className="loaded available Console">
-        <Terminal />
+        <Terminal records={records} onEnter={onEnter} />
     </div>
+
+    function onEnter(record: Record) {
+        setRecords([...records, record])
+    }
 }

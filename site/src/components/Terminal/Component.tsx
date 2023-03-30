@@ -1,13 +1,12 @@
-import Button                  from "ui/Button/Component"
-import Input                   from "ui/Input/Component"
+import Button                             from "ui/Button/Component"
+import Input                              from "ui/Input/Component"
 
-import { FormEvent, useState } from "react"
+import { FormEvent, useState, useEffect } from "react"
 
 import "./style.css"
 
 export interface Props {
     records?: Record[]
-    input?:   string
     onEnter?: OnEnter
 }
 
@@ -25,9 +24,11 @@ export type Type  = "input"
                   | "error"
 
 export default function Terminal(props: Props) {
-    const { onEnter               } = props
-    const [ records, setRecords   ] = useState(props.records ?? [])
-    const [ input,   setInput     ] = useState(props.input   ?? "")
+    const { onEnter             } = props
+    const [ records, setRecords ] = useState([] as Record[])
+    const [ input,   setInput   ] = useState("")
+
+    useEffect(() => setRecords(props.records ?? []), [props.records])
 
     return <div className="Terminal">
         <ol className="output">
