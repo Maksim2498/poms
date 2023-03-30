@@ -1,38 +1,38 @@
-import Button       from "ui/Button/Component"
-import Input        from "ui/Input/Component"
+import Button                  from "ui/Button/Component"
+import Input                   from "ui/Input/Component"
 
 import { FormEvent, useState } from "react"
 
 import "./style.css"
 
 export interface Props {
-    records?:      Record[]
-    input?:        string
-    onEnter?:      OnEnter
-    printEntered?: boolean
+    records?: Record[]
+    input?:   string
+    onEnter?: OnEnter
 }
 
 export type OnEnter = (record: Record) => void
 
 export interface Record {
-    level: Level
-    time:  Date
-    text:  string
+    type: Type
+    time: Date
+    text: string
 }
 
-export type Level = "info" | "error"
+export type Type  = "input"
+                  | "info"
+                  | "success"
+                  | "error"
 
 export default function Terminal(props: Props) {
-    const { onEnter, printEntered } = props
+    const { onEnter               } = props
     const [ records, setRecords   ] = useState(props.records ?? [])
-    const [ input,   setInput     ] = useState(props.input  ?? "")
+    const [ input,   setInput     ] = useState(props.input   ?? "")
 
     return <div className="Terminal">
-        <ul className="output">
-            {records.map((record, index) => <li key={recordToKey(record, index)}>
-                {fmtRecord(record)}
-            </li>)}
-        </ul>
+        <ol className="output">
+            {recordsToElementList(records)}
+        </ol>
         <form onSubmit={onSubmit}>
             <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} />
             <Button type="submit">Send</Button>
@@ -42,33 +42,84 @@ export default function Terminal(props: Props) {
     function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
 
-        const record = inputToRecrod()
+        const record = makeInputRecord(input)
 
         onEnter?.(record)
-
-        if (printEntered)
-            setRecords([...records, record])
-
+        pushRecords(record)
         setInput("")
     }
 
-    function recordToKey(record: Record, index: number = 0): string {
-        return `${index}/${record.time.toISOString()}`
+    function recordsToElementList(records: Record[]): JSX.Element[] {
+        const preparedRecords = prepareRecords()
+        const elements        = [] as JSX.Element[]
+
+        for (const [i, record] of preparedRecords.entries()) {
+            const element = recordToElement(record, i)
+            elements.push(element)
+        }
+
+        return elements
+
+        function prepareRecords(): Record[] {
+            const prepared = []   as Record[]
+            let   prev     = null as Record | null
+
+            for (const cur of records) {
+                const prevDate = prev?.time.getDate()
+                const curDate  = cur.time.getDate()
+
+                if (prevDate !== curDate) {
+                    const info = makeInfoRecord(cur.time.toLocaleDateString())
+                    prepared.push(info)
+                }
+
+                prepared.push(cur)
+
+                prev = cur
+            }
+
+            return prepared
+        }
+
+        function recordToElement(record: Record, index: number = 0): JSX.Element {
+            const { time, text, type } = record
+
+            return <li className={`${type} record`} key={recordToKey()}>
+                <span className="time">{time.toLocaleTimeString()}</span>
+                <span className="text">{text}</span>
+            </li>
+
+            function recordToKey(): string {
+                return `${index}/${record.time.toISOString()}`
+            }
+        }
     }
 
-    function fmtRecord(record: Record): JSX.Element {
-        const { time, level, text } = record
-
-        return <span className={`${level} record`}>
-            [<span className="time">{time.toLocaleString()}</span>] <span className={`${level} level`}>{level}</span>: <span className="text">{text}</span>
-        </span>
+    function pushRecords(...newRecords: Record[]) {
+        setRecords([...records, ...newRecords])
     }
 
-    function inputToRecrod(): Record {
+    function makeInfoRecord(text: string): Record {
+        return makeRecord("info", text)
+    }
+
+    function makeErrorRecord(text: string): Record {
+        return makeRecord("error", text)
+    }
+
+    function makeSuccessRecord(text: string): Record {
+        return makeRecord("success", text)
+    }
+
+    function makeInputRecord(text: string): Record {
+        return makeRecord("input", text)
+    }
+
+    function makeRecord(type: Type, text: string): Record {
         return {
-            level: "info",
-            time:  new Date(),
-            text:  input
+            type,
+            text,
+            time: new Date()
         }
     }
 }

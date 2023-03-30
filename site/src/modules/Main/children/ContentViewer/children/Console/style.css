@@ -1,3 +1,10 @@
 .Console {
-    height: 100%;
+    height: 100%
+}
+
+.error.Console,
+.loaded.unavailable.Console {
+    display: flex;
+    justify-content: center;
+    align-items: center
 }

@@ -1,3 +1,5 @@
+/* Common */
+
 .Terminal {
     display: flex;
     flex-direction: column;
@@ -9,6 +11,8 @@
     font-family: monospace
 }
 
+/* Output */
+
 .Terminal > .output {
     list-style: none;
     color: white;
@@ -19,16 +23,39 @@
     margin: .5rem
 }
 
-.Terminal > .output > li {
+.Terminal > .output > .record {
     margin: .5rem;
     word-wrap: break-word;
-    line-height: 1.25rem;
+    line-height: 1.25rem
 }
 
-.Terminal > .output > li > .info.record > .level,
-.Terminal > .output > li > .info.record > .text {
+.Terminal > .output > .record > .time::after {
+    content: " ";
+}
+
+.Terminal > .output > .record > .time {
+    color: gray
+}
+
+.Terminal > .output > .success.record > .text {
     color: lime
 }
+
+.Terminal > .output > .error.record > .text{
+    color: firebrick
+}
+
+.Terminal > .output > .info.record > .time {
+    display: none
+}
+
+.Terminal > .output > .info.record > .text {
+    display: block;
+    color: gray;
+    text-align: center
+}
+
+/* Form */
 
 .Terminal > form {
     display: flex

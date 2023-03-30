@@ -117,11 +117,11 @@ export default class AuthInfo {
                 throw new Error("Missing refresh token")
 
             headers.set("Authorization", this.tokenPair.refresh.id)
-        } else if (!this.allowAnonymAccess) {
-            if (this.tokenPair == null)
+        } else {
+            if (this.tokenPair != null)
+                headers.set("Authorization", this.tokenPair.access.id)
+            else if (!this.allowAnonymAccess)
                 throw new Error("Missing access token")
-
-            headers.set("Authorization", this.tokenPair.access.id)
         }
 
         return headers
