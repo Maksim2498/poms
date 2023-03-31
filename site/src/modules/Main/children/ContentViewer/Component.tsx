@@ -9,7 +9,7 @@ import Server                                  from "./children/ServerViewer/Com
 import Users                                   from "./children/Users/Component"
 import Home                                    from "./children/Home/Component"
 
-import { useContext, useState                } from "react"
+import { useContext                          } from "react"
 import { UserContext, AuthControllerContext  } from "pages/App/Component"
 import { Record                              } from "components/Terminal/Component"
 import { Content                             } from "./children/ContentSelector/Component"
@@ -21,12 +21,12 @@ export default function ContentViewer() {
     const [user                                          ] = useContext(UserContext)
     const [authInfo                                      ] = useContext(AuthControllerContext)
     const contentSelectionList                             = makeContentSelectionList()
-    const [records,      setRecords                      ] = useState([] as Record[])
+    const [records,      setRecords,      recordsRef     ] = useStateRef([] as Record[])
     const [contentStack, setContentStack, contentStackRef] = useStateRef([contentSelectionList[0]])
     const topContent                                       = contentStack[contentStack.length - 1]
     const showBack                                         = contentStack.length > 1
 
-    return <ConsoleContext.Provider value={[records, setRecords]}>
+    return <ConsoleContext.Provider value={[records, setRecords, recordsRef]}>
         <div className="ContentViewer">
             <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
             <ContentWindow content={topContent} showBack={showBack} onBack={onBack} />
