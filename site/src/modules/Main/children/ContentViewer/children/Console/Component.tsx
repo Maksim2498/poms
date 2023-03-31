@@ -85,9 +85,9 @@ export default function Console() {
             const url  = `wss://${host}/ws/console`
 
             try {
-                const newSocket        = new WebSocket(url)
-                let   prevState        = newSocket.readyState
-                let   connectionFailed = false
+                const newSocket          = new WebSocket(url)
+                let   prevState          = newSocket.readyState
+                let   isConnectionFailed = false
 
                 newSocket.onopen = event => {
                     prevState      = newSocket.readyState
@@ -121,14 +121,13 @@ export default function Console() {
                 }
 
                 function handleConnectionFailedError(): boolean {
-                    if (connectionFailed)
+                    if (isConnectionFailed)
                         return true
 
                     if (prevState === WebSocket.CONNECTING) {
-                        pushRecord("error", "Connection failed")
-                        initReconnection()
+                        connectionFailed()
 
-                        connectionFailed = true
+                        isConnectionFailed = true
 
                         return true
                     }
@@ -137,9 +136,14 @@ export default function Console() {
                 }
             } catch (error) {
                 console.error(error)
-                initReconnection()
+                connectionFailed()
             }
         })
+
+        function connectionFailed() {
+            pushRecord("error", "Connection failed")
+            initReconnection()
+        }
 
         function initReconnection() {
             if (!tryReconnect.current)
