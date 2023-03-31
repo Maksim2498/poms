@@ -6,8 +6,9 @@ import { FormEvent, useState, useEffect, useRef } from "react"
 import "./style.css"
 
 export interface Props {
-    records?: Record[]
-    onEnter?: OnEnter
+    disabled?: boolean
+    records?:  Record[]
+    onEnter?:  OnEnter
 }
 
 export type OnEnter = (record: Record) => void
@@ -25,7 +26,7 @@ export type Type  = "input"
                   | "error"
 
 export default function Terminal(props: Props) {
-    const { onEnter             } = props
+    const { onEnter, disabled   } = props
     const [ records, setRecords ] = useState([] as Record[])
     const [ input,   setInput   ] = useState("")
     const endRef                  = useRef(null as HTMLDivElement | null)
@@ -41,8 +42,8 @@ export default function Terminal(props: Props) {
             <div className="end" ref={endRef} />
         </ol>
         <form onSubmit={onSubmit}>
-            <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} />
-            <Button type="submit">Send</Button>
+            <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} disabled={disabled} />
+            <Button type="submit" state={disabled ? "disabled" : "active"}>Send</Button>
         </form>
     </div>
 
