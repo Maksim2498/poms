@@ -475,7 +475,7 @@ export default class Server {
                               + "ON SCHEDULE EVERY 1 DAY "
                               + "DO "
                               +     "DELETE FROM ATokens WHERE id in ("
-                              +         "SELECT atoken_id FROM RTokens WHERE exp_time >= now()"
+                              +         "SELECT atoken_id FROM RTokens WHERE exp_time <= now()"
                               +     ")"
                     
                     this.logger?.debug('Creating event "CleanUp"...')
