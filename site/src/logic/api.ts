@@ -73,8 +73,11 @@ export async function reauth(authController: AuthController): Promise<AuthInfo> 
 
         const json = await response.json()
 
-        if (json.error)
+        if (json.error) {
+            const newAuthInfo = authInfo.withoutTokenPair()
+            setAuthInfo(newAuthInfo)
             throw new LogicError(String(json.error))
+        }
 
         const newTokenPair = TokenPair.fromJson(json)
         const newAuthInfo  = authInfo.withTokenPair(newTokenPair)
