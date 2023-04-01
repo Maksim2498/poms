@@ -71,6 +71,12 @@ export default function Console() {
     </div>
 
     function onEnter(newRecord: Record) {
+        const willSend =  newRecord.type             === "input"
+                       && socket.current?.readyState === WebSocket.OPEN
+
+        if (willSend)
+            socket.current!.send(newRecord.text)
+
         const oldRecords = recordsRef.current ?? []
         const newRecords = [...oldRecords, newRecord]
 
