@@ -385,7 +385,7 @@ export default class Config {
         return this.read.ws?.prefix ?? Config.DEFAULT_WS_PREFXI
     }
 
-    get wsConsoleURL(): string {
+    get wsConsoleUrl(): string {
         return this.read.ws?.console?.url ?? Config.DEFAULT_WS_CONSOLE_URL
     }
 
