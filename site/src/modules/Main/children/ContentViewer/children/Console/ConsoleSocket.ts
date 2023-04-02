@@ -90,8 +90,8 @@ export default class ConsoleSocket extends EventEmitter {
         this.socket.send(message)
     }
 
-    async auth(accessToken: string): Promise<boolean> {
-        Token.checkId(accessToken)
+    async auth(accessTokenId: string): Promise<boolean> {
+        Token.checkId(accessTokenId)
 
         this.checkState(["connected"], "authorize")
         this._state = "authorizing"
@@ -112,7 +112,7 @@ export default class ConsoleSocket extends EventEmitter {
                     reject()
                 }
 
-                this.socket.send(accessToken)
+                this.socket.send(accessTokenId)
             })
 
             this.socket.onmessage = event => this.emit("messagae", event.data)

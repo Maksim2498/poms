@@ -38,7 +38,6 @@ export default function Console() {
     }, [error])
 
     useEffect(() => {
-        console.log(socket.current?.state)
         tryReconnect.current = true
 
         initSocket()
@@ -51,6 +50,9 @@ export default function Console() {
                 clearTimeout(reconnectTimeout.current)
                 pushRecord("info", "Reconnection aborted")
             }
+
+            if (socket.current?.state === "connecting")
+                pushRecord("info", "Connection aborted")
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
@@ -106,23 +108,40 @@ export default function Console() {
             })
 
             newSocket.on("disconnected", () => {
+                pushRecord("info", "Disconnected")
                 socket.current = undefined
+                initReconnect()
                 forceRerender()
             })
 
-
             newSocket.on("authorized", () => {
                 pushRecord("success", "Authorized")
-                socket.current = newSocket
                 forceRerender()
                 resolve()
             })
 
+            newSocket.on("connected", () => {
+                pushRecord("success", "Connected")
+
+                const [authInfo]    = authController
+                const { tokenPair } = authInfo
+
+                if (tokenPair == null) {
+                    pushRecord("error", "Cannot authorize")
+                    newSocket.disconnect()
+                    return
+                }
+
+                const accessTokenId = tokenPair.access.id
+
+                newSocket.auth(accessTokenId)
+            })
+
             newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
             newSocket.on("authorizing",          ()   => pushRecord("info", "Authorizing..."))
-            newSocket.on("connected",            ()   => pushRecord("success", "Connected"))
             newSocket.on("messagae",             text => pushRecord("output", text))
 
+            socket.current = newSocket
         })
 
         function initReconnect() {
