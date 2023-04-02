@@ -38,6 +38,7 @@ export default function Console() {
     }, [error])
 
     useEffect(() => {
+        console.log(socket.current?.state)
         tryReconnect.current = true
 
         initSocket()
@@ -109,7 +110,6 @@ export default function Console() {
                 forceRerender()
             })
 
-            newSocket.on("authorization-failed", () => pushRecord("error", "Authorization failed"))
 
             newSocket.on("authorized", () => {
                 pushRecord("success", "Authorized")
@@ -118,11 +118,10 @@ export default function Console() {
                 resolve()
             })
 
-            newSocket.on("authorizing", () => pushRecord("info", "Authorizing..."))
-
-            newSocket.on("connected", () => pushRecord("success", "Connected"))
-
-            newSocket.on("messagae", text => pushRecord("output", text))
+            newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
+            newSocket.on("authorizing",          ()   => pushRecord("info", "Authorizing..."))
+            newSocket.on("connected",            ()   => pushRecord("success", "Connected"))
+            newSocket.on("messagae",             text => pushRecord("output", text))
 
         })
 
