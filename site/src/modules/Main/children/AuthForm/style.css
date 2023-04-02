@@ -15,7 +15,7 @@
     margin: 1rem
 }
 
-.AuthForm > fieldset > .Error {
+.AuthForm > fieldset > .ErrorText {
     text-align: center;
     font-size: small;
     white-space: pre;
