@@ -21,8 +21,15 @@ export default class ConsoleSocket extends EventEmitter {
         this.socket = new WebSocket(ConsoleSocket.URL)
 
         this.socket.addEventListener("close", () => {
-            if (this._state === "connecting")
-                this.emit("connection-lost")
+            switch (this.state) {
+                case "connecting":
+                    this.emit("connection-lost")
+                    break
+
+                case "authorizing":
+                    this.emit("authorization-failed")
+                    break
+            }
 
             this._state = "disconnected"
 
