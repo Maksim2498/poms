@@ -45,6 +45,13 @@ const CONFIG_JSON_SCHEMA = z.object({
         error500Path:         OPATH,
     }).strict().optional(),
 
+    ws: z.object({
+        prefix:               OURI_PATH,
+        console: z.object({
+            url:              OURI_PATH,
+        }).strict().optional(),
+    }).strict().optional(),
+
     mysql: z.object({
         database:             ODB_NAME,
         host:                 OHOST,
@@ -120,6 +127,9 @@ export default class Config {
     static readonly DEFAULT_HTTP_STATIC_PATH             = this.placehold("<SITE_PATH>/build")
     static readonly DEFAULT_HTTP_ERROR_404_PATH          = this.placehold("<SITE_PATH>/build/404.html")
     static readonly DEFAULT_HTTP_ERROR_500_PATH          = this.placehold("<SITE_PATH>/build/500.html")
+
+    static readonly DEFAULT_WS_PREFXI                    = "/ws"
+    static readonly DEFAULT_WS_CONSOLE_URL               = "/console"
 
     static readonly DEFAULT_MYSQL_DATABASE               = "poms"
     static readonly DEFAULT_MYSQL_HOST                   = "localhost"
@@ -369,6 +379,14 @@ export default class Config {
         const port = this.httpPort
 
         return `http://${host}:${port}/`
+    }
+
+    get wsPrefix(): string {
+        return this.read.ws?.prefix ?? Config.DEFAULT_WS_PREFXI
+    }
+
+    get wsConsoleURL(): string {
+        return this.read.ws?.console?.url ?? Config.DEFAULT_WS_CONSOLE_URL
     }
 
     get mysqlHost() {
