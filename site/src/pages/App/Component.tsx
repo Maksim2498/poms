@@ -7,7 +7,7 @@ import Loading                                from "ui/Loading/Component"
 import AuthInfo                               from "logic/AuthInfo"
 
 import { createContext, useEffect, useState } from "react"
-import { AuthController, reauth                     } from "logic/api"
+import { AuthController, reauth             } from "logic/api"
 
 import "./style.css"
 
@@ -22,9 +22,9 @@ function defaultSetAuthInfo() {
     throw new Error("Missing AuthControllerContext.Provider")
 }
 
-export type UserContextType     = [OptionalUser, SetNullableUser]
-export type SetNullableUser     = (user: OptionalUser) => void
-export type OptionalUser        = User | undefined
+export type UserContextType = [OptionalUser, SetNullableUser]
+export type SetNullableUser = (user: OptionalUser) => void
+export type OptionalUser    = User | undefined
 
 export default function App() {
     const [authInfo,     setAuthInfo    ] = useState(AuthInfo.loadOrDefault())
@@ -33,12 +33,7 @@ export default function App() {
     const [,             authInfoLoading] = useAsync(updateAuthInfo)
     const [,             userLoading    ] = useAsync(updateUser, [authInfo])
 
-    useEffect(() => {
-        if (authInfo.tokenPair == null)
-            setUser(undefined)
-
-        authInfo.save()
-    }, [authInfo])
+    useEffect(() => authInfo.save(), [authInfo])
 
     useEffect(() => {
         if (user == null)
@@ -89,7 +84,13 @@ export default function App() {
 
     async function updateUser() {
         try {
+            if (authInfo.tokenPair == null) {
+                setUser(undefined)
+                return
+            }
+
             const updatedUser = await user?.updated({ authController:  [authInfo, setAuthInfo] })
+
             setUser(updatedUser)
         } catch (error) {
             console.error(error)
