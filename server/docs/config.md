@@ -35,7 +35,7 @@ is considered an error):
 | `http.error404Path`          | Path `string`      | `<SITE_PATH>/build/404.html` | No       | Path to 404-error page                                                             |
 | `http.error500Path`          | Path `string`      | `<SITE_PATH>/build/500.html` | No       | Path to 500-error page                                                             |
 | `ws.prefix`                  | Path `string`      | `"/ws"`                      | No       | WebSocket URL path prefix                                                          |
-| `ws.console.url`             | Path `string`      | `"/console"`                 | No       | WebSocket RCON proxy URL relative to `ws.prefix`                                   |
+| `ws.console.path`            | Path `string`      | `"/console"`                 | No       | WebSocket RCON proxy URL relative to `ws.prefix`                                   |
 | `mysql.database`             | `string`           | `poms`                       | No       | Name of database to use                                                            |
 | `mysql.host`                 | `string`           | `"localhost"`                | No       | MySQL server address                                                               |
 | `mysql.port`                 | Port `number`      | `3306`                       | No       | MySQL server port                                                                  |
