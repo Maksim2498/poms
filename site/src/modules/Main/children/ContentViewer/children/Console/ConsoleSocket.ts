@@ -9,7 +9,7 @@ export type State = "connecting"
                   | "disconnected"
 
 export default class ConsoleSocket extends EventEmitter {
-    static readonly URL = `wss://${window.location.host}/ws/console`
+    static readonly URL = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws/console`
 
     private socket:     WebSocket
     private authorized: boolean = false
