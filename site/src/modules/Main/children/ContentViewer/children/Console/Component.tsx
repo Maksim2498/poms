@@ -41,7 +41,10 @@ export default function Console() {
     useEffect(() => {
         tryReconnect.current = true
 
-        if (socket.current?.state !== "connecting")
+        const willInit =  socket.current       ==  null
+                       || socket.current.state === "disconnected"
+
+        if (willInit)
             initSocket()
         
         return () => {
@@ -84,8 +87,11 @@ export default function Console() {
         const willSend =  newRecord.type        === "input"
                        && socket.current?.state === "authorized"
 
-        if (willSend)
-            socket.current!.send(newRecord.text)
+        if (willSend) {
+            const { text } = newRecord
+            const toSend   = text.replace(/^\s*\/\s*/, "")
+            socket.current!.send(toSend)
+        }
 
         const oldRecords = recordsRef.current ?? []
         const newRecords = [...oldRecords, newRecord]
