@@ -41,7 +41,8 @@ export default function Console() {
     useEffect(() => {
         tryReconnect.current = true
 
-        initSocket()
+        if (socket.current?.state !== "connecting")
+            initSocket()
         
         return () => {
             tryReconnect.current = false
@@ -92,62 +93,59 @@ export default function Console() {
         setRecords(newRecords)
     }
 
-    async function initSocket(): Promise<void> {
-        await new Promise<void>(resolve => {
-            pushRecord("info", "Connecting...")
+    function initSocket() {
+        pushRecord("info", "Connecting...")
 
-            const newSocket = new ConsoleSocket()
+        const newSocket = new ConsoleSocket()
 
-            newSocket.on("connection-lost", () => {
-                pushRecord("error", "Connection lost")
-                initReconnect()
-            })
-
-            newSocket.on("connection-failed", () => {
-                pushRecord("error", "Connection failed")
-                initReconnect()
-            })
-
-            newSocket.on("disconnected", () => {
-                pushRecord("info", "Disconnected")
-                socket.current = undefined
-                initReconnect()
-                forceRerender()
-            })
-
-            newSocket.on("authorized", () => {
-                pushRecord("success", "Authorized")
-                forceRerender()
-                resolve()
-            })
-
-            newSocket.on("connected", () => {
-                pushRecord("success", "Connected")
-
-                const [authInfo]    = authController
-                const { tokenPair } = authInfo
-
-                if (tokenPair == null) {
-                    pushRecord("error", "Cannot authorize")
-                    newSocket.disconnect()
-                    return
-                }
-
-                const accessTokenId = tokenPair.access.id
-
-                newSocket.auth(accessTokenId)
-            })
-
-            newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
-            newSocket.on("authorizing",          ()   => pushRecord("info", "Authorizing..."))
-            newSocket.on("messagae",             text => pushRecord("output", fmtMessage(text)))
-
-            socket.current = newSocket
-
-            function fmtMessage(message: string): string {
-                return motd.toHTML(motd.parse(message))
-            }
+        newSocket.on("connection-lost", () => {
+            pushRecord("error", "Connection lost")
+            initReconnect()
         })
+
+        newSocket.on("connection-failed", () => {
+            pushRecord("error", "Connection failed")
+            initReconnect()
+        })
+
+        newSocket.on("disconnected", () => {
+            pushRecord("info", "Disconnected")
+            socket.current = undefined
+            initReconnect()
+            forceRerender()
+        })
+
+        newSocket.on("authorized", () => {
+            pushRecord("success", "Authorized")
+            forceRerender()
+        })
+
+        newSocket.on("connected", () => {
+            pushRecord("success", "Connected")
+
+            const [authInfo]    = authController
+            const { tokenPair } = authInfo
+
+            if (tokenPair == null) {
+                pushRecord("error", "Cannot authorize")
+                newSocket.disconnect()
+                return
+            }
+
+            const accessTokenId = tokenPair.access.id
+
+            newSocket.auth(accessTokenId)
+        })
+
+        newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
+        newSocket.on("authorizing",          ()   => pushRecord("info", "Authorizing..."))
+        newSocket.on("messagae",             text => pushRecord("output", fmtMessage(text)))
+
+        socket.current = newSocket
+
+        function fmtMessage(message: string): string {
+            return motd.toHTML(motd.parse(message))
+        }
 
         function initReconnect() {
             if (!tryReconnect.current)
