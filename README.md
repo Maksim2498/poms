@@ -136,6 +136,6 @@ The following are some site screenshots.
 
 ![Home](./site/images/screenshots/Home.png)
 ![Server](./site/images/screenshots/Server.png)
-![Users](./site/images/screenshots/Users.png.png)
+![Users](./site/images/screenshots/Users.png)
 ![Profile](./site/images/screenshots/Profile.png)
 ![Console](./site/images/screenshots/Console.png)
