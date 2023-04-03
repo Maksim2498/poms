@@ -6,9 +6,10 @@ import { FormEvent, useState, useEffect, useRef } from "react"
 import "./style.css"
 
 export interface Props {
-    disabled?: boolean
-    records?:  Record[]
-    onEnter?:  OnEnter
+    htmlOutput?: boolean
+    disabled?:   boolean
+    records?:    Record[]
+    onEnter?:    OnEnter
 }
 
 export type OnEnter = (record: Record) => void
@@ -26,10 +27,10 @@ export type Type  = "input"
                   | "error"
 
 export default function Terminal(props: Props) {
-    const { onEnter, disabled   } = props
-    const [ records, setRecords ] = useState([] as Record[])
-    const [ input,   setInput   ] = useState("")
-    const endRef                  = useRef(null as HTMLDivElement | null)
+    const { onEnter, disabled, htmlOutput } = props
+    const [records, setRecords            ] = useState([] as Record[])
+    const [input, setInput                ] = useState("")
+    const endRef                            = useRef(null as HTMLDivElement | null)
 
     useEffect(() => {
         setRecords(props.records ?? [])
@@ -94,7 +95,9 @@ export default function Terminal(props: Props) {
 
             return <li className={`${type} record`} key={recordToKey()}>
                 <span className="time">{time.toLocaleTimeString()}</span>
-                <span className="text">{text}</span>
+                {type === "output" && htmlOutput ? <span className="text" dangerouslySetInnerHTML={{ __html: text }} />
+                                                 : <span className="text">{text}</span>
+                }
             </li>
 
             function recordToKey(): string {

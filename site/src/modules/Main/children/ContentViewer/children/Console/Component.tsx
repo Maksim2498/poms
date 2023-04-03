@@ -1,9 +1,10 @@
+import * as motd                                                   from "minecraft-motd-util"
 import useAsync                                                    from "hooks/useAsync"
 import useForceRerender                                            from "hooks/useForceRerender"
-import ConsoleSocket                                               from "./ConsoleSocket"
 import Terminal                                                    from "components/Terminal/Component"
 import Loading                                                     from "ui/Loading/Component"
 import ErrorText                                                   from "ui/ErrorText/Component"
+import ConsoleSocket                                               from "./ConsoleSocket"
 
 import { useContext, useEffect, createContext, useRef, RefObject } from "react"
 import { AuthControllerContext                                   } from "pages/App/Component"
@@ -75,7 +76,7 @@ export default function Console() {
     const disabled = socket.current?.state !== "authorized"
 
     return <div className="loaded available Console">
-        <Terminal records={records} onEnter={onEnter} disabled={disabled} />
+        <Terminal records={records} onEnter={onEnter} disabled={disabled} htmlOutput={true} />
     </div>
 
     function onEnter(newRecord: Record) {
@@ -139,9 +140,13 @@ export default function Console() {
 
             newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
             newSocket.on("authorizing",          ()   => pushRecord("info", "Authorizing..."))
-            newSocket.on("messagae",             text => pushRecord("output", text))
+            newSocket.on("messagae",             text => pushRecord("output", fmtMessage(text)))
 
             socket.current = newSocket
+
+            function fmtMessage(message: string): string {
+                return motd.toHTML(motd.parse(message))
+            }
         })
 
         function initReconnect() {

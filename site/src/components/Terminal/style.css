@@ -54,6 +54,7 @@
     color: lightgreen;
 }
 
+.Terminal > .output > .output.record > .time,
 .Terminal > .output > .success.record > .time,
 .Terminal > .output > .error.record > .time,
 .Terminal > .output > .info.record > .time {
