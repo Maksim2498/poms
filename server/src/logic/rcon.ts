@@ -3,11 +3,13 @@ import Server           from "Server"
 import EventEmitter     from "events"
 
 import { WebSocket    } from "ws"
+import { Request      } from "express"
 import { RCON as Rcon } from "minecraft-server-util"
 
 export interface CreationOptions {
-    readonly server: Server
-    readonly socket: WebSocket
+    readonly server:  Server
+    readonly socket:  WebSocket
+    readonly request: Request
 }
 
 export interface RconProxyEvents {
@@ -17,30 +19,31 @@ export interface RconProxyEvents {
 export class RconProxy extends    EventEmitter
                        implements RconProxyEvents {
     private readonly socket: WebSocket
-    private readonly rcon:   Rcon
 
     readonly         server: Server
+    readonly         ip:     string
 
     constructor(options: CreationOptions) {
         super()
 
-        const { server, socket } = options
+        const { server, request, socket } = options
 
         if (!server.config.rconAvailable)
             throw new Error("RCON isn't available")
 
-        const rcon = new Rcon()
+        const rcon   = new Rcon()
+        const { ip } = request
 
         this.server = server
         this.socket = socket
-        this.rcon   = rcon
+        this.ip     = ip
 
         const { logger } = server
 
-        logger?.debug("Creating RCON proxy...")
+        logger?.debug(`Creating RCON proxy for client at ${ip}...`)
 
         socket.on("close", () => {
-            logger?.debug("RCON proxy lost connection with a client")
+            logger?.debug(`RCON proxy lost connection with a client at ${ip}`)
             rcon.close()
             this.emit("close")
         })
@@ -90,7 +93,7 @@ export class RconProxy extends    EventEmitter
         })
 
         async function initRcon(this: RconProxy) {
-            logger?.debug("Initializing RCON connection...")
+            logger?.debug(`Initializing RCON connection with ${server.config.rconAddress}...`)
             
             try {
                 await connectRcon()
@@ -144,7 +147,7 @@ export class RconProxy extends    EventEmitter
     close() {
         const { logger } = this.server
 
-        logger?.debug("Closing RCON proxy...")
+        logger?.debug(`Closing RCON proxy for client at ${this.ip}...`)
         this.socket.close() // rcon will be closed via socket "close" event listener
         logger?.debug("Closed")
     }

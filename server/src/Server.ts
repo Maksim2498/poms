@@ -245,8 +245,8 @@ export default class Server {
                     return router
 
                     function setupConsole(this: Server) {
-                        router.ws(path, socket => {
-                            const proxy = new RconProxy({ socket, server: this })
+                        router.ws(path, (socket, request) => {
+                            const proxy = new RconProxy({ socket, request, server: this })
 
                             this.rconProxies.add(proxy)
                             proxy.on("close", () => this.rconProxies.delete(proxy))
