@@ -11,6 +11,7 @@ import { createContext, useEffect, useRef, useState } from "react"
 import { AuthController, reauth                     } from "logic/api"
 import { Record                                     } from "components/Terminal/Component"
 import { ConsoleContext                             } from "modules/Main/children/ContentViewer/children/Console/Component"
+import { ContentStackContext, HOME_CONTENT          } from "modules/Main/children/ContentViewer/Component"
 
 import "./style.css"
 
@@ -30,13 +31,14 @@ export type SetNullableUser = (user: OptionalUser) => void
 export type OptionalUser    = User | undefined
 
 export default function App() {
-    const [records,      setRecords,      recordsRef] = useStateRef([] as Record[])
-    const [authInfo,     setAuthInfo                ] = useState(AuthInfo.loadOrDefault())
-    const [user,         setUser                    ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
-    const oldUser                                     = useRef(undefined as User | undefined)
-    const [showAuthForm, setShowAuthForm            ] = useState(false)
-    const [,             authInfoLoading            ] = useAsync(updateAuthInfo)
-    const [,             userLoading                ] = useAsync(updateUser, [authInfo])
+    const [contentStack, setContentStack, contentStackRef] = useStateRef([HOME_CONTENT])
+    const [records,      setRecords,      recordsRef     ] = useStateRef([] as Record[])
+    const [authInfo,     setAuthInfo                     ] = useState(AuthInfo.loadOrDefault())
+    const [user,         setUser                         ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
+    const oldUser                                          = useRef(undefined as User | undefined)
+    const [showAuthForm, setShowAuthForm                 ] = useState(false)
+    const [,             authInfoLoading                 ] = useAsync(updateAuthInfo)
+    const [,             userLoading                     ] = useAsync(updateUser, [authInfo])
 
     useEffect(() => authInfo.save(), [authInfo])
 
@@ -66,13 +68,15 @@ export default function App() {
 
     return <AuthControllerContext.Provider value={[authInfo, setAuthInfo]}>
         <UserContext.Provider value={[user, setUser]}>
-            <ConsoleContext.Provider value={[records, setRecords, recordsRef]}>
-                <div className="App">
-                    {header()}
-                    {main()}
-                    <Footer />
-                </div>
-            </ConsoleContext.Provider>
+            <ContentStackContext.Provider value={[contentStack, setContentStack, contentStackRef]}>
+                <ConsoleContext.Provider value={[records, setRecords, recordsRef]}>
+                    <div className="App">
+                        {header()}
+                        {main()}
+                        <Footer />
+                    </div>
+                </ConsoleContext.Provider>
+            </ContentStackContext.Provider>
         </UserContext.Provider>
     </AuthControllerContext.Provider>
 

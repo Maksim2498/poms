@@ -21,8 +21,9 @@ function defaultSetRecords() {
     throw new Error("Missing ConsoleContext.Provider")
 }
 
-export type ConsoleContextType = [Record[], SetRecords, RefObject<Record[]>]
+export type ConsoleContextType = [Record[], SetRecords, RecordsRef]
 export type SetRecords         = (newRecords: Record[]) => void
+export type RecordsRef         = RefObject<Record[]>
 
 export default function Console() {
     const authController                      = useContext(AuthControllerContext)
