@@ -32,10 +32,8 @@ export default function Terminal(props: Props) {
     const [input, setInput                ] = useState("")
     const endRef                            = useRef(null as HTMLDivElement | null)
 
-    useEffect(() => {
-        setRecords(props.records ?? [])
-        endRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, [props.records])
+    useEffect(() => { setRecords(props.records ?? []) }, [props.records])
+    useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [records])
 
     return <div className="Terminal">
         <ol className="output">
