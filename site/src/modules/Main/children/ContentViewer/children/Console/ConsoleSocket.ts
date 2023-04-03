@@ -109,7 +109,7 @@ export default class ConsoleSocket extends EventEmitter {
             await new Promise<void>((resolve, reject) => {
                 this.socket.onmessage = event => {
                     const data       = event.data.trim().toLowerCase()
-                    const authorized = data === "true"
+                    const authorized = data === "ok"
 
                     if (authorized) {
                         resolve()

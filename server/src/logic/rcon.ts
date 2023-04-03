@@ -73,7 +73,7 @@ export class RconProxy extends    EventEmitter
                     return
                 }
 
-                socket.send("true", async error => {
+                socket.send("ok", async error => {
                     if (error)
                         return
 
