@@ -1,25 +1,28 @@
-import cp                                                                              from "child_process"
-import open                                                                            from "open"
-import express                                                                         from "express"
-import morgan                                                                          from "morgan"
-import mysql                                                                           from "mysql2/promise"
-import LogicError                                                                      from "./logic/LogicError"
-import TokenExpiredError                                                               from "./logic/TokenExpiredError"
-import Config                                                                          from "./Config"
+import cp                                                                 from "child_process"
+import open                                                               from "open"
+import express                                                            from "express"
+import expressWs                                                          from "express-ws"
+import morgan                                                             from "morgan"
+import mysql                                                              from "mysql2/promise"
+import LogicError                                                         from "./logic/LogicError"
+import TokenExpiredError                                                  from "./logic/TokenExpiredError"
+import Config                                                             from "./Config"
 
-import { promises as fsp                                                             } from "fs"
-import { Server   as HttpServer                                                      } from "http"
-import { dirname                                                                     } from "path"
-import { Application, Router, Request, Response, RequestHandler, ErrorRequestHandler } from "express"
-import { Logger                                                                      } from "winston"
-import { Pool, Connection, FieldPacket, ResultSetHeader                              } from "mysql2/promise"
-import { TokenManager, DefaultTokenManager                                           } from "./logic/token"
-import { UserManager, DefaultUserManager                                             } from "./logic/user"
-import { StatusFetcher, DefaultStatusFetcher                                         } from "./logic/status"
-import { AuthManager, DefaultAuthManager                                             } from "./logic/auth"
-import { NicknameManager, DefaultNicknameManager                                     } from "./logic/nickname"
+import { promises as fsp                                                } from "fs"
+import { Server   as HttpServer                                         } from "http"
+import { dirname                                                        } from "path"
+import { Application                                                    } from "express-ws"
+import { Router, Request, Response, RequestHandler, ErrorRequestHandler } from "express"
+import { Logger                                                         } from "winston"
+import { Pool, Connection, FieldPacket, ResultSetHeader                 } from "mysql2/promise"
+import { TokenManager, DefaultTokenManager                              } from "./logic/token"
+import { UserManager, DefaultUserManager                                } from "./logic/user"
+import { StatusFetcher, DefaultStatusFetcher                            } from "./logic/status"
+import { AuthManager, DefaultAuthManager                                } from "./logic/auth"
+import { NicknameManager, DefaultNicknameManager                        } from "./logic/nickname"
+import { RconProxy                                                      } from "logic/rcon"
 
-import * as api                                                                        from "./api"
+import * as api                                                           from "./api"
 
 export type State = "created"
                   | "initializing"
@@ -27,6 +30,8 @@ export type State = "created"
                   | "starting"
                   | "running"
                   | "stopping"
+
+let ews: any
 
 export default class Server {
     static readonly DEFAULT_ON_STARTED = async (server: Server) => {
@@ -50,7 +55,8 @@ export default class Server {
     private  resolveRunPromise?: () => void
     private  rejectRunPromise?:  (value: any) => void // For critical errors only
 
-    private  _state:             State = "created"
+    private  _state:             State          = "created"
+    private  rconProxies:        Set<RconProxy> = new Set()
 
     readonly config:             Config
     readonly logger?:            Logger
@@ -82,13 +88,16 @@ export default class Server {
         this.pool             = pool
 
         function createApp(this: Server): Application {
-            const app = express()
+            ews = expressWs(express())
+            const app = ews.app as Application
 
+            
             if (logger)
                 setupLogger()
 
             setupStatic()
             setupAPI.call(this)
+            setupWs.call(this)
             setup404()
             setup500()
 
@@ -217,6 +226,32 @@ export default class Server {
                     }
 
                     router.use(handler)
+                }
+            }
+
+            function setupWs(this: Server) {
+                const router = createRouter.call(this)
+                const path   = config.wsPrefix
+
+                app.use(path, router)
+
+                function createRouter(this: Server) {
+                    const router = Router()
+                    const path   = config.wsConsolePath
+
+                    if (config.rconAvailable)
+                        setupConsole.call(this)
+
+                    return router
+
+                    function setupConsole(this: Server) {
+                        router.ws(path, socket => {
+                            const proxy = new RconProxy({ socket, server: this })
+
+                            this.rconProxies.add(proxy)
+                            proxy.on("close", () => this.rconProxies.delete(proxy))
+                        })
+                    }
                 }
             }
 
@@ -552,24 +587,42 @@ export default class Server {
 
         this.logger?.info("Stopping server...")
 
-        this.logger?.debug("Closing all pooled MySQL connections...")
-        await this.pool.end()
-        this.logger?.debug("Closed")
+        await closeMysqlPool.call(this)
+        closeRconProxies.call(this)
+        await closeHttp.call(this)
 
-        this.logger?.debug("Stopping HTTP server")
-        this.httpServer?.close(error => {
-            if (error)
-                this.logger?.error(error)
+        async function closeMysqlPool(this: Server) {
+            this.logger?.debug("Closing all pooled MySQL connections...")
+            await this.pool.end()
+            this.logger?.debug("Closed")
+        }
 
-            this.logger?.debug("Stopped")
-            this.logger?.info("Server is stopped")
+        function closeRconProxies(this: Server) {
+            this.logger?.debug("Closing all RCON proxies...")
 
-            this._state = "initialized"
+            for (const proxy of this.rconProxies)
+                proxy.close()
 
-            this.resolveRunPromise!()
-        })
+            this.logger?.debug("Closed")
+        }
 
-        await this.runPromise
+        async function closeHttp(this: Server) {
+            this.logger?.debug("Closing HTTP server")
+
+            this.httpServer?.close(error => {
+                if (error)
+                    this.logger?.error(error)
+
+                this.logger?.debug("Closed")
+                this.logger?.info("Server is closed")
+
+                this._state = "initialized"
+
+                this.resolveRunPromise!()
+            })
+
+            await this.runPromise
+        }
     }
 
     private checkState(required: State, action: string) {
