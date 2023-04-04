@@ -42,10 +42,7 @@ export default function Console() {
     useEffect(() => {
         tryReconnect.current = true
 
-        const willInit =  socket.current       ==  null
-                       || socket.current.state === "disconnected"
-
-        if (willInit)
+        if (socket.current == null)
             initSocket()
         
         return () => {
