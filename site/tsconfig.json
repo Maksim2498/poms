@@ -21,6 +21,5 @@
             "esnext"
         ]
     },
-    "include": ["src"],
-    "files":   ["./src/types/assets.d.ts"]
+    "include": ["src"]
 }
