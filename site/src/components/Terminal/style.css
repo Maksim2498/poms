@@ -14,11 +14,13 @@
 /* Output */
 
 .Terminal > .output {
-    white-space: pre;
+    word-wrap: break-word;
+    white-space: pre-wrap;
     list-style: none;
-    color: white;
     flex-grow: 1;
-    overflow-x: scroll;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    color: white;
     background-color: black;
     border-radius: .5rem;
     margin: .5rem
@@ -26,7 +28,6 @@
 
 .Terminal > .output > .record {
     margin: .5rem;
-    word-wrap: break-word;
     line-height: 1.25rem
 }
 
