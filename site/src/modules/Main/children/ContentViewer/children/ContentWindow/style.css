@@ -21,7 +21,7 @@
     position: relative;
     background-color: #222;
     border-radius: 0 0 .4rem .4rem;
-    overflow: scroll;
+    overflow-x: scroll;
     width: 100%;
     height: calc(100% - 3.5rem)
 }
