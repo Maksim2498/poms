@@ -19,7 +19,7 @@
     list-style: none;
     flex-grow: 1;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
     color: white;
     background-color: black;
     border-radius: .5rem;
