@@ -85,7 +85,7 @@ export default function App() {
 
         if (newAuthInfo.tokenPair != null)
             try {
-                await reauth([newAuthInfo, setAuthInfo])
+                newAuthInfo = await reauth([newAuthInfo, setAuthInfo])
             } catch (error) {
                 newAuthInfo = newAuthInfo.withoutTokenPair()
                 console.error(error)
