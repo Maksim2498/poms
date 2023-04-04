@@ -1,4 +1,5 @@
 import * as motd                                                   from "minecraft-motd-util"
+import Autolinker                                                  from "autolinker"
 import useAsync                                                    from "hooks/useAsync"
 import useForceRerender                                            from "hooks/useForceRerender"
 import Terminal                                                    from "components/Terminal/Component"
@@ -148,7 +149,11 @@ export default function Console() {
         socket.current = newSocket
 
         function fmtMessage(message: string): string {
-            return motd.toHTML(motd.parse(message))
+            return Autolinker.link(
+                motd.toHTML(
+                    motd.parse(message)
+                )
+            )
         }
 
         function initReconnect() {
