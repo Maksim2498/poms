@@ -9,16 +9,17 @@ import { normalize, join, dirname } from "path"
 import { Logger                   } from "winston"
 import { deepAssign               } from "./util/object"
 
-const OPORT     = z.number().int().nonnegative().max(65535).optional()
-const OSTRING   = z.ostring()
-const NSTRING   = z.string().nullish()
-const OHOST     = z.string().transform(s => s.trim()).optional()
-const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
-const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
-const OBOOLEAN  = z.oboolean()
-const OUINT     = z.number().int().nonnegative().optional()
-const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).optional()
-const ODUR      = z.string().transform((val, ctx) => {
+const OPORT      = z.number().int().nonnegative().max(65535).optional()
+const OSTRING    = z.ostring()
+const NSTRING    = z.string().nullish()
+const OHOST      = z.string().transform(s => s.trim()).optional()
+const OHTTP_HOST = OHOST.nullable()
+const OURI_PATH  = z.string().transform(s => normalize("/" + s)).optional()
+const OPATH      = z.string().transform(s => Config.placehold(normalize(s))).optional()
+const OBOOLEAN   = z.oboolean()
+const OUINT      = z.number().int().nonnegative().optional()
+const ODB_NAME   = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).optional()
+const ODUR       = z.string().transform((val, ctx) => {
     const parsed = parseDuration(val)
 
     if (parsed == null) {
@@ -36,7 +37,7 @@ const ODUR      = z.string().transform((val, ctx) => {
 const CONFIG_JSON_SCHEMA = z.object({
     http: z.object({
         apiPrefix:            OURI_PATH,
-        host:                 OHOST,
+        host:                 OHTTP_HOST,
         port:                 OPORT,
         socketPath:           OPATH,
         serveStatic:          OBOOLEAN,
@@ -121,7 +122,7 @@ export default class Config {
     static readonly DEFAULT_PATH                         = this.FILE_NAME
 
     static readonly DEFAULT_HTTP_API_PREFIX              = "/api"
-    static readonly DEFAULT_HTTP_HOST                    = "localhost"
+    static readonly DEFAULT_HTTP_HOST                    = null
     static readonly DEFAULT_HTTP_PORT                    = 8000
     static readonly DEFAULT_HTTP_SERVE_STATIC            = true
     static readonly DEFAULT_HTTP_STATIC_PATH             = this.placehold("<SITE_PATH>/build")
@@ -332,7 +333,7 @@ export default class Config {
         return this.read.http?.apiPrefix ?? Config.DEFAULT_HTTP_API_PREFIX
     }
 
-    get httpHost(): string {
+    get httpHost(): string | null {
         return this.read.http?.host ?? Config.DEFAULT_HTTP_HOST
     }
 
@@ -363,7 +364,7 @@ export default class Config {
         if (socketPath != null)
             return `http://unix:${socketPath}${prefix}/`
 
-        const host = this.httpHost
+        const host = this.httpHost ?? "localhost"
         const port = this.httpPort
 
         return `http://${host}:${port}${prefix}/`
@@ -375,7 +376,7 @@ export default class Config {
         if (socketPath != null)
             return `http://unix:${socketPath}/`
 
-        const host = this.httpHost
+        const host = this.httpHost ?? "localhost"
         const port = this.httpPort
 
         return `http://${host}:${port}/`

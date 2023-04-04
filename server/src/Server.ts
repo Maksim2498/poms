@@ -575,8 +575,20 @@ export default class Server {
                     resolve()
                 }
 
-                this.httpServer = socketPath != null ? this.app.listen(socketPath, listening)
-                                                     : this.app.listen(this.config.httpPort, this.config.httpHost, listening)
+                if (socketPath != null) {
+                    this.httpServer = this.app.listen(socketPath, listening)
+                    return
+                }
+
+                const host = this.config.httpHost
+                const port = this.config.httpPort
+
+                if (host != null) {
+                    this.httpServer = this.app.listen(port, host, listening)
+                    return
+                }
+
+                this.httpServer = this.app.listen(port, listening)
             })
         }
     }

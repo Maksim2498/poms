@@ -27,7 +27,7 @@ is considered an error):
 | Field Path                   | Type               | Default Value                | Required | Description                                                                        |
 |------------------------------|--------------------|------------------------------|----------|------------------------------------------------------------------------------------|
 | `http.apiPrefix`             | Path `string`      | `"/api"`                     | No       | HTTP path prefix of all API-requests                                               |
-| `http.host`                  | `string`           | `"localhost"`                | No       | HTTP server address                                                                |
+| `http.host`                  | `string` or 'null' | `null'                       | No       | HTTP server address                                                                |
 | `http.port`                  | Port `number`      | `8000`                       | No       | HTTP server port                                                                   |
 | `http.socketPath`            | Path `string`      | -                            | No       | HTTP server Unix-socket path. When used `api.port` and `api.host` is ignored       |
 | `http.serveStatic`           | `boolean`          | `true`                       | No       | If `true` HTTP server will serve static content from `http.staticPath`             |
