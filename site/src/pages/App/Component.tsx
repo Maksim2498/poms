@@ -35,23 +35,17 @@ export default function App() {
     const [records,      setRecords,      recordsRef     ] = useStateRef([] as Record[])
     const [authInfo,     setAuthInfo                     ] = useState(AuthInfo.loadOrDefault())
     const [user,         setUser                         ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
-    const oldUser                                          = useRef(undefined as User | undefined)
     const [showAuthForm, setShowAuthForm                 ] = useState(false)
     const [,             authInfoLoading                 ] = useAsync(updateAuthInfo)
     const [,             userLoading                     ] = useAsync(updateUser, [authInfo])
+    const oldUser                                          = useRef(undefined as User | undefined)
 
     useEffect(() => authInfo.save(), [authInfo])
 
     useEffect(() => {
-        if (user == null)
-            User.remove()
-        else
-            user.save()
+        User.save(user)
 
-        const userLogin    = user?.login.trim().toLowerCase()
-        const oldUserLogin = oldUser.current?.login.trim().toLowerCase()
-
-        if (userLogin !== oldUserLogin)
+        if (!User.areLoginsEqual(user?.login, oldUser.current?.login))
             setRecords([])
 
         oldUser.current = user
@@ -94,12 +88,10 @@ export default function App() {
                 await reauth([newAuthInfo, setAuthInfo])
             } catch (error) {
                 newAuthInfo = newAuthInfo.withoutTokenPair()
-
-                setAuthInfo(newAuthInfo)
-                setUser(undefined)
-
                 console.error(error)
             }
+
+        setAuthInfo(newAuthInfo)
     }
 
     async function updateUser() {
@@ -109,7 +101,7 @@ export default function App() {
                 return
             }
 
-            const updatedUser = await user?.updated({ authController:  [authInfo, setAuthInfo] })
+            const updatedUser = await user?.updated({ authController: [authInfo, setAuthInfo] })
 
             setUser(updatedUser)
         } catch (error) {

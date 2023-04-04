@@ -125,10 +125,8 @@ export default function ContentViewer() {
         }
 
         function onTagClick(newLogin: string, oldLogin: string) {
-            if (oldLogin.toLocaleLowerCase() === newLogin.toLocaleLowerCase())
-                return
-
-            pushUserContent(newLogin)
+            if (!User.areLoginsEqual(newLogin, oldLogin))
+                pushUserContent(newLogin)
         }
     }
 

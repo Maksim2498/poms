@@ -115,6 +115,13 @@ export default class User {
         Cookies.remove(this.LOGIN_COOKIE_NAME, { sameSite: "strict" })
     }
 
+    static save(user: User | null | undefined) {
+        if (user == null)
+            User.remove()
+        else
+            user.save()
+    }
+
     static load(): User {
         const user = this.safeLoad()
 
@@ -136,6 +143,13 @@ export default class User {
         }
 
         return new User({ login })
+    }
+
+    static areLoginsEqual(lhs: string | undefined | null, rhs: string | undefined | null): boolean {
+        lhs = lhs?.trim().toLowerCase()
+        rhs = rhs?.trim().toLowerCase()
+
+        return lhs === rhs
     }
 
     readonly login:      string
