@@ -9,7 +9,7 @@ import ConsoleSocket                                               from "./Conso
 
 import { useContext, useEffect, createContext, useRef, RefObject } from "react"
 import { AuthControllerContext                                   } from "pages/App/Component"
-import { Record, makeRecord, Type                                } from "components/Terminal/Component"
+import { Record, makeRecord, RecordType                          } from "components/Terminal/Component"
 import { isConsoleAvailable                                      } from "./api"
 
 import "./style.css"
@@ -169,7 +169,7 @@ export default function Console() {
         }
     }
 
-    function pushRecord(type: Type, text: string) {
+    function pushRecord(type: RecordType, text: string) {
         const newRecord  = makeRecord(type, text)
         const oldRecords = recordsRef.current ?? []
         const newRecords = [...oldRecords, newRecord]

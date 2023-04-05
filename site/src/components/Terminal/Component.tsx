@@ -9,22 +9,22 @@ export interface Props {
     htmlOutput?: boolean
     disabled?:   boolean
     records?:    Record[]
-    onEnter?:    OnEnter
+    onEnter?:    OnRecordEnter
 }
 
-export type OnEnter = (record: Record) => void
+export type OnRecordEnter = (record: Record) => void
 
 export interface Record {
-    type: Type
+    type: RecordType
     time: Date
     text: string
 }
 
-export type Type  = "input"
-                  | "output"
-                  | "info"
-                  | "success"
-                  | "error"
+export type RecordType  = "input"
+                        | "output"
+                        | "info"
+                        | "success"
+                        | "error"
 
 export default function Terminal(props: Props) {
     const { onEnter, disabled, htmlOutput } = props
@@ -109,7 +109,7 @@ export default function Terminal(props: Props) {
     }
 }
 
-export function makeRecord(type: Type, text: string): Record {
+export function makeRecord(type: RecordType, text: string): Record {
     return {
         type,
         text,
