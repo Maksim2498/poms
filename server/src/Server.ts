@@ -31,8 +31,6 @@ export type State = "created"
                   | "running"
                   | "stopping"
 
-let ews: any
-
 export default class Server {
     static readonly DEFAULT_ON_STARTED = async (server: Server) => {
         const config = server.config
