@@ -1,12 +1,12 @@
-import { OnClick } from "ui/Button/Component"
-
 import "./style.css"
 
 export interface Props {
-    onClick?:  OnClick
+    onClick?:  OnIconButtonClick
     children?: string
     src:       string
 }
+
+export type OnIconButtonClick = () => void
 
 export default function IconButton(props: Props) {
     const { onClick, children, src } = props

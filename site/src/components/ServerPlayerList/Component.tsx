@@ -7,12 +7,12 @@ import ErrorText                 from "ui/ErrorText/Component"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
-import { OnPlayerClick         } from "ui/PlayerCard/Component"
+import { OnPlayerCardClick         } from "ui/PlayerCard/Component"
 
 import "./style.css"
 
 export interface Props {
-    onPlayerClick?: OnPlayerClick
+    onPlayerClick?: OnPlayerCardClick
     server:         Server
 }
 

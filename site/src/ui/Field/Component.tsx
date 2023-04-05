@@ -9,7 +9,7 @@ export default function Field(props: Props) {
     const { label, children } = props
 
     return <div className="Field">
-        <div className="label">{label}: </div>
-        <div className="value">{children}</div>
+        <span className="label">{label}: </span>
+        <span className="value">{children}</span>
     </div>
 }

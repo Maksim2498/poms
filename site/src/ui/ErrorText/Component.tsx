@@ -7,7 +7,7 @@ export interface Props {
 export default function ErrorText(props: Props) {
     const { children } = props
 
-    if (children == null)
+    if (!children)
         return null
 
     return <div className="ErrorText">

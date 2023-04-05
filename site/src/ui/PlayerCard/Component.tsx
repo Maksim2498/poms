@@ -5,11 +5,11 @@ import TaggedUserName from "ui/TaggedUserName/Component"
 import "./style.css"
 
 export interface Props {
-    onClick?: OnPlayerClick
+    onClick?: OnPlayerCardClick
     player:   Player
 }
 
-export type OnPlayerClick = (player: Player) => void
+export type OnPlayerCardClick = (player: Player) => void
 
 export default function PlayerCard(props: Props) {
     const { player, onClick  } = props

@@ -1,10 +1,10 @@
-import IconButton  from "ui/IconButton/Component"
-import iconPath    from "./icon.svg"
+import IconButton            from "ui/IconButton/Component"
+import iconPath              from "./icon.svg"
 
-import { OnClick } from "ui/Button/Component"
+import { OnIconButtonClick } from "ui/IconButton/Component"
 
 export interface Props {
-    onClick?: OnClick
+    onClick?: OnIconButtonClick
 }
 
 export default function EditButton(props: Props) {

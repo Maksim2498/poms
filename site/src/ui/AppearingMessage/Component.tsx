@@ -26,7 +26,8 @@ export default function AppearingMessage(props: Props) {
     const [message, setMessage] = useState("")
 
     useEffect(() => {
-        setTimeout(() => setDoTick(true), delay)
+        const timeout = window.setTimeout(() => setDoTick(true), delay)
+        return () => clearTimeout(timeout)
     }, [delay])
 
     useEffect(() => {

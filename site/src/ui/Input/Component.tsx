@@ -5,17 +5,17 @@ import "./styles.css"
 export const DEFAULT_TYPE = "text"
 
 export interface Props {
-    type?:        Type
+    type?:        InputType
     invalid?:     boolean
     value?:       string
-    onChange?:    OnChange
+    onChange?:    OnInputChange
     disabled?:    boolean
     placeholder?: string
     autoFocus?:   boolean
 }
 
-export type Type     = "text" | "password"
-export type OnChange = (value: string) => void
+export type InputType     = "text" | "password"
+export type OnInputChange = (value: string) => void
 
 export default function Input(props: Props) {
     const { type, invalid, value, onChange, disabled, placeholder, autoFocus } = props

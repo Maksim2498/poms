@@ -1,4 +1,4 @@
-import Loading from "ui/Loading/Component"
+import Loading                 from "ui/Loading/Component"
 
 import { useEffect, useState } from "react"
 
@@ -8,15 +8,15 @@ export const DEFAULT_TYPE  = "regular"
 export const DEFAULT_STATE = "active"
 
 export interface Props {
-    type?:     Type
-    state?:    State
-    onClick?:  OnClick
+    type?:     ButtonType
+    state?:    ButtonState
+    onClick?:  OnButtonClick
     children?: any
 }
 
-export type Type    = "regular" | "submit"   | "cancel"
-export type State   = "active"  | "disabled" | "loading"
-export type OnClick = () => void | Promise<any>
+export type ButtonType    = "regular" | "submit"   | "cancel"
+export type ButtonState   = "active"  | "disabled" | "loading"
+export type OnButtonClick = () => void | Promise<any>
 
 export default function Button(props: Props) {
     const type  = props.type  ?? DEFAULT_TYPE

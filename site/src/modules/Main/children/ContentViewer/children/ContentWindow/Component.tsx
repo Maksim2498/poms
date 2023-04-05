@@ -1,16 +1,16 @@
 import BackButton  from "ui/BackButton/Component"
 import EditButton  from "ui/EditButton/Component"
 
-import { OnClick } from "ui/Button/Component"
+import { OnButtonClick } from "ui/Button/Component"
 import { Content } from "../ContentSelector/Component"
 
 import "./style.css"
 
 export interface Props {
     showBack?: boolean
-    onBack?:   OnClick
+    onBack?:   OnButtonClick
     showEdit?: boolean
-    onEdit?:   OnClick
+    onEdit?:   OnButtonClick
     content:   Content
 }
 

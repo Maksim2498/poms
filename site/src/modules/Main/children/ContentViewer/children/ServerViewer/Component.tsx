@@ -9,12 +9,12 @@ import ServerPlayerList          from "components/ServerPlayerList/Component"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
-import { OnPlayerClick         } from "ui/PlayerCard/Component"
+import { OnPlayerCardClick         } from "ui/PlayerCard/Component"
 
 import "./style.css"
 
 export interface Props {
-    onPlayerClick?: OnPlayerClick
+    onPlayerClick?: OnPlayerCardClick
 }
 
 export default function ServerViewer(props: Props) {
