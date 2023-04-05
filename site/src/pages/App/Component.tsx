@@ -10,7 +10,7 @@ import AuthInfo                                       from "logic/AuthInfo"
 import { createContext, useEffect, useRef, useState } from "react"
 import { AuthController, reauth                     } from "logic/api"
 import { Record                                     } from "components/Terminal/Component"
-import { ConsoleContext                             } from "modules/Main/children/ContentViewer/children/Console/Component"
+import { TerminalContext                            } from "components/Terminal/Component"
 import { ContentStackContext, HOME_CONTENT          } from "modules/Main/children/ContentViewer/Component"
 
 import "./style.css"
@@ -63,13 +63,13 @@ export default function App() {
     return <AuthControllerContext.Provider value={[authInfo, setAuthInfo]}>
         <UserContext.Provider value={[user, setUser]}>
             <ContentStackContext.Provider value={[contentStack, setContentStack, contentStackRef]}>
-                <ConsoleContext.Provider value={[records, setRecords, recordsRef]}>
+                <TerminalContext.Provider value={[records, setRecords, recordsRef]}>
                     <div className="App">
                         {header()}
                         {main()}
                         <Footer />
                     </div>
-                </ConsoleContext.Provider>
+                </TerminalContext.Provider>
             </ContentStackContext.Provider>
         </UserContext.Provider>
     </AuthControllerContext.Provider>

@@ -7,28 +7,18 @@ import Loading                                                     from "ui/Load
 import ErrorText                                                   from "ui/ErrorText/Component"
 import ConsoleSocket                                               from "./ConsoleSocket"
 
-import { useContext, useEffect, createContext, useRef, RefObject } from "react"
+import { useContext, useEffect, useRef } from "react"
 import { AuthControllerContext                                   } from "pages/App/Component"
-import { Record, makeRecord, RecordType                          } from "components/Terminal/Component"
+import { Record, makeRecord, RecordType, TerminalContext         } from "components/Terminal/Component"
 import { isConsoleAvailable                                      } from "./api"
 
 import "./style.css"
 
 export const RECONNECT_INTERVAL = 5
 
-export const ConsoleContext = createContext([[], defaultSetRecords, { current: null }] as ConsoleContextType)
-
-function defaultSetRecords() {
-    throw new Error("Missing ConsoleContext.Provider")
-}
-
-export type ConsoleContextType = [Record[], SetRecords, RecordsRef]
-export type SetRecords         = (newRecords: Record[]) => void
-export type RecordsRef         = RefObject<Record[]>
-
 export default function Console() {
     const authController                      = useContext(AuthControllerContext)
-    const [records,   setRecords, recordsRef] = useContext(ConsoleContext)
+    const [,          setRecords, recordsRef] = useContext(TerminalContext)
     const [available, loading,    error     ] = useAsync(async () => isConsoleAvailable(authController))
     const forceRerender                       = useForceRerender()
     const socket                              = useRef(undefined as ConsoleSocket | undefined)
@@ -79,7 +69,7 @@ export default function Console() {
     const disabled = socket.current?.state !== "authorized"
 
     return <div className="loaded available Console">
-        <Terminal records={records} onEnter={onEnter} disabled={disabled} htmlOutput={true} />
+        <Terminal onEnter={onEnter} disabled={disabled} htmlOutput={true} />
     </div>
 
     function onEnter(newRecord: Record) {

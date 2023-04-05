@@ -1,14 +1,24 @@
-import Button                                     from "ui/Button/Component"
-import Input                                      from "ui/Input/Component"
+import ReadonlyRefObject                                                     from "types/ReadonlyRefObject"
+import Button                                                                from "ui/Button/Component"
+import Input                                                                 from "ui/Input/Component"
 
-import { FormEvent, useState, useEffect, useRef } from "react"
+import { FormEvent, useState, useEffect, useRef, useContext, createContext } from "react"
 
 import "./style.css"
+
+export const TerminalContext = createContext([[], defaultSetRecords, { current: []}] as TerminalContextType)
+
+function defaultSetRecords() {
+    throw new Error("Missing TerminalContext.Provider")
+}
+
+export type TerminalContextType = [Record[], SetRecords, RecordsRef]
+export type SetRecords          = (newRecords: Record[]) => void
+export type RecordsRef          = ReadonlyRefObject<Record[]>
 
 export interface Props {
     htmlOutput?: boolean
     disabled?:   boolean
-    records?:    Record[]
     onEnter?:    OnRecordEnter
 }
 
@@ -28,11 +38,10 @@ export type RecordType  = "input"
 
 export default function Terminal(props: Props) {
     const { onEnter, disabled, htmlOutput } = props
-    const [records, setRecords            ] = useState([] as Record[])
-    const [input, setInput                ] = useState("")
+    const [ input,   setInput             ] = useState("")
+    const [ records,                      ] = useContext(TerminalContext)
     const endRef                            = useRef(null as HTMLDivElement | null)
 
-    useEffect(() => { setRecords(props.records ?? []) }, [props.records])
     useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [records])
 
     return <div className="Terminal">
@@ -48,11 +57,7 @@ export default function Terminal(props: Props) {
 
     function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
-
-        const record = makeRecord("input", input)
-
-        onEnter?.(record)
-        pushRecord(record)
+        onEnter?.(makeRecord("input", input))
         setInput("")
     }
 
@@ -93,19 +98,20 @@ export default function Terminal(props: Props) {
 
             return <li className={`${type} record`} key={recordToKey()}>
                 <span className="time">{time.toLocaleTimeString()}</span>
-                {type === "output" && htmlOutput ? <span className="text" dangerouslySetInnerHTML={{ __html: text }} />
-                                                 : <span className="text">{text}</span>
-                }
+                {makeText()}
             </li>
 
             function recordToKey(): string {
                 return `${index}/${record.time.toISOString()}`
             }
-        }
-    }
 
-    function pushRecord(newRecord: Record) {
-        setRecords([...records, newRecord])
+            function makeText() {
+                if (type === "output" && htmlOutput)
+                    return <span className="text" dangerouslySetInnerHTML={{ __html: text }} />
+
+                return <span className="text">{text}</span>
+            }
+        }
     }
 }
 
