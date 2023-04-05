@@ -88,9 +88,7 @@ export default class Server {
         this.pool             = pool
 
         function createApp(this: Server): Application {
-            ews = expressWs(express())
-            const app = ews.app as Application
-
+            const app = expressWs(express()).app as Application
             
             if (logger)
                 setupLogger()
