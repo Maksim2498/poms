@@ -12,17 +12,44 @@ export interface Props {
     disabled?:    boolean
     placeholder?: string
     autoFocus?:   boolean
+    onKeyDown?:   OnInputKeyEvent
+    onKeyUp?:     OnInputKeyEvent
 }
 
-export type InputType     = "text" | "password"
-export type OnInputChange = (value: string) => void
+export type InputType       = "text" | "password"
+export type OnInputChange   = (value: string) => void
+export type OnInputKeyEvent = (event: InputKeyEvent) => void
+
+export interface InputKeyEvent {
+    altKey:   boolean;
+    ctrlKey:  boolean;
+    code:     string;
+    key:      string;
+    locale:   string;
+    location: number;
+    metaKey:  boolean;
+    repeat:   boolean;
+    shiftKey: boolean;
+}
 
 export default function Input(props: Props) {
-    const { type, invalid, value, onChange, disabled, placeholder, autoFocus } = props
+    const {
+        type,
+        invalid,
+        value,
+        onChange,
+        disabled,
+        placeholder,
+        autoFocus,
+        onKeyDown,
+        onKeyUp
+    } = props
 
     const className = invalid ? "error Input" : "Input"
 
     return <input className   = {className}
+                  onKeyDown   = {onKeyDown}
+                  onKeyUp     = {onKeyUp}
                   type        = {type}
                   value       = {value}
                   onChange    = {rawOnChange}
