@@ -3,6 +3,7 @@ import Button                                                                fro
 import Input                                                                 from "ui/Input/Component"
 
 import { FormEvent, useState, useEffect, useRef, useContext, createContext } from "react"
+import { InputKeyEvent                                                     } from "ui/Input/Component"
 
 import "./style.css"
 
@@ -40,26 +41,74 @@ export default function Terminal(props: Props) {
     const { onEnter, disabled, htmlOutput } = props
     const [ input,   setInput             ] = useState("")
     const [ records,                      ] = useContext(TerminalContext)
-    const endRef                            = useRef(null as HTMLDivElement | null)
+    const historyIndex                      = useRef(null as number         | null)
+    const end                               = useRef(null as HTMLDivElement | null)
 
-    useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [records])
+    useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [records])
 
     return <div className="Terminal">
         <ol className="output">
             {recordsToElementList(records)}
-            <div className="end" ref={endRef} />
+            <div className="end" ref={end} />
         </ol>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} onKeyDown={onKeyDown}>
             <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} disabled={disabled} />
             <Button type="submit" state={disabled ? "disabled" : "active"}>Send</Button>
         </form>
     </div>
 
-    function onSubmit(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault()
+    function onSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        clearHistoryIndex()
         onEnter?.(makeRecord("input", input))
         setInput("")
     }
+
+    function onKeyDown(event: InputKeyEvent) {
+        switch (event.code) {
+            case "ArrowUp":
+                stepHistoryBackward()
+                break
+
+            case "ArrowDown":
+                stepHistoryForward()
+        }
+    }
+
+    function clearHistoryIndex() {
+        historyIndex.current = null
+    }
+
+    function stepHistoryForward() {
+        if (records.length === 0 || historyIndex.current == null)
+            return
+
+        for (let index = historyIndex.current + 1; index < records.length; ++index) {
+            const { type, text } = records[index]
+
+            if (type === "input") {
+                historyIndex.current = index
+                setInput(text)
+                break
+            }
+        }
+    }
+
+    function stepHistoryBackward() {
+        if (records.length === 0)
+            return
+
+        for (let index = (historyIndex.current ?? records.length) - 1; index > 0; --index) {
+            const { type, text } = records[index]
+
+            if (type === "input") {
+                historyIndex.current = index
+                setInput(text)
+                break
+            }
+        }
+    }
+
 
     function recordsToElementList(records: Record[]): JSX.Element[] {
         const preparedRecords = prepareRecords()
