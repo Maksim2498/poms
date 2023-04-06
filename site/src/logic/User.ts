@@ -22,6 +22,13 @@ export interface UpdatedOptions {
     authController:   AuthController
 }
 
+export interface MakeIconOptions {
+    login:   string
+    name?:   string
+    width?:  number
+    height?: number
+}
+
 export default class User {
     static readonly JSON_SCHEMA = z.object({
         login:     z.string(),
@@ -152,25 +159,86 @@ export default class User {
         return lhs === rhs
     }
 
+    static readonly DEFAULT_ICON_WIDTH  = 1024
+    static readonly DEFAULT_ICON_HEIGHT = 1024
+
+    static renderDefaultIcon(options: MakeIconOptions): string {
+        const FONT_SIZE_SCALE_FACTOR = .8
+
+        const name   = options.name   ?? options.login
+        const width  = options.width  ?? this.DEFAULT_ICON_WIDTH
+        const height = options.height ?? this.DEFAULT_ICON_HEIGHT
+        const canvas = document.createElement("canvas")
+
+        canvas.width  = width
+        canvas.height = height
+
+        const context = canvas.getContext("2d")
+
+        if (context == null)
+            throw new Error("Canvas is not supported")
+
+        const text         = makeIconText()
+        const initFontSize = width
+
+        context.font = `${width}px sans-serif`
+
+        const metrics  = context.measureText(text)
+        const fontSize = FONT_SIZE_SCALE_FACTOR * Math.min(width * initFontSize / metrics.width, height)
+
+        context.font         = `${fontSize}px sans-serif`
+        context.textBaseline = "middle"
+        context.textAlign    = "center"
+        context.fillStyle    = "white"
+
+        context.fillText(text, width / 2, height / 2)
+
+        const dataUrl = canvas.toDataURL("image/png")
+
+        canvas.remove()
+
+        return dataUrl
+
+        function makeIconText(): string {
+            const splits = name.split(/\s+/)
+
+            if (splits.length === 1)
+                return splits[0][0].toUpperCase()
+
+            return splits[0][0].toUpperCase()
+                 + splits[1][0].toUpperCase()
+        }
+    }
+
     readonly login:      string
     readonly name?:      string
     readonly nicknames:  string[]
     readonly isAdmin:    boolean
     readonly isOnline:   boolean
+    readonly icon:       string
     readonly reg:        {
         readonly time:   Date
         readonly login?: string
     }
 
     constructor(options: CreationOptions) {
-        this.login     = options.login
-        this.name      = options.name      ?? undefined
-        this.nicknames = options.nicknames ?? []
-        this.isAdmin   = options.isAdmin   ?? false
-        this.isOnline  = options.isOnline  ?? false
-        this.reg       =  {
-            time:  options.reg?.time       ?? new Date(),
-            login: options.reg?.login      ?? undefined
+        const { login } = options
+        const name      = options.name       ?? undefined
+        const nicknames = options.nicknames  ?? []
+        const isAdmin   = options.isAdmin    ?? false
+        const isOnline  = options.isOnline   ?? false
+        const regTime   = options.reg?.time  ?? new Date()
+        const regLogin  = options.reg?.login ?? undefined
+
+        this.login     = login
+        this.name      = name
+        this.nicknames = nicknames
+        this.isAdmin   = isAdmin
+        this.isOnline  = isOnline
+        this.icon      = User.renderDefaultIcon({ login, name })
+        this.reg       = {
+            time:  regTime,
+            login: regLogin
         }
     }
 

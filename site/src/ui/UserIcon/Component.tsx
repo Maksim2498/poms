@@ -16,7 +16,7 @@ export default function UserIcon(props: Props) {
                                             : "regular UserIcon"
 
     return <img className = {className}
-                src       = {defaultIconSrc}
+                src       = {user?.icon ?? defaultIconSrc}
                 alt       = "User profile icon"
                 onClick   = {() => onClick?.(user)} />
 }
