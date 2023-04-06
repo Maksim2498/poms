@@ -41,8 +41,9 @@ export default function Terminal(props: Props) {
     const { onEnter, disabled, htmlOutput } = props
     const [ input,   setInput             ] = useState("")
     const [ records,                      ] = useContext(TerminalContext)
-    const historyIndex                      = useRef(null as number         | null)
-    const end                               = useRef(null as HTMLDivElement | null)
+    const historyIndex                      = useRef(null as number           | null)
+    const end                               = useRef(null as HTMLDivElement   | null)
+    const inputElement                      = useRef(null as HTMLInputElement | null)
 
     useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [records])
 
@@ -52,7 +53,7 @@ export default function Terminal(props: Props) {
             <div className="end" ref={end} />
         </ol>
         <form onSubmit={onSubmit} onKeyDown={onKeyDown}>
-            <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} disabled={disabled} />
+            <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} disabled={disabled} ref={inputElement} />
             <Button type="submit" state={disabled ? "disabled" : "active"}>Send</Button>
         </form>
     </div>
@@ -67,11 +68,14 @@ export default function Terminal(props: Props) {
     function onKeyDown(event: InputKeyEvent) {
         switch (event.code) {
             case "ArrowUp":
+                event.preventDefault()
                 stepHistoryBackward()
                 break
 
             case "ArrowDown":
+                event.preventDefault()
                 stepHistoryForward()
+                break
         }
     }
 
