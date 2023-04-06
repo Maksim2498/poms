@@ -21,7 +21,8 @@
     position: relative;
     background-color: #222;
     border-radius: 0 0 .4rem .4rem;
-    overflow-x: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     width: 100%;
     height: calc(100% - 3.5rem)
 }
