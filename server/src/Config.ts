@@ -48,9 +48,6 @@ const CONFIG_JSON_SCHEMA = z.object({
 
     ws: z.object({
         prefix:               OURI_PATH,
-        console: z.object({
-            path:             OURI_PATH,
-        }).strict().optional(),
     }).strict().optional(),
 
     mysql: z.object({
@@ -130,7 +127,6 @@ export default class Config {
     static readonly DEFAULT_HTTP_ERROR_500_PATH          = this.placehold("<SITE_PATH>/build/500.html")
 
     static readonly DEFAULT_WS_PREFXI                    = "/ws"
-    static readonly DEFAULT_WS_CONSOLE_PATH              = "/console"
 
     static readonly DEFAULT_MYSQL_DATABASE               = "poms"
     static readonly DEFAULT_MYSQL_HOST                   = "localhost"
@@ -384,10 +380,6 @@ export default class Config {
 
     get wsPrefix(): string {
         return this.read.ws?.prefix ?? Config.DEFAULT_WS_PREFXI
-    }
-
-    get wsConsolePath(): string {
-        return this.read.ws?.console?.path ?? Config.DEFAULT_WS_CONSOLE_PATH
     }
 
     get mysqlHost() {

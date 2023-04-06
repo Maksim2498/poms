@@ -233,7 +233,6 @@ export default class Server {
 
                 function createRouter(this: Server) {
                     const router = Router()
-                    const path   = config.wsConsolePath
 
                     if (config.rconAvailable)
                         setupConsole.call(this)
@@ -241,7 +240,7 @@ export default class Server {
                     return router
 
                     function setupConsole(this: Server) {
-                        router.ws(path, (socket, request) => {
+                        router.ws("/console", (socket, request) => {
                             const proxy = new RconProxy({ socket, request, server: this })
 
                             this.rconProxies.add(proxy)
