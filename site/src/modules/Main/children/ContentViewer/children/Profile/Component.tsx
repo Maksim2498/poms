@@ -67,7 +67,7 @@ export default function Profile(props: Props) {
         <UserOnlineIndicator user={user!} />
 
         <div className="reg section">
-            <h3>Registration info</h3>
+            <h3>Registration Info</h3>
             <Field label="Registrar">
                 {user!.reg.login != null ? <UserTag login={user!.reg.login} onClick={innerOnTagClick} /> : "System"}
             </Field>
