@@ -181,17 +181,19 @@ export default class User {
         const text         = makeIconText()
         const initFontSize = width
 
-        context.font = `${width}px sans-serif`
-
-        const metrics  = context.measureText(text)
-        const fontSize = FONT_SIZE_SCALE_FACTOR * Math.min(width * initFontSize / metrics.width, height)
-
-        context.font         = `${fontSize}px sans-serif`
+        context.font         = `${width}px sans-serif`
         context.textBaseline = "middle"
         context.textAlign    = "center"
         context.fillStyle    = "white"
 
-        context.fillText(text, width / 2, height / 2)
+        const metrics  = context.measureText(text)
+        const fontSize = FONT_SIZE_SCALE_FACTOR * Math.min(width * initFontSize / metrics.width, height)
+
+        context.font =`${fontSize}px sans-serif`
+
+        const heightDelta = Math.abs(metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent) / 2
+
+        context.fillText(text, width / 2, height / 2 + heightDelta)
 
         const dataUrl = canvas.toDataURL("image/png")
 
