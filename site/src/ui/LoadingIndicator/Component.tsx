@@ -1,7 +1,7 @@
-import styles from "./styles.module.css"
+import style from "./style.module.css"
 
 export default function LoadingIndicator() {
-    return <div className={styles.normal}>
+    return <div className={style.normal}>
         <div />
         <div />
         <div />
