@@ -99,13 +99,12 @@ export class RconProxy extends    EventEmitter
                 await connectRcon()
                 await loginRcon()
                 setupMessageProxy.call(this)
+                logger?.debug("RCON is successfully initialized")
             } catch (error) {
                 logger?.error(error)
                 logger?.debug("RCON initialization failed")
                 this.close()
             }
-
-            logger?.debug("RCON is successfully initialized")
 
             async function connectRcon() {
                 logger?.debug("Connecting to RCON...")
