@@ -1,4 +1,4 @@
-import { FormEvent } from "react"
+import { FormEvent, RefObject } from "react"
 
 import "./styles.css"
 
@@ -14,6 +14,7 @@ export interface Props {
     autoFocus?:   boolean
     onKeyDown?:   OnInputKeyEvent
     onKeyUp?:     OnInputKeyEvent
+    ref?:         RefObject<HTMLInputElement>
 }
 
 export type InputType       = "text" | "password"
@@ -21,15 +22,18 @@ export type OnInputChange   = (value: string) => void
 export type OnInputKeyEvent = (event: InputKeyEvent) => void
 
 export interface InputKeyEvent {
-    altKey:   boolean;
-    ctrlKey:  boolean;
-    code:     string;
-    key:      string;
-    locale:   string;
-    location: number;
-    metaKey:  boolean;
-    repeat:   boolean;
-    shiftKey: boolean;
+    altKey:   boolean
+    ctrlKey:  boolean
+    code:     string
+    key:      string
+    locale:   string
+    location: number
+    metaKey:  boolean
+    repeat:   boolean
+    shiftKey: boolean
+
+    preventDefault(): void;
+    isDefaultPrevented(): boolean;
 }
 
 export default function Input(props: Props) {
@@ -42,7 +46,8 @@ export default function Input(props: Props) {
         placeholder,
         autoFocus,
         onKeyDown,
-        onKeyUp
+        onKeyUp,
+        ref
     } = props
 
     const className = invalid ? "error Input" : "Input"
@@ -55,7 +60,8 @@ export default function Input(props: Props) {
                   onChange    = {rawOnChange}
                   disabled    = {disabled}
                   placeholder = {placeholder}
-                  autoFocus   = {autoFocus} />
+                  autoFocus   = {autoFocus}
+                  ref         = {ref} />
 
     function rawOnChange(event: FormEvent<HTMLInputElement>) {
         if (!onChange)
