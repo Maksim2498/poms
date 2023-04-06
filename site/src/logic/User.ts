@@ -178,6 +178,10 @@ export default class User {
         if (context == null)
             throw new Error("Canvas is not supported")
 
+        context.fillStyle = "black"
+
+        context.fillRect(0, 0, width, height)
+
         const text         = makeIconText()
         const initFontSize = width
 
@@ -195,7 +199,7 @@ export default class User {
 
         context.fillText(text, width / 2, height / 2 + heightDelta)
 
-        const dataUrl = canvas.toDataURL("image/png")
+        const dataUrl = canvas.toDataURL()
 
         canvas.remove()
 
