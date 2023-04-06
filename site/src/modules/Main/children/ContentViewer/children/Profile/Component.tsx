@@ -94,7 +94,7 @@ export default function Profile(props: Props) {
         if (user!.nicknames.length === 0)
             return undefined
 
-        return <div className="section">
+        return <div className="nicknames section">
             <h3>Nicknames</h3>
             <UserNicknames user={user!} />
         </div>
