@@ -188,7 +188,7 @@ export default class User {
         context.font         = `${width}px sans-serif`
         context.textBaseline = "middle"
         context.textAlign    = "center"
-        context.fillStyle    = "red"
+        context.fillStyle    = "black"
 
         const metrics  = context.measureText(text)
         const fontSize = FONT_SIZE_SCALE_FACTOR * Math.min(width * initFontSize / metrics.width, height)
