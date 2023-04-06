@@ -3,6 +3,7 @@
     width: 2rem;
     height: 2rem;
     background-size: contain;
+    transition: .08s filter;
     filter: brightness(.8);
     color: transparent
 }
