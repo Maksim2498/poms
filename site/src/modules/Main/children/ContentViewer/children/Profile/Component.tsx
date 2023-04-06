@@ -72,7 +72,7 @@ export default function Profile(props: Props) {
                 {user!.reg.login != null ? <UserTag login={user!.reg.login} onClick={innerOnTagClick} /> : "System"}
             </Field>
             <Field label="Time">
-                {user!.reg.time.toLocaleDateString()}
+                {user!.reg.time.toLocaleString()}
             </Field>
         </div>
 
