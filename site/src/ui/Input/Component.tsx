@@ -1,4 +1,4 @@
-import { FormEvent, RefObject } from "react"
+import { FormEvent, RefObject, forwardRef } from "react"
 
 import "./styles.css"
 
@@ -14,12 +14,12 @@ export interface Props {
     autoFocus?:   boolean
     onKeyDown?:   OnInputKeyEvent
     onKeyUp?:     OnInputKeyEvent
-    ref?:         RefObject<HTMLInputElement>
 }
 
 export type InputType       = "text" | "password"
 export type OnInputChange   = (value: string) => void
 export type OnInputKeyEvent = (event: InputKeyEvent) => void
+export type InputElementRef = RefObject<HTMLInputElement>
 
 export interface InputKeyEvent {
     altKey:   boolean
@@ -36,7 +36,7 @@ export interface InputKeyEvent {
     isDefaultPrevented(): boolean;
 }
 
-export default function Input(props: Props) {
+const Input = forwardRef<HTMLInputElement, Props>((props, ref) => {
     const {
         type,
         invalid,
@@ -46,8 +46,7 @@ export default function Input(props: Props) {
         placeholder,
         autoFocus,
         onKeyDown,
-        onKeyUp,
-        ref
+        onKeyUp
     } = props
 
     const className = invalid ? "error Input" : "Input"
@@ -71,4 +70,6 @@ export default function Input(props: Props) {
 
         onChange(value)
     }
-}
+})
+
+export default Input
