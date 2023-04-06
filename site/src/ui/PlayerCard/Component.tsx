@@ -20,7 +20,7 @@ export default function PlayerCard(props: Props) {
         return <div className="authorized PlayerCard" onClick={rawOnClick}>
             <UserIcon       user={user} />
             <TaggedUserName user={user} />
-            <span className="nickname">plays as <span className="value">{nickname}</span></span>
+            <span className="nickname">playing as <span className="value">{nickname}</span></span>
         </div>
 
     return <div className={className} onClick={rawOnClick}>
