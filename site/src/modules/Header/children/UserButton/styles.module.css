@@ -1,25 +1,25 @@
-.UserButton > .signed-in {
+.signedIn.UserButton {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between
 }
 
-.UserButton > .signed-in > * {
+.signedIn.UserButton > * {
     margin: 0 .5rem
 }
 
-.UserButton > .signed-in > .UserName {
+.signedIn.UserButton > :global(.UserName) {
     font-size: 1.2rem
 }
 
-.UserButton > .signed-in > .UserIcon {
+.signedIn.UserButton > :global(.UserIcon) {
     width: 2.25rem;
     height: 2.25rem;
     cursor: pointer
 }
 
-.UserButton > .signed-in > .options {
+.signedIn.UserButton > .options {
     position: absolute;
     display: flex;
     justify-content: space-around;
@@ -31,6 +31,6 @@
     width: calc(100% - .5rem)
 }
 
-.UserButton > .signed-in > .options > * {
+.signedIn.UserButton > .options > * {
     width: 100%
 }
