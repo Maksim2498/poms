@@ -1,6 +1,7 @@
 /* Common */
 
 .Button {
+    overflow: hidden;
     position: relative;
     background-color: #484848;
     border: thin solid #666;
@@ -79,17 +80,7 @@
 
 /* Loading */
 
-.Button > .Loading {
-    position: absolute;
-    left: 0;
-    top: 0;
-    border-radius: .4rem
-}
-
-.Button > .Loading ~ * {
+.loading.Button > .children {
+    transition: .08s opacity;
     opacity: 0
-}
-
-.Button > * {
-    transition: .2s opacity
 }

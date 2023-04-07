@@ -1,5 +1,5 @@
-import styles from "./style.module.css"
+import styles from "./styles.module.css"
 
 export default function Dim() {
-    return <div className={styles.normal} />
+    return <div className={styles.Dim} />
 }

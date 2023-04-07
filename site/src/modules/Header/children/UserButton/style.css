@@ -28,9 +28,9 @@
     border-radius: 0 0 .4rem .4rem;
     padding: .4rem;
     background-color: #151515;
-    width: calc(100% - .5rem);
+    width: calc(100% - .5rem)
 }
 
-.UserButton > .signed-in > .options > .Button {
+.UserButton > .signed-in > .options > * {
     width: 100%
 }
