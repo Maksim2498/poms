@@ -8,7 +8,5 @@ export interface Props {
 }
 
 export default function EditButton(props: Props) {
-    return <div className="EditButton">
-        <IconButton src={iconPath} onClick={props.onClick}>Edit</IconButton>
-    </div>
+    return <IconButton src={iconPath} onClick={props.onClick}>Edit</IconButton>
 }

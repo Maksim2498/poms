@@ -8,7 +8,5 @@ export interface Props {
 }
 
 export default function BackButton(props: Props) {
-    return <div className="BackButton">
-        <IconButton src={iconPath} onClick={props.onClick}>Back</IconButton>
-    </div>
+    return <IconButton src={iconPath} onClick={props.onClick}>Back</IconButton>
 }
