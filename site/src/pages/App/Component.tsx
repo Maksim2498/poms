@@ -6,14 +6,13 @@ import Main                                           from "modules/Main/Compone
 import Footer                                         from "modules/Footer/Component"
 import Loading                                        from "ui/Loading/Component"
 import AuthInfo                                       from "logic/AuthInfo"
+import styles                                         from "./styles.module.css"
 
 import { createContext, useEffect, useRef, useState } from "react"
 import { AuthController, reauth                     } from "logic/api"
 import { Record                                     } from "components/Terminal/Component"
 import { TerminalContext                            } from "components/Terminal/Component"
 import { ContentStackContext, HOME_CONTENT          } from "modules/Main/children/ContentViewer/Component"
-
-import "./style.css"
 
 export const UserContext           = createContext([undefined,      defaultSetNullableUser] as UserContextType)
 export const AuthControllerContext = createContext([new AuthInfo(), defaultSetAuthInfo    ] as AuthController )
@@ -56,7 +55,7 @@ export default function App() {
                   || userLoading
 
     if (loading)
-        return <div className="App">
+        return <div className={styles.App}>
             <Loading />
         </div>
 
@@ -64,7 +63,7 @@ export default function App() {
         <UserContext.Provider value={[user, setUser]}>
             <ContentStackContext.Provider value={[contentStack, setContentStack, contentStackRef]}>
                 <TerminalContext.Provider value={[records, setRecords, recordsRef]}>
-                    <div className="App">
+                    <div className={styles.App}>
                         {header()}
                         {main()}
                         <Footer />
