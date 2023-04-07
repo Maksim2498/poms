@@ -11,6 +11,13 @@ export default function ErrorText(props: Props) {
         return null
 
     return <div className="ErrorText">
-        {children}
+        {body()}
     </div>
+
+    function body() {
+        if (children instanceof Error)
+            return children.message
+
+        return children
+    }
 }
