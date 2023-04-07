@@ -7,9 +7,3 @@
     padding-right: max(2rem, calc((100% - 60rem) / 2));
     height: 3.5rem
 }
-
-.Header > .Logo {
-    font-size: 1.75rem;
-    width: 5rem;
-    text-align: center
-}
