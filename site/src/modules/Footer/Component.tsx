@@ -1,9 +1,8 @@
 import GitHub from "ui/GitHub/Component"
-
-import "./style.css"
+import styles from "./styles.module.css"
 
 export default function Footer() {
-    return <footer className="Footer">
+    return <footer className={styles.Footer}>
         <GitHub />
     </footer>
 }
