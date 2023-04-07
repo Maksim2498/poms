@@ -1,9 +1,8 @@
 import Logo         from "./children/Logo/Component"
 import UserButton   from "./children/UserButton/Component"
+import styles       from "./styles.module.css"
 
 import { OnSignIn } from "./children/UserButton/Component"
-
-import "./style.css"
 
 export type Props = UserProps
                   | NoneProps
@@ -20,7 +19,7 @@ export interface NoneProps {
 export type Show = "user" | "none"
 
 export default function Header(props: Props) {
-    return <header className="Header">
+    return <header className={styles.Header}>
         <Logo />
         {show()}
     </header>
