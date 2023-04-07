@@ -1,6 +1,5 @@
-import User from "logic/User";
-
-import "./style.css"
+import User   from "logic/User";
+import styles from "./styles.module.css"
 
 export type Props = UserProps
                   | LoginProps
@@ -21,7 +20,7 @@ export default function UserTag(props: Props) {
     const { onClick } = props
     const login       = getLogin()
 
-    return <div className="UserTag" onClick={() => onClick?.(login)}>
+    return <div className={styles.UserTag} onClick={() => onClick?.(login)}>
         @{login}
     </div>
 
