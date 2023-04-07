@@ -1,4 +1,4 @@
-import "./style.css"
+import styles from "./styles.module.css"
 
 export interface Props {
     onClick?:  OnIconButtonClick
@@ -11,7 +11,7 @@ export type OnIconButtonClick = () => void
 export default function IconButton(props: Props) {
     const { onClick, children, src } = props
 
-    return <div className="IconButton" style={{backgroundImage: `url("${src}")`}} onClick={onClick}>
+    return <div className={styles.IconButton} style={{backgroundImage: `url("${src}")`}} onClick={onClick}>
         {children}
     </div>
 }
