@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
+import styles from "./styles.module.css"
 
-import "./style.css"
+import { useState, useEffect } from "react"
 
 export const DEFAULT_TICK        = 80
 export const DEFAULT_DELAY       = 500
@@ -54,7 +54,7 @@ export default function AppearingMessage(props: Props) {
         return () => clearInterval(interval)
     }, [showCursor, cursorTick])
 
-    return <div className="AppearingMessage">
+    return <div className={styles.AppearingMessage}>
         {message}{showCursor ? cursor : cursorStub}
     </div>
 }
