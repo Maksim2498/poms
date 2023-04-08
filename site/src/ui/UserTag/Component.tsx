@@ -17,15 +17,18 @@ export interface LoginProps {
 export type OnUserTagClick = (login: string) => void
 
 export default function UserTag(props: Props) {
-    const { onClick } = props
-    const login       = getLogin()
+    const login = getLogin()
 
-    return <div className={styles.UserTag} onClick={() => onClick?.(login)}>
+    return <div className={styles.UserTag} onClick={rawOnClick}>
         @{login}
     </div>
 
     function getLogin(): string {
         return "login" in props ? props.login
                                 : props.user.login
+    }
+
+    function rawOnClick() {
+        props.onClick?.(login)
     }
 }
