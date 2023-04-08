@@ -44,7 +44,7 @@ export default function AppearingMessage(props: Props) {
         }, tick)
 
         return () => clearInterval(interval)
-    })
+    }, [doTick, message, targetMessage, tick])
 
     const [showCursor, setShowCursor] = useState(false)
     const cursorStub                  = " ".repeat(cursor.length)
