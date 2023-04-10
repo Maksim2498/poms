@@ -54,7 +54,7 @@ export default function AppearingMessage(props: Props) {
         return () => clearInterval(interval)
     }, [showCursor, cursorTick])
 
-    return <div className={styles.AppearingMessage}>
+    return <div className={styles.message}>
         {message}{showCursor ? cursor : cursorStub}
     </div>
 }

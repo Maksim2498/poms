@@ -1,11 +1,10 @@
 import ReadonlyRefObject                                                     from "types/ReadonlyRefObject"
 import Button                                                                from "ui/Button/Component"
 import Input                                                                 from "ui/Input/Component"
+import styles                                                                from "./styles.module.css"
 
 import { FormEvent, useState, useEffect, useRef, useContext, createContext } from "react"
 import { InputKeyEvent                                                     } from "ui/Input/Component"
-
-import "./style.css"
 
 export const TerminalContext = createContext([[], defaultSetRecords, { current: []}] as TerminalContextType)
 
@@ -47,12 +46,12 @@ export default function Terminal(props: Props) {
 
     useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [records])
 
-    return <div className="Terminal">
-        <ol className="output">
+    return <div className={styles.terminal}>
+        <ol className={styles.output}>
             {recordsToElementList(records)}
-            <div className="end" ref={end} />
+            <div ref={end} />
         </ol>
-        <form onSubmit={onSubmit} onKeyDown={onKeyDown}>
+        <form onSubmit={onSubmit} onKeyDown={onKeyDown} className={styles.form}>
             <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} disabled={disabled} ref={inputElement} />
             <Button type="submit" state={disabled ? "disabled" : "active"}>Send</Button>
         </form>
@@ -113,7 +112,6 @@ export default function Terminal(props: Props) {
         }
     }
 
-
     function recordsToElementList(records: Record[]): JSX.Element[] {
         const preparedRecords = prepareRecords()
         const elements        = [] as JSX.Element[]
@@ -148,9 +146,10 @@ export default function Terminal(props: Props) {
 
         function recordToElement(record: Record, index: number = 0): JSX.Element {
             const { time, text, type } = record
+            const className            = styles[type + "Record"]
 
-            return <li className={`${type} record`} key={recordToKey()}>
-                <span className="time">{time.toLocaleTimeString()}</span>
+            return <li className={className} key={recordToKey()}>
+                <span className={styles.time}>{time.toLocaleTimeString()}</span>
                 {makeText()}
             </li>
 
@@ -160,9 +159,9 @@ export default function Terminal(props: Props) {
 
             function makeText() {
                 if (type === "output" && htmlOutput)
-                    return <span className="text" dangerouslySetInnerHTML={{ __html: text }} />
+                    return <span className={styles.text} dangerouslySetInnerHTML={{ __html: text }} />
 
-                return <span className="text">{text}</span>
+                return <span className={styles.text}>{text}</span>
             }
         }
     }

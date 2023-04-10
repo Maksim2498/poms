@@ -5,9 +5,5 @@ export interface Props {
 }
 
 export default function ServerVersion(props: Props) {
-    const { name } = props.server.version
-
-    return <div className="ServerVersion">
-        {name}
-    </div>
+    return <>{props.server.version.name}</>
 }

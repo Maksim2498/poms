@@ -5,5 +5,5 @@ export interface Props {
 }
 
 export default function ServerMotd(props: Props) {
-    return <pre className="ServerMotd" dangerouslySetInnerHTML={{__html: props.server.motd.html }} />
+    return <pre dangerouslySetInnerHTML={{__html: props.server.motd.html }} />
 }

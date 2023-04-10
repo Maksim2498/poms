@@ -1,6 +1,6 @@
-import { FormEvent, RefObject, forwardRef } from "react"
+import styles                               from "./styles.module.css"
 
-import "./styles.css"
+import { FormEvent, RefObject, forwardRef } from "react"
 
 export const DEFAULT_TYPE = "text"
 
@@ -49,7 +49,7 @@ const Input = forwardRef<HTMLInputElement, Props>((props, ref) => {
         onKeyUp
     } = props
 
-    const className = invalid ? "error Input" : "Input"
+    const className = invalid ? styles.invalid : styles.valid
 
     return <input className   = {className}
                   onKeyDown   = {onKeyDown}

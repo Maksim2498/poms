@@ -1,15 +1,15 @@
 import Server                    from "logic/Server"
 import Player                    from "logic/Player"
 import useAsync                  from "hooks/useAsync"
-import Loading                   from "ui/Loading/Component"
+import LoadingIndicator          from "ui/LoadingIndicator/Component"
 import PlayerCard                from "ui/PlayerCard/Component"
 import ErrorText                 from "ui/ErrorText/Component"
+import styles                    from "./styles.module.css"
+
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
-import { OnPlayerCardClick         } from "ui/PlayerCard/Component"
-
-import "./style.css"
+import { OnPlayerCardClick     } from "ui/PlayerCard/Component"
 
 export interface Props {
     onPlayerClick?: OnPlayerCardClick
@@ -27,17 +27,17 @@ export default function ServerPlayerList(props: Props) {
     }, [error])
 
     if (loading)
-        return <div className="loading ServerPlayerList">
-            <Loading />
+        return <div className={styles.loading}>
+            <LoadingIndicator />
         </div>
 
     if (error != null)
-        return <div className="error ServerPlayerList">
+        return <div className={styles.error}>
             <ErrorText>Loading failed</ErrorText>
         </div>
 
-    return <ul className="loaded ServerPlayerList">
-        {players.map(player => <li key={player.nickname}>
+    return <ul className={styles.loaded}>
+        {players.map(player => <li key={player.nickname} className={styles.item}>
             <PlayerCard player={player} onClick={onPlayerClick} />
         </li>)}
     </ul>

@@ -6,13 +6,12 @@ import Terminal                                                    from "compone
 import Loading                                                     from "ui/Loading/Component"
 import ErrorText                                                   from "ui/ErrorText/Component"
 import ConsoleSocket                                               from "./ConsoleSocket"
+import styles                                                      from "./styles.module.css"
 
 import { useContext, useEffect, useRef } from "react"
 import { AuthControllerContext                                   } from "pages/App/Component"
 import { Record, makeRecord, RecordType, TerminalContext         } from "components/Terminal/Component"
 import { isConsoleAvailable                                      } from "./api"
-
-import "./style.css"
 
 export const RECONNECT_INTERVAL = 5
 
@@ -52,23 +51,23 @@ export default function Console() {
     }, [])
 
     if (loading)
-        return <div className="loading Console">
+        return <div className={styles.loading}>
             <Loading />
         </div>
 
     if (error != null)
-        return <div className="error Console">
+        return <div className={styles.error}>
             <ErrorText>Loading failed</ErrorText>
         </div>
 
     if (!available)
-        return <div className="loaded unavailable Console">
+        return <div className={styles.unavailable}>
             <ErrorText>Console is unavailable</ErrorText>
         </div>
 
     const disabled = socket.current?.state !== "authorized"
 
-    return <div className="loaded available Console">
+    return <div className={styles.loaded}>
         <Terminal onEnter={onEnter} disabled={disabled} htmlOutput={true} />
     </div>
 

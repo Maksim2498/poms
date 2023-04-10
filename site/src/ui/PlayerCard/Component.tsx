@@ -1,8 +1,7 @@
 import Player         from "logic/Player"
 import UserIcon       from "ui/UserIcon/Component"
 import TaggedUserName from "ui/TaggedUserName/Component"
-
-import "./style.css"
+import styles         from "./styles.module.css"
 
 export interface Props {
     onClick?: OnPlayerCardClick
@@ -14,22 +13,37 @@ export type OnPlayerCardClick = (player: Player) => void
 export default function PlayerCard(props: Props) {
     const { player, onClick  } = props
     const { user,   nickname } = player
-    const className            = (user == null ? "anonym" : "authorized") + " PlayerCard"
 
     if (user != null)
-        return <div className="authorized PlayerCard" onClick={rawOnClick}>
-            <UserIcon       user={user} />
-            <TaggedUserName user={user} />
-            <span className="nickname">playing as <span className="value">{nickname}</span></span>
+        return <div className={styles.authorized} onClick={rawOnClick}>
+            {icon()}
+            <div className={styles.user}>
+                <TaggedUserName user={user} />
+            </div>
+            {playingAs()}
         </div>
 
-    return <div className={className} onClick={rawOnClick}>
-        <UserIcon />
-        <span className="anonym">Anonymous</span>
-        <span className="nickname">playing as <span className="value">{nickname}</span></span>
+    return <div className={styles.anonym} onClick={rawOnClick}>
+        {icon()}
+        <div className={styles.user}>
+            Anonymous
+        </div>
+        {playingAs()}
     </div>
 
     function rawOnClick() {
         onClick?.(player)
+    }
+
+    function icon() {
+        return <div className={styles.icon}>
+            <UserIcon user={user} />
+        </div>
+    }
+
+    function playingAs() {
+        return <div className={styles.nickname}>
+            playing as <span className={styles.value}>{nickname}</span>
+        </div>
     }
 }

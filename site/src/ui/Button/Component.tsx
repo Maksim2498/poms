@@ -36,7 +36,7 @@ export default function Button(props: Props) {
     </button>
 
     function className(): string {
-        const classes = [typeClass(), stateClass(), styles.Button]
+        const classes = [typeClass(), stateClass(), styles.button]
 
         return classes.join(" ")
 

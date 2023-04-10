@@ -19,7 +19,7 @@ export type OnUserTagClick = (login: string) => void
 export default function UserTag(props: Props) {
     const login = getLogin()
 
-    return <div className={styles.UserTag} onClick={rawOnClick}>
+    return <div className={styles.tag} onClick={rawOnClick}>
         @{login}
     </div>
 

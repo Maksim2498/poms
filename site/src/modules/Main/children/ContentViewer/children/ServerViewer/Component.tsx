@@ -6,12 +6,11 @@ import ServerMotd                from "ui/ServerMotd/Component"
 import ErrorText                 from "ui/ErrorText/Component"
 import ServerVersion             from "ui/ServerVersion/Component"
 import ServerPlayerList          from "components/ServerPlayerList/Component"
+import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
-import { OnPlayerCardClick         } from "ui/PlayerCard/Component"
-
-import "./style.css"
+import { OnPlayerCardClick     } from "ui/PlayerCard/Component"
 
 export interface Props {
     onPlayerClick?: OnPlayerCardClick
@@ -28,27 +27,33 @@ export default function ServerViewer(props: Props) {
     }, [error])
 
     if (loading)
-        return <div className="loading ServerViewer">
+        return <div className={styles.loading}>
             <Loading />
         </div>
 
     if (error != null)
-        return <div className="error ServerViewer">
+        return <div className={styles.error}>
             <ErrorText>Server is offline</ErrorText>
         </div>
 
-    return <div className="loaded ServerViewer">
-        <ServerIcon    server={server} />
-        <ServerMotd    server={server} />
-        <ServerVersion server={server} />
+    return <div className={styles.loaded}>
+        <div className={styles.icon}>
+            <ServerIcon server={server} />
+        </div>
+        <div className={styles.motd}>
+            <ServerMotd server={server} />
+        </div>
+        <div className={styles.version}>
+            <ServerVersion server={server} />
+        </div>
         {players()}
     </div>
 
     function players() {
         const { online, max } = server!.players
 
-        return <div className="players section">
-            <h3>Players ({online}/{max})</h3>
+        return <div className={styles.players}>
+            <h3 className={styles.header}>Players ({online}/{max})</h3>
             <ServerPlayerList server={server!} onPlayerClick={onPlayerClick} />
         </div>
     }

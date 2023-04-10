@@ -1,8 +1,8 @@
-.ServerIcon {
+.icon {
+    width: 100%;
+    aspect-ratio: 1/1;
     background-color: black;
     border-radius: 50%;
     border: thin solid #666;
     image-rendering: pixelated;
-    width: 4rem;
-    height: 4rem
 }

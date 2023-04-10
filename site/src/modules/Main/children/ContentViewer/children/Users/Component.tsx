@@ -24,16 +24,16 @@ export default function Users(props: Props) {
     }, [error])
 
     if (loading)
-        return <div className={`${styles.loading} ${styles.Users}`}>
+        return <div className={styles.loading}>
             <Loading />
         </div>
 
     if (error != null)
-        return <div className={`${styles.error} ${styles.Users}`}>
+        return <div className={styles.error}>
             <ErrorText>Loading failed</ErrorText>
         </div>
 
-    return <ul className={`${styles.loaded} ${styles.Users}`}>
+    return <ul className={styles.loaded}>
         {users.map(user =>
             <li key={user.login}>
                 <UserCard user={user} onClick={onUserClick} />

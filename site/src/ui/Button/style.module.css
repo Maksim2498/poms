@@ -1,6 +1,6 @@
 /* Common */
 
-.Button {
+.button {
     overflow: hidden;
     position: relative;
     background-color: #484848;
@@ -11,76 +11,80 @@
     transition: .08s background-color
 }
 
-.Button:hover {
-    background-color: #555
-}
-
-.Button:active {
-    background-color: #444
-}
-
-.Button:disabled {
-    border: thin solid #444;
-    background-color: #333
-}
-
 /* Regular */
 
-.regular.Button .children {
+.regular .children {
     color: #E8E8E8
 }
 
-.regular.Button:hover .children {
+.regular:hover .children {
     color: #FFF
 }
 
-.regular.Button:active .children {
+.regular:active .children {
     color: #EEE
 }
 
-.regular.Button:disabled .children {
+.regular:disabled .children {
     color: #DDD
 }
 
 /* Submit */
 
-.submit.Button .children {
+.submit .children {
     color: #18E818
 }
 
-.submit.Button:hover .children {
+.submit:hover .children {
     color: #2F2
 }
 
-.submit.Button:active .children {
+.submit:active .children {
     color: #1E1
 }
 
-.submit.Button:disabled .children {
+.submit:disabled .children {
     color: #0D0
 }
 
 /* Cancel */
 
-.cancel.Button .children {
+.cancel .children {
     color: #E81818
 }
 
-.cancel.Button:hover .children {
+.cancel:hover .children {
     color: #F22
 }
 
-.cancel.Button:active .children {
+.cancel:active .children {
     color: #E11
 }
 
-.cancel.Button:disabled .children {
+.cancel:disabled .children {
     color: #D00
+}
+
+/* Active */
+
+.active:hover {
+    background-color: #555
+}
+
+.active:active {
+    background-color: #444
 }
 
 /* Loading */
 
-.loading.Button > .children {
+.loading > .children {
     transition: .08s opacity;
     opacity: 0
+}
+
+/* Disabled */
+
+.disabled {
+    border: thin solid #444;
+    background-color: #333
 }

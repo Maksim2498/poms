@@ -1,19 +1,23 @@
-.Users {
+.users {
     height: 100%
 }
 
-.loaded.Users {
+.loading, .error, .loaded {
+    composes: users
+}
+
+.loaded {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     list-style: none
 }
 
-.loaded.Users > li {
+.loaded > li {
     margin: 1rem
 }
 
-.error.Users {
+.error {
     display: flex;
     align-items: center;
     justify-content: center

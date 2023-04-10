@@ -1,44 +1,46 @@
-.AuthForm > fieldset {
+.fields {
     width: 15rem;
+
     border-radius: .4rem;
     background-color: #222;
     border: none;
+
     display: flex;
     flex-direction: column;
+
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%)
 }
 
-.AuthForm > fieldset > * {
+.fields > * {
     margin: 1rem
 }
 
-.AuthForm > fieldset > .ErrorText {
+.error {
     text-align: center;
     font-size: small;
     white-space: pre;
     margin:.5rem 1rem 
 }
 
-.AuthForm > fieldset > legend {
+.header {
     font-size: 1.5rem;
-    padding: 1rem;
     width: 7rem;
-    height: 4rem;
+    height: 3.5rem;
     text-align: center;
     width: auto;
     margin-left: auto;
     margin-right: auto;
-    transform: translateY(2rem)
+    transform: translateY(2.5rem)
 }
 
-.AuthForm > fieldset > .buttons {
+.buttons {
     display: flex;
     justify-content: space-between
 }
 
-.AuthForm > fieldset > .buttons > * {
+.buttons > * {
     width: 6rem
 }

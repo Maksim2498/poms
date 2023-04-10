@@ -1,0 +1,45 @@
+.profile {
+    height: 100%
+}
+
+.loading, .error, .loaded {
+    composes: profile
+}
+
+.error, .loaded {
+    display: flex;
+    align-items: center
+}
+
+.error {
+    justify-content: center
+}
+
+.loaded {
+    composes: profile;
+    flex-direction: column;
+    padding: 1rem
+}
+
+.icon {
+    width: 10rem
+}
+
+.taggedName {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center
+}
+
+.taggedName > * {
+    margin: .25rem
+}
+
+.onlineIndicator {
+    margin-top: .25rem
+}
+
+.sections > *{
+    margin: 2rem
+}

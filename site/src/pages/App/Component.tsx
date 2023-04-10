@@ -55,7 +55,7 @@ export default function App() {
                   || userLoading
 
     if (loading)
-        return <div className={styles.App}>
+        return <div className={styles.app}>
             <Loading />
         </div>
 
@@ -63,7 +63,7 @@ export default function App() {
         <UserContext.Provider value={[user, setUser]}>
             <ContentStackContext.Provider value={[contentStack, setContentStack, contentStackRef]}>
                 <TerminalContext.Provider value={[records, setRecords, recordsRef]}>
-                    <div className={styles.App}>
+                    <div className={styles.app}>
                         {header()}
                         {main()}
                         <Footer />

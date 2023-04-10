@@ -19,7 +19,7 @@ export type Show = "content"
                  | "auth"
 
 export default function Main(props: Props) {
-    return <main className={styles.Main}>
+    return <main className={styles.main}>
         {body()}
     </main>
 

@@ -12,8 +12,8 @@ export interface Props {
 export default function TaggedUserName(props: Props) {
     const { user, onTagClick } = props
 
-    return <div className="TaggedUserName">
+    return <>
         <UserName user={user} />
         <UserTag  user={user} onClick={onTagClick} />
-    </div>
+    </>
 }

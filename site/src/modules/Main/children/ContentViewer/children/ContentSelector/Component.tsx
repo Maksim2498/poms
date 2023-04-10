@@ -1,6 +1,5 @@
 import Button from "ui/Button/Component"
-
-import "./style.css"
+import styles from "./styles.module.css"
 
 export interface Props {
     contentList?: Content[]
@@ -19,13 +18,13 @@ export type ContentComponent = () => JSX.Element
 export default function ContentSelector(props: Props) {
     const contentList = props.contentList ?? []
 
-    return <ul className="ContentSelector">
+    return <ul className={styles.selector}>
         {
             contentList.map((c, i) => {
                 const name    = c.selectName ?? c.name
                 const onClick = () => props.onSelect?.(c)
 
-                return <li className="content" key={`${name}-${i}`}>
+                return <li className={styles.content} key={`${name}-${i}`}>
                     <Button onClick={onClick}>{name}</Button>
                 </li>
             })

@@ -3,16 +3,14 @@ import User                                   from "logic/User"
 import TaggedUserName                         from "ui/TaggedUserName/Component"
 import UserIcon                               from "ui/UserIcon/Component"
 import UserOnlineIndicator                    from "ui/UserOnlineIndicator/Component"
-import UserTag                                from "ui/UserTag/Component"
 import UserNicknames                          from "ui/UserNicknames/Component"
-import Field                                  from "ui/Field/Component"
 import Loading                                from "ui/Loading/Component"
 import ErrorText                              from "ui/ErrorText/Component"
+import UserRegInfo                            from "ui/UserRegInfo/Component"
+import styles                                 from "./styles.module.css"
 
 import { useContext, useEffect              } from "react"
 import { AuthControllerContext, UserContext } from "pages/App/Component"
-
-import "./style.css"
 
 export type Props = UserProps
                   | LoginProps
@@ -44,39 +42,35 @@ export default function Profile(props: Props) {
         if (!user || !contextUser)
             return
 
-        const userLogin        = user.login.trim().toLowerCase()
-        const contextUserLogin = contextUser.login.trim().toLowerCase()
-
-        if (userLogin === contextUserLogin)
+        if (User.areLoginsEqual(user.login, contextUser.login))
             setContextUser(user)
     }, [user, contextUser, setContextUser])
 
     if (loading)
-        return <div className="loading Profile">
+        return <div className={styles.loading}>
             <Loading />
         </div>
 
     if (error != null)
-        return <div className="error Profile">
+        return <div className={styles.error}>
             <ErrorText>Loading failed</ErrorText>
         </div>
 
-    return <div className="loaded Profile">
-        <UserIcon            user={user!} />
-        <TaggedUserName      user={user!} onTagClick={innerOnTagClick} />
-        <UserOnlineIndicator user={user!} />
-
-        <div className="reg section">
-            <h3>Registration Info</h3>
-            <Field label="Registrar">
-                {user!.reg.login != null ? <UserTag login={user!.reg.login} onClick={innerOnTagClick} /> : "System"}
-            </Field>
-            <Field label="Time">
-                {user!.reg.time.toLocaleString()}
-            </Field>
+    return <div className={styles.loaded}>
+        <div className={styles.icon}>
+            <UserIcon user={user!} />
+        </div>
+        <div className={styles.taggedName}>
+            <TaggedUserName user={user!} onTagClick={innerOnTagClick} />
+        </div>
+        <div className={styles.onlineIndicator}>
+            <UserOnlineIndicator user={user!} />
         </div>
 
-        {nicknames()}
+        <div className={styles.sections}>
+            <UserRegInfo   user={user!} onTagClick={innerOnTagClick} />
+            <UserNicknames user={user!} />
+        </div>
     </div>
 
     async function getUser(): Promise<User> {
@@ -88,16 +82,6 @@ export default function Profile(props: Props) {
             login:          props.login,
             authController
         })
-    }
-
-    function nicknames() {
-        if (user!.nicknames.length === 0)
-            return undefined
-
-        return <div className="nicknames section">
-            <h3>Nicknames</h3>
-            <UserNicknames user={user!} />
-        </div>
     }
 
     function innerOnTagClick(login: string) {

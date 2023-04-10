@@ -1,0 +1,48 @@
+.server {
+    height: 100%
+}
+
+.loading, .error, .loaded {
+    composes: server
+}
+
+.loaded, .error {
+    display: flex;
+    align-items: center
+}
+
+.error {
+    justify-content: center
+}
+
+.loaded {
+    flex-direction: column
+}
+
+.loaded > * {
+    margin: 1rem
+}
+
+.icon {
+    width: 10rem;
+    height: 10rem
+}
+
+.motd {
+    font-size: 2rem;
+    margin-bottom: 0rem
+}
+
+.version {
+    margin-top: 0;
+    color: gray
+}
+
+.players {
+    margin-top: 2rem;
+    flex-grow: 1
+}
+
+.players > .header {
+    text-align: center
+}

@@ -8,12 +8,11 @@ import Profile                                from "./children/Profile/Component
 import Server                                 from "./children/ServerViewer/Component"
 import Users                                  from "./children/Users/Component"
 import Home                                   from "./children/Home/Component"
+import styles                                 from "./styles.module.css"
 
 import { useContext, createContext          } from "react"
 import { UserContext, AuthControllerContext } from "pages/App/Component"
 import { Content                            } from "./children/ContentSelector/Component"
-
-import "./style.css"
 
 export const ContentStackContext = createContext([[], defaultSetContentStack, { current: [] }] as ContentStackContextType)
 
@@ -35,9 +34,11 @@ export default function ContentViewer() {
     const topContent                                       = contentStack[contentStack.length - 1]
     const showBack                                         = contentStack.length > 1
 
-    return <div className="ContentViewer">
+    return <div className={styles.viewer}>
         <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
-        <ContentWindow content={topContent} showBack={showBack} onBack={onBack} />
+        <div className={styles.window}>
+            <ContentWindow content={topContent} showBack={showBack} onBack={onBack} />
+        </div>
     </div>
 
     function makeContentSelectionList() {

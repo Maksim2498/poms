@@ -1,0 +1,17 @@
+.console {
+    height: 100%
+}
+
+.loading, .error, .loaded {
+    composes: console
+}
+
+.unavailable {
+    composes: loaded
+}
+
+.error, .loaded {
+    display: flex;
+    justify-content: center;
+    align-items: center
+}

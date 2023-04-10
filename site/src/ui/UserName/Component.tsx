@@ -1,15 +1,11 @@
-import User from "logic/User";
-
-import "./style.css"
+import User   from "logic/User";
+import styles from "./styles.module.css"
 
 export interface Props {
     user: User
 }
 
 export default function UserName(props: Props) {
-    const { user } = props
-
-    return <div className="UserName">
-        {user.name ?? user.login}
-    </div>
+    const { name, login } = props.user
+    return <span className={styles.name}>{name ?? login}</span>
 }

@@ -1,15 +1,12 @@
-import User from "logic/User"
-
-import "./style.css"
+import User   from "logic/User"
+import List from "ui/List/Component"
 
 export interface Props {
     user: User
 }
 
 export default function UserNicknames(props: Props) {
-    const { nicknames } = props.user
-
-    return <ul className="UserNicknames">
-        {nicknames.map(n => <li key={n}>{n}</li>)}
-    </ul>
+    return <List header="Nicknames">
+        {props.user.nicknames}
+    </List>
 }

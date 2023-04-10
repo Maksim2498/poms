@@ -11,7 +11,7 @@ export type OnIconButtonClick = () => void
 export default function IconButton(props: Props) {
     const { onClick, children, src } = props
 
-    return <div className={styles.IconButton} style={{backgroundImage: `url("${src}")`}} onClick={onClick}>
-        {children}
+    return <div className={styles.button} style={{backgroundImage: `url("${src}")`}} onClick={onClick}>
+        <div className={styles.children}>{children}</div>
     </div>
 }

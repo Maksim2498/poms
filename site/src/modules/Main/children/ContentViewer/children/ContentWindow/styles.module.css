@@ -1,8 +1,9 @@
-.ContentWindow {
+.window {
+    width: 100%;
     height: 100%
 }
 
-.ContentWindow > .header {
+.header {
     padding: .8rem;
     display: flex;
     justify-content: space-between;
@@ -13,11 +14,11 @@
     border-radius: .4rem .4rem 0 0
 }
 
-.ContentWindow > .header > h2 {
+.header > h2 {
     text-align: center
 }
 
-.ContentWindow > .main {
+.main {
     position: relative;
     background-color: #222;
     border-radius: 0 0 .4rem .4rem;

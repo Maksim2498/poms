@@ -1,4 +1,6 @@
-.Input {
+.valid {
+    display: block;
+    flex-grow: 1;
     padding: .75rem;
     font-size: .9rem;
     border-radius: .4rem;
@@ -6,6 +8,7 @@
     color: black
 }
 
-.error.Input {
+.invalid {
+    composes: valid;
     border: thin solid red
 }

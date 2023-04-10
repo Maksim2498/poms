@@ -3,12 +3,11 @@ import LogicError                             from "logic/LogicError"
 import Input                                  from "ui/Input/Component"
 import Button                                 from "ui/Button/Component"
 import ErrorText                              from "ui/ErrorText/Component"
+import styles                                 from "./styles.module.css"
 
 import { FormEvent, useState, useContext    } from "react"
 import { AuthControllerContext, UserContext } from "pages/App/Component"
 import { auth                               } from "logic/api"
-
-import "./style.css"
 
 export interface Props {
     onAuth?:   OnAuth
@@ -97,20 +96,29 @@ export default function AuthFrom(props: Props) {
         setCommonError(undefined)
     }
 
-    return <form className="AuthForm" onSubmit={onSubmit}>
-        <fieldset>
-            <legend>Sign In</legend>
+    return <form onSubmit={onSubmit}>
+        <fieldset className={styles.fields}>
+            <legend className={styles.header}>Sign In</legend>
             <Input placeholder="Login" onChange={onLoginChange} invalid={loginInvalid} />
-            <ErrorText>{loginError}</ErrorText>
+            {error(loginError)}
             <Input placeholder="Password" onChange={onPasswordChange} invalid={passwordInvalid} type="password" />
-            <ErrorText>{passwordError}</ErrorText>
-            <div className="buttons">
+            {error(passwordError)}
+            <div className={styles.buttons}>
                 <Button type="cancel" state={cancelState} onClick={onCancel}>Cancel</Button>
                 <Button type="submit" state={signInState}>Sign In</Button>
             </div>
-            <ErrorText>{commonError}</ErrorText>
+            {error(commonError)}
         </fieldset>
     </form>
+
+    function error(message: string | undefined) {
+        if (message == null)
+            return null
+
+        return <div className={styles.error}>
+            <ErrorText>{message}</ErrorText>
+        </div>
+    }
 
     function formatError(error?: string): string | undefined {
         return error?.replaceAll(/\.\s*/g, ".\n")

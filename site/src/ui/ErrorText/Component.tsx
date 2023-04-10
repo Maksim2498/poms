@@ -1,4 +1,4 @@
-import "./style.css"
+import styles from "./styles.module.css"
 
 export interface Props {
     children?: any
@@ -10,7 +10,7 @@ export default function ErrorText(props: Props) {
     if (!children)
         return null
 
-    return <div className="ErrorText">
+    return <div className={styles.text}>
         {body()}
     </div>
 

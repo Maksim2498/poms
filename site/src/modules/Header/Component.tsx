@@ -19,7 +19,7 @@ export interface NoneProps {
 export type Show = "user" | "none"
 
 export default function Header(props: Props) {
-    return <header className={styles.Header}>
+    return <header className={styles.header}>
         <Logo />
         {show()}
     </header>

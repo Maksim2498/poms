@@ -1,17 +1,20 @@
-.IconButton {
+.button {
     cursor: pointer;
     width: 2rem;
     height: 2rem;
     background-size: contain;
     transition: .08s filter;
-    filter: brightness(.8);
-    color: transparent
+    filter: brightness(.8)
 }
 
-.IconButton:hover {
+.button:hover {
     filter: brightness(1)
 }
 
-.IconButton:active {
+.button:active {
     filter: brightness(.6)
+}
+
+.children {
+    display: none
 }
