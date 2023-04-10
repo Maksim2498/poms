@@ -195,7 +195,7 @@ export default class User {
 
         context.font =`${fontSize}px sans-serif`
 
-        const heightDelta = Math.abs(metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent) / 2
+        const heightDelta = evalHeightDelta()
 
         context.fillText(text, width / 2, height / 2 + heightDelta)
 
@@ -213,6 +213,13 @@ export default class User {
 
             return splits[0][0].toUpperCase()
                  + splits[1][0].toUpperCase()
+        }
+
+        function evalHeightDelta() {
+            const diff = metrics.fontBoundingBoxAscent != null ? metrics.fontBoundingBoxAscent   - metrics.fontBoundingBoxDescent
+                                                               : metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent
+
+            return Math.abs(diff / 2)
         }
     }
 
