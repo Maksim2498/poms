@@ -1,6 +1,7 @@
 {
-  "name": "site",
+  "name": "poms-site",
   "version": "0.1.0",
+  "description": "Site for POMS",
   "private": true,
   "dependencies": {
     "@craco/craco": "^7.1.0",
@@ -26,6 +27,19 @@
     "start": "craco start",
     "build": "craco build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maksim2498/poms.git"
+  },
+  "keywords": [
+    "site"
+  ],
+  "author": "Maksim Victorovich Fomin",
+  "license": "SEE LICENSE IN ../LICENSE.md",
+  "bugs": {
+    "url": "https://github.com/Maksim2498/poms/issues"
+  },
+  "homepage": "https://github.com/Maksim2498/poms#readme",
   "eslintConfig": {
     "extends": [
       "react-app"
