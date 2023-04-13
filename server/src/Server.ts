@@ -12,8 +12,8 @@ import Config                                                             from "
 import { promises as fsp                                                } from "fs"
 import { Server   as HttpServer                                         } from "http"
 import { dirname                                                        } from "path"
-import { Instance as WsApplication                                      } from "express-ws"
 import { Router, Request, Response, RequestHandler, ErrorRequestHandler } from "express"
+import { Instance as WsApplication                                      } from "express-ws"
 import { Logger                                                         } from "winston"
 import { Pool, Connection, FieldPacket, ResultSetHeader                 } from "mysql2/promise"
 import { TokenManager, DefaultTokenManager                              } from "./logic/token"
@@ -48,7 +48,7 @@ export default class Server {
         logger?.info("Opened")
     }
 
-    private  httpServer?:        HttpServer
+    private  httpServer:         HttpServer
 
     private  runPromise?:        Promise<void>
     private  resolveRunPromise?: () => void
@@ -73,7 +73,10 @@ export default class Server {
         const nicknameManager = new DefaultNicknameManager({ userManager, config, logger })
         const authManager     = new DefaultAuthManager({ userManager, tokenManager, config, logger })
         const statusFetcher   = new DefaultStatusFetcher({ nicknameManager, config, logger })
-        const app             = createApp.call(this)
+        const rawApp          = express()
+        const httpServer      = http.createServer(rawApp)
+        const wsApp           = expressWs(rawApp, httpServer)
+        const app             = wsApp.app
         const pool            = createPool.call(this)
 
         this.config           = config
@@ -83,13 +86,13 @@ export default class Server {
         this.nicknameManager  = nicknameManager
         this.authManager      = authManager
         this.statusFetcher    = statusFetcher
-        this.wsApp            = app
+        this.wsApp            = wsApp
+        this.httpServer       = httpServer
         this.pool             = pool
 
-        function createApp(this: Server): WsApplication {
-            const wsApp = expressWs(express())
-            const app   = wsApp.app
-            
+        setupApp.call(this)
+
+        function setupApp(this: Server) {
             if (logger)
                 setupLogger()
 
@@ -98,8 +101,6 @@ export default class Server {
             setupWs.call(this)
             setup404()
             setup500()
-
-            return wsApp
 
             function setupLogger() {
                 const middleware = morgan("tiny", {
@@ -565,17 +566,11 @@ export default class Server {
         async function listen(this: Server) {
             return new Promise<void>((resolve, reject) => {
                 try {
-                    const onListenError = (error: any) => {
-                        this.httpServer = undefined
-                        reject(error)
-                    }
-
-                    this.httpServer = http.createServer(this.wsApp.app)
-                                          .on("error", onListenError)
+                    this.httpServer.on("error", reject)
 
                     const socketPath = this.config.read.http?.socketPath
                     const listening  = () => {
-                        this.httpServer!.removeListener("error", onListenError)
+                        this.httpServer.removeListener("error", reject)
 
                         this.logger?.info(this.config.httpServeStatic ? "Listening and serving static content..."
                                                                       : "Listening...")
@@ -632,7 +627,7 @@ export default class Server {
         async function closeHttp(this: Server) {
             this.logger?.debug("Closing HTTP server")
 
-            this.httpServer?.close(error => {
+            this.httpServer.close(error => {
                 if (error)
                     this.logger?.error(error)
 
