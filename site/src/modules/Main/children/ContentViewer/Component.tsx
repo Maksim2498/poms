@@ -12,7 +12,7 @@ import styles                                 from "./styles.module.css"
 
 import { useContext, createContext          } from "react"
 import { UserContext, AuthControllerContext } from "pages/App/Component"
-import { Content                            } from "./children/ContentSelector/Component"
+import { Content                            } from "./content"
 
 export const ContentStackContext = createContext([[], defaultSetContentStack, { current: [] }] as ContentStackContextType)
 
@@ -110,14 +110,14 @@ export default function ContentViewer() {
             function createProfileContent(): Content {
                 const name       = "Your Profile"
                 const selectName = "Profile"
-                const component  = () => Profile({ login: user!.login, onTagClick })
+                const component  = () => Profile({ login: user!.login, onTagClick: onUserTagClick })
 
                 return { name, selectName, component }
             }
         }
 
         function pushUserContent(login: string) {
-            const component       = () => Profile({ login: login, onTagClick })
+            const component       = () => Profile({ login: login, onTagClick: onUserTagClick })
             const name            = `${login}'s Profile`
             const newContent      = { name, component }
             const oldContentStack = contentStackRef.current ?? []
@@ -126,7 +126,7 @@ export default function ContentViewer() {
             setContentStack(newContentStack)
         }
 
-        function onTagClick(newLogin: string, oldLogin: string) {
+        function onUserTagClick(newLogin: string, oldLogin: string) {
             if (!User.areLoginsEqual(newLogin, oldLogin))
                 pushUserContent(newLogin)
         }

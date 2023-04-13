@@ -1,9 +1,9 @@
-import BackButton  from "ui/BackButton/Component"
-import EditButton  from "ui/EditButton/Component"
-import styles      from "./styles.module.css"
+import BackButton        from "ui/BackButton/Component"
+import EditButton        from "ui/EditButton/Component"
+import styles            from "./styles.module.css"
 
 import { OnButtonClick } from "ui/Button/Component"
-import { Content } from "../ContentSelector/Component"
+import { Content       } from "modules/Main/children/ContentViewer/content"
 
 export interface Props {
     showBack?: boolean

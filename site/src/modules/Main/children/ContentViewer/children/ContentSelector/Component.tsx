@@ -1,19 +1,14 @@
-import Button from "ui/Button/Component"
-import styles from "./styles.module.css"
+import Button      from "ui/Button/Component"
+import styles      from "./styles.module.css"
+
+import { Content } from "modules/Main/children/ContentViewer/content"
 
 export interface Props {
     contentList?: Content[]
-    onSelect?:    OnSelect
+    onSelect?:    OnContentSelect
 }
 
-export interface Content {
-    name:        string
-    selectName?: string
-    component:   ContentComponent
-}
-
-export type OnSelect         = (conent: Content) => void
-export type ContentComponent = () => JSX.Element
+export type OnContentSelect = (conent: Content) => void
 
 export default function ContentSelector(props: Props) {
     const contentList = props.contentList ?? []
