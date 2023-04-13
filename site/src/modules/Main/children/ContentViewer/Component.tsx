@@ -33,11 +33,17 @@ export default function ContentViewer() {
     const [contentStack, setContentStack, contentStackRef] = useContext(ContentStackContext)
     const topContent                                       = contentStack[contentStack.length - 1]
     const showBack                                         = contentStack.length > 1
+    const { editable }                                     = topContent
+    const onEdit                                           = () => window.alert("Not implemented")
 
     return <div className={styles.viewer}>
         <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
         <div className={styles.window}>
-            <ContentWindow content={topContent} showBack={showBack} onBack={onBack} showEdit={topContent.editable} />
+            <ContentWindow content  = {topContent}
+                           showBack = {showBack}
+                           onBack   = {onBack}
+                           showEdit = {editable}
+                           onEdit   = {onEdit} />
         </div>
     </div>
 
