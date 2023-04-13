@@ -478,7 +478,7 @@ export default class Config {
         return this.read.logic?.allowAnonymousAccess ?? Config.DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS
     }
 
-    get logicAuthDuration(): number {
+    get logicAuthDelay(): number {
         return this.read.logic?.authDelay ?? Config.DEFAULT_LOGIC_AUTH_DURATION
     }
 
