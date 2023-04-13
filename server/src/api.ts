@@ -1,5 +1,6 @@
 import z                                                   from "zod"
 import isBase64                                            from "is-base64"
+import sleep                                               from "util/sleep"
 import Server                                              from "./Server"
 
 import { Request, Response                               } from "express"
@@ -183,6 +184,8 @@ export const units: UnitCollection = {
         path:   "/auth",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            await sleep(this.config.logicAuthDelay)
+
             const authorization = req.headers.authorization
 
             if (authorization == null) {
