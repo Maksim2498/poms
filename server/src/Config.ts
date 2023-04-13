@@ -89,7 +89,8 @@ const CONFIG_JSON_SCHEMA = z.object({
         openBrowser:          OBOOLEAN,
         aTokenLifetime:       ODUR,
         rTokenLifetime:       ODUR,
-        allowAnonymousAccess: OBOOLEAN
+        allowAnonymousAccess: OBOOLEAN,
+        authDelay:            ODUR,
     }).strict().optional(),
 
     rcon: z.object({
@@ -146,6 +147,7 @@ export default class Config {
     static readonly DEFAULT_LOGIC_A_TOKEN_LIFETIME       = parseDuration("30m")
     static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME       = parseDuration("1w")
     static readonly DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS = true
+    static readonly DEFAULT_LOGIC_AUTH_DURATION          = parseDuration("2s")
 
     static readonly DEFAULT_RCON_ENABLE                  = false
     static readonly DEFAULT_RCON_PORT                    = 25575
@@ -474,6 +476,10 @@ export default class Config {
 
     get logicAllowAnonymousAccess(): boolean {
         return this.read.logic?.allowAnonymousAccess ?? Config.DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS
+    }
+
+    get logicAuthDuration(): number {
+        return this.read.logic?.authDelay ?? Config.DEFAULT_LOGIC_AUTH_DURATION
     }
 
     get rconEnable(): boolean {
