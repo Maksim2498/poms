@@ -124,7 +124,7 @@ export default function Console() {
         newSocket.on("connection-lost",      ()   => pushRecord("error", "Connection lost"))
         newSocket.on("connection-failed",    ()   => pushRecord("error", "Connection failed"))
         newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
-        newSocket.on("authorizing",          ()   => pushRecord("info", "Authorizing..."))
+        newSocket.on("authorizing",          ()   => pushRecord("info",  "Authorizing..."))
         newSocket.on("messagae",             text => pushRecord("output", fmtMessage(text)))
 
         socket.current = newSocket
