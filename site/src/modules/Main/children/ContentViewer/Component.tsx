@@ -82,8 +82,9 @@ export default function ContentViewer() {
                 const name       = "Users List"
                 const selectName = "Users"
                 const component  = () => Users({ onUserClick })
+                const editable   = user?.isAdmin
 
-                return { name, selectName, component}
+                return { name, selectName, component, editable }
 
                 function onUserClick(user: User) {
                     pushUserContent(user.login)
