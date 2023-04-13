@@ -92,16 +92,6 @@ export default function Console() {
 
         const newSocket = new ConsoleSocket()
 
-        newSocket.on("connection-lost", () => {
-            pushRecord("error", "Connection lost")
-            initReconnect()
-        })
-
-        newSocket.on("connection-failed", () => {
-            pushRecord("error", "Connection failed")
-            initReconnect()
-        })
-
         newSocket.on("disconnected", () => {
             pushRecord("info", "Disconnected")
             socket.current = undefined
@@ -131,6 +121,8 @@ export default function Console() {
             newSocket.auth(accessTokenId)
         })
 
+        newSocket.on("connection-lost",      ()   => pushRecord("error", "Connection lost"))
+        newSocket.on("connection-failed",    ()   => pushRecord("error", "Connection failed"))
         newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
         newSocket.on("authorizing",          ()   => pushRecord("info", "Authorizing..."))
         newSocket.on("messagae",             text => pushRecord("output", fmtMessage(text)))
