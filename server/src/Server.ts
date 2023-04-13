@@ -12,7 +12,7 @@ import Config                                                             from "
 import { promises as fsp                                                } from "fs"
 import { Server   as HttpServer                                         } from "http"
 import { dirname                                                        } from "path"
-import { Application                                                    } from "express-ws"
+import { Instance as WsApplication                                      } from "express-ws"
 import { Router, Request, Response, RequestHandler, ErrorRequestHandler } from "express"
 import { Logger                                                         } from "winston"
 import { Pool, Connection, FieldPacket, ResultSetHeader                 } from "mysql2/promise"
@@ -64,7 +64,7 @@ export default class Server {
     readonly tokenManager:       TokenManager
     readonly authManager:        AuthManager
     readonly nicknameManager:    NicknameManager
-    readonly app:                Application
+    readonly wsApp:              WsApplication
     readonly pool:               Pool
 
     constructor(config: Config, logger?: Logger) {
@@ -83,11 +83,12 @@ export default class Server {
         this.nicknameManager  = nicknameManager
         this.authManager      = authManager
         this.statusFetcher    = statusFetcher
-        this.app              = app
+        this.wsApp            = app
         this.pool             = pool
 
-        function createApp(this: Server): Application {
-            const app = expressWs(express()).app as Application
+        function createApp(this: Server): WsApplication {
+            const wsApp = expressWs(express())
+            const app   = wsApp.app
             
             if (logger)
                 setupLogger()
@@ -98,7 +99,7 @@ export default class Server {
             setup404()
             setup500()
 
-            return app
+            return wsApp
 
             function setupLogger() {
                 const middleware = morgan("tiny", {
@@ -569,7 +570,7 @@ export default class Server {
                         reject(error)
                     }
 
-                    this.httpServer = http.createServer(this.app)
+                    this.httpServer = http.createServer(this.wsApp.app)
                                           .on("error", onListenError)
 
                     const socketPath = this.config.read.http?.socketPath
