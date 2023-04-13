@@ -1,6 +1,7 @@
 export interface Content {
     name:        string
     selectName?: string
+    editable?:   boolean
     component:   ContentComponent
 }
 

@@ -37,7 +37,7 @@ export default function ContentViewer() {
     return <div className={styles.viewer}>
         <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
         <div className={styles.window}>
-            <ContentWindow content={topContent} showBack={showBack} onBack={onBack} />
+            <ContentWindow content={topContent} showBack={showBack} onBack={onBack} showEdit={topContent.editable} />
         </div>
     </div>
 
@@ -111,15 +111,17 @@ export default function ContentViewer() {
                 const name       = "Your Profile"
                 const selectName = "Profile"
                 const component  = () => Profile({ login: user!.login, onTagClick: onUserTagClick })
+                const editable   = true
 
-                return { name, selectName, component }
+                return { name, selectName, component, editable }
             }
         }
 
         function pushUserContent(login: string) {
             const component       = () => Profile({ login: login, onTagClick: onUserTagClick })
             const name            = `${login}'s Profile`
-            const newContent      = { name, component }
+            const editable        = login === user?.login || (user?.isAdmin ?? false)
+            const newContent      = { name, component, editable }
             const oldContentStack = contentStackRef.current ?? []
             const newContentStack = [...oldContentStack, newContent]
 
