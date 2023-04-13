@@ -1,3 +1,7 @@
+.header, .header * {
+    z-index: 1
+}
+
 .header {
     background-color: #151515;
     display: flex;
