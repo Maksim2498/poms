@@ -39,7 +39,6 @@
   "bugs": {
     "url": "https://github.com/Maksim2498/poms/issues"
   },
-  "homepage": "https://github.com/Maksim2498/poms#readme",
   "eslintConfig": {
     "extends": [
       "react-app"
