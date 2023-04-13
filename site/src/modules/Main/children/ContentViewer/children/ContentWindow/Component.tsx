@@ -18,9 +18,13 @@ export default function ContentWindow(props: Props) {
 
     return <div className={styles.window}>
         <div className={styles.header}>
-            {showBack ? <BackButton onClick={onBack} /> : <div />}
+            <div className={styles.button}>
+                {showBack && <BackButton onClick={onBack} />}
+            </div>
             <h2>{content.name}</h2>
-            {showEdit ? <EditButton onClick={onEdit} /> : <div />}
+            <div className={styles.button}>
+                {showEdit && <EditButton onClick={onEdit} />}
+            </div>
         </div>
         <div className={styles.main}>
             <content.component />

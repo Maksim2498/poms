@@ -18,6 +18,11 @@
     text-align: center
 }
 
+.button {
+    width: 2rem;
+    height: 2rem
+}
+
 .main {
     position: relative;
     background-color: #222;
