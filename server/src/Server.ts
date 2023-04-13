@@ -1,3 +1,4 @@
+import http                                                               from "http"
 import cp                                                                 from "child_process"
 import open                                                               from "open"
 import express                                                            from "express"
@@ -561,29 +562,43 @@ export default class Server {
         }
 
         async function listen(this: Server) {
-            await new Promise<void>(resolve => {
-                const socketPath = this.config.read.http?.socketPath
-                const listening  = () => {
-                    this.logger?.info(this.config.httpServeStatic ? "Listening and serving static content..."
-                                                                  : "Listening...")
+            return new Promise<void>((resolve, reject) => {
+                try {
+                    const onListenError = (error: any) => {
+                        this.httpServer = undefined
+                        reject(error)
+                    }
 
-                    resolve()
+                    this.httpServer = http.createServer(this.app)
+                                          .on("error", onListenError)
+
+                    const socketPath = this.config.read.http?.socketPath
+                    const listening  = () => {
+                        this.httpServer!.removeListener("error", onListenError)
+
+                        this.logger?.info(this.config.httpServeStatic ? "Listening and serving static content..."
+                                                                      : "Listening...")
+
+                        resolve()
+                    }
+
+                    if (socketPath != null) {
+                        this.httpServer.listen(socketPath, listening)
+                        return
+                    }
+
+                    const host = this.config.httpHost
+                    const port = this.config.httpPort
+
+                    if (host != null) {
+                        this.httpServer.listen(port, host, listening)
+                        return
+                    }
+
+                    this.httpServer.listen(port, listening)
+                } catch (error) {
+                    reject(error)
                 }
-
-                if (socketPath != null) {
-                    this.httpServer = this.app.listen(socketPath, listening)
-                    return
-                }
-
-                const host = this.config.httpHost
-                const port = this.config.httpPort
-
-                if (host != null) {
-                    this.httpServer = this.app.listen(port, host, listening)
-                    return
-                }
-
-                this.httpServer = this.app.listen(port, listening)
             })
         }
     }
