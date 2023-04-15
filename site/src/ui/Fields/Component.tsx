@@ -1,14 +1,6 @@
-import styles from "./styles.module.css"
+import styles    from "./styles.module.css"
 
-export interface Props {
-    showIfEmpty?: boolean
-    header?:      string
-    children:     Rows
-}
-
-export type Rows = {
-    [label: string]: any
-}
+import { Props } from "./types"
 
 export default function Fields(props: Props) {
     const {
