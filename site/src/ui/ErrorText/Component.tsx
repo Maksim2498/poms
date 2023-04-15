@@ -1,8 +1,6 @@
-import styles from "./styles.module.css"
+import styles    from "./styles.module.css"
 
-export interface Props {
-    children?: any
-}
+import { Props } from "./types"
 
 export default function ErrorText(props: Props) {
     const { children } = props
