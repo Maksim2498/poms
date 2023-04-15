@@ -2,7 +2,7 @@ import BackButton        from "ui/BackButton/Component"
 import EditButton        from "ui/EditButton/Component"
 import styles            from "./styles.module.css"
 
-import { OnButtonClick } from "ui/Button/Component"
+import { OnButtonClick } from "ui/Button/types"
 import { Content       } from "modules/Main/children/ContentViewer/content"
 
 export interface Props {
