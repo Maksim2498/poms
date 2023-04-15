@@ -1,19 +1,12 @@
-import styles from "./styles.module.css"
+import styles                  from "./styles.module.css"
 
 import { useState, useEffect } from "react"
+import { Props               } from "./types"
 
 export const DEFAULT_TICK        = 80
 export const DEFAULT_DELAY       = 500
 export const DEFAULT_CURSOR      = "_"
 export const DEFUALT_CURSOR_TICK = 500
-
-export type Props = {
-    tick?:       number
-    delay?:      number
-    cursor?:     string
-    cursorTick?: number
-    children?:   string
-}
 
 export default function AppearingMessage(props: Props) {
     const targetMessage = props.children   ?? ""
