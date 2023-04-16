@@ -1,10 +1,6 @@
-import styles from "./styles.module.css"
+import styles    from "./styles.module.css"
 
-export interface Props {
-    showIfEmpty?: boolean
-    header?:      string
-    children:     any[]
-}
+import { Props } from "./types"
 
 export default function List(props: Props) {
     const {
