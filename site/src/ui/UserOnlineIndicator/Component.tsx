@@ -1,9 +1,6 @@
-import User   from "logic/User"
-import styles from "./styles.module.css"
+import styles    from "./styles.module.css"
 
-export interface Props {
-    user: User
-}
+import { Props } from "./types"
 
 export default function UserOnlineIndicator(props: Props) {
     const { isOnline } = props.user
