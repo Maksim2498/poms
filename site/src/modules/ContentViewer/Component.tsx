@@ -1,29 +1,19 @@
-import ReadonlyRefObject             from "types/ReadonlyRefObject"
-import User                          from "logic/User"
-import Player                        from "logic/Player"
-import ContentSelector               from "./children/ContentSelector/Component"
-import ContentWindow                 from "./children/ContentWindow/Component"
-import Console                       from "./children/Console/Component"
-import Profile                       from "./children/Profile/Component"
-import Server                        from "./children/ServerViewer/Component"
-import Users                         from "./children/Users/Component"
-import Home                          from "./children/Home/Component"
-import styles                        from "./styles.module.css"
+import User                      from "logic/User"
+import Player                    from "logic/Player"
+import ContentSelector           from "./ContentSelector/Component"
+import ContentWindow             from "./ContentWindow/Component"
+import Console                   from "./Console/Component"
+import Profile                   from "./Profile/Component"
+import Server                    from "./ServerViewer/Component"
+import Users                     from "./Users/Component"
+import Home                      from "./Home/Component"
+import styles                    from "./styles.module.css"
 
-import { useContext, createContext } from "react"
-import { AuthControllerContext     } from "App/AuthControllerContext"
-import { UserContext               } from "App/UserContext"
-import { Content                   } from "./content"
-
-export const ContentStackContext = createContext([[], defaultSetContentStack, { current: [] }] as ContentStackContextType)
-
-function defaultSetContentStack() {
-    throw new Error("Missing ContentStackContext.Provider")
-}
-
-export type ContentStackContextType = [Content[], SetContentStack, ContentStackRef]
-export type SetContentStack         = (newContentStack: Content[]) => void
-export type ContentStackRef         = ReadonlyRefObject<Content[]>
+import { useContext            } from "react"
+import { AuthControllerContext } from "App/AuthControllerContext"
+import { UserContext           } from "App/UserContext"
+import { ContentStackContext   } from "./Context"
+import { Content               } from "./types"
 
 export const HOME_CONTENT = { name: "Home", component: Home } as Content
 

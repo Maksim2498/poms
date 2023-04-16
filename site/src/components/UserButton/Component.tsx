@@ -7,12 +7,7 @@ import { useContext, useState  } from "react"
 import { AuthControllerContext } from "App/AuthControllerContext"
 import { UserContext           } from "App/UserContext"
 import { deauth                } from "logic/api"
-
-export interface Props {
-    onSignIn?: OnSignIn
-}
-
-export type OnSignIn = () => void
+import { Props                 } from "./types"
 
 export default function UserButton(props: Props) {
     const authController                = useContext(AuthControllerContext)

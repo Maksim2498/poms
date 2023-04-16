@@ -9,14 +9,7 @@ import { FormEvent, useState, useContext } from "react"
 import { AuthControllerContext           } from "App/AuthControllerContext"
 import { UserContext                     } from "App/UserContext"
 import { auth                            } from "logic/api"
-
-export interface Props {
-    onAuth?:   OnAuth
-    onCancel?: OnCancelAuth
-}
-
-export type OnAuth       = () => void
-export type OnCancelAuth = () => void
+import { Props                           } from "./types"
 
 export default function AuthFrom(props: Props) {
     const { onAuth, onCancel } = props

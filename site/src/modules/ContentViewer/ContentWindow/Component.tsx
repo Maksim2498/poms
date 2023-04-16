@@ -1,17 +1,8 @@
-import BackButton        from "ui/BackButton/Component"
-import EditButton        from "ui/EditButton/Component"
-import styles            from "./styles.module.css"
+import BackButton from "ui/BackButton/Component"
+import EditButton from "ui/EditButton/Component"
+import styles     from "./styles.module.css"
 
-import { OnButtonClick } from "ui/Button/types"
-import { Content       } from "modules/Main/children/ContentViewer/content"
-
-export interface Props {
-    showBack?: boolean
-    onBack?:   OnButtonClick
-    showEdit?: boolean
-    onEdit?:   OnButtonClick
-    content:   Content
-}
+import { Props  } from "./types"
 
 export default function ContentWindow(props: Props) {
     const { showBack, onBack, showEdit, onEdit, content } = props

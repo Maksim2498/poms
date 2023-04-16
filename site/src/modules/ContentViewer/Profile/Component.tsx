@@ -12,21 +12,7 @@ import styles                    from "./styles.module.css"
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "App/AuthControllerContext"
 import { UserContext           } from "App/UserContext"
-
-export type Props = UserProps
-                  | LoginProps
-
-export interface UserProps {
-    onTagClick?: OnTagClick
-    user:        User
-}
-
-export interface LoginProps {
-    onTagClick?: OnTagClick
-    login:       string
-}
-
-export type OnTagClick = (newLogin: string, oldLogin: string) => void
+import { Props                 } from "./types"
 
 export default function Profile(props: Props) {
     const authController                = useContext(AuthControllerContext)

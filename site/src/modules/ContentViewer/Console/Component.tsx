@@ -14,8 +14,7 @@ import { TerminalContext               } from "components/Terminal/Context"
 import { makeRecord                    } from "components/Terminal/util"
 import { Record, RecordType            } from "components/Terminal/types"
 import { isConsoleAvailable            } from "./api"
-
-export const RECONNECT_INTERVAL = 5
+import { RECONNECT_INTERVAL            } from "./constants"
 
 export default function Console() {
     const authController                      = useContext(AuthControllerContext)

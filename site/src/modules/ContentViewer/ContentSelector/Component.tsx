@@ -1,14 +1,7 @@
-import Button      from "ui/Button/Component"
-import styles      from "./styles.module.css"
+import Button    from "ui/Button/Component"
+import styles    from "./styles.module.css"
 
-import { Content } from "modules/Main/children/ContentViewer/content"
-
-export interface Props {
-    contentList?: Content[]
-    onSelect?:    OnContentSelect
-}
-
-export type OnContentSelect = (conent: Content) => void
+import { Props } from "./types"
 
 export default function ContentSelector(props: Props) {
     const contentList = props.contentList ?? []

@@ -10,11 +10,7 @@ import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "App/AuthControllerContext"
-import { OnPlayerCardClick     } from "ui/PlayerCard/types"
-
-export interface Props {
-    onPlayerClick?: OnPlayerCardClick
-}
+import { Props                 } from "./types"
 
 export default function ServerViewer(props: Props) {
     const { onPlayerClick        } = props

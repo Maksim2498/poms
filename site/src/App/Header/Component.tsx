@@ -1,22 +1,8 @@
-import Logo         from "./children/Logo/Component"
-import UserButton   from "./children/UserButton/Component"
+import Logo         from "ui/Logo/Component"
+import UserButton   from "components/UserButton/Component"
 import styles       from "./styles.module.css"
 
-import { OnSignIn } from "./children/UserButton/Component"
-
-export type Props = UserProps
-                  | NoneProps
-
-export interface UserProps {
-    show:     "user"
-    onSignIn: OnSignIn
-}
-
-export interface NoneProps {
-    show?: "none"
-}
-
-export type Show = "user" | "none"
+import { Props    } from "./types"
 
 export default function Header(props: Props) {
     return <header className={styles.header}>
