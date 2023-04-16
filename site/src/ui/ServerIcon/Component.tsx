@@ -1,10 +1,7 @@
-import Server         from "logic/Server"
 import defaultIconSrc from "./default-icon.png"
 import styles         from "./styles.module.css"
 
-export interface Props {
-    server: Server
-}
+import { Props      } from "./types"
 
 export default function ServerIcon(props: Props) {
     const { server } = props
