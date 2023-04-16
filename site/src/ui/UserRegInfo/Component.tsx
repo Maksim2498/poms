@@ -1,13 +1,7 @@
-import User               from "logic/User"
-import Fields             from "ui/Fields/Component"
-import UserTag            from "ui/UserTag/Component"
+import Fields    from "ui/Fields/Component"
+import UserTag   from "ui/UserTag/Component"
 
-import { OnUserTagClick } from "ui/UserTag/Component"
-
-export interface Props {
-    onTagClick?: OnUserTagClick
-    user:        User
-}
+import { Props } from "./types"
 
 export default function UserRegInfo(props: Props) {
     const { login, time } = props.user.reg
