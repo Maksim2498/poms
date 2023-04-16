@@ -1,40 +1,12 @@
-import ReadonlyRefObject                                                     from "types/ReadonlyRefObject"
 import Button                                                                from "ui/Button/Component"
 import Input                                                                 from "ui/Input/Component"
 import styles                                                                from "./styles.module.css"
 
-import { FormEvent, useState, useEffect, useRef, useContext, createContext } from "react"
-import { InputKeyEvent                                                     } from "ui/Input/types"
-
-export const TerminalContext = createContext([[], defaultSetRecords, { current: []}] as TerminalContextType)
-
-function defaultSetRecords() {
-    throw new Error("Missing TerminalContext.Provider")
-}
-
-export type TerminalContextType = [Record[], SetRecords, RecordsRef]
-export type SetRecords          = (newRecords: Record[]) => void
-export type RecordsRef          = ReadonlyRefObject<Record[]>
-
-export interface Props {
-    htmlOutput?: boolean
-    disabled?:   boolean
-    onEnter?:    OnRecordEnter
-}
-
-export type OnRecordEnter = (record: Record) => void
-
-export interface Record {
-    type: RecordType
-    time: Date
-    text: string
-}
-
-export type RecordType  = "input"
-                        | "output"
-                        | "info"
-                        | "success"
-                        | "error"
+import { FormEvent, useState, useEffect, useRef, useContext } from "react"
+import { InputKeyEvent                                      } from "ui/Input/types"
+import { Props, Record                                      } from "./types"
+import { makeRecord                                         } from "./util"
+import { TerminalContext                                    } from "./Context"
 
 export default function Terminal(props: Props) {
     const { onEnter, disabled, htmlOutput } = props
@@ -164,13 +136,5 @@ export default function Terminal(props: Props) {
                 return <span className={styles.text}>{text}</span>
             }
         }
-    }
-}
-
-export function makeRecord(type: RecordType, text: string): Record {
-    return {
-        type,
-        text,
-        time: new Date()
     }
 }

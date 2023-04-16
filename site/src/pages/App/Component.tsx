@@ -10,8 +10,8 @@ import styles                                         from "./styles.module.css"
 
 import { createContext, useEffect, useRef, useState } from "react"
 import { AuthController, reauth                     } from "logic/api"
-import { Record                                     } from "components/Terminal/Component"
-import { TerminalContext                            } from "components/Terminal/Component"
+import { Record                                     } from "components/Terminal/types"
+import { TerminalContext                            } from "components/Terminal/Context"
 import { ContentStackContext, HOME_CONTENT          } from "modules/Main/children/ContentViewer/Component"
 
 export const UserContext           = createContext([undefined,      defaultSetNullableUser] as UserContextType)
