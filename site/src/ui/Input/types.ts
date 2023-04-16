@@ -1,15 +1,16 @@
 import { RefObject } from "react"
 
 export interface Props {
-    type?:        InputType
-    invalid?:     boolean
-    value?:       string
-    onChange?:    OnInputChange
-    disabled?:    boolean
-    placeholder?: string
-    autoFocus?:   boolean
-    onKeyDown?:   OnInputKeyEvent
-    onKeyUp?:     OnInputKeyEvent
+    type?:         InputType
+    invalid?:      boolean
+    value?:        string
+    onChange?:     OnInputChange
+    disabled?:     boolean
+    placeholder?:  string
+    autoFocus?:    boolean
+    onKeyDown?:    OnInputKeyEvent
+    onKeyUp?:      OnInputKeyEvent
+    autoComplete?: string
 }
 
 export type InputType       = "text" | "password"

@@ -15,21 +15,23 @@ const Input = forwardRef<HTMLInputElement, Props>((props, ref) => {
         placeholder,
         autoFocus,
         onKeyDown,
-        onKeyUp
+        onKeyUp,
+        autoComplete
     } = props
 
     const className = invalid ? styles.invalid : styles.valid
 
-    return <input className   = {className}
-                  onKeyDown   = {onKeyDown}
-                  onKeyUp     = {onKeyUp}
-                  type        = {type}
-                  value       = {value}
-                  onChange    = {rawOnChange}
-                  disabled    = {disabled}
-                  placeholder = {placeholder}
-                  autoFocus   = {autoFocus}
-                  ref         = {ref} />
+    return <input className    = {className}
+                  onKeyDown    = {onKeyDown}
+                  onKeyUp      = {onKeyUp}
+                  type         = {type}
+                  value        = {value}
+                  onChange     = {rawOnChange}
+                  disabled     = {disabled}
+                  placeholder  = {placeholder}
+                  autoFocus    = {autoFocus}
+                  autoComplete = {autoComplete}
+                  ref          = {ref} />
 
     function rawOnChange(event: FormEvent<HTMLInputElement>) {
         if (!onChange)
