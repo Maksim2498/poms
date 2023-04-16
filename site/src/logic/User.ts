@@ -156,7 +156,6 @@ export default class User {
     static areLoginsEqual(lhs: string | undefined | null, rhs: string | undefined | null): boolean {
         lhs = lhs?.trim().toLowerCase()
         rhs = rhs?.trim().toLowerCase()
-        console.log(lhs, rhs)
 
         return lhs === rhs
     }
