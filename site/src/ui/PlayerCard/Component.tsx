@@ -1,14 +1,8 @@
-import Player         from "logic/Player"
 import UserIcon       from "ui/UserIcon/Component"
 import TaggedUserName from "ui/TaggedUserName/Component"
 import styles         from "./styles.module.css"
 
-export interface Props {
-    onClick?: OnPlayerCardClick
-    player:   Player
-}
-
-export type OnPlayerCardClick = (player: Player) => void
+import { Props      } from "./types"
 
 export default function PlayerCard(props: Props) {
     const { player, onClick  } = props

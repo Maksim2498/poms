@@ -10,7 +10,7 @@ import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
-import { OnPlayerCardClick     } from "ui/PlayerCard/Component"
+import { OnPlayerCardClick     } from "ui/PlayerCard/types"
 
 export interface Props {
     onPlayerClick?: OnPlayerCardClick
