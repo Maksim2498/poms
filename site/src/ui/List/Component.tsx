@@ -2,20 +2,17 @@ import styles    from "./styles.module.css"
 
 import { Props } from "./types"
 
-export default function List(props: Props) {
+export default function List<T extends React.ReactNode>(props: Props<T>) {
     const {
         header,
         showIfEmpty,
         children: items
-    } = props
+     } = props
 
-    const hide =  !showIfEmpty
-               && Object.keys(items).length === 0
+    const hide = !showIfEmpty && Object.keys(items).length === 0
 
     if (hide)
         return null
-
-    const now = (new Date()).toISOString()
 
     return <div>
         {head()}
@@ -26,17 +23,23 @@ export default function List(props: Props) {
         if (header == null)
             return null
 
-        return <div className={styles.header}>
+        const headerClassName = props.headerClassName ?? styles.header
+
+        return <div className={headerClassName}>
             {header}
         </div>
     }
 
     function body() {
-        return <ul className={styles.list}>
-            {items.map((item, i) => {
-                const key = `${i}/${now}`
+        const evalKey       = props.evalKey       ?? (() => Math.random())
+        const listClassName = props.listClassName ?? styles.list
+        const itemClassName = props.itemClassName ?? styles.item
 
-                return <li key={key} className={styles.item}>
+        return <ul className={listClassName}>
+            {items.map((item, i) => {
+                const key = evalKey(item, i)
+
+                return <li key={key} className={itemClassName}>
                     {item}
                 </li>
             })}

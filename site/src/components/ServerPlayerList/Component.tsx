@@ -3,6 +3,7 @@ import useAsync                  from "hooks/useAsync"
 import LoadingIndicator          from "ui/LoadingIndicator/Component"
 import PlayerCard                from "ui/PlayerCard/Component"
 import ErrorText                 from "ui/ErrorText/Component"
+import List                      from "ui/List/Component"
 import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
@@ -29,11 +30,11 @@ export default function ServerPlayerList(props: Props) {
             <ErrorText>Loading failed</ErrorText>
         </div>
 
-    return <ul className={styles.loaded}>
-        {players.map(player => <li key={player.nickname} className={styles.item}>
-            <PlayerCard player={player} onClick={onPlayerClick} />
-        </li>)}
-    </ul>
+    return <List listClassName = {styles.loaded}
+                 itemClassName = {styles.item}
+                 evalKey       = {card => card.props.player.nickname}>
+        {players.map(player => <PlayerCard player={player} onClick={onPlayerClick} key={player.nickname} />)}
+    </List>
 
     async function getPlayers(): Promise<Player[]> {
         const { sample } = server.players

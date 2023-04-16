@@ -36,6 +36,11 @@ export default function Users(props: Props) {
         </div>
 
     return <div className={styles.loaded}>
+        {
+            editMode && <div className={styles.createButton}>
+                <Button>Create new user</Button>
+            </div>
+        }
         <ul className={styles.list}>
             {users.map((user, index) =>
                 user && <li key={user.login} className={styles.item}>

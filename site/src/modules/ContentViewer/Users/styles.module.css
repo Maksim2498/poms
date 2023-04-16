@@ -16,6 +16,10 @@
     align-items: center
 }
 
+.createButton {
+    margin-top: 1rem;
+}
+
 .list {
     display: flex;
     flex-direction: column;
@@ -32,10 +36,6 @@
 
 .item > * {
     margin: 0 .5rem
-}
-
-.creationForm {
-    display: flex;
 }
 
 .error {
