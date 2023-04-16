@@ -5,9 +5,10 @@
     position: relative;
     background-color: #484848;
     border: thin solid #666;
+    border-radius: .4rem;
     padding: .75rem;
     font-size: .9rem;
-    border-radius: .4rem;
+    cursor: pointer;
     transition: .08s background-color
 }
 
