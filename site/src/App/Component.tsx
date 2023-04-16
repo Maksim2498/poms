@@ -32,8 +32,10 @@ export default function App() {
     useEffect(() => {
         User.save(user)
 
-        if (!User.areLoginsEqual(user?.login, oldUser.current?.login))
+        if (!User.areLoginsEqual(user?.login, oldUser.current?.login)) {
+            setContentStack([HOME_CONTENT])
             setRecords([])
+        }
 
         oldUser.current = user
     // eslint-disable-next-line react-hooks/exhaustive-deps
