@@ -73,6 +73,8 @@ export default function AuthFrom(props: Props) {
     }
 
     const onLoginChange = (newLogin: string) => {
+        newLogin = newLogin.trim()
+
         const error = formatError(User.validateLogin(newLogin))
 
         setLogin(newLogin)
