@@ -1,9 +1,6 @@
-import User   from "logic/User"
-import List from "ui/List/Component"
+import List       from "ui/List/Component"
 
-export interface Props {
-    user: User
-}
+import { Props } from "./types"
 
 export default function UserNicknames(props: Props) {
     return <List header="Nicknames">
