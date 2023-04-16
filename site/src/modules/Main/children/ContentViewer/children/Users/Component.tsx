@@ -7,7 +7,7 @@ import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
-import { OnUserCardClick       } from "ui/UserCard/Component"
+import { OnUserCardClick       } from "ui/UserCard/types"
 
 export interface Props {
     onUserClick?: OnUserCardClick

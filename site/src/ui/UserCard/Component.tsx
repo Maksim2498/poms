@@ -1,15 +1,9 @@
-import User                from "logic/User"
 import TaggedUserName      from "ui/TaggedUserName/Component"
 import UserIcon            from "ui/UserIcon/Component"
 import UserOnlineIndicator from "ui/UserOnlineIndicator/Component"
 import styles              from "./styles.module.css"
 
-export interface Props {
-    onClick?: OnUserCardClick
-    user:     User
-}
-
-export type OnUserCardClick = (user: User) => void
+import { Props           } from "./types"
 
 export default function UserCard(props: Props) {
     const { onClick, user } = props
