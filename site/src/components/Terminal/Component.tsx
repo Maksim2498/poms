@@ -4,7 +4,7 @@ import Input                                                                 fro
 import styles                                                                from "./styles.module.css"
 
 import { FormEvent, useState, useEffect, useRef, useContext, createContext } from "react"
-import { InputKeyEvent                                                     } from "ui/Input/Component"
+import { InputKeyEvent                                                     } from "ui/Input/types"
 
 export const TerminalContext = createContext([[], defaultSetRecords, { current: []}] as TerminalContextType)
 
