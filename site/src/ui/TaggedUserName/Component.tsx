@@ -1,13 +1,7 @@
-import User     from "logic/User";
-import UserName from "ui/UserName/Component";
-import UserTag  from "ui/UserTag/Component";
+import UserName  from "ui/UserName/Component";
+import UserTag   from "ui/UserTag/Component";
 
-import { OnUserTagClick } from "ui/UserTag/Component";
-
-export interface Props {
-    onTagClick?: OnUserTagClick
-    user:        User
-}
+import { Props } from "./types"
 
 export default function TaggedUserName(props: Props) {
     const { user, onTagClick } = props
