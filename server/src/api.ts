@@ -184,7 +184,11 @@ export const units: UnitCollection = {
         path:   "/auth",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            await sleep(this.config.logicAuthDelay)
+            const production = process.env.NODE_ENV === "production"
+            const needSleep  = production || !this.config.logicNoAuthDelayInDev
+
+            if (needSleep)
+                await sleep(this.config.logicAuthDelay)
 
             const authorization = req.headers.authorization
 
