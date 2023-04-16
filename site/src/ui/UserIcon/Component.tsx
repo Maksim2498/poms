@@ -1,13 +1,7 @@
-import User           from "logic/User";
 import defaultIconSrc from "./default-icon.svg"
 import styles         from "./styles.module.css"
 
-export interface Props {
-    onClick?: OnUserIconClick
-    user?:    User
-}
-
-export type OnUserIconClick = (user?: User) => void
+import { Props      } from "./types"
 
 export default function UserIcon(props: Props) {
     const { onClick, user } = props
