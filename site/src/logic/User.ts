@@ -1,8 +1,8 @@
-import z                       from "zod"
-import Cookies                 from "js-cookie"
-import AuthInfo                from "./AuthInfo"
+import z                             from "zod"
+import Cookies                       from "js-cookie"
+import AuthInfo                      from "./AuthInfo"
 
-import { AuthController, get } from "./api"
+import { AuthController, del, get } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
@@ -61,8 +61,9 @@ export default class User {
     static async fetch(options: FetchOptions): Promise<User> {
         const { login, authController, fetchNicknames } = options
 
-        const url    = `users/${encodeURIComponent(login)}?${fetchNicknames ? "nicknames" : ""}`
-        const [json] = await get(authController, url)
+        const urlOptions = fetchNicknames ? { nicknames: undefined } : undefined
+        const url        = this.makeUrl(login, urlOptions)
+        const [json]     = await get(authController, url)
         
         return User.fromJson(json)
     }
@@ -155,6 +156,7 @@ export default class User {
     static areLoginsEqual(lhs: string | undefined | null, rhs: string | undefined | null): boolean {
         lhs = lhs?.trim().toLowerCase()
         rhs = rhs?.trim().toLowerCase()
+        console.log(lhs, rhs)
 
         return lhs === rhs
     }
@@ -223,6 +225,29 @@ export default class User {
         }
     }
 
+    static async del(authController: AuthController, login: string) {
+        const url = this.makeUrl(login)
+        await del(authController, url)
+    }
+
+    static makeUrl(login: string, options?: { [key: string]: any }): string {
+        const encodedLogin   = encodeURIComponent(login)
+        const encodedOptions = Object.entries(options ?? {})
+                                     .map(([key, value]) => {
+                                        const encodedKey = encodeURIComponent(key)
+
+                                        if (value === undefined)
+                                            return encodedKey
+
+                                        const encodedValue = encodeURIComponent(String(value))
+
+                                        return`${encodedKey}=${encodedValue}`
+                                     })
+                                     .join("&")
+
+        return `users/${encodedLogin}?${encodedOptions}`
+    }
+
     readonly login:      string
     readonly name?:      string
     readonly nicknames:  string[]
@@ -270,5 +295,9 @@ export default class User {
             expires:  3650,
             sameSite: "strict"
         })
+    }
+
+    async del(authController: AuthController) {
+        await User.del(authController, this.login)
     }
 }
