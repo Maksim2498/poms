@@ -6,7 +6,7 @@ import Console                   from "./Console/Component"
 import Profile                   from "./Profile/Component"
 import Server                    from "./ServerViewer/Component"
 import Users                     from "./Users/Component"
-import Home                      from "./Home/Component"
+import HOME_CONTENT              from "./HomeContent"
 import styles                    from "./styles.module.css"
 
 import { useContext            } from "react"
@@ -14,8 +14,6 @@ import { AuthControllerContext } from "App/AuthControllerContext"
 import { UserContext           } from "App/UserContext"
 import { ContentStackContext   } from "./Context"
 import { Content               } from "./types"
-
-export const HOME_CONTENT = { name: "Home", component: Home } as Content
 
 export default function ContentViewer() {
     const [user                                          ] = useContext(UserContext)
@@ -49,9 +47,7 @@ export default function ContentViewer() {
         return contentList
 
         function makeBasicContent(): Content[] {
-            return [
-                { name: "Home", component: Home }
-            ]
+            return [HOME_CONTENT]
         }
 
         function addCommonContent() {
