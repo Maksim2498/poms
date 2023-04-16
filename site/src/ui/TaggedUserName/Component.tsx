@@ -1,6 +1,6 @@
-import User     from "logic/User";
-import UserName from "ui/UserName/Component";
-import UserTag  from "ui/UserTag/Component";
+import User               from "logic/User";
+import UserName           from "ui/UserName/Component";
+import UserTag            from "ui/UserTag/Component";
 
 import { OnUserTagClick } from "ui/UserTag/Component";
 
