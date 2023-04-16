@@ -1,19 +1,19 @@
-import User                      from "logic/User"
-import Player                    from "logic/Player"
-import ContentSelector           from "./ContentSelector/Component"
-import ContentWindow             from "./ContentWindow/Component"
-import Console                   from "./Console/Component"
-import Profile                   from "./Profile/Component"
-import Server                    from "./ServerViewer/Component"
-import Users                     from "./Users/Component"
-import HOME_CONTENT              from "./HomeContent"
-import styles                    from "./styles.module.css"
+import User                               from "logic/User"
+import Player                             from "logic/Player"
+import ContentSelector                    from "./ContentSelector/Component"
+import ContentWindow                      from "./ContentWindow/Component"
+import Console                            from "./Console/Component"
+import Profile                            from "./Profile/Component"
+import Server                             from "./ServerViewer/Component"
+import Users                              from "./Users/Component"
+import HOME_CONTENT                       from "./HomeContent"
+import styles                             from "./styles.module.css"
 
-import { useContext            } from "react"
-import { AuthControllerContext } from "App/AuthControllerContext"
-import { UserContext           } from "App/UserContext"
-import { ContentStackContext   } from "./Context"
-import { Content               } from "./types"
+import { useContext                     } from "react"
+import { AuthControllerContext          } from "App/AuthControllerContext"
+import { UserContext                    } from "App/UserContext"
+import { ContentStackContext            } from "./Context"
+import { Content, ContentComponentProps } from "./types"
 
 export default function ContentViewer() {
     const [user                                          ] = useContext(UserContext)
@@ -22,8 +22,7 @@ export default function ContentViewer() {
     const [contentStack, setContentStack, contentStackRef] = useContext(ContentStackContext)
     const topContent                                       = contentStack[contentStack.length - 1]
     const showBack                                         = contentStack.length > 1
-    const { editable }                                     = topContent
-    const onEdit                                           = () => window.alert("Not implemented")
+    const { editable                                     } = topContent
 
     return <div className={styles.viewer}>
         <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
@@ -31,8 +30,7 @@ export default function ContentViewer() {
             <ContentWindow content  = {topContent}
                            showBack = {showBack}
                            onBack   = {onBack}
-                           showEdit = {editable}
-                           onEdit   = {onEdit} />
+                           showEdit = {editable} />
         </div>
     </div>
 
@@ -74,7 +72,7 @@ export default function ContentViewer() {
             function createUsersContent(): Content {
                 const name       = "Users List"
                 const selectName = "Users"
-                const component  = () => Users({ onUserClick })
+                const component  = ({ editMode }: ContentComponentProps) => Users({ onUserClick, editMode })
                 const editable   = user?.isAdmin
 
                 return { name, selectName, component, editable }

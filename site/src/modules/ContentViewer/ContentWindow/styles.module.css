@@ -5,30 +5,43 @@
 
 .header {
     padding: .8rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+
     background-color: #333;
+
+    display: grid;
+    align-items: center;
+    grid-template-columns: 8rem calc(100% - 16rem) 8rem;
+    grid-template-rows: 1.9rem;
+
     width: 100%;
     height: 3.5rem;
+
     border-radius: .4rem .4rem 0 0
 }
 
-.header > h2 {
-    text-align: center
+.title {
+    text-align: center;
+    grid-column: 2
 }
 
-.button {
-    width: 2rem;
-    height: 2rem
+.leftButton {
+    grid-column: 1
+}
+
+.rightButton {
+    grid-column: 3;
+    justify-self: end
 }
 
 .main {
     position: relative;
+
     background-color: #222;
     border-radius: 0 0 .4rem .4rem;
+
     overflow-x: hidden;
     overflow-y: auto;
+
     width: 100%;
     height: calc(100% - 3.5rem)
 }

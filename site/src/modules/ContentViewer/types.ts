@@ -14,5 +14,5 @@ export interface Content {
 export type ContentComponent = (props: ContentComponentProps) => JSX.Element
 
 export interface ContentComponentProps {
-
+    editMode?: boolean
 }
