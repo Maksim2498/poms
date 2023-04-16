@@ -1,4 +1,3 @@
-import Server                    from "logic/Server"
 import Player                    from "logic/Player"
 import useAsync                  from "hooks/useAsync"
 import LoadingIndicator          from "ui/LoadingIndicator/Component"
@@ -6,15 +5,9 @@ import PlayerCard                from "ui/PlayerCard/Component"
 import ErrorText                 from "ui/ErrorText/Component"
 import styles                    from "./styles.module.css"
 
-
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "pages/App/Component"
-import { OnPlayerCardClick     } from "ui/PlayerCard/types"
-
-export interface Props {
-    onPlayerClick?: OnPlayerCardClick
-    server:         Server
-}
+import { Props                 } from "./types"
 
 export default function ServerPlayerList(props: Props) {
     const { server, onPlayerClick } = props
