@@ -1,13 +1,14 @@
-import User                                   from "logic/User"
-import LogicError                             from "logic/LogicError"
-import Input                                  from "ui/Input/Component"
-import Button                                 from "ui/Button/Component"
-import ErrorText                              from "ui/ErrorText/Component"
-import styles                                 from "./styles.module.css"
+import User                                from "logic/User"
+import LogicError                          from "logic/LogicError"
+import Input                               from "ui/Input/Component"
+import Button                              from "ui/Button/Component"
+import ErrorText                           from "ui/ErrorText/Component"
+import styles                              from "./styles.module.css"
 
-import { FormEvent, useState, useContext    } from "react"
-import { AuthControllerContext, UserContext } from "pages/App/Component"
-import { auth                               } from "logic/api"
+import { FormEvent, useState, useContext } from "react"
+import { AuthControllerContext           } from "App/AuthControllerContext"
+import { UserContext                     } from "App/UserContext"
+import { auth                            } from "logic/api"
 
 export interface Props {
     onAuth?:   OnAuth

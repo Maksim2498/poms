@@ -6,7 +6,7 @@ import ErrorText                 from "ui/ErrorText/Component"
 import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
-import { AuthControllerContext } from "pages/App/Component"
+import { AuthControllerContext } from "App/AuthControllerContext"
 import { Props                 } from "./types"
 
 export default function ServerPlayerList(props: Props) {

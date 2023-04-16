@@ -1,33 +1,20 @@
-import useStateRef                                    from "react-usestateref"
-import User                                           from "logic/User"
-import useAsync                                       from "hooks/useAsync"
-import Header                                         from "modules/Header/Component"
-import Main                                           from "modules/Main/Component"
-import Footer                                         from "modules/Footer/Component"
-import Loading                                        from "ui/Loading/Component"
-import AuthInfo                                       from "logic/AuthInfo"
-import styles                                         from "./styles.module.css"
+import useStateRef                           from "react-usestateref"
+import User                                  from "logic/User"
+import useAsync                              from "hooks/useAsync"
+import Header                                from "modules/Header/Component"
+import Main                                  from "modules/Main/Component"
+import Footer                                from "modules/Footer/Component"
+import Loading                               from "ui/Loading/Component"
+import AuthInfo                              from "logic/AuthInfo"
+import styles                                from "./styles.module.css"
 
-import { createContext, useEffect, useRef, useState } from "react"
-import { AuthController, reauth                     } from "logic/api"
-import { Record                                     } from "components/Terminal/types"
-import { TerminalContext                            } from "components/Terminal/Context"
-import { ContentStackContext, HOME_CONTENT          } from "modules/Main/children/ContentViewer/Component"
-
-export const UserContext           = createContext([undefined,      defaultSetNullableUser] as UserContextType)
-export const AuthControllerContext = createContext([new AuthInfo(), defaultSetAuthInfo    ] as AuthController )
-
-function defaultSetNullableUser() {
-    throw new Error("Missing UserContext.Provider")
-}
-
-function defaultSetAuthInfo() {
-    throw new Error("Missing AuthControllerContext.Provider")
-}
-
-export type UserContextType = [OptionalUser, SetNullableUser]
-export type SetNullableUser = (user: OptionalUser) => void
-export type OptionalUser    = User | undefined
+import { useEffect, useRef, useState       } from "react"
+import { reauth                            } from "logic/api"
+import { Record                            } from "components/Terminal/types"
+import { TerminalContext                   } from "components/Terminal/Context"
+import { ContentStackContext, HOME_CONTENT } from "modules/Main/children/ContentViewer/Component"
+import { AuthControllerContext             } from "./AuthControllerContext"
+import { UserContext                       } from "./UserContext"
 
 export default function App() {
     const [contentStack, setContentStack, contentStackRef] = useStateRef([HOME_CONTENT])

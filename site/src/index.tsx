@@ -1,4 +1,4 @@
-import App            from "pages/App/Component"
+import App            from "App/Component"
 
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"

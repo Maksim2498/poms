@@ -9,7 +9,7 @@ import ConsoleSocket                     from "./ConsoleSocket"
 import styles                            from "./styles.module.css"
 
 import { useContext, useEffect, useRef } from "react"
-import { AuthControllerContext         } from "pages/App/Component"
+import { AuthControllerContext         } from "App/AuthControllerContext"
 import { TerminalContext               } from "components/Terminal/Context"
 import { makeRecord                    } from "components/Terminal/util"
 import { Record, RecordType            } from "components/Terminal/types"
