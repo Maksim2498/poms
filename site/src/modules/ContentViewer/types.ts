@@ -11,4 +11,8 @@ export interface Content {
     component:   ContentComponent
 }
 
-export type ContentComponent = () => JSX.Element
+export type ContentComponent = (props: ContentComponentProps) => JSX.Element
+
+export interface ContentComponentProps {
+
+}
