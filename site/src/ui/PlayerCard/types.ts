@@ -1,6 +1,6 @@
 import Player from "logic/Player"
 
-export interface Props {
+export interface PlayerCardProps {
     onClick?: OnPlayerCardClick
     player:   Player
 }
