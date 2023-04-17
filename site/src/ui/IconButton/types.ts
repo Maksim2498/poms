@@ -1,4 +1,4 @@
-export interface Props {
+export interface IconButtonProps {
     onClick?:  OnIconButtonClick
     children?: string
     src:       string

@@ -1,8 +1,8 @@
-import styles    from "./styles.module.css"
+import styles              from "./styles.module.css"
 
-import { Props } from "./types"
+import { IconButtonProps } from "./types"
 
-export default function IconButton(props: Props) {
+export default function IconButton(props: IconButtonProps) {
     const { onClick, children, src } = props
 
     return <div className={styles.button} style={{backgroundImage: `url("${src}")`}} onClick={onClick}>
