@@ -1,20 +1,20 @@
-import * as motd                         from "minecraft-motd-util"
-import Autolinker                        from "autolinker"
-import useAsync                          from "hooks/useAsync"
-import useForceRerender                  from "hooks/useForceRerender"
-import Terminal                          from "components/Terminal/Component"
-import Loading                           from "ui/Loading/Component"
-import ErrorText                         from "ui/ErrorText/Component"
-import ConsoleSocket                     from "./ConsoleSocket"
-import styles                            from "./styles.module.css"
+import * as motd                              from "minecraft-motd-util"
+import Autolinker                             from "autolinker"
+import useAsync                               from "hooks/useAsync"
+import useForceRerender                       from "hooks/useForceRerender"
+import Terminal                               from "components/Terminal/Component"
+import Loading                                from "ui/Loading/Component"
+import ErrorText                              from "ui/ErrorText/Component"
+import ConsoleSocket                          from "./ConsoleSocket"
+import styles                                 from "./styles.module.css"
 
-import { useContext, useEffect, useRef } from "react"
-import { AuthControllerContext         } from "App/AuthControllerContext"
-import { TerminalContext               } from "components/Terminal/Context"
-import { makeRecord                    } from "components/Terminal/util"
-import { Record, RecordType            } from "components/Terminal/types"
-import { isConsoleAvailable            } from "./api"
-import { RECONNECT_INTERVAL            } from "./constants"
+import { useContext, useEffect, useRef      } from "react"
+import { AuthControllerContext              } from "App/AuthControllerContext"
+import { TerminalContext                    } from "components/Terminal/Context"
+import { makeTerminalRecord                 } from "components/Terminal/util"
+import { TerminalRecord, TerminalRecordType } from "components/Terminal/types"
+import { isConsoleAvailable                 } from "./api"
+import { RECONNECT_INTERVAL                 } from "./constants"
 
 export default function Console() {
     const authController                      = useContext(AuthControllerContext)
@@ -72,7 +72,7 @@ export default function Console() {
         <Terminal onEnter={onEnter} disabled={disabled} htmlOutput={true} />
     </div>
 
-    function onEnter(newRecord: Record) {
+    function onEnter(newRecord: TerminalRecord) {
         const willSend =  newRecord.type        === "input"
                        && socket.current?.state === "authorized"
 
@@ -151,8 +151,8 @@ export default function Console() {
         }
     }
 
-    function pushRecord(type: RecordType, text: string) {
-        const newRecord  = makeRecord(type, text)
+    function pushRecord(type: TerminalRecordType, text: string) {
+        const newRecord  = makeTerminalRecord(type, text)
         const oldRecords = recordsRef.current ?? []
         const newRecords = [...oldRecords, newRecord]
 

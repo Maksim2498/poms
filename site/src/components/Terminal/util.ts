@@ -1,6 +1,6 @@
-import { RecordType, Record } from "./types"
+import { TerminalRecordType, TerminalRecord } from "./types"
 
-export function makeRecord(type: RecordType, text: string): Record {
+export function makeTerminalRecord(type: TerminalRecordType, text: string): TerminalRecord {
     return {
         type,
         text,

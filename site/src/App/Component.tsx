@@ -11,7 +11,7 @@ import styles                          from "./styles.module.css"
 
 import { useEffect, useRef, useState } from "react"
 import { reauth                      } from "logic/api"
-import { Record                      } from "components/Terminal/types"
+import { TerminalRecord              } from "components/Terminal/types"
 import { TerminalContext             } from "components/Terminal/Context"
 import { ContentStackContext         } from "modules/ContentViewer/Context"
 import { AuthControllerContext       } from "./AuthControllerContext"
@@ -19,7 +19,7 @@ import { UserContext                 } from "./UserContext"
 
 export default function App() {
     const [contentStack, setContentStack, contentStackRef] = useStateRef([HOME_CONTENT])
-    const [records,      setRecords,      recordsRef     ] = useStateRef([] as Record[])
+    const [records,      setRecords,      recordsRef     ] = useStateRef([] as TerminalRecord[])
     const [authInfo,     setAuthInfo                     ] = useState(AuthInfo.loadOrDefault())
     const [user,         setUser                         ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
     const [showAuthForm, setShowAuthForm                 ] = useState(false)

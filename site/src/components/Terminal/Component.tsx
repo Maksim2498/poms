@@ -1,14 +1,14 @@
-import Button                                                                from "ui/Button/Component"
-import Input                                                                 from "ui/Input/Component"
-import styles                                                                from "./styles.module.css"
+import Button                                                 from "ui/Button/Component"
+import Input                                                  from "ui/Input/Component"
+import styles                                                 from "./styles.module.css"
 
 import { FormEvent, useState, useEffect, useRef, useContext } from "react"
 import { InputKeyEvent                                      } from "ui/Input/types"
-import { Props, Record                                      } from "./types"
-import { makeRecord                                         } from "./util"
+import { TerminalProps, TerminalRecord                      } from "./types"
+import { makeTerminalRecord                                 } from "./util"
 import { TerminalContext                                    } from "./Context"
 
-export default function Terminal(props: Props) {
+export default function Terminal(props: TerminalProps) {
     const { onEnter, disabled, htmlOutput } = props
     const [ input,   setInput             ] = useState("")
     const [ records,                      ] = useContext(TerminalContext)
@@ -32,7 +32,7 @@ export default function Terminal(props: Props) {
     function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         clearHistoryIndex()
-        onEnter?.(makeRecord("input", input))
+        onEnter?.(makeTerminalRecord("input", input))
         setInput("")
     }
 
@@ -84,7 +84,7 @@ export default function Terminal(props: Props) {
         }
     }
 
-    function recordsToElementList(records: Record[]): JSX.Element[] {
+    function recordsToElementList(records: TerminalRecord[]): JSX.Element[] {
         const preparedRecords = prepareRecords()
         const elements        = [] as JSX.Element[]
 
@@ -95,16 +95,16 @@ export default function Terminal(props: Props) {
 
         return elements
 
-        function prepareRecords(): Record[] {
-            const prepared = []   as Record[]
-            let   prev     = null as Record | null
+        function prepareRecords(): TerminalRecord[] {
+            const prepared = []   as TerminalRecord[]
+            let   prev     = null as TerminalRecord | null
 
             for (const cur of records) {
                 const prevDate = prev?.time.getDate()
                 const curDate  = cur.time.getDate()
 
                 if (prevDate !== curDate) {
-                    const info = makeRecord("info", cur.time.toLocaleDateString())
+                    const info = makeTerminalRecord("info", cur.time.toLocaleDateString())
                     prepared.push(info)
                 }
 
@@ -116,7 +116,7 @@ export default function Terminal(props: Props) {
             return prepared
         }
 
-        function recordToElement(record: Record, index: number = 0): JSX.Element {
+        function recordToElement(record: TerminalRecord, index: number = 0): JSX.Element {
             const { time, text, type } = record
             const className            = styles[type + "Record"]
 
