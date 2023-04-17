@@ -3,9 +3,9 @@ import UserIcon            from "ui/UserIcon/Component"
 import UserOnlineIndicator from "ui/UserOnlineIndicator/Component"
 import styles              from "./styles.module.css"
 
-import { Props           } from "./types"
+import { UserCardProps   } from "./types"
 
-export default function UserCard(props: Props) {
+export default function UserCard(props: UserCardProps) {
     const { onClick, user } = props
 
     return <div className={styles.card} onClick={() => onClick?.(user)}>

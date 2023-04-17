@@ -1,6 +1,6 @@
 import User from "logic/User"
 
-export interface Props {
+export interface UserCardProps {
     onClick?: OnUserCardClick
     user:     User
 }
