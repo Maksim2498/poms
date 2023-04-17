@@ -1,10 +1,13 @@
-export interface Props {
-    type?:     ButtonType
-    state?:    ButtonState
-    onClick?:  OnButtonClick
-    children?: any
+export interface ButtonProps {
+    type?:      ButtonType
+    color?:     ButtonColor
+    disabled?:  boolean
+    loading?:   boolean
+    onClick?:   OnButtonClick
+    autoFocus?: boolean
+    children?:  any
 }
 
-export type ButtonType    = "regular" | "submit"   | "cancel"
-export type ButtonState   = "active"  | "disabled" | "loading"
-export type OnButtonClick = () => void | Promise<any>
+export type ButtonType    = "regular" | "submit" | "reset"
+export type ButtonColor   = "white"   | "green"  | "red"
+export type OnButtonClick = () => void | Promise<void>

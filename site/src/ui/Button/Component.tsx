@@ -1,90 +1,73 @@
-import Loading                 from "ui/Loading/Component"
-import styles                  from "./style.module.css"
+import Loading                                       from "ui/Loading/Component"
+import styles                                        from "./style.module.css"
 
-import { useEffect, useState } from "react"
-import { Props               } from "./types"
+import { useEffect, useState                       } from "react"
+import { DEFAULT_BUTTON_COLOR, DEFAULT_BUTTON_TYPE } from "./constants"
+import { ButtonProps                               } from "./types"
 
-export const DEFAULT_TYPE  = "regular"
-export const DEFAULT_STATE = "active"
+export default function Button(props: ButtonProps) {
+    const {
+        disabled,
+        loading,
+        onClick,
+        children,
+        autoFocus
+    } = props
 
-export default function Button(props: Props) {
-    const propsState = props.state ?? DEFAULT_STATE
+    const color = props.color ?? DEFAULT_BUTTON_COLOR
+    const type  = props.type  ?? DEFAULT_BUTTON_TYPE
 
-    const [loading, setLoading] = useState(propsState === "loading")
+    const [innerLoading, setInnerLoading] = useState(loading)
 
-    useEffect(() => setLoading(propsState === "loading"), [propsState])
+    useEffect(() => setInnerLoading(loading), [loading])
 
-    const type  = props.type ?? DEFAULT_TYPE
-    const state = loading ? "loading" : propsState
-
-    return <button className={className()} type={domType()} disabled={disabled()} onClick={onClick}>
-        {loading && <Loading />}
+    return <button className={className()} type={domType()} disabled={disabled} onClick={rawOnClick} autoFocus={autoFocus}>
+        {innerLoading && <Loading />}
 
         <div className={styles.children}>
-            {props.children}
+            {children}
         </div>
     </button>
 
     function className(): string {
-        const classes = [typeClass(), stateClass(), styles.button]
+        const classes = [colorClass(), stateClass(), styles.button]
 
         return classes.join(" ")
 
-        function typeClass() {
-            switch (type) {
-                case "regular":
-                    return styles.regular
-
-                case "submit":
-                    return styles.submit
-
-                case "cancel":
-                    return styles.cancel
-            }
+        function colorClass() {
+            return styles[color]
         }
 
         function stateClass() {
-            switch (state) {
-                case "active":
-                    return styles.active
+            if (innerLoading)
+                return styles.loading
 
-                case "disabled":
-                    return styles.disabled
+            if (disabled)
+                return styles.disabled
 
-                case "loading":
-                    return styles.loading
-            }
+            return styles.active
         }
     }
 
-    function domType() {
-        return type  === "submit" ? "submit"
-                                  : "button"
-    }
-
-    function disabled() {
-        switch (state) {
-            case "disabled":
-            case "loading":
-                return true
+    function domType(): "button" | "reset" | "submit" {
+        switch (type) {
+            case "reset":
+            case "submit":
+                return type
 
             default:
-                return false
+                return "button"
         }
     }
 
-    function onClick() {
-        if (!props.onClick)
-            return
-
-        const result = props.onClick()
+    function rawOnClick() {
+        const result = onClick?.()
 
         if (result instanceof Promise) {
-            setLoading(true)
+            setInnerLoading(true)
 
-            result
-                .catch(error => console.error(error))
-                .finally(()  => setLoading(false))
+            result.catch(error => console.error(error))
+                  .finally(()  => setInnerLoading(false))
         }
     }
 }

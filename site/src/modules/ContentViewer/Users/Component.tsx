@@ -1,16 +1,16 @@
-import User                      from "logic/User"
-import useAsync                  from "hooks/useAsync"
-import useForceRerender          from "hooks/useForceRerender"
-import UserCard                  from "ui/UserCard/Component"
-import Loading                   from "ui/Loading/Component"
-import ErrorText                 from "ui/ErrorText/Component"
-import Button                    from "ui/Button/Component"
-import styles                    from "./styles.module.css"
+import User                                from "logic/User"
+import useAsync                            from "hooks/useAsync"
+import UserCard                            from "ui/UserCard/Component"
+import Loading                             from "ui/Loading/Component"
+import ErrorText                           from "ui/ErrorText/Component"
+import Button                              from "ui/Button/Component"
+import Modal                               from "ui/Modal/Component"
+import styles                              from "./styles.module.css"
 
-import { useContext, useEffect } from "react"
-import { AuthControllerContext } from "App/AuthControllerContext"
-import { UserContext           } from "App/UserContext"
-import { Props                 } from "./types"
+import { useContext, useEffect, useState } from "react"
+import { AuthControllerContext           } from "App/AuthControllerContext"
+import { UserContext                     } from "App/UserContext"
+import { Props                           } from "./types"
 
 export default function Users(props: Props) {
     const { onUserClick, editMode } = props
@@ -18,7 +18,9 @@ export default function Users(props: Props) {
     const authController            = useContext(AuthControllerContext)
     const [authInfo, setAuthInfo  ] = authController
     const [users, loading, error  ] = useAsync(async () => User.fetchAll({ authController }) as Promise<(User | undefined)[]>)
-    const forceRerender             = useForceRerender()
+    const [target, setTarget      ] = useState(undefined as { user: User, index: number } | undefined)
+
+    useEffect(clearTarget, [editMode])
 
     useEffect(() => {
         if (error != null)
@@ -36,36 +38,65 @@ export default function Users(props: Props) {
         </div>
 
     return <div className={styles.loaded}>
+        <div className={styles.listContainer}>
+            {
+                editMode && <div className={styles.createButton}>
+                    <Button onClick={() => alert("Not implemented")}>Create new user</Button>
+                </div>
+            }
+            <ul className={styles.list}>
+                {users.map((user, index) =>
+                    user && <li key={user.login} className={styles.item}>
+                        <UserCard user={user} onClick={onUserClick} />
+                        {editMode && <Button color="red" onClick={() => onDelete(user, index)}>Delete</Button>}
+                    </li>
+                )}
+            </ul>
+        </div>
         {
-            editMode && <div className={styles.createButton}>
-                <Button>Create new user</Button>
-            </div>
+            target && <Modal header="Confirmation" question={`Do you really want to delete user "${target.user.login}"?`}>
+                {[
+                    {
+                        text:      "Cancel",
+                        onClick:   onDeleteCancel,
+                        autoFocus: true
+                    },
+                    {
+                        text:    "Delete",
+                        color:   "red",
+                        onClick: onDeleteConfirm
+                    }
+                ]}
+            </Modal>
         }
-        <ul className={styles.list}>
-            {users.map((user, index) =>
-                user && <li key={user.login} className={styles.item}>
-                    <UserCard user={user} onClick={onUserClick} />
-                    {editMode && <Button type="cancel" onClick={() => onDelete(user, index)}>Delete</Button>}
-                </li>
-            )}
-        </ul>
     </div>
 
-    async function onDelete(targetUser: User, index: number) {
-        try {
-            await targetUser.del(authController)
+    async function onDelete(user: User, index: number) {
+        setTarget({ user, index })
+    }
 
-            if (User.areLoginsEqual(user?.login, targetUser.login)) {
-                setUser(undefined)
-                setAuthInfo(authInfo.withoutTokenPair())
-                return
-            }
-        
-            users![index] = undefined
+    function onDeleteCancel() {
+        clearTarget()
+    }
 
-            forceRerender()
-        } catch (error) {
-            console.error(error)
+    async function onDeleteConfirm() {
+        if (!target || !users)
+            return
+
+        await target.user.del(authController)
+
+        if (User.areLoginsEqual(user?.login, target.user.login)) {
+            setAuthInfo(authInfo.withoutTokenPair())
+            setUser(undefined)
+            return
         }
+
+        users[target.index] = undefined
+
+        clearTarget()
+    }
+
+    function clearTarget() {
+        setTarget(undefined)
     }
 }

@@ -43,13 +43,6 @@ export default function AuthFrom(props: Props) {
     const signInDisabled   = !bothChanged
                            || hasError
 
-    const cancelState      = loading  ? "disabled"
-                                      : "active"
-
-    const signInState      =  loading ? "loading"
-                                      : signInDisabled ? "disabled"
-                                                       : "active"
-
     const onSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
@@ -95,13 +88,16 @@ export default function AuthFrom(props: Props) {
     return <form onSubmit={onSubmit}>
         <fieldset className={styles.fields}>
             <legend className={styles.header}>Sign In</legend>
+
             <Input placeholder="Login" onChange={onLoginChange} invalid={loginInvalid} />
             {error(loginError)}
+
             <Input placeholder="Password" onChange={onPasswordChange} invalid={passwordInvalid} type="password" />
             {error(passwordError)}
+
             <div className={styles.buttons}>
-                <Button type="cancel" state={cancelState} onClick={onCancel}>Cancel</Button>
-                <Button type="submit" state={signInState}>Sign In</Button>
+                <Button color="red" disabled={loading} onClick={onCancel}>Cancel</Button>
+                <Button color="green" disabled={signInDisabled} type="submit" loading={loading}>Sign In</Button>
             </div>
             {error(commonError)}
         </fieldset>

@@ -25,7 +25,7 @@ export default function Terminal(props: Props) {
         </ol>
         <form onSubmit={onSubmit} onKeyDown={onKeyDown} className={styles.form}>
             <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} disabled={disabled} ref={inputElement} />
-            <Button type="submit" state={disabled ? "disabled" : "active"}>Send</Button>
+            <Button type="submit" disabled={disabled}>Send</Button>
         </form>
     </div>
 

@@ -3,66 +3,69 @@
 .button {
     overflow: hidden;
     position: relative;
+
     background-color: #484848;
+    transition: .08s background-color opacity;
+
     border: thin solid #666;
     border-radius: .4rem;
+
     padding: .75rem;
     font-size: .9rem;
-    cursor: pointer;
-    transition: .08s background-color
+    cursor: pointer
 }
 
-/* Regular */
+/* White */
 
-.regular .children {
+.white .children {
     color: #E8E8E8
 }
 
-.regular:hover .children {
+.white:hover .children {
     color: #FFF
 }
 
-.regular:active .children {
+.white:active .children {
     color: #EEE
 }
 
-.regular:disabled .children {
+.white:disabled .children {
     color: #DDD
 }
 
-/* Submit */
+/* Green */
 
-.submit .children {
+.green .children {
     color: #18E818
 }
 
-.submit:hover .children {
+.green:hover .children {
     color: #2F2
 }
 
-.submit:active .children {
+.green:active .children {
     color: #1E1
 }
 
-.submit:disabled .children {
+.green:disabled .children {
     color: #0D0
 }
 
-/* Cancel */
+/* Red */
 
-.cancel .children {
+.red .children {
     color: #E81818
 }
 
-.cancel:hover .children {
+.red:hover .children {
     color: #F22
 }
 
-.cancel:active .children {
+.red:active .children {
     color: #E11
 }
 
-.cancel:disabled .children {
+.red:disabled .children {
     color: #D00
 }
 
@@ -79,7 +82,6 @@
 /* Loading */
 
 .loading > .children {
-    transition: .08s opacity;
     opacity: 0
 }
 

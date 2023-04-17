@@ -16,7 +16,7 @@ export default function UserButton(props: Props) {
 
     if (user == null)
         return <div className={styles.notSignedIn}>
-            <Button type="submit" onClick={props.onSignIn}>Sign In</Button>
+            <Button color="green" onClick={props.onSignIn}>Sign In</Button>
         </div>
 
     return <div className={styles.signedIn}>
@@ -27,7 +27,7 @@ export default function UserButton(props: Props) {
             <UserIcon user={user!} onClick={() => setShowOptions(!showOptions)} />
         </div>
         <div className={styles.options} style={{ display: showOptions ? "block" : "none" }}>
-            <Button type="cancel" onClick={onSignOut}>Sign Out</Button>
+            <Button color="red" onClick={onSignOut}>Sign Out</Button>
         </div>
     </div>
 

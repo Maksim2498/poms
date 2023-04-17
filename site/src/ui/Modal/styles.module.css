@@ -1,0 +1,45 @@
+.container {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%
+}
+
+.modal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 15rem;
+
+    border-radius: .4rem;
+    background-color: #222;
+}
+
+.modal > * {
+    margin: 1rem
+}
+
+.header {
+    text-align: center
+}
+
+.question {
+
+}
+
+.answers {
+    display: flex;
+    justify-content: space-between
+}
+
+.answers > * {
+    flex-grow: 1
+}
+
+.answers > *:not(:first-child) {
+    margin-left: .5rem
+}

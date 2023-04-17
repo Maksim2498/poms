@@ -1,5 +1,6 @@
 .users {
-    height: 100%
+    height: 100%;
+    width: 100%
 }
 
 .loading, .error, .loaded {
@@ -18,6 +19,16 @@
 
 .createButton {
     margin-top: 1rem;
+}
+
+.listContainer {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    overflow-x: auto
 }
 
 .list {
