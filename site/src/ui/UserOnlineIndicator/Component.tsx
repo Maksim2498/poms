@@ -1,8 +1,8 @@
-import styles    from "./styles.module.css"
+import styles                       from "./styles.module.css"
 
-import { Props } from "./types"
+import { UserOnlineIndicatorProps } from "./types"
 
-export default function UserOnlineIndicator(props: Props) {
+export default function UserOnlineIndicator(props: UserOnlineIndicatorProps) {
     const { isOnline } = props.user
     const body         = isOnline ? "online" : "offline"
     const className    = isOnline ? styles.online : styles.offline
