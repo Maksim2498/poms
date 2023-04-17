@@ -3,10 +3,10 @@ import EditButton              from "ui/EditButton/Component"
 import Button                  from "ui/Button/Component"
 import styles                  from "./styles.module.css"
 
-import { Props               } from "./types"
+import { ContentWindowProps  } from "./types"
 import { useEffect, useState } from "react"
 
-export default function ContentWindow(props: Props) {
+export default function ContentWindow(props: ContentWindowProps) {
     const {
         showBack,
         onBack,
