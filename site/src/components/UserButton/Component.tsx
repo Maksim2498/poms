@@ -7,9 +7,9 @@ import { useContext, useState  } from "react"
 import { AuthControllerContext } from "App/AuthControllerContext"
 import { UserContext           } from "App/UserContext"
 import { deauth                } from "logic/api"
-import { Props                 } from "./types"
+import { UserButtonProps       } from "./types"
 
-export default function UserButton(props: Props) {
+export default function UserButton(props: UserButtonProps) {
     const authController                = useContext(AuthControllerContext)
     const [user,        setUser       ] = useContext(UserContext)
     const [showOptions, setShowOptions] = useState(false)
