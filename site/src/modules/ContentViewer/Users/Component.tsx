@@ -1,16 +1,17 @@
-import User                                from "logic/User"
-import useAsync                            from "hooks/useAsync"
-import UserCard                            from "ui/UserCard/Component"
-import Loading                             from "ui/Loading/Component"
-import ErrorText                           from "ui/ErrorText/Component"
-import Button                              from "ui/Button/Component"
-import Modal                               from "ui/Modal/Component"
-import styles                              from "./styles.module.css"
+import User                                                  from "logic/User"
+import useAsync                                              from "hooks/useAsync"
+import UserCard                                              from "ui/UserCard/Component"
+import Loading                                               from "ui/Loading/Component"
+import ErrorText                                             from "ui/ErrorText/Component"
+import Button                                                from "ui/Button/Component"
+import Modal                                                 from "ui/Modal/Component"
+import styles                                                from "./styles.module.css"
 
-import { useContext, useEffect, useState } from "react"
-import { AuthControllerContext           } from "App/AuthControllerContext"
-import { UserContext                     } from "App/UserContext"
-import { UsersProps                      } from "./types"
+import { useContext, useEffect, useState                   } from "react"
+import { AuthControllerContext                             } from "App/AuthControllerContext"
+import { UserContext                                       } from "App/UserContext"
+import { ButtonAnswerState, InputAnswerState, AnswerStates } from "ui/Modal/types"
+import { UsersProps                                        } from "./types"
 
 export default function Users(props: UsersProps) {
     const { onUserClick, editMode } = props
@@ -18,7 +19,8 @@ export default function Users(props: UsersProps) {
     const authController            = useContext(AuthControllerContext)
     const [authInfo, setAuthInfo  ] = authController
     const [users, loading, error  ] = useAsync(async () => User.fetchAll({ authController }) as Promise<(User | undefined)[]>)
-    const [target, setTarget      ] = useState(undefined as { user: User, index: number } | undefined)
+    const [target,   setTarget    ] = useState(undefined as { user: User, index: number } | undefined)
+    const [creating, setCreating  ] = useState(false)
 
     useEffect(clearTarget, [editMode])
 
@@ -41,7 +43,7 @@ export default function Users(props: UsersProps) {
         <div className={styles.listContainer}>
             {
                 editMode && <div className={styles.createButton}>
-                    <Button onClick={() => alert("Not implemented")}>Create new user</Button>
+                    <Button onClick={onCreate}>Create new user</Button>
                 </div>
             }
             <ul className={styles.list}>
@@ -54,29 +56,100 @@ export default function Users(props: UsersProps) {
             </ul>
         </div>
         {
-            target && <Modal header="Please confirm" question={`Do you really want to delete user "${target.user.login}"?`}>
-                {[
-                    {
+            target && <Modal header="User Deletion" question={`Do you really want to delete user "${target.user.login}"?`}>
+                {{
+                    cancel: {
+                        type:      "button",
                         text:      "Cancel",
-                        onClick:   onDeleteCancel,
+                        onClick:   clearTarget,
+                        disable:   states => (states.delete as ButtonAnswerState).loading,
                         autoFocus: true
                     },
-                    {
-                        text:    "Delete",
-                        color:   "red",
-                        onClick: onDeleteConfirm
+
+                    delete: {
+                        type:      "button",
+                        text:      "Delete",
+                        color:     "red",
+                        onClick:   onDeleteConfirm
                     }
-                ]}
+                }}
+            </Modal>
+        }
+        {
+            creating && <Modal header="User Creation">
+                {{
+                    login: {
+                        type:         "input",
+                        placeholder:  "Login",
+                        validate:     User.validateLogin,
+                        format:       login => login.trim(),
+                        disable:      disableCreationItem
+                    },
+
+                    password: {
+                        type:         "input",
+                        placeholder:  "Password",
+                        inputType:    "password",
+                        autoComplete: "new-password",
+                        validate:     User.validatePassword,
+                        disable:      disableCreationItem
+                    },
+
+                    name: {
+                        type:         "input",
+                        placeholder:  "Name",
+                        format:       name => name.trim(),
+                        disable:      disableCreationItem
+                    },
+
+                    cancel: {
+                        type:         "button",
+                        text:         "Cancel",
+                        onClick:      resetCreating,
+                        autoFocus:    true,
+                        disable:      disableCreationItem
+                    },
+
+                    create: {
+                        type:         "button",
+                        text:         "Create",
+                        color:        "green",
+                        onClick:      onCreateConfirm,
+                        disable:      states => (states.login    as InputAnswerState).invalid != null
+                                             || (states.password as InputAnswerState).invalid != null
+                    }
+                }}
             </Modal>
         }
     </div>
 
-    async function onDelete(user: User, index: number) {
-        setTarget({ user, index })
+    function disableCreationItem(states: AnswerStates) {
+        return (states.create as ButtonAnswerState).loading
     }
 
-    function onDeleteCancel() {
+    function onCreate() {
         clearTarget()
+        setCreating(true)
+    }
+
+    async function onCreateConfirm(states: AnswerStates) {
+        if (!users)
+            return
+
+        const { value: login    } = states.login    as InputAnswerState
+        const { value: password } = states.password as InputAnswerState
+        const { value: name     } = states.name     as InputAnswerState
+
+        const newUser = await User.register({ authController, login, password, name })
+
+        users.push(newUser)
+
+        resetCreating()
+    }
+
+    async function onDelete(user: User, index: number) {
+        resetCreating()
+        setTarget({ user, index })
     }
 
     async function onDeleteConfirm() {
@@ -98,5 +171,9 @@ export default function Users(props: UsersProps) {
 
     function clearTarget() {
         setTarget(undefined)
+    }
+
+    function resetCreating() {
+        setCreating(false)
     }
 }

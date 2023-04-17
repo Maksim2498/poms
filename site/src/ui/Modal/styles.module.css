@@ -31,15 +31,26 @@
 
 }
 
+.input {
+    display: flex;
+    flex-direction: column
+}
+
+.input > *:first-child {
+    margin-bottom: .5rem
+}
+
 .answers {
     display: flex;
-    justify-content: space-between
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: .5rem
 }
 
 .answers > * {
     flex-grow: 1
 }
 
-.answers > *:not(:first-child) {
-    margin-left: .5rem
+.answers > * {
+    margin: .5rem
 }
