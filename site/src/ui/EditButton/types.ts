@@ -1,5 +1,5 @@
 import { OnIconButtonClick } from "ui/IconButton/types"
 
-export interface Props {
+export interface EditButtonProps {
     onClick?: OnIconButtonClick
 }
