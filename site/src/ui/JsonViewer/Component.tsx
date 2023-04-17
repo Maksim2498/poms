@@ -1,8 +1,8 @@
-import styles    from "./styles.module.css"
+import styles              from "./styles.module.css"
 
-import { Props } from "./types"
+import { JsonViewerProps } from "./types"
 
-export default function JsonViewer(props: Props) {
+export default function JsonViewer(props: JsonViewerProps) {
     const json = props.json ?? {}
     const text = JSON.stringify(json, null, 4)
 
