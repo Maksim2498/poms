@@ -2,9 +2,9 @@ import AuthFrom            from "modules/AuthForm/Component"
 import ContentViewer       from "modules/ContentViewer/Component"
 import styles              from "./styles.module.css"
 
-import { Props           } from "./types"
+import { MainProps       } from "./types"
 
-export default function Main(props: Props) {
+export default function Main(props: MainProps) {
     return <main className={styles.main}>
         {body()}
     </main>

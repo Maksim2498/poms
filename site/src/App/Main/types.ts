@@ -1,15 +1,15 @@
-import { Props as AProps } from "modules/AuthForm/types"
+import { Props } from "modules/AuthForm/types"
 
-export type Props = ContentProps
-                  | AuthProps
+export type MainProps = MainContentProps
+                      | MainAuthProps
 
-export interface ContentProps {
+export interface MainContentProps {
     show: "content"
 }
 
-export interface AuthProps extends AProps {
+export interface MainAuthProps extends Props {
     show: "auth"
 }
 
-export type Show = "content"
-                 | "auth"
+export type ShowMain = "content"
+                     | "auth"
