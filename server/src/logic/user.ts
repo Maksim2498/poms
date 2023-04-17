@@ -266,7 +266,19 @@ export class DefaultUserManager implements UserManager {
     }
 
     async createUser(connection: Connection, options: CreateUserOptions): Promise<boolean> {
-        const { login, name, creator, password, isAdmin, checkCreator, throwOnExists } = options
+        const {
+            login,
+            creator,
+            password,
+            isAdmin,
+            checkCreator,
+            throwOnExists
+        } = options
+
+        let name = options.name?.trim()
+
+        if (name?.length == null)
+            name = undefined
 
         this.logger?.debug(`Creating user "${login}"...`)
 
