@@ -1,8 +1,8 @@
-import List       from "ui/List/Component"
+import List                   from "ui/List/Component"
 
-import { Props } from "./types"
+import { UserNicknamesProps } from "./types"
 
-export default function UserNicknames(props: Props) {
+export default function UserNicknames(props: UserNicknamesProps) {
     return <List header="Nicknames" evalKey={value => value}>
         {props.user.nicknames}
     </List>
