@@ -2,7 +2,7 @@ import Server                from "logic/Server"
 
 import { OnPlayerCardClick } from "ui/PlayerCard/types"
 
-export interface Props {
+export interface ServerPlayerListProps {
     onPlayerClick?: OnPlayerCardClick
     server:         Server
 }

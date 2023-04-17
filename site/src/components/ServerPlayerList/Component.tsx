@@ -8,9 +8,9 @@ import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "App/AuthControllerContext"
-import { Props                 } from "./types"
+import { ServerPlayerListProps } from "./types"
 
-export default function ServerPlayerList(props: Props) {
+export default function ServerPlayerList(props: ServerPlayerListProps) {
     const { server, onPlayerClick } = props
     const authController            = useContext(AuthControllerContext)
     const [players, loading, error] = useAsync(getPlayers)
