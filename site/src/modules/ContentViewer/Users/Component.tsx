@@ -10,9 +10,9 @@ import styles                              from "./styles.module.css"
 import { useContext, useEffect, useState } from "react"
 import { AuthControllerContext           } from "App/AuthControllerContext"
 import { UserContext                     } from "App/UserContext"
-import { Props                           } from "./types"
+import { UsersProps                      } from "./types"
 
-export default function Users(props: Props) {
+export default function Users(props: UsersProps) {
     const { onUserClick, editMode } = props
     const [user, setUser          ] = useContext(UserContext)
     const authController            = useContext(AuthControllerContext)
