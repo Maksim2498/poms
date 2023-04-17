@@ -17,10 +17,10 @@ export default function Modal(props: ModalProps) {
     return <div className={styles.container}>
         <Dim />
         <div className={styles.modal}>
-            {header && <h3 className={styles.header}>{header}</h3>}
-            <div className={styles.question}>{question}</div>
+            {header   && <h3  className={styles.header  }>{header  }</h3> }
+            {question && <div className={styles.question}>{question}</div>}
             <div className={styles.answers}>
-                {answers.map(({ text, color, onClick, autoFocus }) => {
+                {answers && answers.map(({ text, color, onClick, autoFocus }) => {
                     const key = `${text}/${color}`
 
                     return <Button key={key} color={color} disabled={loading} onClick={rawOnClick} autoFocus={autoFocus}>
