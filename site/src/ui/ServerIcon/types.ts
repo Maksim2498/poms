@@ -1,5 +1,5 @@
 import Server from "logic/Server"
 
-export interface Props {
+export interface ServerIconProps {
     server: Server
 }
