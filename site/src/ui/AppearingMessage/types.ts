@@ -1,4 +1,4 @@
-export type Props = {
+export type AppearingMessageProps = {
     tick?:       number
     delay?:      number
     cursor?:     string

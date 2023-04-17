@@ -1,19 +1,15 @@
-import styles                  from "./styles.module.css"
+import styles                    from "./styles.module.css"
+import * as constants            from "./constants"
 
-import { useState, useEffect } from "react"
-import { Props               } from "./types"
+import { useState, useEffect   } from "react"
+import { AppearingMessageProps } from "./types"
 
-export const DEFAULT_TICK        = 80
-export const DEFAULT_DELAY       = 500
-export const DEFAULT_CURSOR      = "_"
-export const DEFUALT_CURSOR_TICK = 500
-
-export default function AppearingMessage(props: Props) {
+export default function AppearingMessage(props: AppearingMessageProps) {
     const targetMessage = props.children   ?? ""
-    const tick          = props.tick       ?? DEFAULT_TICK
-    const delay         = props.delay      ?? DEFAULT_DELAY
-    const cursor        = props.cursor     ?? DEFAULT_CURSOR
-    const cursorTick    = props.cursorTick ?? DEFUALT_CURSOR_TICK
+    const tick          = props.tick       ?? constants.DEFAULT_APPEARING_MESSAGE_TICK
+    const delay         = props.delay      ?? constants.DEFAULT_APPEARING_MESSAGE_DELAY
+    const cursor        = props.cursor     ?? constants.DEFAULT_APPEARING_MESSAGE_CURSOR
+    const cursorTick    = props.cursorTick ?? constants.DEFUALT_APPEARING_MESSAGE_CURSOR_TICK
 
     const [doTick,  setDoTick ] = useState(false)
     const [message, setMessage] = useState("")
