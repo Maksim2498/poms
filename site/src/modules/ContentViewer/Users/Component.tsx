@@ -54,7 +54,7 @@ export default function Users(props: UsersProps) {
             </ul>
         </div>
         {
-            target && <Modal header="Confirmation" question={`Do you really want to delete user "${target.user.login}"?`}>
+            target && <Modal header="Please confirm" question={`Do you really want to delete user "${target.user.login}"?`}>
                 {[
                     {
                         text:      "Cancel",
