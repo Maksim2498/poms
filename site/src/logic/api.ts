@@ -115,24 +115,27 @@ export async function deauth(authController: AuthController): Promise<AuthInfo> 
     return newAuthInfo
 }
 
-export async function get(authController: AuthController, url: string) {
-    return await api(authController, "get", url)
+export async function get(authController: AuthController, url: string, body?: any) {
+    return await api(authController, "get", url, body)
 }
 
-export async function post(authController: AuthController, url: string) {
-    return await api(authController, "post", url)
+export async function post(authController: AuthController, url: string, body?: any) {
+    return await api(authController, "post", url, body)
 }
 
-export async function update(authController: AuthController, url: string) {
-    return await api(authController, "update", url)
+export async function update(authController: AuthController, url: string, body?: any) {
+    return await api(authController, "update", url, body)
 }
 
-export async function del(authController: AuthController, url: string) {
-    return await api(authController, "delete", url)
+export async function del(authController: AuthController, url: string, body?: any) {
+    return await api(authController, "delete", url, body)
 }
 
-export async function api(authController: AuthController, method: Method, url: string): Promise<ApiResult> {
+export async function api(authController: AuthController, method: Method, url: string, body?: any): Promise<ApiResult> {
     url = "/api/" + url
+
+    if (body)
+        body = JSON.stringify(body)
 
     const [authInfo, setAuthInfo] = authController
     const { tokenPair           } = authInfo
@@ -154,7 +157,12 @@ export async function api(authController: AuthController, method: Method, url: s
         if (!authInfo.allowAnonymAccess)
             throw new Error("Anonymous access is forbidden")
 
-        const response = await fetch(url, { method, cache: "no-store" })
+        const headers = new Headers()
+
+        if (body)
+            headers.set("Content-Type", "application/json")
+
+        const response = await fetch(url, { method, headers, body, cache: "no-store" })
 
         if (!response.ok)
             throw new Error(response.statusText)
@@ -207,11 +215,12 @@ export async function api(authController: AuthController, method: Method, url: s
         return [json, effectiveAuthInfo]
 
         async function fetch() {
-            return await window.fetch(url, {
-                method,
-                headers: effectiveAuthInfo.toHeaders(),
-                cache:   "no-store"
-            })
+            const headers = effectiveAuthInfo.toHeaders()
+
+            if (body)
+                headers.set("Content-Type", "application/json")
+
+            return await window.fetch(url, { method, headers, body, cache: "no-store" })
         }
     }
 }
