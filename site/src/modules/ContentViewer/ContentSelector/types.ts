@@ -1,6 +1,6 @@
 import { Content } from "modules/ContentViewer/types"
 
-export interface Props {
+export interface ContentSelectorProps {
     contentList?: Content[]
     onSelect?:    OnContentSelect
 }

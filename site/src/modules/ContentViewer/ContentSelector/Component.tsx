@@ -1,9 +1,9 @@
-import Button    from "ui/Button/Component"
-import styles    from "./styles.module.css"
+import Button                   from "ui/Button/Component"
+import styles                   from "./styles.module.css"
 
-import { Props } from "./types"
+import { ContentSelectorProps } from "./types"
 
-export default function ContentSelector(props: Props) {
+export default function ContentSelector(props: ContentSelectorProps) {
     const contentList = props.contentList ?? []
 
     return <ul className={styles.selector}>
