@@ -1,15 +1,16 @@
 import { OnSignIn } from "components/UserButton/types"
 
-export type Props = UserProps
-                  | NoneProps
+export type HeaderProps = HeaderUserProps
+                        | HeaderNoneProps
 
-export interface UserProps {
+export interface HeaderUserProps {
     show:     "user"
     onSignIn: OnSignIn
 }
 
-export interface NoneProps {
+export interface HeaderNoneProps {
     show?: "none"
 }
 
-export type Show = "user" | "none"
+export type HeaderShow = "user"
+                       | "none"

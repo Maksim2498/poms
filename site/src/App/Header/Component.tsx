@@ -1,10 +1,10 @@
-import Logo         from "ui/Logo/Component"
-import UserButton   from "components/UserButton/Component"
-import styles       from "./styles.module.css"
+import Logo            from "ui/Logo/Component"
+import UserButton      from "components/UserButton/Component"
+import styles          from "./styles.module.css"
 
-import { Props    } from "./types"
+import { HeaderProps } from "./types"
 
-export default function Header(props: Props) {
+export default function Header(props: HeaderProps) {
     return <header className={styles.header}>
         <Logo />
         {show()}
