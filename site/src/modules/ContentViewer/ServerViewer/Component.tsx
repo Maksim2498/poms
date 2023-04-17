@@ -10,9 +10,9 @@ import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "App/AuthControllerContext"
-import { Props                 } from "./types"
+import { ServerViewerProps     } from "./types"
 
-export default function ServerViewer(props: Props) {
+export default function ServerViewer(props: ServerViewerProps) {
     const { onPlayerClick        } = props
     const authController           = useContext(AuthControllerContext)
     const [server, loading, error] = useAsync(async () => await Server.fetch(authController))

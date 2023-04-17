@@ -1,5 +1,5 @@
 import { OnPlayerCardClick } from "ui/PlayerCard/types"
 
-export interface Props {
+export interface ServerViewerProps {
     onPlayerClick?: OnPlayerCardClick
 }
