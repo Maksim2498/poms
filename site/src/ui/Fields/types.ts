@@ -1,4 +1,4 @@
-export interface Props {
+export interface FieldsProps {
     showIfEmpty?: boolean
     header?:      string
     children:     Rows

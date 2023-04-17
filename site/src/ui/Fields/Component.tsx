@@ -1,8 +1,8 @@
-import styles    from "./styles.module.css"
+import styles          from "./styles.module.css"
 
-import { Props } from "./types"
+import { FieldsProps } from "./types"
 
-export default function Fields(props: Props) {
+export default function Fields(props: FieldsProps) {
     const {
         header,
         showIfEmpty,
