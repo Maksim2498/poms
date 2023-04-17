@@ -1,9 +1,9 @@
-import Fields    from "ui/Fields/Component"
-import UserTag   from "ui/UserTag/Component"
+import Fields               from "ui/Fields/Component"
+import UserTag              from "ui/UserTag/Component"
 
-import { Props } from "./types"
+import { UserRegInfoProps } from "./types"
 
-export default function UserRegInfo(props: Props) {
+export default function UserRegInfo(props: UserRegInfoProps) {
     const { login, time } = props.user.reg
 
     return <Fields header = "Registration Info">
