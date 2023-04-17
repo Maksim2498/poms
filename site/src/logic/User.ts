@@ -1,8 +1,8 @@
-import z                             from "zod"
-import Cookies                       from "js-cookie"
-import AuthInfo                      from "./AuthInfo"
+import z                                  from "zod"
+import Cookies                            from "js-cookie"
+import AuthInfo                           from "./AuthInfo"
 
-import { AuthController, del, get } from "./api"
+import { AuthController, del, get, post } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
@@ -27,6 +27,14 @@ export interface MakeIconOptions {
     name?:   string
     width?:  number
     height?: number
+}
+
+export interface RegisterUserOptions {
+    authController: AuthController
+    login:          string
+    password:       string
+    name?:          string
+    isAdmin?:       boolean
 }
 
 export default class User {
@@ -245,6 +253,16 @@ export default class User {
                                      .join("&")
 
         return `users/${encodedLogin}?${encodedOptions}`
+    }
+
+    static async register(options: RegisterUserOptions): Promise<User> {
+        const { authController, login, password, name, isAdmin } = options
+
+        const url = this.makeUrl(login)
+    
+        await post(authController, url, { password, name, isAdmin })
+
+        return new User({ login, name, isAdmin })
     }
 
     readonly login:      string
