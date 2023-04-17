@@ -12,9 +12,9 @@ import styles                    from "./styles.module.css"
 import { useContext, useEffect } from "react"
 import { AuthControllerContext } from "App/AuthControllerContext"
 import { UserContext           } from "App/UserContext"
-import { Props                 } from "./types"
+import { ProfileProps          } from "./types"
 
-export default function Profile(props: Props) {
+export default function Profile(props: ProfileProps) {
     const authController                = useContext(AuthControllerContext)
     const [contextUser, setContextUser] = useContext(UserContext)
     const [user,        loading, error] = useAsync(getUser)

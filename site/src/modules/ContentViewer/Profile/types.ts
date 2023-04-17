@@ -1,16 +1,16 @@
 import User from "logic/User"
 
-export type Props = UserProps
-                  | LoginProps
+export type ProfileProps = ProfileUserProps
+                         | ProfileLoginProps
 
-export interface UserProps {
-    onTagClick?: OnTagClick
+export interface ProfileUserProps {
+    onTagClick?: OnProfileTagClick
     user:        User
 }
 
-export interface LoginProps {
-    onTagClick?: OnTagClick
+export interface ProfileLoginProps {
+    onTagClick?: OnProfileTagClick
     login:       string
 }
 
-export type OnTagClick = (newLogin: string, oldLogin: string) => void
+export type OnProfileTagClick = (newLogin: string, oldLogin: string) => void
