@@ -1,8 +1,8 @@
-import styles    from "./styles.module.css"
+import styles        from "./styles.module.css"
 
-import { Props } from "./types"
+import { ListProps } from "./types"
 
-export default function List<T extends React.ReactNode>(props: Props<T>) {
+export default function List<T extends React.ReactNode>(props: ListProps<T>) {
     const {
         header,
         showIfEmpty,
