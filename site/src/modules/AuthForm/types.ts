@@ -1,4 +1,4 @@
-export interface Props {
+export interface AuthProps {
     onAuth?:   OnAuth
     onCancel?: OnCancelAuth
 }
