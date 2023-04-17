@@ -6,13 +6,13 @@ import Console                            from "./Console/Component"
 import Profile                            from "./Profile/Component"
 import Server                             from "./ServerViewer/Component"
 import Users                              from "./Users/Component"
-import HOME_CONTENT                       from "./HomeContent"
 import styles                             from "./styles.module.css"
 
 import { useContext                     } from "react"
 import { AuthControllerContext          } from "App/AuthControllerContext"
 import { UserContext                    } from "App/UserContext"
 import { ContentStackContext            } from "./Context"
+import { HOME_CONTENT                   } from "./constants"
 import { Content, ContentComponentProps } from "./types"
 
 export default function ContentViewer() {

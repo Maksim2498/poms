@@ -5,10 +5,10 @@ export type SetContentStack         = (newContentStack: Content[]) => void
 export type ContentStackRef         = ReadonlyRefObject<Content[]>
 
 export interface Content {
-    name:        string
-    selectName?: string
-    editable?:   boolean
-    component:   ContentComponent
+    readonly name:        string
+    readonly selectName?: string
+    readonly editable?:   boolean
+    readonly component:   ContentComponent
 }
 
 export type ContentComponent = (props: ContentComponentProps) => JSX.Element
