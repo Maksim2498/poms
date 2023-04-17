@@ -1,8 +1,8 @@
-import styles    from "./styles.module.css"
+import styles             from "./styles.module.css"
 
-import { Props } from "./types"
+import { ErrorTextProps } from "./types"
 
-export default function ErrorText(props: Props) {
+export default function ErrorText(props: ErrorTextProps) {
     const { children } = props
 
     if (!children)
