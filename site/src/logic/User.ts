@@ -278,12 +278,15 @@ export default class User {
 
     constructor(options: CreationOptions) {
         const { login } = options
-        const name      = options.name       ?? undefined
-        const nicknames = options.nicknames  ?? []
-        const isAdmin   = options.isAdmin    ?? false
-        const isOnline  = options.isOnline   ?? false
-        const regTime   = options.reg?.time  ?? new Date()
-        const regLogin  = options.reg?.login ?? undefined
+        let   name      = options.name?.trim() ?? undefined
+        const nicknames = options.nicknames    ?? []
+        const isAdmin   = options.isAdmin      ?? false
+        const isOnline  = options.isOnline     ?? false
+        const regTime   = options.reg?.time    ?? new Date()
+        const regLogin  = options.reg?.login   ?? undefined
+
+        if (!name?.length)
+            name = undefined
 
         this.login     = login
         this.name      = name
