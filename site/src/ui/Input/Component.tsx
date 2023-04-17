@@ -1,11 +1,9 @@
 import styles                    from  "./styles.module.css"
 
 import { FormEvent, forwardRef } from "react"
-import { Props                 } from "./types"
+import { InputProps            } from "./types"
 
-export const DEFAULT_TYPE = "text"
-
-const Input = forwardRef<HTMLInputElement, Props>((props, ref) => {
+const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     const {
         type,
         invalid,

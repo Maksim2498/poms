@@ -1,6 +1,6 @@
 import { RefObject } from "react"
 
-export interface Props {
+export interface InputProps {
     type?:         InputType
     invalid?:      boolean
     value?:        string
