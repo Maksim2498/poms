@@ -1,7 +1,7 @@
 import User from "logic/User"
 
-export type Props = UserProps
-                  | LoginProps
+export type UserTagProps = UserProps
+                         | LoginProps
 
 export interface UserProps {
     onClick?: OnUserTagClick
