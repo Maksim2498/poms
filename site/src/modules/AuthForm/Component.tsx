@@ -2,7 +2,7 @@ import User                                from "logic/User"
 import LogicError                          from "logic/LogicError"
 import Input                               from "ui/Input/Component"
 import Button                              from "ui/Button/Component"
-import ErrorText                           from "ui/ErrorText/Component"
+import FormErrorText                       from "ui/FormErrorText/Component"
 import styles                              from "./styles.module.css"
 
 import { FormEvent, useState, useContext } from "react"
@@ -68,7 +68,7 @@ export default function AuthFrom(props: AuthProps) {
     const onLoginChange = (newLogin: string) => {
         newLogin = newLogin.trim()
 
-        const error = formatError(User.validateLogin(newLogin))
+        const error = User.validateLogin(newLogin)
 
         setLogin(newLogin)
         setLoginError(error)
@@ -77,7 +77,7 @@ export default function AuthFrom(props: AuthProps) {
     }
 
     const onPasswordChange = (newPassword: string) => {
-        const error = formatError(User.validatePassword(newPassword))
+        const error = User.validatePassword(newPassword)
 
         setPassword(newPassword)
         setPasswordError(error)
@@ -104,16 +104,8 @@ export default function AuthFrom(props: AuthProps) {
     </form>
 
     function error(message: string | undefined) {
-        if (message == null)
-            return null
-
-        return <div className={styles.error}>
-            <ErrorText>{message}</ErrorText>
+        return message && <div className={styles.error}>
+            <FormErrorText>{message}</FormErrorText>
         </div>
-    }
-
-    function formatError(error?: string): string | undefined {
-        return error?.replaceAll(/\.\s*/g, ".\n")
-                    ?.replaceAll(/\.?$/g,  ".")
     }
 }
