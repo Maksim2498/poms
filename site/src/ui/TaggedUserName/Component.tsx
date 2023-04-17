@@ -1,9 +1,9 @@
-import UserName  from "ui/UserName/Component";
-import UserTag   from "ui/UserTag/Component";
+import UserName                from "ui/UserName/Component";
+import UserTag                 from "ui/UserTag/Component";
 
-import { Props } from "./types"
+import { TaggedUserNameProps } from "./types"
 
-export default function TaggedUserName(props: Props) {
+export default function TaggedUserName(props: TaggedUserNameProps) {
     const { user, onTagClick } = props
 
     return <>
