@@ -12,19 +12,16 @@
     width: 10rem
 }
 
-.taggedName {
-    margin-top: 1rem;
+.general {
     display: flex;
     flex-direction: column;
-    align-items: center
+    align-items: center;
+
+    margin-top: .5rem
 }
 
-.taggedName > * {
+.general > * {
     margin: .25rem
-}
-
-.onlineIndicator {
-    margin-top: .25rem
 }
 
 .sections > *{

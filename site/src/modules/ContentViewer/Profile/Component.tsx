@@ -4,7 +4,8 @@ import LoadingContent                                         from "modules/Cont
 import ErrorContent                                           from "modules/ContentViewer/ErrorContent/Component"
 import Button                                                 from "ui/Button/Component"
 import Modal                                                  from "ui/Modal/Component"
-import TaggedUserName                                         from "ui/TaggedUserName/Component"
+import UserTag                                                from "ui/UserTag/Component"
+import UserName                                               from "ui/UserName/Component"
 import UserIcon                                               from "ui/UserIcon/Component"
 import UserOnlineIndicator                                    from "ui/UserOnlineIndicator/Component"
 import UserNicknames                                          from "ui/UserNicknames/Component"
@@ -49,11 +50,9 @@ export default function Profile(props: ProfileProps) {
             <UserIcon user={user!} />
         </div>
 
-        <div className={styles.taggedName}>
-            <TaggedUserName user={user!} onTagClick={innerOnTagClick} />
-        </div>
-
-        <div className={styles.onlineIndicator}>
+        <div className={styles.general}>
+            <UserName            user={user} />
+            <UserTag             user={user} />
             <UserOnlineIndicator user={user!} />
         </div>
 
