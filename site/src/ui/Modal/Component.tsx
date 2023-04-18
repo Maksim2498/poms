@@ -1,11 +1,12 @@
-import Dim                                                               from "ui/Dim/Component"
-import Button                                                            from "ui/Button/Component"
-import Input                                                             from "ui/Input/Component"
-import FormErrorText                                                     from "ui/FormErrorText/Component"
-import styles                                                            from "./styles.module.css"
+import Dim                                                                                    from "ui/Dim/Component"
+import Button                                                                                 from "ui/Button/Component"
+import Input                                                                                  from "ui/Input/Component"
+import FormErrorText                                                                          from "ui/FormErrorText/Component"
+import CheckBox                                                                               from "ui/CheckBox/Component"
+import styles                                                                                 from "./styles.module.css"
 
-import { useState                                                      } from "react"
-import { ModalProps, AnswerStates, InputAnswerState, ButtonAnswerState } from "./types"
+import { useState                                                                           } from "react"
+import { ModalProps, AnswerStates, InputAnswerState, ButtonAnswerState, CheckBoxAnswerState } from "./types"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -156,6 +157,45 @@ export default function Modal(props: ModalProps) {
                             }
                         }
 
+                        case "check-box": {
+                            const { checked, label } = answer
+
+                            const {
+                                changed,
+                                checked:  oldChecked,
+                                disabled: oldDisabled
+                            } = states[key] as CheckBoxAnswerState
+
+                            const disabled  = disable?.(states) ?? false
+
+                            if (disabled !== oldDisabled)
+                                setStates({
+                                    ...states,
+                                    [key]: {
+                                        disabled,
+                                        changed,
+                                        type: "check-box",
+                                        checked: oldChecked
+                                    }
+                                })
+
+                            return <div key={key} className={styles.checkBox}>
+                                <CheckBox checked={checked} label={label} onChange={onChange} />
+                            </div>
+
+                            function onChange(checked: boolean) {
+                                setStates({
+                                    ...states,
+                                    [key]: {
+                                        checked,
+                                        disabled,
+                                        type:    "check-box",
+                                        changed: true
+                                    }
+                                })
+                            }
+                        }
+
                         default:
                             return null
                     }
@@ -195,6 +235,19 @@ export default function Modal(props: ModalProps) {
                         value:    value,
                         changed:  false,
                         invalid:  answer.validate?.(value)
+                    }
+
+                    break
+                }
+
+                case "check-box": {
+                    const checked = answer.checked ?? false
+
+                    states[key] = {
+                        checked,
+                        type:     "check-box",
+                        disabled: false,
+                        changed:  false
                     }
 
                     break

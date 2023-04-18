@@ -13,6 +13,7 @@ export interface Answers {
 
 export type Answer = ButtonAnswer
                    | InputAnswer
+                   | CheckBoxAnswer
 
 export interface AnswerBase {
     type:       AnswerType
@@ -38,8 +39,15 @@ export interface InputAnswer extends AnswerBase {
     showErrorIfNotChanged?: boolean
 }
 
+export interface CheckBoxAnswer extends AnswerBase {
+    type:     "check-box"
+    checked?: boolean
+    label?:   string
+}
+
 export type AnswerType = "button"
                        | "input"
+                       | "check-box"
 
 export type ValidateInput       = (input: string) => string | undefined
 export type OnAnswerButtonClick = (states: AnswerStates) => void | Promise<void>
@@ -52,6 +60,7 @@ export interface AnswerStates {
 
 export type AnswerState = ButtonAnswerState
                         | InputAnswerState
+                        | CheckBoxAnswerState
 
 export interface AnswerStateBase {
     type:     AnswerType
@@ -68,4 +77,10 @@ export interface InputAnswerState extends AnswerStateBase {
     value:    string
     changed:  boolean
     invalid?: string | undefined
+}
+
+export interface CheckBoxAnswerState extends AnswerStateBase {
+    type:    "check-box"
+    checked: boolean
+    changed: boolean
 }

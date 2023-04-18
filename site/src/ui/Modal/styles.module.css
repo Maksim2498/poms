@@ -36,8 +36,8 @@
     flex-direction: column
 }
 
-.input > *:first-child {
-    margin-bottom: .5rem
+.input > *:not(:first-child) {
+    margin-top: .5rem
 }
 
 .answers {
@@ -53,4 +53,15 @@
 
 .answers > * {
     margin: .5rem
+}
+
+.checkBox {
+    display: flex;
+    justify-content: center;
+
+    width: 100%
+}
+
+.checkBox > *:not(:first-child) {
+    margin-left: .5rem
 }
