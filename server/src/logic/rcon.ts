@@ -43,7 +43,7 @@ export class RconProxy extends    EventEmitter
         logger?.debug(`Creating RCON proxy for client at ${ip}...`)
 
         socket.on("close", () => {
-            logger?.debug(`RCON proxy lost connection with a client at ${ip}`)
+            logger?.debug(`RCON proxy connection with a client at ${ip} is closed`)
             rcon.close()
             this.emit("close")
         })
