@@ -1,11 +1,11 @@
-import Dim                                                                       from "ui/Dim/Component"
-import Button                                                                    from "ui/Button/Component"
-import Input                                                                     from "ui/Input/Component"
-import FormErrorText                                                             from "ui/FormErrorText/Component"
-import styles                                                                    from "./styles.module.css"
+import Dim                                                               from "ui/Dim/Component"
+import Button                                                            from "ui/Button/Component"
+import Input                                                             from "ui/Input/Component"
+import FormErrorText                                                     from "ui/FormErrorText/Component"
+import styles                                                            from "./styles.module.css"
 
-import { useState                                                              } from "react"
-import { ModalProps, AnswerStates, Answer, InputAnswerState, ButtonAnswerState } from "./types"
+import { useState                                                      } from "react"
+import { ModalProps, AnswerStates, InputAnswerState, ButtonAnswerState } from "./types"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -23,8 +23,10 @@ export default function Modal(props: ModalProps) {
             {header   && <h3  className={styles.header  }>{header  }</h3> }
             {question && <div className={styles.question}>{question}</div>}
             <div className={styles.answers}>
-                {answers && (Object.entries(answers).filter(([, answer]) => answer) as [string, Answer][])
-                                                    .map(([key, answer]) => {
+                {answers && Object.entries(answers).map(([key, answer]) => {
+                    if (!answer)
+                        return null
+
                     const { type, disable, autoFocus } = answer
 
                     switch (type) {
