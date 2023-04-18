@@ -33,9 +33,6 @@ export default function Console() {
     useEffect(() => {
         tryReconnect.current = true
 
-        if (socket.current == null)
-            initSocket()
-        
         return () => {
             tryReconnect.current = false
             socket.current?.disconnect()
@@ -50,6 +47,16 @@ export default function Console() {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    useEffect(() => {
+        if (!available)
+            return
+
+        if (socket.current == null)
+            initSocket()
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [available])
 
     if (loading)
         return <div className={styles.loading}>
