@@ -66,8 +66,7 @@ export default function Profile(props: ProfileProps) {
             <UserNicknames user={user!} />
         </div>
 
-        {canChangePassword() && <Button color="red" onClick={() => setChangingPassword(true)}>Change password</Button>}
-        {canResetPassword()  && <Button color="red" onClick={() => setResetingPassword(true)}>Reset password</Button>}
+        {editMode && <Button color="red" onClick={() => setResetingPassword(true)}>Reset password</Button>}
 
         {
             changingPassword && <Modal header="Password Changing">
@@ -125,17 +124,6 @@ export default function Profile(props: ProfileProps) {
 
     function innerOnTagClick(login: string) {
         onTagClick?.(login, user!.login)
-    }
-
-    function canChangePassword(): boolean {
-        return editMode === true
-            && User.areLoginsEqual(contextUser?.login, user?.login)
-    }
-
-    function canResetPassword(): boolean {
-        return editMode             === true
-            && contextUser?.isAdmin === true
-            && !User.areLoginsEqual(contextUser.login, user?.login)
     }
 
     function disablePasswordResetItem(states: AnswerStates) {
