@@ -564,7 +564,7 @@ export default class Server {
         }
 
         async function listen(this: Server) {
-            return new Promise<void>((resolve, reject) => {
+            return new Promise<void>(async (resolve, reject) => {
                 try {
                     this.httpServer.on("error", reject)
 
@@ -579,6 +579,7 @@ export default class Server {
                     }
 
                     if (socketPath != null) {
+                        await fsp.rm(socketPath)
                         this.httpServer.listen(socketPath, listening)
                         return
                     }
