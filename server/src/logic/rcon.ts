@@ -13,15 +13,18 @@ export interface CreationOptions {
 }
 
 export interface RconProxyEvents {
-    on(eventName: "close", listener: () => void): this
+    on(eventName: "authorized", listener: (login: string, id: number) => void): this
+    on(eventName: "close",      listener: (                         ) => void): this
 }
 
 export class RconProxy extends    EventEmitter
                        implements RconProxyEvents {
-    private readonly socket: WebSocket
+    private readonly socket:  WebSocket
+    private          _id?:    number
+    private          _login?: string
 
-    readonly         server: Server
-    readonly         ip:     string
+    readonly         server:  Server
+    readonly         ip:      string
 
     constructor(options: CreationOptions) {
         super()
@@ -40,15 +43,20 @@ export class RconProxy extends    EventEmitter
 
         const { logger } = server
 
-        logger?.debug(`Creating RCON proxy for client at ${ip}...`)
+        logger?.debug(`Creating RCON proxy for ${this.address}...`)
 
         socket.on("close", () => {
-            logger?.debug(`RCON proxy connection with a client at ${ip} is closed`)
+            logger?.debug(`RCON proxy connection with ${this.address} is closed`)
             rcon.close()
             this.emit("close")
         })
 
         socket.once("message", async data => {
+            const failed = () => {
+                logger?.debug(`RCON authorization of ${this.address} failed`)
+                this.close()
+            }
+
             const connection = await server.pool.getConnection()
 
             connection.beginTransaction()
@@ -56,14 +64,13 @@ export class RconProxy extends    EventEmitter
             try {
                 const aTokenIdString = data.toString()
 
-                logger?.debug(`Authorizing RCON user with access token ${aTokenIdString}...`)
+                logger?.debug(`Starting RCON authorization for ${this.address} with access token ${aTokenIdString}...`)
 
                 const aTokenIdBuffer = Buffer.from(aTokenIdString, "hex")
                 const aTokenInfo     = await server.tokenManager.getATokenInfo(connection, aTokenIdBuffer)
 
                 if (aTokenInfo == null) {
-                    logger?.debug("Authorization failed")
-                    this.close()
+                    failed()
                     return
                 }
 
@@ -71,16 +78,25 @@ export class RconProxy extends    EventEmitter
                 const userInfo   = await server.userManager.getUserInfo(connection, userId)
 
                 if (userInfo?.isAdmin !== true) {
-                    logger?.debug("Authorization failed")
-                    this.close()
+                    failed()
                     return
                 }
 
                 socket.send("ok", async error => {
-                    if (error)
+                    if (error) {
+                        failed()
                         return
+                    }
 
-                    logger?.debug("Authorization succeeded")
+                    const { login, id } = userInfo
+
+                    this._login = login
+                    this._id    = id
+
+                    logger?.debug(`RCON authorization of ${this.address} succeeded`)
+
+                    this.emit("authorized", login, id)
+
                     await initRcon.call(this)
                 })
             } catch (error) {
@@ -93,21 +109,21 @@ export class RconProxy extends    EventEmitter
         })
 
         async function initRcon(this: RconProxy) {
-            logger?.debug(`Initializing RCON connection with ${server.config.rconAddress}...`)
+            logger?.debug(`Initializing RCON connection with ${server.config.rconAddress} for ${this.address}...`)
             
             try {
-                await connectRcon()
-                await loginRcon()
+                await connectRcon.call(this)
+                await loginRcon.call(this)
                 setupMessageProxy.call(this)
-                logger?.debug("RCON is successfully initialized")
+                logger?.debug(`RCON is successfully initialized for ${this.address}`)
             } catch (error) {
                 logger?.error(error)
-                logger?.debug("RCON initialization failed")
+                logger?.debug(`RCON initialization is failed for ${this.address}`)
                 this.close()
             }
 
-            async function connectRcon() {
-                logger?.debug("Connecting to RCON...")
+            async function connectRcon(this: RconProxy) {
+                logger?.debug(`Connecting ${this.address} to RCON...`)
 
                 const { config } = server
                 const host       = config.rconHost
@@ -115,23 +131,28 @@ export class RconProxy extends    EventEmitter
 
                 await rcon.connect(host, port)
 
-                logger?.debug("Connected")
+                logger?.debug(`${this.address} is connected to RCON`)
             }
 
-            async function loginRcon() {
-                logger?.debug("Logging in RCON...")
+            async function loginRcon(this: RconProxy) {
+                logger?.debug(`Logging ${this.address} in RCON...`)
 
                 const password = server.config.read.rcon?.password
 
                 await rcon.login(password!)
 
-                logger?.debug("Logged in")
+                logger?.debug(`${this.address} is logged in RCON`)
             }
 
             function setupMessageProxy(this: RconProxy) {
-                rcon.on("message", ({message}) => socket.send(message))
+                rcon.on("message", ({message}) => {
+                    logger?.debug(`${this.address} got response from rcon: ${message}`)
+                    socket.send(message)
+                })
 
                 socket.on("message", async message => {
+                    logger?.info(`${this.address} issued server command /${message}`)
+
                     try {
                         await rcon.execute(message.toString())
                     } catch (error) {
@@ -143,11 +164,27 @@ export class RconProxy extends    EventEmitter
         }
     }
 
+    get id(): number | undefined {
+        return this._id
+    }
+
+    get login(): string | undefined {
+        return this._login
+    }
+
+    get address(): string {
+        return this.authorized ? `${this._login}[${this._id}]@${this.ip}`
+                               : `@${this.ip}`
+    }
+
+    get authorized(): boolean {
+        return this._id != null
+    }
+
     close() {
         const { logger } = this.server
 
-        logger?.debug(`Closing RCON proxy for client at ${this.ip}...`)
+        logger?.debug(`Closing RCON proxy connection for ${this.address}...`)
         this.socket.close() // rcon will be closed via socket "close" event listener
-        logger?.debug("Closed")
     }
 }
