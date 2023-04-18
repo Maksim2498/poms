@@ -10,8 +10,8 @@ export type SetAuthInfo = (authInfo: AuthInfo) => void
 
 export type Method = "get"
                    | "post"
-                   | "update"
                    | "delete"
+                   | "put"
 
 export type ApiResult = [any, AuthInfo]
 
@@ -123,8 +123,8 @@ export async function post(authController: AuthController, url: string, body?: a
     return await api(authController, "post", url, body)
 }
 
-export async function update(authController: AuthController, url: string, body?: any) {
-    return await api(authController, "update", url, body)
+export async function put(authController: AuthController, url: string, body?: any) {
+    return await api(authController, "put", url, body)
 }
 
 export async function del(authController: AuthController, url: string, body?: any) {

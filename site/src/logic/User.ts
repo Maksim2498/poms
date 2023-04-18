@@ -2,7 +2,7 @@ import z                                          from "zod"
 import Cookies                                    from "js-cookie"
 import AuthInfo                                   from "./AuthInfo"
 
-import { AuthController, del, get, post, update } from "./api"
+import { AuthController, del, get, post, put } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
@@ -286,7 +286,7 @@ export default class User {
 
         const url = this.makeUrl(login, "password")
         
-        await update(authController, url, { password })
+        await put(authController, url, { password })
     }
 
     readonly login:      string
