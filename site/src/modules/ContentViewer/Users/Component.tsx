@@ -1,17 +1,17 @@
-import User                                                  from "logic/User"
-import useAsync                                              from "hooks/useAsync"
-import UserCard                                              from "ui/UserCard/Component"
-import Loading                                               from "ui/Loading/Component"
-import ErrorText                                             from "ui/ErrorText/Component"
-import Button                                                from "ui/Button/Component"
-import Modal                                                 from "ui/Modal/Component"
-import styles                                                from "./styles.module.css"
+import User                                                                       from "logic/User"
+import useAsync                                                                   from "hooks/useAsync"
+import UserCard                                                                   from "ui/UserCard/Component"
+import Loading                                                                    from "ui/Loading/Component"
+import ErrorText                                                                  from "ui/ErrorText/Component"
+import Button                                                                     from "ui/Button/Component"
+import Modal                                                                      from "ui/Modal/Component"
+import styles                                                                     from "./styles.module.css"
 
-import { useContext, useEffect, useState                   } from "react"
-import { AuthControllerContext                             } from "App/AuthControllerContext"
-import { UserContext                                       } from "App/UserContext"
-import { ButtonAnswerState, InputAnswerState, AnswerStates } from "ui/Modal/types"
-import { UsersProps                                        } from "./types"
+import { useContext, useEffect, useState                                        } from "react"
+import { AuthControllerContext                                                  } from "App/AuthControllerContext"
+import { UserContext                                                            } from "App/UserContext"
+import { ButtonAnswerState, InputAnswerState, AnswerStates, CheckBoxAnswerState } from "ui/Modal/types"
+import { UsersProps                                                             } from "./types"
 
 export default function Users(props: UsersProps) {
     const { onUserClick, editMode } = props
@@ -102,6 +102,11 @@ export default function Users(props: UsersProps) {
                         disable:      disableCreationItem
                     },
 
+                    isAdmin: {
+                        type:         "check-box",
+                        label:        "Admin:"
+                    },
+
                     cancel: {
                         type:         "button",
                         text:         "Cancel",
@@ -136,11 +141,12 @@ export default function Users(props: UsersProps) {
         if (!users)
             return
 
-        const { value: login    } = states.login    as InputAnswerState
-        const { value: password } = states.password as InputAnswerState
-        const { value: name     } = states.name     as InputAnswerState
+        const { value:   login    } = states.login    as InputAnswerState
+        const { value:   password } = states.password as InputAnswerState
+        const { value:   name     } = states.name     as InputAnswerState
+        const { checked: isAdmin  } = states.isAdmin  as CheckBoxAnswerState
 
-        const newUser = await User.register({ authController, login, password, name })
+        const newUser = await User.register({ authController, login, password, name, isAdmin })
 
         users.push(newUser)
 
