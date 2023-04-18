@@ -1,8 +1,8 @@
-import z                                  from "zod"
-import Cookies                            from "js-cookie"
-import AuthInfo                           from "./AuthInfo"
+import z                                          from "zod"
+import Cookies                                    from "js-cookie"
+import AuthInfo                                   from "./AuthInfo"
 
-import { AuthController, del, get, post } from "./api"
+import { AuthController, del, get, post, update } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
 
@@ -35,6 +35,12 @@ export interface RegisterUserOptions {
     password:       string
     name?:          string
     isAdmin?:       boolean
+}
+
+export interface SetPasswordOptions {
+    authController: AuthController
+    login:          string
+    password:       string
 }
 
 export default class User {
@@ -70,7 +76,7 @@ export default class User {
         const { login, authController, fetchNicknames } = options
 
         const urlOptions = fetchNicknames ? { nicknames: undefined } : undefined
-        const url        = this.makeUrl(login, urlOptions)
+        const url        = this.makeUrl(login, undefined, urlOptions)
         const [json]     = await get(authController, url)
         
         return User.fromJson(json)
@@ -233,11 +239,14 @@ export default class User {
     }
 
     static async del(authController: AuthController, login: string) {
+        this.validateLogin(login)
+
         const url = this.makeUrl(login)
+
         await del(authController, url)
     }
 
-    static makeUrl(login: string, options?: { [key: string]: any }): string {
+    static makeUrl(login: string, suffix?: string | null, options?: { [key: string]: any }): string {
         const encodedLogin   = encodeURIComponent(login)
         const encodedOptions = Object.entries(options ?? {})
                                      .map(([key, value]) => {
@@ -252,17 +261,32 @@ export default class User {
                                      })
                                      .join("&")
 
-        return `users/${encodedLogin}?${encodedOptions}`
+        return suffix ? `users/${encodedLogin}/${suffix}?${encodedOptions}`
+                      : `users/${encodedLogin}?${encodedOptions}`
     }
 
     static async register(options: RegisterUserOptions): Promise<User> {
         const { authController, login, password, name, isAdmin } = options
+
+        this.validateLogin(login)
+        this.validatePassword(password)
 
         const url = this.makeUrl(login)
     
         await post(authController, url, { password, name, isAdmin })
 
         return new User({ login, name, isAdmin })
+    }
+
+    static async setPassword(options: SetPasswordOptions) {
+        const { authController, login, password } = options
+
+        this.validateLogin(login)
+        this.validatePassword(password)
+
+        const url = this.makeUrl(login, "password")
+        
+        await update(authController, url, { password })
     }
 
     readonly login:      string
