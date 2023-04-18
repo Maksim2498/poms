@@ -3,14 +3,17 @@ import User from "logic/User"
 export type ProfileProps = ProfileUserProps
                          | ProfileLoginProps
 
-export interface ProfileUserProps {
+export interface ProfilePropsBase {
     onTagClick?: OnProfileTagClick
-    user:        User
+    editMode?:   boolean
 }
 
-export interface ProfileLoginProps {
-    onTagClick?: OnProfileTagClick
-    login:       string
+export interface ProfileUserProps extends ProfilePropsBase {
+    user: User
+}
+
+export interface ProfileLoginProps extends ProfilePropsBase {
+    login: string
 }
 
 export type OnProfileTagClick = (newLogin: string, oldLogin: string) => void

@@ -102,7 +102,7 @@ export default function ContentViewer() {
             function createProfileContent(): Content {
                 const name       = "Your Profile"
                 const selectName = "Profile"
-                const component  = () => Profile({ login: user!.login, onTagClick: onUserTagClick })
+                const component  = ({ editMode }: ContentComponentProps) => Profile({ editMode, login: user!.login, onTagClick: onUserTagClick })
                 const editable   = true
 
                 return { name, selectName, component, editable }
@@ -110,7 +110,7 @@ export default function ContentViewer() {
         }
 
         function pushUserContent(login: string) {
-            const component       = () => Profile({ login: login, onTagClick: onUserTagClick })
+            const component       = ({ editMode }: ContentComponentProps) => Profile({ editMode, login, onTagClick: onUserTagClick })
             const name            = `${login}'s Profile`
             const editable        = login === user?.login || (user?.isAdmin ?? false)
             const newContent      = { name, component, editable }

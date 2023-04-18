@@ -18,7 +18,7 @@ export default function Profile(props: ProfileProps) {
     const authController                = useContext(AuthControllerContext)
     const [contextUser, setContextUser] = useContext(UserContext)
     const [user,        loading, error] = useAsync(getUser)
-    const { onTagClick                } = props
+    const { onTagClick, editMode      } = props
 
     useEffect(() => {
         if (error != null)
@@ -44,6 +44,8 @@ export default function Profile(props: ProfileProps) {
         </div>
 
     return <div className={styles.loaded}>
+        {editMode && <div style={{marginBottom: "1rem", color: "red"}}>"Profile editing is not implemented"</div>}
+
         <div className={styles.icon}>
             <UserIcon user={user!} />
         </div>
