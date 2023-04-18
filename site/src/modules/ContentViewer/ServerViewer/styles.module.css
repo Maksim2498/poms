@@ -1,25 +1,12 @@
 .server {
-    height: 100%
-}
+    height: 100%;
 
-.loading, .error, .loaded {
-    composes: server
-}
-
-.loaded, .error {
     display: flex;
-    align-items: center
+    flex-direction: column;
+    align-items: center;
 }
 
-.error {
-    justify-content: center
-}
-
-.loaded {
-    flex-direction: column
-}
-
-.loaded > * {
+.server > * {
     margin: 1rem
 }
 

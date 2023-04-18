@@ -1,13 +1,7 @@
 .users {
     height: 100%;
-    width: 100%
-}
+    width: 100%;
 
-.loading, .error, .loaded {
-    composes: users
-}
-
-.loaded {
     position: absolute;
     transform: translateX(-50%);
     left: 50%;
@@ -42,15 +36,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     margin: 1rem
 }
 
 .item > * {
     margin: 0 .5rem
-}
-
-.error {
-    display: flex;
-    align-items: center;
-    justify-content: center
 }

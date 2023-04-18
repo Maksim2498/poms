@@ -1,8 +1,8 @@
 import User                                                                       from "logic/User"
 import useAsync                                                                   from "hooks/useAsync"
+import LoadingContent                                                             from "modules/ContentViewer/LoadingContent/Component"
+import ErrorContent                                                               from "modules/ContentViewer/ErrorContent/Component"
 import UserCard                                                                   from "ui/UserCard/Component"
-import Loading                                                                    from "ui/Loading/Component"
-import ErrorText                                                                  from "ui/ErrorText/Component"
 import Button                                                                     from "ui/Button/Component"
 import Modal                                                                      from "ui/Modal/Component"
 import styles                                                                     from "./styles.module.css"
@@ -30,16 +30,12 @@ export default function Users(props: UsersProps) {
     }, [error])
 
     if (loading)
-        return <div className={styles.loading}>
-            <Loading />
-        </div>
+        return <LoadingContent />
 
     if (error != null)
-        return <div className={styles.error}>
-            <ErrorText>Loading failed</ErrorText>
-        </div>
+        return <ErrorContent>Loading failed</ErrorContent>
 
-    return <div className={styles.loaded}>
+    return <div className={styles.users}>
         <div className={styles.listContainer}>
             {
                 editMode && <div className={styles.createButton}>

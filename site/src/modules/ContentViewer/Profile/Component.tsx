@@ -1,13 +1,13 @@
 import useAsync                                               from "hooks/useAsync"
 import User                                                   from "logic/User"
+import LoadingContent                                         from "modules/ContentViewer/LoadingContent/Component"
+import ErrorContent                                           from "modules/ContentViewer/ErrorContent/Component"
 import Button                                                 from "ui/Button/Component"
 import Modal                                                  from "ui/Modal/Component"
 import TaggedUserName                                         from "ui/TaggedUserName/Component"
 import UserIcon                                               from "ui/UserIcon/Component"
 import UserOnlineIndicator                                    from "ui/UserOnlineIndicator/Component"
 import UserNicknames                                          from "ui/UserNicknames/Component"
-import Loading                                                from "ui/Loading/Component"
-import ErrorText                                              from "ui/ErrorText/Component"
 import UserRegInfo                                            from "ui/UserRegInfo/Component"
 import styles                                                 from "./styles.module.css"
 
@@ -39,16 +39,12 @@ export default function Profile(props: ProfileProps) {
     }, [user, contextUser, setContextUser])
 
     if (loading)
-        return <div className={styles.loading}>
-            <Loading />
-        </div>
+        return <LoadingContent />
 
     if (error != null)
-        return <div className={styles.error}>
-            <ErrorText>Loading failed</ErrorText>
-        </div>
+        return <ErrorContent>Loading failed</ErrorContent>
 
-    return <div className={styles.loaded}>
+    return <div className={styles.profile}>
         <div className={styles.icon}>
             <UserIcon user={user!} />
         </div>

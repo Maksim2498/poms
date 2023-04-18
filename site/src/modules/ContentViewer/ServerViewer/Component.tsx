@@ -1,9 +1,9 @@
 import useAsync                  from "hooks/useAsync"
 import Server                    from "logic/Server"
-import Loading                   from "ui/Loading/Component"
+import LoadingContent            from "modules/ContentViewer/LoadingContent/Component"
+import ErrorContent              from "modules/ContentViewer/ErrorContent/Component"
 import ServerIcon                from "ui/ServerIcon/Component"
 import ServerMotd                from "ui/ServerMotd/Component"
-import ErrorText                 from "ui/ErrorText/Component"
 import ServerVersion             from "ui/ServerVersion/Component"
 import ServerPlayerList          from "components/ServerPlayerList/Component"
 import styles                    from "./styles.module.css"
@@ -23,16 +23,12 @@ export default function ServerViewer(props: ServerViewerProps) {
     }, [error])
 
     if (loading)
-        return <div className={styles.loading}>
-            <Loading />
-        </div>
+        return <LoadingContent />
 
     if (error != null)
-        return <div className={styles.error}>
-            <ErrorText>Server is offline</ErrorText>
-        </div>
+        return <ErrorContent>Server is offline</ErrorContent>
 
-    return <div className={styles.loaded}>
+    return <div className={styles.server}>
         <div className={styles.icon}>
             <ServerIcon server={server} />
         </div>

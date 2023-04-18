@@ -2,9 +2,9 @@ import * as motd                              from "minecraft-motd-util"
 import Autolinker                             from "autolinker"
 import useAsync                               from "hooks/useAsync"
 import useForceRerender                       from "hooks/useForceRerender"
+import LoadingContent                         from "modules/ContentViewer/LoadingContent/Component"
+import ErrorContent                           from "modules/ContentViewer/ErrorContent/Component"
 import Terminal                               from "components/Terminal/Component"
-import Loading                                from "ui/Loading/Component"
-import ErrorText                              from "ui/ErrorText/Component"
 import ConsoleSocket                          from "./ConsoleSocket"
 import styles                                 from "./styles.module.css"
 
@@ -59,23 +59,17 @@ export default function Console() {
     }, [available])
 
     if (loading)
-        return <div className={styles.loading}>
-            <Loading />
-        </div>
+        return <LoadingContent />
 
     if (error != null)
-        return <div className={styles.error}>
-            <ErrorText>Loading failed</ErrorText>
-        </div>
+        return <ErrorContent>Loading failed</ErrorContent>
 
     if (!available)
-        return <div className={styles.unavailable}>
-            <ErrorText>Console is unavailable</ErrorText>
-        </div>
+        return <ErrorContent>Console is unavailable</ErrorContent>
 
     const disabled = socket.current?.state !== "authorized"
 
-    return <div className={styles.loaded}>
+    return <div className={styles.console}>
         <Terminal onEnter={onEnter} disabled={disabled} htmlOutput={true} />
     </div>
 
