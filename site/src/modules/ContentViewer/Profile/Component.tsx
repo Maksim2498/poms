@@ -44,7 +44,7 @@ export default function Profile(props: ProfileProps) {
         </div>
 
     return <div className={styles.loaded}>
-        {editMode && <div style={{marginBottom: "1rem", color: "red"}}>"Profile editing is not implemented"</div>}
+        {editMode && <div style={{marginBottom: "1rem", color: "red"}}>Profile editing is not implemented</div>}
 
         <div className={styles.icon}>
             <UserIcon user={user!} />
