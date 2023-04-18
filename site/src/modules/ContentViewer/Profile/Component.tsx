@@ -47,18 +47,18 @@ export default function Profile(props: ProfileProps) {
 
     return <div className={styles.profile}>
         <div className={styles.icon}>
-            <UserIcon user={user!} />
+            <UserIcon user={user} />
         </div>
 
         <div className={styles.general}>
             <UserName            user={user} />
             <UserTag             user={user} />
-            <UserOnlineIndicator user={user!} />
+            <UserOnlineIndicator user={user} />
         </div>
 
         <div className={styles.sections}>
-            <UserRegInfo   user={user!} onTagClick={innerOnTagClick} />
-            <UserNicknames user={user!} />
+            <UserRegInfo   user={user} onTagClick={innerOnTagClick} />
+            <UserNicknames user={user} />
         </div>
 
         {editMode && <Button color="red" onClick={() => setResetingPassword(true)}>Reset password</Button>}
