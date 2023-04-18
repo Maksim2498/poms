@@ -131,8 +131,8 @@ export class DefaultTokenManager implements TokenManager {
         const diff = count - limit
 
         const [result] = await connection.execute(
-            "DELETE FROM ATokens WHERE user_id = ? ORDER BY cr_time ASC LIMIT ?",
-            [id, diff]
+            `DELETE FROM ATokens WHERE user_id = ? ORDER BY cr_time ASC LIMIT ${diff}`,
+            [id]
         ) as [ResultSetHeader, FieldPacket[]]
 
         const deleted = result.affectedRows
