@@ -33,7 +33,7 @@ export default class Player {
     constructor(options: CreationOptions) {
         const { dontCheckNicknames, nickname, user } = options
 
-        const checkNicknames =  user != null
+        const checkNicknames =  user?.nicknames != null
                              && !dontCheckNicknames
 
         if (checkNicknames && !userHasNickname())
@@ -46,7 +46,7 @@ export default class Player {
             const testNickname =  nickname.trim()
                                           .toLowerCase()
 
-            for (const userNickname of user!.nicknames) {
+            for (const userNickname of user!.nicknames!) {
                 const testUserNickname = userNickname.trim()
                                                      .toLowerCase()
 

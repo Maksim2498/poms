@@ -328,7 +328,7 @@ export default class User {
 
     readonly login:      string
     readonly name?:      string
-    readonly nicknames:  string[]
+    readonly nicknames?: string[]
     readonly isAdmin:    boolean
     readonly isOnline:   boolean
     readonly icon:       string
@@ -340,7 +340,7 @@ export default class User {
     constructor(options: CreationOptions) {
         const { login } = options
         let   name      = options.name?.trim() ?? undefined
-        const nicknames = options.nicknames    ?? []
+        const nicknames = options.nicknames    ?? undefined
         const isAdmin   = options.isAdmin      ?? false
         const isOnline  = options.isOnline     ?? false
         const regTime   = options.reg?.time    ?? new Date()
@@ -390,14 +390,14 @@ export default class User {
         return new User({ ...this, isAdmin })
     }
 
-    equalTo(user: User, ignoreNicknames: boolean = false): boolean {
+    equalTo(user: User): boolean {
         if (!User.areLoginsEqual(this.login, user.login)
          || this.name             !== user.name
          || this.isAdmin          !== user.isAdmin
          || this.icon             !== user.icon)
             return false
 
-        if (!ignoreNicknames) {
+        if (this.nicknames != null && user.nicknames != null) {
             if (this.nicknames.length !== user.nicknames.length)
                 return false
 

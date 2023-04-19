@@ -34,7 +34,7 @@ export default function Users(props: UsersProps) {
 
             const updateContextUser =  contextUser
                                     && User.areLoginsEqual(user.login, contextUser.login)
-                                    && !contextUser.equalTo(user, true)
+                                    && !contextUser.equalTo(user)
 
             if (updateContextUser)
                 setContextUser(user)
