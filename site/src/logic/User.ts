@@ -385,7 +385,12 @@ export default class User {
         return true
     }
 
-    async saveDiff(user: User) {
-
+    async saveDiff(authController: AuthController, user: User) {
+        if (this.name !== user.name)
+            await User.setName({
+                authController,
+                login: this.login,
+                name:  this.name
+            })
     }
 }
