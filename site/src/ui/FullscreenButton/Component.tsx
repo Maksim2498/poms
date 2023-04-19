@@ -7,9 +7,9 @@ export default function FullscreenButton() {
     function onClick() {
         const doc = document as any
 
-        if (!(document.fullscreenElement ?? doc.webkitFullscreenElement))
-            document.body.requestFullscreen?.() ?? doc.body.webkitRequestFullscreen?.()
+        if (!(document.fullscreenElement ?? doc.webkitFullscreenElement ?? doc.mozFullScreenElement))
+            document.body.requestFullscreen?.() ?? doc.body.webkitRequestFullscreen?.() ?? doc.body.mozRequestFullScreen?.()
         else
-            document.exitFullscreen?.() ?? doc.webkitExitFullscreen()
+            document.exitFullscreen?.() ?? doc.webkitExitFullscreen() ?? doc.mozExitFullScreen?.()
     }
 }
