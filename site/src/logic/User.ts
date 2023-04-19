@@ -348,4 +348,19 @@ export default class User {
     withName(name: string): User {
         return new User({ ...this, name })
     }
+
+    equalTo(user: User): boolean {
+        if (!User.areLoginsEqual(this.login, user.login)
+         || this.name             !== user.name
+         || this.nicknames.length !== user.nicknames.length
+         || this.isAdmin          !== user.isAdmin
+         || this.icon             !== user.icon)
+            return false
+
+        for (const nickname of this.nicknames)
+            if (!user.nicknames.includes(nickname))
+                return false
+
+        return true
+    }
 }
