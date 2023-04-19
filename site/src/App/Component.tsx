@@ -102,10 +102,14 @@ export default function App() {
         if (showAuthForm)
             return <Header show="none" />
 
-        return <Header show="user" onSignIn={revealAuthForm} />
+        return <Header show="user" onSignIn={revealAuthForm} onLogoClick={onLogoClick} />
 
         function revealAuthForm() {
             setShowAuthForm(true)
+        }
+
+        function onLogoClick() {
+            setContentStack([HOME_CONTENT])
         }
     }
 

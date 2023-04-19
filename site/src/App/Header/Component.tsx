@@ -6,7 +6,7 @@ import { HeaderProps } from "./types"
 
 export default function Header(props: HeaderProps) {
     return <header className={styles.header}>
-        <Logo />
+        <Logo onClick={props.onLogoClick} />
         {show()}
     </header>
 
