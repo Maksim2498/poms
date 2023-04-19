@@ -49,6 +49,12 @@ export interface SetNameOptions {
     name:           string | undefined | null
 }
 
+export interface SetIsAdminOptions {
+    authController: AuthController
+    login:          string
+    isAdmin:        boolean
+}
+
 export default class User {
     static readonly JSON_SCHEMA = z.object({
         login:     z.string(),
@@ -310,6 +316,16 @@ export default class User {
         await put(authController, url, { name: uploadName })
     }
 
+    static async setIsAdmin(options: SetIsAdminOptions) {
+        const { authController, login, isAdmin } = options
+
+        this.validateLogin(login)
+
+        const url = this.makeUrl(login, "is-admin")
+
+        await put(authController, url, { isAdmin })
+    }
+
     readonly login:      string
     readonly name?:      string
     readonly nicknames:  string[]
@@ -395,6 +411,13 @@ export default class User {
                 authController,
                 login: this.login,
                 name:  this.name
+            })
+
+        if (this.isAdmin !== user.isAdmin)
+            await User.setIsAdmin({
+                authController,
+                login:   this.login,
+                isAdmin: this.isAdmin
             })
     }
 }
