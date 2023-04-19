@@ -53,7 +53,8 @@ export default function Profile(props: ProfileProps) {
         if (editMode)
             return
 
-        userName.current = savedUser.current?.name ?? ""
+        userName.current    = savedUser.current?.name    ?? ""
+        isUserAdmin.current = savedUser.current?.isAdmin ?? false
 
         setUser(savedUser.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
