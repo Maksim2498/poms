@@ -370,6 +370,10 @@ export default class User {
         return new User({ ...this, name })
     }
 
+    withIsAdmin(isAdmin: boolean): User {
+        return new User({ ...this, isAdmin })
+    }
+
     equalTo(user: User): boolean {
         if (!User.areLoginsEqual(this.login, user.login)
          || this.name             !== user.name
