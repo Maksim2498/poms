@@ -43,6 +43,12 @@ export interface SetPasswordOptions {
     password:       string
 }
 
+export interface SetNameOptions {
+    authController: AuthController
+    login:          string
+    name:           string | undefined | null
+}
+
 export default class User {
     static readonly JSON_SCHEMA = z.object({
         login:     z.string(),
@@ -289,6 +295,21 @@ export default class User {
         await put(authController, url, { password })
     }
 
+    static async setName(options: SetNameOptions) {
+        const { authController, login, name } = options
+
+        this.validateLogin(login)
+
+        const uploadName = name?.trim()
+
+        if (uploadName?.length === 0)
+            return
+
+        const url = this.makeUrl(login, "name")
+
+        await put(authController, url, { name })
+    }
+
     readonly login:      string
     readonly name?:      string
     readonly nicknames:  string[]
@@ -362,5 +383,9 @@ export default class User {
                 return false
 
         return true
+    }
+
+    async saveDiff(user: User) {
+
     }
 }
