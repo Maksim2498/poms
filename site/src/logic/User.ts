@@ -344,4 +344,8 @@ export default class User {
     async del(authController: AuthController) {
         await User.del(authController, this.login)
     }
+
+    withName(name: string): User {
+        return new User({ ...this, name })
+    }
 }
