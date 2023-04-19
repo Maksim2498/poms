@@ -14,15 +14,33 @@ import { ButtonAnswerState, InputAnswerState, AnswerStates, CheckBoxAnswerState 
 import { UsersProps                                                             } from "./types"
 
 export default function Users(props: UsersProps) {
-    const { onUserClick, editMode } = props
-    const [user, setUser          ] = useContext(UserContext)
-    const authController            = useContext(AuthControllerContext)
-    const [authInfo, setAuthInfo  ] = authController
-    const [users, loading, error  ] = useAsync(async () => User.fetchAll({ authController }) as Promise<(User | undefined)[]>)
-    const [target,   setTarget    ] = useState(undefined as { user: User, index: number } | undefined)
-    const [creating, setCreating  ] = useState(false)
+    const { onUserClick, editMode     } = props
+    const [contextUser, setContextUser] = useContext(UserContext)
+    const authController                = useContext(AuthControllerContext)
+    const [authInfo, setAuthInfo      ] = authController
+    const [users, loading, error      ] = useAsync(async () => User.fetchAll({ authController }) as Promise<(User | undefined)[]>)
+    const [target,   setTarget        ] = useState(undefined as { user: User, index: number } | undefined)
+    const [creating, setCreating      ] = useState(false)
 
     useEffect(clearTarget, [editMode])
+
+    useEffect(() => {
+        if (!users)
+            return
+
+        for (const user of users) {
+            if (user == null)
+                continue
+
+            const updateContextUser =  contextUser
+                                    && User.areLoginsEqual(user.login, contextUser.login)
+                                    && !contextUser.equalTo(user)
+
+            if (updateContextUser)
+                setContextUser(user)
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [users])
 
     useEffect(() => {
         if (error != null)
@@ -43,12 +61,12 @@ export default function Users(props: UsersProps) {
                 </div>
             }
             <ul className={styles.list}>
-                {users.map((user, index) =>
-                    user && <li key={user.login} className={styles.item}>
+                {
+                    users.map((user, index) => user && <li key={user.login} className={styles.item}>
                         <UserCard user={user} onClick={onUserClick} />
                         {editMode && <Button color="red" onClick={() => onDelete(user, index)}>Delete</Button>}
-                    </li>
-                )}
+                    </li>)
+                }
             </ul>
         </div>
         {
@@ -160,9 +178,9 @@ export default function Users(props: UsersProps) {
 
         await target.user.del(authController)
 
-        if (User.areLoginsEqual(user?.login, target.user.login)) {
+        if (User.areLoginsEqual(contextUser?.login, target.user.login)) {
             setAuthInfo(authInfo.withoutTokenPair())
-            setUser(undefined)
+            setContextUser(undefined)
             return
         }
 
