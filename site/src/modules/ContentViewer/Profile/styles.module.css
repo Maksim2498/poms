@@ -27,3 +27,12 @@
 .sections > *{
     margin: 2rem
 }
+
+.buttons {
+    display: flex
+}
+
+.buttons > * {
+    width: 9rem;
+    margin: 0 .5rem
+}

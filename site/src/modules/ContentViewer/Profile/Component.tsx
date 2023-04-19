@@ -3,6 +3,7 @@ import User                                                   from "logic/User"
 import LoadingContent                                         from "modules/ContentViewer/LoadingContent/Component"
 import ErrorContent                                           from "modules/ContentViewer/ErrorContent/Component"
 import Button                                                 from "ui/Button/Component"
+import Input                                                  from "ui/Input/Component"
 import Modal                                                  from "ui/Modal/Component"
 import UserTag                                                from "ui/UserTag/Component"
 import UserName                                               from "ui/UserName/Component"
@@ -12,7 +13,7 @@ import UserNicknames                                          from "ui/UserNickn
 import UserRegInfo                                            from "ui/UserRegInfo/Component"
 import styles                                                 from "./styles.module.css"
 
-import { useContext, useEffect, useState                    } from "react"
+import { useContext, useEffect, useRef, useState            } from "react"
 import { AuthControllerContext                              } from "App/AuthControllerContext"
 import { UserContext                                        } from "App/UserContext"
 import { AnswerStates, ButtonAnswerState, InputAnswerState  } from "ui/Modal/types"
@@ -21,23 +22,45 @@ import { ProfileProps                                       } from "./types"
 export default function Profile(props: ProfileProps) {
     const authController                          = useContext(AuthControllerContext)
     const [contextUser, setContextUser          ] = useContext(UserContext)
-    const [user, loading, error                 ] = useAsync(getUser)
+    const [loadedUser, loadingUser, error       ] = useAsync(getUser)
+    const [user, setUser                        ] = useState(undefined as User | undefined)
+    const [changedUser, setChangedUser          ] = useState(false)
     const [changingPassword, setChangingPassword] = useState(false)
     const [resetingPassword, setResetingPassword] = useState(false)
+    const userName                                = useRef("")
+    const savedUser                               = useRef(undefined as User | undefined)
     const { onTagClick, editMode                } = props
+
+    useEffect(() => {
+        if (!loadedUser)
+            return
+
+        setUser(loadedUser)
+
+        savedUser.current = loadedUser
+        userName.current  = loadedUser.name ?? ""
+
+        if (User.areLoginsEqual(loadedUser.login, contextUser?.login))
+            setContextUser(loadedUser)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loadedUser])
+
+    useEffect(() => {
+        if (editMode)
+            return
+
+        userName.current = savedUser.current?.name ?? ""
+
+        setUser(savedUser.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editMode])
 
     useEffect(() => {
         if (error != null)
             error != null && console.error(error)
     }, [error])
 
-    useEffect(() => {
-        if (!user || !contextUser)
-            return
-
-        if (User.areLoginsEqual(user.login, contextUser.login))
-            setContextUser(user)
-    }, [user, contextUser, setContextUser])
+    const loading = loadingUser || user == null
 
     if (loading)
         return <LoadingContent />
@@ -51,8 +74,11 @@ export default function Profile(props: ProfileProps) {
         </div>
 
         <div className={styles.general}>
-            <UserName            user={user} />
-            <UserTag             user={user} />
+            {
+                editMode ? <Input value={userName.current} onChange={onUserNameChanged} placeholder="User name" />
+                         : <UserName user={user} />
+            }
+            <UserTag user={user} />
             <UserOnlineIndicator user={user} />
         </div>
 
@@ -61,7 +87,12 @@ export default function Profile(props: ProfileProps) {
             <UserNicknames user={user} />
         </div>
 
-        {editMode && <Button color="red" onClick={() => setResetingPassword(true)}>Reset password</Button>}
+        {
+            editMode && <div className={styles.buttons}>
+                <Button color="red" onClick={() => setResetingPassword(true)}>Reset password</Button>
+                {changedUser && <Button color="green" onClick={onSave}>Save changed</Button>}
+            </div>
+        }
 
         {
             changingPassword && <Modal header="Password Changing">
@@ -115,6 +146,28 @@ export default function Profile(props: ProfileProps) {
             login:          props.login,
             authController
         })
+    }
+
+    function onUserNameChanged(name: string) {
+        const newUser = user!.withName(name)
+
+        setChangedUser(!newUser.equalTo(savedUser.current!))
+        setUser(newUser)
+
+        userName.current = name
+    }
+
+    async function onSave() {
+        try {
+            await user!.saveDiff(authController, savedUser.current!)
+        } catch (error) {
+            console.error(error)
+        }
+
+        savedUser.current = user!
+
+        if (User.areLoginsEqual(savedUser.current.login, contextUser?.login))
+            setContextUser(savedUser.current)
     }
 
     function innerOnTagClick(login: string) {
