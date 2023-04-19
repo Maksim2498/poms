@@ -4,7 +4,7 @@ export interface CheckBoxProps {
     disabled?:     boolean
     autoFocus?:    boolean
     autoComplete?: string
-    label?:        string
+    children?:     string
 }
 
 export type OnCheckBoxChange = (value: boolean) => void

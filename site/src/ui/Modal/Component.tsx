@@ -180,7 +180,9 @@ export default function Modal(props: ModalProps) {
                                 })
 
                             return <div key={key} className={styles.checkBox}>
-                                <CheckBox checked={checked} label={label} onChange={onChange} />
+                                <CheckBox checked={checked} onChange={onChange}>
+                                    {label}
+                                </CheckBox>
                             </div>
 
                             function onChange(checked: boolean) {

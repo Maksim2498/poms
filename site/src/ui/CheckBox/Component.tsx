@@ -1,3 +1,5 @@
+import styles            from "./styles.module.css"
+
 import { FormEvent     } from "react"
 import { CheckBoxProps } from "./type"
 
@@ -8,10 +10,10 @@ export default function CheckBox(props: CheckBoxProps) {
         disabled,
         autoFocus,
         autoComplete,
-        label
+        children: label
     } = props
 
-    return <>
+    return <div className={styles.checkBox}>
         {label != null && <label>{label}</label>}
         <input checked      = {checked}
                onChange     = {rawOnChange}
@@ -19,7 +21,7 @@ export default function CheckBox(props: CheckBoxProps) {
                autoFocus    = {autoFocus}
                autoComplete = {autoComplete}
                type         = "checkbox" />
-    </>
+    </div>
 
     function rawOnChange(event: FormEvent<HTMLInputElement>) {
         onChange?.(event.currentTarget.checked)
