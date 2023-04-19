@@ -1065,7 +1065,7 @@ Changes whether is specified user is administrator or not. This method is for ad
 __Request__:
 
 ```http
-PUT /users/<user>/admin
+PUT /users/<user>/is-admin
 ```
 
 ```http
