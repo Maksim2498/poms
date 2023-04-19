@@ -300,14 +300,14 @@ export default class User {
 
         this.validateLogin(login)
 
-        const uploadName = name?.trim()
+        const uploadName = name?.trim() ?? null
 
         if (uploadName?.length === 0)
             return
 
         const url = this.makeUrl(login, "name")
 
-        await put(authController, url, { name })
+        await put(authController, url, { name: uploadName })
     }
 
     readonly login:      string
