@@ -390,17 +390,21 @@ export default class User {
         return new User({ ...this, isAdmin })
     }
 
-    equalTo(user: User): boolean {
+    equalTo(user: User, ignoreNicknames: boolean = false): boolean {
         if (!User.areLoginsEqual(this.login, user.login)
          || this.name             !== user.name
-         || this.nicknames.length !== user.nicknames.length
          || this.isAdmin          !== user.isAdmin
          || this.icon             !== user.icon)
             return false
 
-        for (const nickname of this.nicknames)
-            if (!user.nicknames.includes(nickname))
+        if (!ignoreNicknames) {
+            if (this.nicknames.length !== user.nicknames.length)
                 return false
+
+            for (const nickname of this.nicknames)
+                if (!user.nicknames.includes(nickname))
+                    return false
+        }
 
         return true
     }
