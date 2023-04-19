@@ -9,3 +9,7 @@
     display: flex;
     justify-content: space-between;
 }
+
+.fullscreen {
+    filter: brightness(.4)
+}
