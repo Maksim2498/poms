@@ -28,6 +28,7 @@ export default function Profile(props: ProfileProps) {
     const [changedUser, setChangedUser          ] = useState(false)
     const [changingPassword, setChangingPassword] = useState(false)
     const [resetingPassword, setResetingPassword] = useState(false)
+    const [saving, setSaving                    ] = useState(false)
     const isUserAdmin                             = useRef(false)
     const userName                                = useRef("")
     const savedUser                               = useRef(undefined as User | undefined)
@@ -80,10 +81,12 @@ export default function Profile(props: ProfileProps) {
             {
                 editMode
              && contextUser?.isAdmin
-             && <CheckBox checked={isUserAdmin.current} onChange={onIsUserAdminChanged}>Admin:</CheckBox>
+             && <CheckBox checked={isUserAdmin.current} onChange={onIsUserAdminChanged} disabled={saving}>
+                    Admin:
+                </CheckBox>
             }
             {
-                editMode ? <Input value={userName.current} onChange={onUserNameChanged} placeholder="User name" />
+                editMode ? <Input value={userName.current} onChange={onUserNameChanged} disabled={saving} placeholder="User name" />
                          : <UserName user={user} />
             }
             <UserTag user={user} />
@@ -97,7 +100,7 @@ export default function Profile(props: ProfileProps) {
 
         {
             editMode && <div className={styles.buttons}>
-                <Button color="red" onClick={() => setResetingPassword(true)}>Reset password</Button>
+                <Button color="red" disabled={saving} onClick={() => setResetingPassword(true)}>Reset password</Button>
                 {changedUser && <Button color="green" onClick={onSave}>Save changed</Button>}
             </div>
         }
@@ -159,7 +162,7 @@ export default function Profile(props: ProfileProps) {
     function onIsUserAdminChanged(isAdmin: boolean) {
         const newUser = user!.withIsAdmin(isAdmin)
 
-        setChangedUser(newUser.isAdmin !== savedUser.current!.isAdmin)
+        setChangedUser(!newUser.equalTo(savedUser.current!))
         setUser(newUser)
 
         isUserAdmin.current = isAdmin
@@ -168,13 +171,15 @@ export default function Profile(props: ProfileProps) {
     function onUserNameChanged(name: string) {
         const newUser = user!.withName(name)
 
-        setChangedUser(newUser.name !== savedUser.current!.name)
+        setChangedUser(!newUser.equalTo(savedUser.current!))
         setUser(newUser)
 
         userName.current = name
     }
 
     async function onSave() {
+        setSaving(true)
+
         try {
             await user!.saveDiff(authController, savedUser.current!)
         } catch (error) {
@@ -185,6 +190,8 @@ export default function Profile(props: ProfileProps) {
 
         if (User.areLoginsEqual(savedUser.current.login, contextUser?.login))
             setContextUser(savedUser.current)
+
+        setSaving(false)
     }
 
     function innerOnTagClick(login: string) {
