@@ -3,6 +3,7 @@ import User                                                   from "logic/User"
 import LoadingContent                                         from "modules/ContentViewer/LoadingContent/Component"
 import ErrorContent                                           from "modules/ContentViewer/ErrorContent/Component"
 import Button                                                 from "ui/Button/Component"
+import CheckBox                                               from "ui/CheckBox/Component"
 import Input                                                  from "ui/Input/Component"
 import Modal                                                  from "ui/Modal/Component"
 import UserTag                                                from "ui/UserTag/Component"
@@ -27,6 +28,7 @@ export default function Profile(props: ProfileProps) {
     const [changedUser, setChangedUser          ] = useState(false)
     const [changingPassword, setChangingPassword] = useState(false)
     const [resetingPassword, setResetingPassword] = useState(false)
+    const isUserAdmin                             = useRef(false)
     const userName                                = useRef("")
     const savedUser                               = useRef(undefined as User | undefined)
     const { onTagClick, editMode                } = props
@@ -37,8 +39,9 @@ export default function Profile(props: ProfileProps) {
 
         setUser(loadedUser)
 
-        savedUser.current = loadedUser
-        userName.current  = loadedUser.name ?? ""
+        savedUser.current   = loadedUser
+        userName.current    = loadedUser.name ?? ""
+        isUserAdmin.current = loadedUser.isAdmin
 
         if (User.areLoginsEqual(loadedUser.login, contextUser?.login))
             setContextUser(loadedUser)
@@ -74,6 +77,11 @@ export default function Profile(props: ProfileProps) {
         </div>
 
         <div className={styles.general}>
+            {
+                editMode
+             && contextUser?.isAdmin
+             && <CheckBox checked={isUserAdmin.current} onChange={onIsUserAdminChanged}>Admin:</CheckBox>
+            }
             {
                 editMode ? <Input value={userName.current} onChange={onUserNameChanged} placeholder="User name" />
                          : <UserName user={user} />
@@ -148,10 +156,19 @@ export default function Profile(props: ProfileProps) {
         })
     }
 
+    function onIsUserAdminChanged(isAdmin: boolean) {
+        const newUser = user!.withIsAdmin(isAdmin)
+
+        setChangedUser(newUser.isAdmin !== savedUser.current!.isAdmin)
+        setUser(newUser)
+
+        isUserAdmin.current = isAdmin
+    }
+
     function onUserNameChanged(name: string) {
         const newUser = user!.withName(name)
 
-        setChangedUser(!newUser.equalTo(savedUser.current!))
+        setChangedUser(newUser.name !== savedUser.current!.name)
         setUser(newUser)
 
         userName.current = name
