@@ -235,7 +235,7 @@ export class DefaultNicknameManager implements NicknameManager {
             return 0
         }
 
-        const [rows] = await connection.execute("SELECT COUNT(*) AS count FROM NICKNAMES WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+        const [rows] = await connection.execute("SELECT COUNT(*) AS count FROM Nicknames WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
         const count  = rows[0].count
 
         this.logger?.debug(`Got: ${count}`)
