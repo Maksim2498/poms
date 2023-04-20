@@ -1,35 +1,37 @@
 .signedIn {
-    position: relative;
+    cursor: pointer;
+    position: relative
+}
+
+.user {
     display: flex;
-    align-items: center;
-    justify-content: space-between
+    align-items: center
 }
 
-.signedIn > * {
-    margin: 0 .5rem
-}
-
-.signedIn > .name {
+.name {
     font-size: 1.2rem
 }
 
-.signedIn > .icon {
-    width: 2.25rem;
-    cursor: pointer
+.icon {
+    margin-left: .5rem;
+    width: 2.25rem
 }
 
-.signedIn > .options {
+.options {
     position: absolute;
+
+    width: calc(100%);
+
     display: flex;
     justify-content: space-around;
     flex-direction: column;
-    top: 2.8rem;
+
     border-radius: 0 0 .4rem .4rem;
-    padding: .4rem;
     background-color: #151515;
-    width: calc(100% - .5rem)
+
+    padding: .4rem
 }
 
-.signedIn > .options > * {
+.options > * {
     width: 100%
 }
