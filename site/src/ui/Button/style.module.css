@@ -5,7 +5,9 @@
     position: relative;
 
     background-color: #484848;
-    transition: .08s background-color opacity;
+
+    transition: background-color .08s;
+    transition: opacity .08s;
 
     border: thin solid #666;
     border-radius: .4rem;
