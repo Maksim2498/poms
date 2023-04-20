@@ -1,18 +1,13 @@
-.footer {
-    z-index: -1;
-
+.footer > * {
     position: fixed;
-    left: 0;
-    bottom: 0;
-
-    padding: 1rem;
-    width: 100%;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline
+    bottom: 1rem
 }
 
 .fullscreen {
+    left: 1rem;
     filter: brightness(.4)
+}
+
+.github {
+    right: 1rem
 }
