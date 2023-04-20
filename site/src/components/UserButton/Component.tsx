@@ -21,11 +21,8 @@ export default function UserButton(props: UserButtonProps) {
         return () => document.removeEventListener("click", handleClickOutside)
         
         function handleClickOutside(event: MouseEvent) {
-            console.log(signedInRef.current, event.target)
-            if (!signedInRef.current?.contains(event.target as Node)) {
-                console.log("Close")
+            if (!signedInRef.current?.contains(event.target as Node))
                 setShowOptions(false)
-            }
         }
     }, [signedInRef])
 
