@@ -17,7 +17,8 @@
     flex-direction: column;
     align-items: center;
 
-    margin-top: .5rem
+    margin-top: .5rem;
+    margin-bottom: 1rem
 }
 
 .general > * {
@@ -31,10 +32,11 @@
 }
 
 .sections > * {
-    margin-top: 2rem
+    margin: 1rem
 }
 
 .buttons {
+    margin-top: 1rem;
     display: flex
 }
 
