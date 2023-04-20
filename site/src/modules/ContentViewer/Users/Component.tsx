@@ -53,10 +53,10 @@ export default function Users(props: UsersProps) {
     if (error != null)
         return <ErrorContent>Loading failed</ErrorContent>
 
-    return <div className={styles.users}>
+    return <div className={editMode ? styles.editableUsers : styles.users}>
         <div className={styles.listContainer}>
             {
-                editMode && <div className={styles.createButton}>
+                editMode && <div className={styles.create}>
                     <Button onClick={onCreate}>Create new user</Button>
                 </div>
             }

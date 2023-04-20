@@ -7,7 +7,11 @@
     align-items: center
 }
 
-.createButton {
+.editableUsers {
+    composes: users
+}
+
+.create {
     margin-top: 1rem;
 }
 
@@ -34,6 +38,13 @@
     align-items: center;
 
     margin: 1rem
+}
+
+.editableUsers .item {
+    border: thin solid #666;
+    border-radius: .4rem;
+
+    padding: .5rem
 }
 
 .item > * {
