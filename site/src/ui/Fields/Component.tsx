@@ -15,10 +15,12 @@ export default function Fields(props: FieldsProps) {
     if (hide)
         return null
 
-    return <table>
-        {caption()}
-        {body()}
-    </table>
+    return <div className={styles.container}>
+        <table>
+            {caption()}
+            {body()}
+        </table>
+    </div>
 
     function caption() {
         if (header == null)

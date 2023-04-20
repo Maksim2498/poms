@@ -64,19 +64,18 @@ export default function Profile(props: ProfileProps) {
     if (error != null)
         return <ErrorContent>Loading failed</ErrorContent>
 
-    return <div className={styles.profile}>
+    return <div className={editMode ? styles.editableProfile : styles.profile}>
         <div className={styles.icon}>
             <UserIcon user={user} />
         </div>
 
-        <div className={styles.general}>
-            {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user} onChange={onChanged} />}
-            <UserName user={user} editMode={editMode} onChange={onChanged} />
-            <UserTag user={user} />
-            <UserOnlineIndicator user={user} />
-        </div>
-
         <div className={styles.sections}>
+            <div className={styles.general}>
+                {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user} onChange={onChanged} />}
+                <UserName user={user} editMode={editMode} onChange={onChanged} />
+                <UserTag user={user} />
+                <UserOnlineIndicator user={user} />
+            </div>
             <UserRegInfo   user={user} onTagClick={innerOnTagClick} />
             <UserNicknames user={user} editMode={editMode} onChange={onChanged}/>
         </div>
