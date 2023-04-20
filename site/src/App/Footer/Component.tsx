@@ -7,6 +7,8 @@ export default function Footer() {
         <div className={styles.fullscreen}>
             <FullscreenButton />
         </div>
-        <GitHub />
+        <div className={styles.github}>
+            <GitHub />
+        </div>
     </footer>
 }
