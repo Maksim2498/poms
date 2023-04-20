@@ -24,7 +24,14 @@
     justify-content: space-between;
     align-items: center;
 
-    margin-top: .5rem
+    margin-top: 1rem
+}
+
+.editableList .item {
+    border: thin solid #666;
+    border-radius: .4rem;
+
+    padding: .5rem
 }
 
 .nickname {
