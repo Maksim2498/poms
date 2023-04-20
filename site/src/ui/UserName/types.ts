@@ -1,5 +1,9 @@
-import User from "logic/User"
+import User         from "logic/User"
+
+import { OnChange } from "logic/User"
 
 export interface UserNameProps {
-    user: User
+    editMode?: boolean
+    user:      User
+    onChange?: OnChange
 }

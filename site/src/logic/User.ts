@@ -55,6 +55,8 @@ export interface SetIsAdminOptions {
     isAdmin:        boolean
 }
 
+export type OnChange = (newUser: User, oldUser: User) => void
+
 export default class User {
     static readonly JSON_SCHEMA = z.object({
         login:     z.string(),

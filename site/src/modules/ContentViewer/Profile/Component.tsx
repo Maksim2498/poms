@@ -3,10 +3,9 @@ import User                                                   from "logic/User"
 import LoadingContent                                         from "modules/ContentViewer/LoadingContent/Component"
 import ErrorContent                                           from "modules/ContentViewer/ErrorContent/Component"
 import Button                                                 from "ui/Button/Component"
-import CheckBox                                               from "ui/CheckBox/Component"
-import Input                                                  from "ui/Input/Component"
 import Modal                                                  from "ui/Modal/Component"
 import UserTag                                                from "ui/UserTag/Component"
+import UserIsAdminCheckBox                                    from "ui/UserIsAdminCheckBox/Component"
 import UserName                                               from "ui/UserName/Component"
 import UserIcon                                               from "ui/UserIcon/Component"
 import UserOnlineIndicator                                    from "ui/UserOnlineIndicator/Component"
@@ -29,8 +28,6 @@ export default function Profile(props: ProfileProps) {
     const [changingPassword, setChangingPassword] = useState(false)
     const [resetingPassword, setResetingPassword] = useState(false)
     const [saving, setSaving                    ] = useState(false)
-    const isUserAdmin                             = useRef(false)
-    const userName                                = useRef("")
     const savedUser                               = useRef(undefined as User | undefined)
     const { onTagClick, editMode                } = props
 
@@ -40,9 +37,7 @@ export default function Profile(props: ProfileProps) {
 
         setUser(loadedUser)
 
-        savedUser.current   = loadedUser
-        userName.current    = loadedUser.name ?? ""
-        isUserAdmin.current = loadedUser.isAdmin
+        savedUser.current = loadedUser
 
         if (User.areLoginsEqual(loadedUser.login, contextUser?.login))
             setContextUser(loadedUser)
@@ -52,9 +47,6 @@ export default function Profile(props: ProfileProps) {
     useEffect(() => {
         if (editMode)
             return
-
-        userName.current    = savedUser.current?.name    ?? ""
-        isUserAdmin.current = savedUser.current?.isAdmin ?? false
 
         setUser(savedUser.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,17 +71,8 @@ export default function Profile(props: ProfileProps) {
         </div>
 
         <div className={styles.general}>
-            {
-                editMode
-             && contextUser?.isAdmin
-             && <CheckBox checked={isUserAdmin.current} onChange={onIsUserAdminChanged} disabled={saving}>
-                    Admin:
-                </CheckBox>
-            }
-            {
-                editMode ? <Input value={userName.current} onChange={onUserNameChanged} disabled={saving} placeholder="User name" />
-                         : <UserName user={user} />
-            }
+            {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user} onChange={onUserChanged} />}
+            <UserName user={user} editMode={editMode} onChange={onUserChanged} />
             <UserTag user={user} />
             <UserOnlineIndicator user={user} />
         </div>
@@ -160,43 +143,37 @@ export default function Profile(props: ProfileProps) {
         })
     }
 
-    function onIsUserAdminChanged(isAdmin: boolean) {
-        const newUser = user!.withIsAdmin(isAdmin)
-
-        setChangedUser(!newUser.equalTo(savedUser.current!))
+    function onUserChanged(newUser: User) {
+        setChangedUser(!savedUser.current || !newUser.equalTo(savedUser.current))
         setUser(newUser)
-
-        isUserAdmin.current = isAdmin
-    }
-
-    function onUserNameChanged(name: string) {
-        const newUser = user!.withName(name)
-
-        setChangedUser(!newUser.equalTo(savedUser.current!))
-        setUser(newUser)
-
-        userName.current = name
     }
 
     async function onSave() {
+        if (!user || !savedUser.current)
+            return
+
         setSaving(true)
 
         try {
-            await user!.saveDiff(authController, savedUser.current!)
+            await user!.saveDiff(authController, savedUser.current)
         } catch (error) {
             console.error(error)
         }
 
-        savedUser.current = user!
+        savedUser.current = user
 
         if (User.areLoginsEqual(savedUser.current.login, contextUser?.login))
             setContextUser(savedUser.current)
 
+        setChangedUser(false)
         setSaving(false)
     }
 
     function innerOnTagClick(login: string) {
-        onTagClick?.(login, user!.login)
+        if (!user)
+            return
+
+        onTagClick?.(login, user.login)
     }
 
     function disablePasswordResetItem(states: AnswerStates) {
@@ -204,7 +181,10 @@ export default function Profile(props: ProfileProps) {
     }
 
     async function onPasswordReset(states: AnswerStates) {
-        const login    = user!.login
+        if (!user)
+            return 
+
+        const login    = user.login
         const password = (states.password as InputAnswerState).value
 
         await User.setPassword({
