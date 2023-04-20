@@ -1,12 +1,12 @@
 import Button                                                 from "ui/Button/Component"
 import Input                                                  from "ui/Input/Component"
 import styles                                                 from "./styles.module.css"
+import TerminalContext                                        from "./Context"
 
 import { FormEvent, useState, useEffect, useRef, useContext } from "react"
 import { InputKeyEvent                                      } from "ui/Input/types"
 import { TerminalProps, TerminalRecord                      } from "./types"
 import { makeTerminalRecord                                 } from "./util"
-import { TerminalContext                                    } from "./Context"
 
 export default function Terminal(props: TerminalProps) {
     const { onEnter, disabled, htmlOutput } = props
