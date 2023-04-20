@@ -36,7 +36,6 @@ export default function Profile(props: ProfileProps) {
             return
 
         setUser(loadedUser)
-
         savedUser.current = loadedUser
 
         if (User.areLoginsEqual(loadedUser.login, contextUser?.login))
@@ -54,7 +53,7 @@ export default function Profile(props: ProfileProps) {
 
     useEffect(() => {
         if (error != null)
-            error != null && console.error(error)
+            console.error(error)
     }, [error])
 
     const loading = loadingUser || user == null
