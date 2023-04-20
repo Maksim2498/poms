@@ -4,7 +4,7 @@ import AuthInfo                                   from "./AuthInfo"
 
 import { AuthController, del, get, post, put } from "./api"
 
-export type CreationOptions = z.TypeOf<typeof User.JSON_SCHEMA>
+export type CreationOptions = z.TypeOf<typeof User.USER_JSON_SCHEMA>
 
 export interface FetchAllOptions {
     authController:  AuthController
@@ -55,10 +55,16 @@ export interface SetIsAdminOptions {
     isAdmin:        boolean
 }
 
+export interface SetNicknamesOptions {
+    authController: AuthController
+    login:          string
+    nicknames:      string[] | null | undefined
+}
+
 export type OnChange = (newUser: User, oldUser: User) => void
 
 export default class User {
-    static readonly JSON_SCHEMA = z.object({
+    static readonly USER_JSON_SCHEMA = z.object({
         login:     z.string(),
         name:      z.string().nullish(),
         nicknames: z.string().array().nullish(),
@@ -97,7 +103,7 @@ export default class User {
     }
 
     static fromJson(json: any): User {
-        return new User(this.JSON_SCHEMA.parse(json))
+        return new User(this.USER_JSON_SCHEMA.parse(json))
     }
 
     static readonly LOGIN_COOKIE_NAME = "login"
@@ -326,6 +332,28 @@ export default class User {
         const url = this.makeUrl(login, "is-admin")
 
         await put(authController, url, { isAdmin })
+    }
+
+    static readonly MAX_NICKNAMES_JSON_SCHMEA = z.object({
+        max: z.number()
+    })
+
+    static async getMaxNicknames(authController: AuthController): Promise<number> {
+        const [json] = await get(authController, "max-nicknames")
+        const parsed = this.MAX_NICKNAMES_JSON_SCHMEA.parse(json)
+
+        return parsed.max
+    }
+
+    static async setNicknames(options: SetNicknamesOptions) {
+        const { authController, login } = options
+        const nicknames                 = options.nicknames ?? null
+
+        this.validateLogin(login)
+
+        const url = this.makeUrl(login, "nicknames")
+
+        await put(authController, url, { nicknames })
     }
 
     readonly login:      string
