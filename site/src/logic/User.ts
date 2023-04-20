@@ -342,11 +342,12 @@ export default class User {
     constructor(options: CreationOptions) {
         const { login } = options
         let   name      = options.name?.trim() ?? undefined
-        const nicknames = options.nicknames    ?? undefined
+        const nicknames = options.nicknames    ?  [...options.nicknames] : undefined
         const isAdmin   = options.isAdmin      ?? false
         const isOnline  = options.isOnline     ?? false
         const regTime   = options.reg?.time    ?? new Date()
         const regLogin  = options.reg?.login   ?? undefined
+        const icon      = User.renderDefaultIcon({ login, name })
 
         if (!name?.length)
             name = undefined
@@ -356,7 +357,7 @@ export default class User {
         this.nicknames = nicknames
         this.isAdmin   = isAdmin
         this.isOnline  = isOnline
-        this.icon      = User.renderDefaultIcon({ login, name })
+        this.icon      = icon
         this.reg       = {
             time:  regTime,
             login: regLogin
@@ -390,6 +391,10 @@ export default class User {
 
     withIsAdmin(isAdmin: boolean): User {
         return new User({ ...this, isAdmin })
+    }
+
+    withNicknames(nicknames: string[]): User {
+        return new User({ ...this, nicknames })
     }
 
     equalTo(user: User): boolean {
