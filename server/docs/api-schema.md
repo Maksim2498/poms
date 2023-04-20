@@ -931,7 +931,7 @@ __Response__:
 ### __Delete User__
 
 Deletes specified user. If issued with administator's access token
-`user` - can be any user's login else can be only token owener's login.
+`user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -949,7 +949,7 @@ Accept: application/json
 ### __Delete All User nicknames__
 
 Deletes all nicknames of specified user. If issued with administator's access token
-`user` - can be any user's login else can be only token owener's login.
+`user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -975,7 +975,7 @@ __Response__:
 ### __Delete User Nickname__
 
 Deletes specified nickname of given user. If issued with administator's access token
-`user` - can be any user's login else can be only token owener's login.
+`user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -999,7 +999,7 @@ __Response__:
 ### __Update User Name__
 
 Updates specified user name. If issued with administator's access token
-`user` - can be any user's login else can be only token owener's login.
+`user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1030,7 +1030,7 @@ __Response__:
 ### __Update User Password__
 
 Updates specified user password. If issued with administator's access token
-`user` - can be any user's login else can be only token owener's login.
+`user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1088,10 +1088,37 @@ __Response__:
 
 <hr />
 
+### __Set User Nicknames__
+
+Sets user nicknames. If issued with administator's access token
+`user` - can be any user's login otherwise can only be a token owener's login.
+
+__Request__:
+
+```http
+POST /users/<user>/nicknames
+```
+
+```http
+Authorization: Bearer <access token>
+Content-Type: application/json
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    nicknames: string[] | null
+}
+```
+
+<hr />
+
 ### __Add User Nickname__
 
 Adds nickname to the user. If issued with administator's access token
-`user` - can be any user's login else can be only token owener's login.
+`user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 

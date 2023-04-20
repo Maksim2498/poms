@@ -135,6 +135,10 @@ const UPDATE_USER_PERMISSION_SCHEMA = z.object({
     isAdmin: z.boolean()
 })
 
+const SET_NICKNAMES_SCHEMA = z.object({
+    nicknames: z.string().array().nullable()
+})
+
 export const units: UnitCollection = {
     isAnonymousAccessAllowed: {
         method: "get",
@@ -716,6 +720,32 @@ export const units: UnitCollection = {
         }
     },
 
+    setUserNicknames: {
+        permission: "mixed",
+        method:     "put",
+        path:       "/users/:user/nicknames",
+
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const json   = req.body
+            const parsed = SET_NICKNAMES_SCHEMA.safeParse(json)
+
+            if (!parsed.success) {
+                res.sendStatus(400)
+                return
+            }
+
+            const { nicknames } = parsed.data
+            const user          = req.params.user
+
+            await this.nicknameManager.forceDeleteAllUserNicknames(connection, user)
+
+            if (nicknames != null)
+                await Promise.all(nicknames.map(nickname => this.nicknameManager.forceAddUserNickname(connection, user, nickname)))
+
+            res.json({})
+        }
+    },
+
     addUserNickname: {
         permission: "mixed",
         method:     "post",
@@ -737,15 +767,15 @@ export const units: UnitCollection = {
         path:       "/users/:user",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const json        = req.body
-            const parseResult = ADD_USER_SCHEMA.safeParse(json)
+            const json   = req.body
+            const parsed = ADD_USER_SCHEMA.safeParse(json)
 
-            if (!parseResult.success) {
+            if (!parsed.success) {
                 res.sendStatus(400)
                 return
             }
 
-            const { password, name, isAdmin } = parseResult.data
+            const { password, name, isAdmin } = parsed.data
             const authorization               = req.headers.authorization!
             const aTokenId                    = parseTokenId(authorization)
             const aTokenInfo                  = await this.tokenManager.forceGetATokenInfo(connection, aTokenId)
