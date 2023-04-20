@@ -2,20 +2,21 @@ import useStateRef                     from "react-usestateref"
 import AuthInfo                        from "logic/AuthInfo"
 import User                            from "logic/User"
 import useAsync                        from "hooks/useAsync"
+import ContentStackContext             from "modules/ContentViewer/Context"
 import TerminalContext                 from "components/Terminal/Context"
+import MaxUserNicknamesContext         from "components/UserNicknames/Context"
 import Loading                         from "ui/Loading/Component"
 import Header                          from "./Header/Component"
 import Main                            from "./Main/Component"
 import Footer                          from "./Footer/Component"
+import AuthControllerContext           from "./AuthControllerContext"
+import UserContext                     from "./UserContext"
 import styles                          from "./styles.module.css"
 
 import { useEffect, useRef, useState } from "react"
 import { reauth                      } from "logic/api"
 import { TerminalRecord              } from "components/Terminal/types"
-import { ContentStackContext         } from "modules/ContentViewer/Context"
 import { HOME_CONTENT                } from "modules/ContentViewer/constants"
-import { AuthControllerContext       } from "./AuthControllerContext"
-import { UserContext                 } from "./UserContext"
 
 export default function App() {
     const [contentStack, setContentStack, contentStackRef] = useStateRef([HOME_CONTENT])
@@ -24,7 +25,8 @@ export default function App() {
     const [user,         setUser                         ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
     const [showAuthForm, setShowAuthForm                 ] = useState(false)
     const [,             authInfoLoading                 ] = useAsync(updateAuthInfo)
-    const [,             userLoading                     ] = useAsync(updateUser, [authInfo])
+    const [,             userLoading                     ] = useAsync(updateUser,      [authInfo])
+    const [maxNicknames, maxNicknamesLoading             ] = useAsync(getMaxNicknames, [authInfo])
     const oldUser                                          = useRef(undefined as User | undefined)
 
     useEffect(() => authInfo.save(), [authInfo])
@@ -43,6 +45,7 @@ export default function App() {
 
     const loading =  authInfoLoading
                   || userLoading
+                  || maxNicknamesLoading
 
     if (loading)
         return <div className={styles.app}>
@@ -50,17 +53,19 @@ export default function App() {
         </div>
 
     return <AuthControllerContext.Provider value={[authInfo, setAuthInfo]}>
-        <UserContext.Provider value={[user, setUser]}>
-            <ContentStackContext.Provider value={[contentStack, setContentStack, contentStackRef]}>
-                <TerminalContext.Provider value={[records, setRecords, recordsRef]}>
-                    <div className={styles.app}>
-                        {header()}
-                        {main()}
-                        <Footer />
-                    </div>
-                </TerminalContext.Provider>
-            </ContentStackContext.Provider>
-        </UserContext.Provider>
+        <MaxUserNicknamesContext.Provider value={maxNicknames!}>
+            <UserContext.Provider value={[user, setUser]}>
+                <ContentStackContext.Provider value={[contentStack, setContentStack, contentStackRef]}>
+                    <TerminalContext.Provider value={[records, setRecords, recordsRef]}>
+                        <div className={styles.app}>
+                            {header()}
+                            {main()}
+                            <Footer />
+                        </div>
+                    </TerminalContext.Provider>
+                </ContentStackContext.Provider>
+            </UserContext.Provider>
+        </MaxUserNicknamesContext.Provider>
     </AuthControllerContext.Provider>
 
     async function updateAuthInfo() {
@@ -95,6 +100,15 @@ export default function App() {
             setUser(updatedUser)
         } catch (error) {
             console.error(error)
+        }
+    }
+
+    async function getMaxNicknames(): Promise<number> {
+        try {
+            return await User.getMaxNicknames([authInfo, setAuthInfo])
+        } catch (error) {
+            console.error(error)
+            return 5
         }
     }
 

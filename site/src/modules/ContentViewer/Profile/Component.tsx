@@ -1,7 +1,10 @@
 import useAsync                                               from "hooks/useAsync"
 import User                                                   from "logic/User"
+import AuthControllerContext                                  from "App/AuthControllerContext"
+import UserContext                                            from "App/UserContext"
 import LoadingContent                                         from "modules/ContentViewer/LoadingContent/Component"
 import ErrorContent                                           from "modules/ContentViewer/ErrorContent/Component"
+import UserNicknames                                          from "components/UserNicknames/Component"
 import Button                                                 from "ui/Button/Component"
 import Modal                                                  from "ui/Modal/Component"
 import UserTag                                                from "ui/UserTag/Component"
@@ -9,13 +12,10 @@ import UserIsAdminCheckBox                                    from "ui/UserIsAdm
 import UserName                                               from "ui/UserName/Component"
 import UserIcon                                               from "ui/UserIcon/Component"
 import UserOnlineIndicator                                    from "ui/UserOnlineIndicator/Component"
-import UserNicknames                                          from "ui/UserNicknames/Component"
 import UserRegInfo                                            from "ui/UserRegInfo/Component"
 import styles                                                 from "./styles.module.css"
 
 import { useContext, useEffect, useRef, useState            } from "react"
-import { AuthControllerContext                              } from "App/AuthControllerContext"
-import { UserContext                                        } from "App/UserContext"
 import { AnswerStates, ButtonAnswerState, InputAnswerState  } from "ui/Modal/types"
 import { ProfileProps                                       } from "./types"
 
@@ -70,15 +70,15 @@ export default function Profile(props: ProfileProps) {
         </div>
 
         <div className={styles.general}>
-            {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user} onChange={onUserChanged} />}
-            <UserName user={user} editMode={editMode} onChange={onUserChanged} />
+            {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user} onChange={onChanged} />}
+            <UserName user={user} editMode={editMode} onChange={onChanged} />
             <UserTag user={user} />
             <UserOnlineIndicator user={user} />
         </div>
 
         <div className={styles.sections}>
             <UserRegInfo   user={user} onTagClick={innerOnTagClick} />
-            <UserNicknames user={user} />
+            <UserNicknames user={user} editMode={editMode} onChange={onChanged}/>
         </div>
 
         {
@@ -142,7 +142,7 @@ export default function Profile(props: ProfileProps) {
         })
     }
 
-    function onUserChanged(newUser: User) {
+    function onChanged(newUser: User) {
         setChangedUser(!savedUser.current || !newUser.equalTo(savedUser.current))
         setUser(newUser)
     }

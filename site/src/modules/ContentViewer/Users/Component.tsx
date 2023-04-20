@@ -1,5 +1,7 @@
 import User                                                                       from "logic/User"
 import useAsync                                                                   from "hooks/useAsync"
+import AuthControllerContext                                                      from "App/AuthControllerContext"
+import UserContext                                                                from "App/UserContext"
 import LoadingContent                                                             from "modules/ContentViewer/LoadingContent/Component"
 import ErrorContent                                                               from "modules/ContentViewer/ErrorContent/Component"
 import UserCard                                                                   from "ui/UserCard/Component"
@@ -8,8 +10,6 @@ import Modal                                                                    
 import styles                                                                     from "./styles.module.css"
 
 import { useContext, useEffect, useState                                        } from "react"
-import { AuthControllerContext                                                  } from "App/AuthControllerContext"
-import { UserContext                                                            } from "App/UserContext"
 import { ButtonAnswerState, InputAnswerState, AnswerStates, CheckBoxAnswerState } from "ui/Modal/types"
 import { UsersProps                                                             } from "./types"
 

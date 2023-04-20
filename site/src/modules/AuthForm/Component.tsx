@@ -1,13 +1,13 @@
 import User                                from "logic/User"
 import LogicError                          from "logic/LogicError"
+import AuthControllerContext               from "App/AuthControllerContext"
+import UserContext                         from "App/UserContext"
 import Input                               from "ui/Input/Component"
 import Button                              from "ui/Button/Component"
 import FormErrorText                       from "ui/FormErrorText/Component"
 import styles                              from "./styles.module.css"
 
 import { FormEvent, useState, useContext } from "react"
-import { AuthControllerContext           } from "App/AuthControllerContext"
-import { UserContext                     } from "App/UserContext"
 import { auth                            } from "logic/api"
 import { AuthProps                       } from "./types"
 

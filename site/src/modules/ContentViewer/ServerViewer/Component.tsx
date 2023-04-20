@@ -1,5 +1,6 @@
 import useAsync                  from "hooks/useAsync"
 import Server                    from "logic/Server"
+import AuthControllerContext     from "App/AuthControllerContext"
 import LoadingContent            from "modules/ContentViewer/LoadingContent/Component"
 import ErrorContent              from "modules/ContentViewer/ErrorContent/Component"
 import ServerIcon                from "ui/ServerIcon/Component"
@@ -9,7 +10,6 @@ import ServerPlayerList          from "components/ServerPlayerList/Component"
 import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
-import { AuthControllerContext } from "App/AuthControllerContext"
 import { ServerViewerProps     } from "./types"
 
 export default function ServerViewer(props: ServerViewerProps) {

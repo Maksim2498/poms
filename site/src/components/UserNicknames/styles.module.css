@@ -1,0 +1,46 @@
+.container {
+    min-width: 18rem
+}
+
+.header {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+
+    list-style: none
+}
+
+.editableList {
+    composes: list
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-top: .5rem
+}
+
+.nickname {
+    text-align: center;
+    flex-grow: 1;
+    color: gray
+}
+
+.editableList .nickname {
+    text-align: right;
+    margin-right: 1rem
+}
+
+.add {
+    display: flex;
+    justify-content: center;
+
+    margin-top: 1rem
+}

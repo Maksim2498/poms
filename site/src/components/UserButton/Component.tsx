@@ -1,11 +1,11 @@
+import AuthControllerContext                        from "App/AuthControllerContext"
+import UserContext                                  from "App/UserContext"
 import UserName                                     from "ui/UserName/Component"
 import Button                                       from "ui/Button/Component"
 import UserIcon                                     from "ui/UserIcon/Component"
 import styles                                       from "./styles.module.css"
 
 import { useContext, useState, useEffect, useRef  } from "react"
-import { AuthControllerContext                    } from "App/AuthControllerContext"
-import { UserContext                              } from "App/UserContext"
 import { deauth                                   } from "logic/api"
 import { UserButtonProps                          } from "./types"
 

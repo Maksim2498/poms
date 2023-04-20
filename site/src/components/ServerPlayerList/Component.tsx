@@ -1,5 +1,6 @@
 import Player                    from "logic/Player"
 import useAsync                  from "hooks/useAsync"
+import AuthControllerContext     from "App/AuthControllerContext"
 import LoadingIndicator          from "ui/LoadingIndicator/Component"
 import PlayerCard                from "ui/PlayerCard/Component"
 import ErrorText                 from "ui/ErrorText/Component"
@@ -7,7 +8,6 @@ import List                      from "ui/List/Component"
 import styles                    from "./styles.module.css"
 
 import { useContext, useEffect } from "react"
-import { AuthControllerContext } from "App/AuthControllerContext"
 import { ServerPlayerListProps } from "./types"
 
 export default function ServerPlayerList(props: ServerPlayerListProps) {

@@ -1,5 +1,8 @@
 import User                               from "logic/User"
 import Player                             from "logic/Player"
+import AuthControllerContext              from "App/AuthControllerContext"
+import UserContext                        from "App/UserContext"
+import ContentStackContext                from "./Context"
 import ContentSelector                    from "./ContentSelector/Component"
 import ContentWindow                      from "./ContentWindow/Component"
 import Console                            from "./Console/Component"
@@ -9,9 +12,6 @@ import Users                              from "./Users/Component"
 import styles                             from "./styles.module.css"
 
 import { useContext                     } from "react"
-import { AuthControllerContext          } from "App/AuthControllerContext"
-import { UserContext                    } from "App/UserContext"
-import { ContentStackContext            } from "./Context"
 import { HOME_CONTENT                   } from "./constants"
 import { Content, ContentComponentProps } from "./types"
 
