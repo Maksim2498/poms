@@ -194,6 +194,20 @@ export default class User {
         return lhs === rhs
     }
 
+    static areNicknamesEqual(lhs: string[] | undefined | null, rhs: string[] | undefined | null): boolean {
+        if (lhs == null || rhs == null)
+            return true
+
+        if (lhs.length !== rhs.length)
+            return false
+
+        for (const lhsNickname of lhs)
+            if (!rhs.includes(lhsNickname))
+                return false
+
+        return true
+    }
+
     static readonly DEFAULT_ICON_WIDTH  = 1024
     static readonly DEFAULT_ICON_HEIGHT = 1024
 
@@ -427,19 +441,11 @@ export default class User {
 
     equalTo(user: User): boolean {
         if (!User.areLoginsEqual(this.login, user.login)
+         || !User.areNicknamesEqual(this.nicknames, user.nicknames)
          || this.name             !== user.name
          || this.isAdmin          !== user.isAdmin
          || this.icon             !== user.icon)
             return false
-
-        if (this.nicknames != null && user.nicknames != null) {
-            if (this.nicknames.length !== user.nicknames.length)
-                return false
-
-            for (const nickname of this.nicknames)
-                if (!user.nicknames.includes(nickname))
-                    return false
-        }
 
         return true
     }
