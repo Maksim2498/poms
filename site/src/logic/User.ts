@@ -464,5 +464,12 @@ export default class User {
                 login:   this.login,
                 isAdmin: this.isAdmin
             })
+
+        if (!User.areNicknamesEqual(this.nicknames, user.nicknames))
+            await User.setNicknames({
+                authController,
+                login:     this.login,
+                nicknames: this.nicknames
+            })
     }
 }
