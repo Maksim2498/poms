@@ -155,6 +155,7 @@ export default function Profile(props: ProfileProps) {
 
         try {
             await user!.saveDiff(authController, savedUser.current)
+            setChangedUser(false)
         } catch (error) {
             console.error(error)
         }
@@ -164,7 +165,6 @@ export default function Profile(props: ProfileProps) {
         if (User.areLoginsEqual(savedUser.current.login, contextUser?.login))
             setContextUser(savedUser.current)
 
-        setChangedUser(false)
         setSaving(false)
     }
 
