@@ -30,8 +30,8 @@
     align-items: center
 }
 
-.sections > *{
-    margin: 2rem
+.sections > * {
+    margin-top: 2rem
 }
 
 .buttons {
