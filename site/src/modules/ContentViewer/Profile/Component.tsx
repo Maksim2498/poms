@@ -24,7 +24,7 @@ export default function Profile(props: ProfileProps) {
     const [contextUser, setContextUser          ] = useContext(UserContext)
     const [loadedUser, loadingUser, error       ] = useAsync(getUser)
     const [user, setUser                        ] = useState(undefined as User | undefined)
-    const [changedUser, setChangedUser          ] = useState(false)
+    const [changed, setChanged                  ] = useState(false)
     const [changingPassword, setChangingPassword] = useState(false)
     const [resetingPassword, setResetingPassword] = useState(false)
     const [saving, setSaving                    ] = useState(false)
@@ -48,6 +48,7 @@ export default function Profile(props: ProfileProps) {
             return
 
         setUser(savedUser.current)
+        setChanged(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editMode])
 
@@ -83,7 +84,7 @@ export default function Profile(props: ProfileProps) {
         {
             editMode && <div className={styles.buttons}>
                 <Button color="red" disabled={saving} onClick={() => setResetingPassword(true)}>Reset password</Button>
-                {changedUser && <Button color="green" onClick={onSave}>Save changed</Button>}
+                {changed && <Button color="green" onClick={onSave}>Save changed</Button>}
             </div>
         }
 
@@ -142,7 +143,7 @@ export default function Profile(props: ProfileProps) {
     }
 
     function onChanged(newUser: User) {
-        setChangedUser(!savedUser.current || !newUser.equalTo(savedUser.current))
+        setChanged(!savedUser.current || !newUser.equalTo(savedUser.current))
         setUser(newUser)
     }
 
@@ -154,7 +155,7 @@ export default function Profile(props: ProfileProps) {
 
         try {
             await user!.saveDiff(authController, savedUser.current)
-            setChangedUser(false)
+            setChanged(false)
         } catch (error) {
             console.error(error)
         }
