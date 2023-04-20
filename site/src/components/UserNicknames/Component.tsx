@@ -19,13 +19,9 @@ export default function UserNicknames(props: UserNicknamesProps) {
     const [adding,    setAdding   ] = useState(false)
 
     useEffect(() => {
-        if (editMode)
-            return
-
         setNicknames(user.nicknames ?? [])
         setAdding(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editMode])
+    }, [editMode, user])
 
     if (!editMode && !nicknames.length)
         return null
