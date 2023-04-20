@@ -7,6 +7,10 @@
     height: 100%
 }
 
+.container > * {
+    z-index: 5
+}
+
 .modal {
     position: absolute;
     left: 50%;
