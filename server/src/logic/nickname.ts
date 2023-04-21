@@ -103,7 +103,7 @@ export class DefaultNicknameManager implements NicknameManager {
         const userId = await this.userManager.getUserId(connection, user, options?.checkUser)
 
         if (userId == null) {
-            this.logger?.debug("Not found")
+            this.logger?.debug("User not found")
             return false
         }
 

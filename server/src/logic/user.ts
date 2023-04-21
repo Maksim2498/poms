@@ -31,8 +31,11 @@ export interface ForceCreateUserOptions {
 }
 
 export interface CreateUserOptions extends ForceCreateUserOptions {
-    checkCreator?:  boolean
-    throwOnExists?: boolean
+    throwOnInvalidName?:     boolean
+    throwOnInvalidLogin?:    boolean
+    throwOnInvalidPassword?: boolean
+    throwOnInvalidCreator?:  boolean
+    throwOnExists?:          boolean
 } 
 
 export interface DeepUserInfo {
@@ -147,8 +150,26 @@ export class DefaultUserManager implements UserManager {
     async setUserName(connection: Connection, user: User, name: string | null, force:  boolean = false): Promise<boolean> {
         const numUser = typeof user === "number"
 
-        this.logger?.debug(numUser ? `Setting name property to "${name}" of user with id ${user}...`
-                                   : `Setting name property to "${name}" of user "${user}"...`)
+        this.logger?.debug(numUser ? `Setting name property to ${name == null ? null : `"${name}"`} of user with id ${user}...`
+                                   : `Setting name property to ${name == null ? null : `"${name}"`} of user "${user}"...`)
+
+        if (name != null) {
+            const invalidReason = validateUserName(name)
+
+            if (invalidReason != null) {
+                if (force)
+                    throw new LogicError(invalidReason)
+
+                this.logger?.debug(invalidReason)
+
+                return false
+            }
+
+            name = name.trim()
+
+            if (name.length === 0)
+                name = null
+        }
 
         const whereSql = numUser ? "id = ?" : "login = ?"
         const sql      = `UPDATE Users SET name = ? WHERE ${whereSql}`
@@ -179,6 +200,17 @@ export class DefaultUserManager implements UserManager {
 
         this.logger?.debug(numUser ? `Updating password of user with id ${user}...`
                                    : `Updating password of user "${user}"...`)
+
+        const invalidReason = validateUserPassword(password)
+
+        if (invalidReason != null) {
+            if (force)
+                throw new LogicError(invalidReason)
+
+            this.logger?.debug(invalidReason)
+
+            return false
+        }
 
         const login = await this.getUserLogin(connection, user, force)
 
@@ -249,7 +281,7 @@ export class DefaultUserManager implements UserManager {
             name,
             isAdmin:       true,
             throwOnExists: force,
-            checkCreator:  force
+            throwOnInvalidCreator:  force
         })
 
         this.logger?.debug(created ? "Created" : "Not created")
@@ -260,7 +292,10 @@ export class DefaultUserManager implements UserManager {
     async forceCreateUser(connection: Connection, options: ForceCreateUserOptions) {
         await this.createUser(connection, {
             ...options,
-            checkCreator:  true,
+            throwOnInvalidName:     true,
+            throwOnInvalidCreator:  true,
+            throwOnInvalidLogin:    true,
+            throwOnInvalidPassword: true,
             throwOnExists: true
         })
     }
@@ -271,23 +306,28 @@ export class DefaultUserManager implements UserManager {
             creator,
             password,
             isAdmin,
-            checkCreator,
+            throwOnInvalidCreator,
+            throwOnInvalidLogin,
+            throwOnInvalidPassword,
+            throwOnInvalidName,
             throwOnExists
         } = options
 
         let name = options.name?.trim()
 
-        if (name?.length == null)
-            name = undefined
-
         this.logger?.debug(`Creating user "${login}"...`)
+
+        const invalid =  checkLogin.call(this)
+                      || checkPassword.call(this)
+                      || checkName.call(this)
+
+        if (invalid)
+            return false
 
         const creatorId = await getCreatorId.call(this)
 
-        if (creatorId === "not-found") {
-            this.logger?.debug("Creator not found")
+        if (creatorId === "not-found")
             return false
-        }
 
         const sql    = "INSERT INTO Users (login, name, is_admin, cr_id, password_hash) VALUES (?, ?, ?, ?, UNHEX(SHA2(?, 512)))"
         const toHash = `${login.toLowerCase()}:${password}`
@@ -317,14 +357,68 @@ export class DefaultUserManager implements UserManager {
 
         return true
 
+        function checkLogin(this: DefaultUserManager): boolean {
+            const invalidReason = validateUserLogin(login)
+
+            if (invalidReason != null) {
+                if (throwOnInvalidLogin)
+                    throw new LogicError(invalidReason)
+
+                this.logger?.debug(invalidReason)
+
+                return true
+            }
+
+            return false
+        }
+
+        function checkPassword(this: DefaultUserManager): boolean {
+            const invalidReason = validateUserPassword(password)
+
+            if (invalidReason != null) {
+                if (throwOnInvalidPassword)
+                    throw new LogicError(invalidReason)
+
+                this.logger?.debug(invalidReason)
+
+                return true
+            }
+
+            return false
+        }
+
+        function checkName(this: DefaultUserManager): boolean {
+            if (name == null)
+                return false
+
+            const invalidReason = validateUserName(name)
+
+            if (invalidReason != null) {
+                if (throwOnInvalidName)
+                    throw new LogicError(name)
+
+                this.logger?.debug(invalidReason)
+
+                return false
+            }
+
+            return false
+        }
+
         async function getCreatorId(this: DefaultUserManager): Promise<number | null | "not-found"> {
             if (creator == null)
                 return null
 
-            const id = await this.getUserId(connection, creator, checkCreator)
+            const id = await this.getUserId(connection, creator, throwOnInvalidCreator)
 
-            if (id == null)
+            if (id == null) {
+                if (throwOnInvalidCreator)
+                    throw new LogicError("Creator not found")
+
+                this.logger?.debug("Creator not found")
+
                 return "not-found"
+            }
 
             return id
         }
@@ -578,7 +672,7 @@ export class DefaultUserManager implements UserManager {
 export function checkUserPassword(password: string) {
     const invalidReason = validateUserPassword(password)
 
-    if (invalidReason !== undefined)
+    if (invalidReason != null)
         throw new LogicError(invalidReason)
 }
 
@@ -599,7 +693,7 @@ export function validateUserPassword(password: string): string | undefined {
 export function checkUserLogin(login: string) {
     const invalidReason = validateUserLogin(login)
 
-    if (invalidReason !== undefined)
+    if (invalidReason != null)
         throw new LogicError(invalidReason)
 }
 
@@ -616,6 +710,24 @@ export function validateUserLogin(login: string): string | undefined {
 
     if (login.match(/\s/))
         return `Login "${login}" contains whitespace`
+
+    return undefined
+}
+
+export function checkUserName(name: string) {
+    const invalidReason = validateUserName(name)
+
+    if (invalidReason != null)
+        throw new LogicError(invalidReason)
+}
+
+export function validateUserName(name: string): string | undefined {
+    name = name.trim()
+
+    const MAX_LENGTH = 255
+
+    if (name.length > MAX_LENGTH)
+        return `Name is too long. Maximum ${MAX_LENGTH} characters allowed`
 
     return undefined
 }
