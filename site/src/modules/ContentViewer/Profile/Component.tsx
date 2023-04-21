@@ -7,6 +7,7 @@ import ErrorContent                                           from "modules/Cont
 import UserNicknames                                          from "components/UserNicknames/Component"
 import Button                                                 from "ui/Button/Component"
 import Modal                                                  from "ui/Modal/Component"
+import ErrorText                                              from "ui/ErrorText/Component"
 import UserTag                                                from "ui/UserTag/Component"
 import UserIsAdminCheckBox                                    from "ui/UserIsAdminCheckBox/Component"
 import UserName                                               from "ui/UserName/Component"
@@ -28,6 +29,7 @@ export default function Profile(props: ProfileProps) {
     const [changingPassword, setChangingPassword] = useState(false)
     const [resetingPassword, setResetingPassword] = useState(false)
     const [saving, setSaving                    ] = useState(false)
+    const [saveError, setSaveError              ] = useState(undefined as any)
     const savedUser                               = useRef(undefined as User | undefined)
     const { onTagClick, editMode                } = props
 
@@ -80,6 +82,8 @@ export default function Profile(props: ProfileProps) {
             <UserRegInfo   user={user} onTagClick={innerOnTagClick} />
             <UserNicknames user={user} editMode={editMode} onChange={onChanged}/>
         </div>
+
+        <ErrorText>{saveError}</ErrorText>
 
         {
             editMode && <div className={styles.buttons}>
@@ -162,8 +166,10 @@ export default function Profile(props: ProfileProps) {
 
             if (User.areLoginsEqual(savedUser.current.login, contextUser?.login))
                 setContextUser(savedUser.current)
+
+            setSaveError(undefined)
         } catch (error) {
-            console.error(error)
+            setSaveError(error)
         }
 
         setSaving(false)
