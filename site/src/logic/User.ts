@@ -46,7 +46,7 @@ export interface SetPasswordOptions {
 export interface SetNameOptions {
     authController: AuthController
     login:          string
-    name:           string | undefined | null
+    name:           string | null
 }
 
 export interface SetIsAdminOptions {
@@ -58,7 +58,15 @@ export interface SetIsAdminOptions {
 export interface SetNicknamesOptions {
     authController: AuthController
     login:          string
-    nicknames:      string[] | null | undefined
+    nicknames?:     string[] | null
+}
+
+export interface SetOptions {
+    authController: AuthController
+    login:          string
+    name?:          string   | null
+    nicknames?:     string[] | null
+    isAdmin?:       boolean
 }
 
 export type OnChange = (newUser: User, oldUser: User) => void
@@ -370,6 +378,22 @@ export default class User {
         await put(authController, url, { nicknames })
     }
 
+    static async set(options: SetOptions) {
+        const {
+            authController,
+            login,
+            name,
+            nicknames,
+            isAdmin
+        } = options
+
+        this.validateLogin(login)
+
+        const url = this.makeUrl(login)
+
+        await put(authController, url, { name, nicknames, isAdmin })
+    }
+
     readonly login:      string
     readonly name?:      string
     readonly nicknames?: string[]
@@ -383,16 +407,18 @@ export default class User {
 
     constructor(options: CreationOptions) {
         const { login } = options
-        let   name      = options.name?.trim() ?? undefined
+
+        let name = options.name?.trim() ?? undefined
+
+        if (!name?.length)
+            name = undefined
+
         const nicknames = options.nicknames    ?  [...options.nicknames] : undefined
         const isAdmin   = options.isAdmin      ?? false
         const isOnline  = options.isOnline     ?? false
         const regTime   = options.reg?.time    ?? new Date()
         const regLogin  = options.reg?.login   ?? undefined
         const icon      = User.renderDefaultIcon({ login, name })
-
-        if (!name?.length)
-            name = undefined
 
         this.login     = login
         this.name      = name
@@ -451,25 +477,16 @@ export default class User {
     }
 
     async saveDiff(authController: AuthController, user: User) {
-        if (this.name !== user.name)
-            await User.setName({
-                authController,
-                login: this.login,
-                name:  this.name
-            })
+        const name      = this.name    === user.name                             ? undefined : this.name ?? null
+        const isAdmin   = this.isAdmin === user.isAdmin                          ? undefined : this.isAdmin
+        const nicknames = User.areNicknamesEqual(this.nicknames, user.nicknames) ? undefined : this.nicknames
 
-        if (this.isAdmin !== user.isAdmin)
-            await User.setIsAdmin({
-                authController,
-                login:   this.login,
-                isAdmin: this.isAdmin
-            })
-
-        if (!User.areNicknamesEqual(this.nicknames, user.nicknames))
-            await User.setNicknames({
-                authController,
-                login:     this.login,
-                nicknames: this.nicknames
-            })
+        await User.set({
+            authController,
+            name,
+            isAdmin,
+            nicknames, 
+            login: this.login
+        })
     }
 }
