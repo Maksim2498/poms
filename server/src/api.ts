@@ -737,10 +737,7 @@ export const units: UnitCollection = {
             const { nicknames } = parsed.data
             const user          = req.params.user
 
-            await this.nicknameManager.forceDeleteAllUserNicknames(connection, user)
-
-            if (nicknames != null)
-                await Promise.all(nicknames.map(nickname => this.nicknameManager.forceAddUserNickname(connection, user, nickname)))
+            await this.nicknameManager.forceSetUserNicknames(connection, user, nicknames)
 
             res.json({})
         }

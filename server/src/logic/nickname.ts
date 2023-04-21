@@ -12,6 +12,11 @@ export interface CreationOptions {
     readonly logger?:     Logger
 }
 
+export interface SetUserNicknamesOptions {
+    checkUser?:  boolean
+    checkCount?: boolean
+}
+
 export interface DeleteUserNicknameOptions {
     checkUser?:     boolean
     checkNickname?: boolean
@@ -24,6 +29,9 @@ export interface AddUserNicknameOptions {
 }
 
 export interface NicknameManager {
+    forceSetUserNicknames(connection: Connection, user: User, nicknames: string[] | null): Promise<void>
+    setUserNicknames(connection: Connection, user: User, nicknames: string[] | null, options?: SetUserNicknamesOptions): Promise<boolean>
+
     forceDeleteAllUserNicknames(connection: Connection, user: User): Promise<void>
 
     deleteAllUserNicknames(connection: Connection, user: User, checkUser?: boolean): Promise<number>
@@ -70,6 +78,43 @@ export class DefaultNicknameManager implements NicknameManager {
         this.userManager = options.userManager
         this.config      = options.config
         this.logger      = options.logger
+    }
+
+    async forceSetUserNicknames(connection: Connection, user: User, nicknames: string[] | null) {
+        await this.setUserNicknames(connection, user, nicknames, {
+            checkCount: true,
+            checkUser:  true
+        })
+    }
+
+    async setUserNicknames(connection: Connection, user: User, nicknames: string[] | null, options?: SetUserNicknamesOptions): Promise<boolean> {
+        this.logger?.debug(typeof user === "string" ? `Setting nicknames of user "${user}" to [${nicknames?.join(", ")}]...`
+                                                    : `Setting nicknames of user with id ${user} to [${nicknames?.join(", ")}]...`)
+
+        if ((nicknames?.length ?? 0) > this.config.logicMaxNicknames) {
+            if (options?.checkCount)
+                throw new LogicError("Too many nicknames")
+
+            this.logger?.debug("Too many nicknames")
+
+            return false
+        }
+
+        const userId = await this.userManager.getUserId(connection, user, options?.checkUser)
+
+        if (userId == null) {
+            this.logger?.debug("Not found")
+            return false
+        }
+
+        await this.forceDeleteAllUserNicknames(connection, user)
+
+        if (nicknames != null)
+            await Promise.all(nicknames.map(nickname => this.forceAddUserNickname(connection, user, nickname)))
+
+        this.logger?.debug("Set")
+
+        return true
     }
 
     async forceDeleteAllUserNicknames(connection: Connection, user: User) {
@@ -279,12 +324,8 @@ export class DefaultNicknameManager implements NicknameManager {
             const code = (error as any).code
 
             if (code === "ER_DUP_ENTRY") {
-                if (options?.throwOnDuplicate) {
-                    const message = typeof user === "string" ? `User "${user}" already has nickname "${nickname}"`
-                                                             : `User with id ${user} already has nickname "${nickname}"`
-
-                    throw new LogicError(message)
-                }
+                if (options?.throwOnDuplicate)
+                    throw new LogicError(`Nickname "${nickname}" already occupied`)
 
                 this.logger?.debug("Nickname already exists")
 
@@ -309,8 +350,10 @@ export class DefaultNicknameManager implements NicknameManager {
 
         const id = await this.userManager.getUserId(connection, user, checkUser)
 
-        if (id == null)
+        if (id == null) {
+            this.logger?.debug("Not found")
             return []
+        }
 
         const [rows]    = await connection.execute("SELECT nickname FROM Nicknames WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
         const nicknames = rows.map(row => row.nickname)
