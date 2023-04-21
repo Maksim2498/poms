@@ -123,6 +123,12 @@ const ADD_USER_SCHEMA = z.object({
     isAdmin:  z.oboolean()
 })
 
+const UPDATE_USER_SCHEMA = z.object({
+    name:      z.string().nullish(),
+    nicknames: z.string().array().nullish(),
+    isAdmin:   z.oboolean()
+})
+
 const UPDATE_USER_NAME_SCHEMA = z.object({
     name: z.string().nullable()
 })
@@ -135,7 +141,7 @@ const UPDATE_USER_PERMISSION_SCHEMA = z.object({
     isAdmin: z.boolean()
 })
 
-const SET_NICKNAMES_SCHEMA = z.object({
+const UPDATE_NICKNAMES_SCHEMA = z.object({
     nicknames: z.string().array().nullable()
 })
 
@@ -650,6 +656,49 @@ export const units: UnitCollection = {
         }
     },
 
+    updateUser: {
+        permission: "mixed",
+        method:     "put",
+        path:       "/users/:user",
+
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const json         = req.body
+            const parsedResult = UPDATE_USER_SCHEMA.safeParse(json)
+
+            if (!parsedResult.success) {
+                res.sendStatus(400)
+                return
+            }
+
+            const {
+                name,
+                nicknames,
+                isAdmin
+            } = parsedResult.data
+
+            const user = req.params.user
+
+            if (name !== undefined)
+                await this.userManager.forceSetUserName(connection, user, name)
+
+            if (nicknames !== undefined)
+                await this.nicknameManager.forceSetUserNicknames(connection, user, nicknames)
+
+            const authorization = req.headers.authorization
+
+            if (isAdmin !== undefined && authorization !== undefined) {
+                const aTokenId   = parseTokenId(authorization)
+                const aTokenInfo = await this.tokenManager.forceGetATokenInfo(connection, aTokenId)
+                const userInfo   = await this.userManager.getUserInfo(connection, aTokenInfo.userId)
+
+                if (userInfo?.isAdmin)
+                    await this.userManager.forceSetUserPermission(connection, user, isAdmin)
+            }
+
+            res.json({})
+        }
+    },
+
     updateUserName: {
         permission: "mixed",
         method:     "put",
@@ -720,14 +769,14 @@ export const units: UnitCollection = {
         }
     },
 
-    setUserNicknames: {
+    updateUserNicknames: {
         permission: "mixed",
         method:     "put",
         path:       "/users/:user/nicknames",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const json   = req.body
-            const parsed = SET_NICKNAMES_SCHEMA.safeParse(json)
+            const parsed = UPDATE_NICKNAMES_SCHEMA.safeParse(json)
 
             if (!parsed.success) {
                 res.sendStatus(400)

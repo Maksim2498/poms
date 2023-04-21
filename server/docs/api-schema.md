@@ -996,6 +996,35 @@ __Response__:
 
 <hr />
 
+### __Update User__
+
+Updates all user fields. If issued with administator's access token
+`user` - can be any user's login otherwise can only be a token owener's login.
+
+__Request__:
+
+```http
+PUT /users/<user>
+```
+
+```http
+Authorization: Bearer <access token>
+Content-Type: application/json
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    name?:      string   | null
+    nicknames?: string[] | null
+    isAdmin?:   boolean         // Ignored if issuer is not an admin
+}
+```
+
+<hr />
+
 ### __Update User Name__
 
 Updates specified user name. If issued with administator's access token
@@ -1088,15 +1117,15 @@ __Response__:
 
 <hr />
 
-### __Set User Nicknames__
+### __Update User Nicknames__
 
-Sets user nicknames. If issued with administator's access token
+Updates user nicknames. If issued with administator's access token
 `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
 ```http
-POST /users/<user>/nicknames
+PUT /users/<user>/nicknames
 ```
 
 ```http
