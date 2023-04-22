@@ -95,8 +95,7 @@ export default function Users(props: UsersProps) {
                     login: {
                         type:         "input",
                         placeholder:  "Login",
-                        validate:     User.validateLogin,
-                        format:       login => login.trim(),
+                        validate:     User.validateNormedLogin.bind(User),
                         disable:      disableCreationItem
                     },
 
@@ -105,14 +104,14 @@ export default function Users(props: UsersProps) {
                         placeholder:  "Password",
                         inputType:    "password",
                         autoComplete: "new-password",
-                        validate:     User.validatePassword,
+                        validate:     User.validatePassword.bind(User),
                         disable:      disableCreationItem
                     },
 
                     name: {
                         type:         "input",
                         placeholder:  "Name",
-                        format:       name => name.trim(),
+                        validate:     User.validateName.bind(User),
                         disable:      disableCreationItem
                     },
 
@@ -134,8 +133,7 @@ export default function Users(props: UsersProps) {
                         text:         "Create",
                         color:        "green",
                         onClick:      onCreateConfirm,
-                        disable:      states => (states.login    as InputAnswerState).invalid != null
-                                             || (states.password as InputAnswerState).invalid != null
+                        disable:      disableCreateItem
                     }
                 }}
             </Modal>
@@ -144,6 +142,12 @@ export default function Users(props: UsersProps) {
 
     function disableCreationItem(states: AnswerStates) {
         return (states.create as ButtonAnswerState).loading
+    }
+
+    function disableCreateItem(states: AnswerStates) {
+        return (states.login    as InputAnswerState).invalid != null
+            || (states.password as InputAnswerState).invalid != null
+            || (states.name     as InputAnswerState).invalid != null
     }
 
     function onCreate() {

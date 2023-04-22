@@ -1,3 +1,4 @@
+import User                                from "logic/User"
 import Button                              from "ui/Button/Component"
 import Modal                               from "ui/Modal/Component"
 import MaxUserNicknamesContext             from "./Context"
@@ -65,6 +66,7 @@ export default function UserNicknames(props: UserNicknamesProps) {
                         type:        "button",
                         color:       "green",
                         text:        "Add",
+                        disable:     states => (states.nickname as InputAnswerState).invalid != null,
                         onClick:     states => onAdd((states.nickname as InputAnswerState).value)
                     }
                 }}
@@ -80,13 +82,12 @@ export default function UserNicknames(props: UserNicknamesProps) {
     }
 
     function validateNickname(nickname: string): string | undefined {
-        if (!nickname.length)
-            return "Cannot be a blank string"
+        let invalidReason = User.validateNormedNickname(nickname)
 
-        if (nicknames.includes(nickname))
-            return `"${nickname}" alredy exists`
+        if (invalidReason == null && nicknames.includes(nickname))
+            invalidReason = `"${nickname}" alredy exists`
 
-        return
+        return invalidReason
     }
 
     function onAdd(nickname: string) {

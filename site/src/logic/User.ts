@@ -1,21 +1,25 @@
-import z                                          from "zod"
-import Cookies                                    from "js-cookie"
-import AuthInfo                                   from "./AuthInfo"
+import z                                       from "zod"
+import Cookies                                 from "js-cookie"
+import AuthInfo                                from "./AuthInfo"
 
 import { hasWs                               } from "util/string"
 import { AuthController, del, get, post, put } from "./api"
 
-export type CreationOptions = z.TypeOf<typeof User.USER_JSON_SCHEMA>
+export interface CreationOptions extends z.TypeOf<typeof User.USER_JSON_SCHEMA> {
+    acceptInvalid?: boolean
+}
 
 export interface FetchAllOptions {
     authController:  AuthController
     fetchNicknames?: boolean
+    acceptInvalid?:  boolean
 }
 
 export interface FetchOptions {
     login:           string
     authController:  AuthController
     fetchNicknames?: boolean
+    acceptInvalid?:  boolean
 }
 
 export interface UpdatedOptions {
@@ -25,7 +29,7 @@ export interface UpdatedOptions {
 
 export interface MakeIconOptions {
     login:   string
-    name?:   string
+    name?:   string | null
     width?:  number
     height?: number
 }
@@ -34,7 +38,7 @@ export interface RegisterUserOptions {
     authController: AuthController
     login:          string
     password:       string
-    name?:          string
+    name?:          string | null
     isAdmin?:       boolean
 }
 
@@ -59,14 +63,14 @@ export interface SetIsAdminOptions {
 export interface SetNicknamesOptions {
     authController: AuthController
     login:          string
-    nicknames?:     string[] | null
+    nicknames?:     string[]
 }
 
 export interface SetOptions {
     authController: AuthController
     login:          string
-    name?:          string   | null
-    nicknames?:     string[] | null
+    name?:          string | null
+    nicknames?:     string[]
     isAdmin?:       boolean
 }
 
@@ -86,14 +90,18 @@ export default class User {
     })
 
     static async fetchAll(options: FetchAllOptions): Promise<User[]> {
-        const { authController, fetchNicknames } = options
+        const {
+            authController,
+            fetchNicknames,
+            acceptInvalid
+        } = options
 
-        const url     = `users?${fetchNicknames ? "nicknames" : ""}`
+        const url     = `users${fetchNicknames ? "?nicknames" : ""}`
         const [jsons] = (await get(authController, url)) as [any[], AuthInfo]
 
         return jsons.map(json => {
             try {
-                return User.fromJson(json)
+                return User.fromJson(json, acceptInvalid)
             } catch (error) {
                 console.error(error)
                 return undefined
@@ -102,29 +110,41 @@ export default class User {
     }
 
     static async fetch(options: FetchOptions): Promise<User> {
-        const { login, authController, fetchNicknames } = options
+        const {
+            authController,
+            fetchNicknames,
+            login,
+            acceptInvalid
+        } = options
 
-        const urlOptions = fetchNicknames ? { nicknames: undefined } : undefined
-        const url        = this.makeUrl(login, undefined, urlOptions)
-        const [json]     = await get(authController, url)
+        const url    = this.makeUrl(login, undefined, { nicknames: fetchNicknames })
+        const [json] = await get(authController, url)
         
-        return User.fromJson(json)
+        return User.fromJson(json, acceptInvalid)
     }
 
-    static fromJson(json: any): User {
-        return new User(this.USER_JSON_SCHEMA.parse(json))
+    static fromJson(json: any, acceptInvalid?: boolean): User {
+        return new User({ ...this.USER_JSON_SCHEMA.parse(json), acceptInvalid})
     }
 
     static readonly LOGIN_COOKIE_NAME = "login"
 
     static checkLogin(login: string) {
-        const invalidReason = this.validateLogin(login)
+        return this.checkNormedLogin(this.normLogin(login))
+    }
+
+    static checkNormedLogin(login: string) {
+        const invalidReason = this.validateNormedLogin(login)
 
         if (invalidReason != null)
             throw new Error(invalidReason)
     }
 
     static validateLogin(login: string): string | undefined {
+        return this.validateNormedLogin(this.normLogin(login))
+    }
+
+    static validateNormedLogin(login: string): string | undefined {
         const MIN_LENGTH = 4
 
         if (login.length < MIN_LENGTH)
@@ -139,6 +159,10 @@ export default class User {
             return `Login "${login}" contains whitespace`
 
         return undefined
+    }
+
+    static normLogin(login: string): string {
+        return login.trim()
     }
 
     static checkPassword(password: string) {
@@ -162,14 +186,26 @@ export default class User {
         return undefined
     }
 
-    static checkUserName(name: string | null) {
-        const invalidReason = this.validateName(name)
+    static checkName(name: string | undefined | null) {
+        return this.checkNormedName(this.normName(name))
+    }
+
+    static checkNormedName(name: string | undefined) {
+        const invalidReason = this.validateNormedName(name)
 
         if (invalidReason != null)
             throw new Error(invalidReason)
     }
 
-    static validateName(name: string | null): string | undefined {
+    static validateName(name: undefined | null):          undefined
+    static validateName(name: string | undefined | null): string | undefined
+    static validateName(name: string | undefined | null): string | undefined {
+        return this.validateNormedName(this.normName(name))
+    }
+
+    static validateNormedName(name: undefined):          undefined
+    static validateNormedName(name: string | undefined): string | undefined
+    static validateNormedName(name: string | undefined): string | undefined {
         if (name == null)
             return undefined
 
@@ -181,14 +217,66 @@ export default class User {
         return undefined
     }
 
+    static normName(name: undefined | null):          undefined
+    static normName(name: string | undefined | null): string | undefined
+    static normName(name: string | undefined | null): string | undefined {
+        if (name == null)
+            return undefined
+
+        name = name.trim()
+
+        if (name.length === 0)
+            return undefined
+
+        return name
+    }
+
+    static checkNicknames(nicknames: string[] | undefined | null) {
+        if (nicknames)
+            for (const nickname of nicknames)
+                this.checkNickname(nickname)
+    }
+
+    static checkNormedNicknames(nicknames: string[] | undefined) {
+        if (nicknames)
+            for (const nickname of nicknames)
+                this.checkNormedNickname(nickname)
+    }
+
+    static validateNicknames(nicknames: string[] | undefined | null): (string | undefined)[] {
+        return nicknames != null ? nicknames.map(this.validateNormedNickname)
+                                 : []
+    }
+
+    static validateNormedNicknames(nicknames: string[] | undefined): (string | undefined)[] {
+        return nicknames != null ? nicknames.map(this.validateNormedNickname)
+                                 : []
+    }
+
+    static normNicknames(nicknames: string[]):                    string[]
+    static normNicknames(nicknames: undefined | null):            undefined
+    static normNicknames(nicknames: string[] | undefined | null): string[] | undefined
+    static normNicknames(nicknames: string[] | undefined | null): string[] | undefined {
+        return nicknames != null ? nicknames.map(this.normNickname)
+                                 : undefined
+    }
+
     static checkNickname(nickname: string) {
-        const invalidReason = this.validateNickname(nickname)
+        return this.checkNormedNickname(this.normNickname(nickname))
+    }
+
+    static checkNormedNickname(nickname: string) {
+        const invalidReason = this.validateNormedNickname(nickname)
 
         if (invalidReason != null)
             throw new Error(invalidReason)
     }
 
     static validateNickname(nickname: string): string | undefined {
+        return this.validateNormedNickname(this.normNickname(nickname))
+    }
+
+    static validateNormedNickname(nickname: string): string | undefined {
         const MIN_LENGTH = 4
 
         if (nickname.length < MIN_LENGTH)
@@ -203,6 +291,10 @@ export default class User {
             return `Nickname "${nickname}" contains whitespace`
 
         return undefined
+    }
+
+    static normNickname(nickname: string): string {
+        return nickname.trim()
     }
 
     static remove() {
@@ -266,10 +358,10 @@ export default class User {
     static renderDefaultIcon(options: MakeIconOptions): string {
         const FONT_SIZE_SCALE_FACTOR = .8
 
-        const name   = options.name   ?? options.login
-        const width  = options.width  ?? this.DEFAULT_ICON_WIDTH
-        const height = options.height ?? this.DEFAULT_ICON_HEIGHT
-        const canvas = document.createElement("canvas")
+        const name   = (options.name   ?? options.login).trim()
+        const width  =  options.width  ?? this.DEFAULT_ICON_WIDTH
+        const height =  options.height ?? this.DEFAULT_ICON_HEIGHT
+        const canvas =  document.createElement("canvas")
 
         canvas.width  = width
         canvas.height = height
@@ -325,26 +417,31 @@ export default class User {
     }
 
     static async del(authController: AuthController, login: string) {
-        this.validateLogin(login)
-
         const url = this.makeUrl(login)
-
         await del(authController, url)
     }
 
-    static makeUrl(login: string, suffix?: string | null, options?: { [key: string]: any }): string {
+    static makeUrl(login: string, suffix?: string | null, options: { [key: string]: any } = {}): string {
+        login = this.normLogin(login)
+
+        this.checkNormedLogin(login)
+
         const encodedLogin   = encodeURIComponent(login)
-        const encodedOptions = Object.entries(options ?? {})
+        const encodedOptions = Object.entries(options)
                                      .map(([key, value]) => {
+                                        if (!value)
+                                            return null
+
                                         const encodedKey = encodeURIComponent(key)
 
-                                        if (value === undefined)
+                                        if (typeof value === "boolean")
                                             return encodedKey
 
                                         const encodedValue = encodeURIComponent(String(value))
 
                                         return`${encodedKey}=${encodedValue}`
                                      })
+                                     .filter(arg => arg != null)
                                      .join("&")
 
         return suffix ? `users/${encodedLogin}/${suffix}?${encodedOptions}`
@@ -352,48 +449,66 @@ export default class User {
     }
 
     static async register(options: RegisterUserOptions): Promise<User> {
-        const { authController, login, password, name, isAdmin } = options
-
-        this.validateLogin(login)
-        this.validatePassword(password)
+        const {
+            authController,
+            login,
+            password,
+            isAdmin
+        } = options
 
         const url = this.makeUrl(login)
+
+        this.checkPassword(password)
+
+        const name = this.normName(options.name)
+
+        this.checkNormedName(name)
     
-        await post(authController, url, { password, name, isAdmin })
+        await post(authController, url, {
+            name,
+            password,
+            isAdmin
+        })
 
         return new User({ login, name, isAdmin })
     }
 
     static async setPassword(options: SetPasswordOptions) {
-        const { authController, login, password } = options
-
-        this.validateLogin(login)
-        this.validatePassword(password)
+        const {
+            authController,
+            login,
+            password
+        } = options
 
         const url = this.makeUrl(login, "password")
+
+        this.checkPassword(password)
         
         await put(authController, url, { password })
     }
 
     static async setName(options: SetNameOptions) {
-        const { authController, login, name } = options
+        const {
+            authController,
+            login
+        } = options
 
-        this.validateLogin(login)
+        const url  = this.makeUrl(login, "name")
+        const name = this.normName(options.name)
 
-        const uploadName = name?.trim() ?? null
+        this.checkNormedName(name)
 
-        if (uploadName?.length === 0)
-            return
-
-        const url = this.makeUrl(login, "name")
-
-        await put(authController, url, { name: uploadName })
+        await put(authController, url, {
+            name: name ?? null
+        })
     }
 
     static async setIsAdmin(options: SetIsAdminOptions) {
-        const { authController, login, isAdmin } = options
-
-        this.validateLogin(login)
+        const {
+            authController,
+            login,
+            isAdmin
+        } = options
 
         const url = this.makeUrl(login, "is-admin")
 
@@ -413,29 +528,41 @@ export default class User {
 
     static async setNicknames(options: SetNicknamesOptions) {
         const { authController, login } = options
-        const nicknames                 = options.nicknames ?? null
-
-        this.validateLogin(login)
 
         const url = this.makeUrl(login, "nicknames")
 
-        await put(authController, url, { nicknames })
+        const nicknames = this.normNicknames(options.nicknames) ?? []
+
+        this.checkNormedNicknames(nicknames)
+
+        await put(authController, url, nicknames)
     }
 
     static async set(options: SetOptions) {
         const {
             authController,
             login,
-            name,
-            nicknames,
             isAdmin
         } = options
 
-        this.validateLogin(login)
-
         const url = this.makeUrl(login)
 
-        await put(authController, url, { name, nicknames, isAdmin })
+        const name = options.name !== undefined ? this.normName(options.name) ?? null
+                                                : undefined
+
+        if (name != null)
+            this.checkNormedName(name)
+
+        const nicknames = this.normNicknames(options.nicknames) ?? undefined
+
+        if (nicknames != null)
+            this.checkNormedNicknames(nicknames)
+
+        await put(authController, url, {
+            isAdmin,
+            nicknames,
+            name
+        })
     }
 
     readonly login:      string
@@ -450,27 +577,31 @@ export default class User {
     }
 
     constructor(options: CreationOptions) {
-        const { login } = options
+        const validate  = !options.acceptInvalid
 
-        let name = options.name?.trim() ?? undefined
+        const login     = User.normLogin(options.login)
+        const name      = User.normName(options.name)
+        const nicknames = User.normNicknames(options.nicknames)
 
-        if (!name?.length)
-            name = undefined
+        if (validate) {
+            User.checkNormedLogin(login)
+            User.checkNormedName(name)
+            User.checkNormedNicknames(nicknames)
+        }
 
-        const nicknames = options.nicknames    ?  [...options.nicknames] : undefined
         const isAdmin   = options.isAdmin      ?? false
         const isOnline  = options.isOnline     ?? false
         const regTime   = options.reg?.time    ?? new Date()
         const regLogin  = options.reg?.login   ?? undefined
         const icon      = User.renderDefaultIcon({ login, name })
 
-        this.login     = login
-        this.name      = name
-        this.nicknames = nicknames
-        this.isAdmin   = isAdmin
-        this.isOnline  = isOnline
-        this.icon      = icon
-        this.reg       = {
+        this.login      = login
+        this.name       = name
+        this.nicknames  = nicknames
+        this.isAdmin    = isAdmin
+        this.isOnline   = isOnline
+        this.icon       = icon
+        this.reg        = {
             time:  regTime,
             login: regLogin
         }
@@ -498,26 +629,39 @@ export default class User {
     }
 
     withName(name: string): User {
-        return new User({ ...this, name })
+        User.checkName(name)
+
+        return new User({
+            ...this,
+            name,
+            acceptInvalid: true
+        })
     }
 
     withIsAdmin(isAdmin: boolean): User {
-        return new User({ ...this, isAdmin })
+        return new User({
+            ...this,
+            isAdmin,
+            acceptInvalid: true
+        })
     }
 
     withNicknames(nicknames: string[]): User {
-        return new User({ ...this, nicknames })
+        User.checkNicknames(nicknames)
+
+        return new User({
+            ...this,
+            nicknames,
+            acceptInvalid: true
+        })
     }
 
     equalTo(user: User): boolean {
-        if (!User.areLoginsEqual(this.login, user.login)
-         || !User.areNicknamesEqual(this.nicknames, user.nicknames)
-         || this.name             !== user.name
-         || this.isAdmin          !== user.isAdmin
-         || this.icon             !== user.icon)
-            return false
-
-        return true
+        return User.areLoginsEqual(this.login, user.login)
+            && User.areNicknamesEqual(this.nicknames, user.nicknames)
+            && this.name    === user.name
+            && this.isAdmin === user.isAdmin
+            && this.icon    === user.icon
     }
 
     async saveDiff(authController: AuthController, user: User) {
@@ -529,7 +673,7 @@ export default class User {
             authController,
             name,
             isAdmin,
-            nicknames, 
+            nicknames,
             login: this.login
         })
     }

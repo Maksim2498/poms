@@ -23,7 +23,7 @@ import { ProfileProps                                       } from "./types"
 export default function Profile(props: ProfileProps) {
     const authController                          = useContext(AuthControllerContext)
     const [contextUser, setContextUser          ] = useContext(UserContext)
-    const [loadedUser, loadingUser, error       ] = useAsync(getUser)
+    const [loadedUser, , error                  ] = useAsync(getUser)
     const [user, setUser                        ] = useState(undefined as User | undefined)
     const [changed, setChanged                  ] = useState(false)
     const [changingPassword, setChangingPassword] = useState(false)
@@ -60,7 +60,7 @@ export default function Profile(props: ProfileProps) {
             console.error(error)
     }, [error])
 
-    const loading = loadingUser || user == null
+    const loading = user == null && error == null
 
     if (loading)
         return <LoadingContent />
@@ -75,13 +75,13 @@ export default function Profile(props: ProfileProps) {
 
         <div className={styles.sections}>
             <div className={styles.general}>
-                {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user} onChange={onChanged} />}
-                <UserName user={user} editMode={editMode} onChange={onChanged} />
-                <UserTag user={user} />
-                <UserOnlineIndicator user={user} />
+                {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user!} onChange={onChanged} />}
+                <UserName user={user!} editMode={editMode} onChange={onChanged} />
+                <UserTag user={user!} />
+                <UserOnlineIndicator user={user!} />
             </div>
-            <UserRegInfo   user={user} onTagClick={innerOnTagClick} />
-            <UserNicknames user={user} editMode={editMode} onChange={onChanged}/>
+            <UserRegInfo   user={user!} onTagClick={innerOnTagClick} />
+            <UserNicknames user={user!} editMode={editMode} onChange={onChanged}/>
         </div>
 
         <ErrorText>{saveError}</ErrorText>
@@ -114,7 +114,7 @@ export default function Profile(props: ProfileProps) {
                         placeholder:  "New password",
                         autoComplete: "new-password",
                         disable:      disablePasswordResetItem,
-                        validate:     User.validatePassword
+                        validate:     User.validatePassword.bind(User)
                     },
 
                     cancel: {
@@ -143,6 +143,7 @@ export default function Profile(props: ProfileProps) {
         return await User.fetch({
             fetchNicknames: true,
             login:          props.login,
+            acceptInvalid:  true,
             authController
         })
     }
