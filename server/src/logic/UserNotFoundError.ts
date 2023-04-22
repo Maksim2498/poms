@@ -5,7 +5,7 @@ import { User   } from "./user"
 export default class UserNotFoundError extends LogicError {
     readonly user: User
 
-    static makeMessage(user: User) {
+    static makeMessage(user: User): string {
         return typeof user === "string" ? `User "${user}" not found`
                                         : `User with id ${user} not found`
     }
