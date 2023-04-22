@@ -661,6 +661,8 @@ function handleInvalidReason(invalidReason: string | undefined, throwOnFailure: 
     return undefined
 }
 
+export function validateUserName(name: null):          undefined
+export function validateUserName(name: string | null): string | undefined
 export function validateUserName(name: string | null): string | undefined {
     if (name == null)
         return undefined
@@ -673,6 +675,8 @@ export function validateUserName(name: string | null): string | undefined {
     return undefined
 }
 
+export function normUserName(name: string):                    string
+export function normUserName(name: string | undefined | null): string | null
 export function normUserName(name: string | undefined | null): string | null {
     if (name == null)
         return null
