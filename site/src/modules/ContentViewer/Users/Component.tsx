@@ -18,7 +18,7 @@ export default function Users(props: UsersProps) {
     const [contextUser, setContextUser] = useContext(UserContext)
     const authController                = useContext(AuthControllerContext)
     const [authInfo, setAuthInfo      ] = authController
-    const [users, loading, error      ] = useAsync(async () => User.fetchAll({ authController }) as Promise<(User | undefined)[]>)
+    const [users, loading, error      ] = useAsync(getUsers)
     const [target,   setTarget        ] = useState(undefined as { user: User, index: number } | undefined)
     const [creating, setCreating      ] = useState(false)
 
@@ -139,6 +139,21 @@ export default function Users(props: UsersProps) {
             </Modal>
         }
     </div>
+
+    async function getUsers(): Promise<(User | undefined)[]> {
+        const users       = await User.fetchAll({ authController })
+        const sortedUsers = users.sort((lhs, rhs) => {
+            if (lhs.isAdmin && !rhs.isAdmin)
+                return -1
+
+            if (!lhs.isAdmin && rhs.isAdmin)
+                return 1
+
+            return (lhs.name ?? lhs.login) >= (rhs.name ?? rhs.login) ? 1 : -1
+        })
+
+        return sortedUsers
+    }
 
     function disableCreationItem(states: AnswerStates) {
         return (states.create as ButtonAnswerState).loading
