@@ -141,10 +141,8 @@ export default function Users(props: UsersProps) {
     </div>
 
     async function getUsers(): Promise<(User | undefined)[]> {
-        const users       = await User.fetchAll({ authController })
-        const sortedUsers = User.sort(users)
-
-        return sortedUsers
+        const users = await User.fetchAll({ authController })
+        return User.sort(users)
     }
 
     function disableCreationItem(states: AnswerStates) {

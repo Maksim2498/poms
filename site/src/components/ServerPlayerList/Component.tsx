@@ -43,10 +43,13 @@ export default function ServerPlayerList(props: ServerPlayerListProps) {
 
     async function getPlayers(): Promise<Player[]> {
         const { sample } = server.players
-        const players    = sample.map(({login, nickname}) => login == null ? new Player({ nickname })
-                                                                           : Player.fetch({ authController, login, nickname }))
-                                 .filter(s => s != null) as Promise<Player>[]
 
-        return Promise.all(players)
+        const playerPromises = sample.map(({login, nickname}) => login == null ? new Player({ nickname })
+                                                                               : Player.fetch({ authController, login, nickname }))
+                                     .filter(s => s != null) as Promise<Player>[]
+
+        const players = await Promise.all(playerPromises)
+
+        return Player.sort(players)
     }
 }

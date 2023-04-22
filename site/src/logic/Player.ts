@@ -27,6 +27,18 @@ export default class Player {
         })
     }
 
+    static sort(players: Player[]): Player[] {
+        return players.sort((lhs, rhs) => {
+            if (lhs.user?.isAdmin && !rhs.user?.isAdmin)
+                return 1
+
+            if (!lhs.user?.isAdmin && rhs.user?.isAdmin)
+                return -1
+
+            return lhs.nickname >= rhs.nickname ? 1 : -1
+        })
+    }
+
     readonly user?:    User
     readonly nickname: string
 
