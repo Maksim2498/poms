@@ -1,4 +1,4 @@
-import Logo            from "ui/Logo/Component"
+import Logo            from "components/Logo/Component"
 import UserButton      from "components/UserButton/Component"
 import styles          from "./styles.module.css"
 
@@ -6,7 +6,7 @@ import { HeaderProps } from "./types"
 
 export default function Header(props: HeaderProps) {
     return <header className={styles.header}>
-        <Logo onClick={props.onLogoClick} />
+        <Logo />
         {show()}
     </header>
 

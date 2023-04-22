@@ -1,12 +1,10 @@
 import { OnSignIn    } from "components/UserButton/types"
-import { OnLogoClick } from "ui/Logo/types"
 
 export type HeaderProps = UserHeaderProps
                         | NoneHeaderProps
 
 export interface HeaderPropsBase {
-    onLogoClick?: OnLogoClick
-    show?:        HeaderShow
+    show?: HeaderShow
 }
 
 export interface UserHeaderProps extends HeaderPropsBase {
