@@ -42,9 +42,11 @@
   - [Delete User](#delete-user);
   - [Delete All User Nickname](#delete-all-user-nicknames);
   - [Delete User Nickname](#delete-user-nickname);
+  - [Update User](#update-user);
   - [Update User Name](#update-user-name);
   - [Update User Password](#update-user-password);
   - [Update User Permissions](#update-user-permissions);
+  - [Update User Nicknames](#update-user-nicknames);
   - [Add User Canonical Name](#add-user-nickname);
   - [Add User](#add-user).
 
@@ -1018,7 +1020,7 @@ __Response__:
 ```ts
 {
     name?:      string   | null
-    nicknames?: string[] | null
+    nicknames?: string[]
     isAdmin?:   boolean         // Ignored if issuer is not an admin
 }
 ```
@@ -1137,9 +1139,7 @@ Accept: application/json
 __Response__:
 
 ```ts
-{
-    nicknames: string[] | null
-}
+string[]
 ```
 
 <hr />

@@ -39,9 +39,9 @@ export interface DeleteUserNicknameOptions extends DeleteNicknameOptions {
 }
 
 export interface NicknameManager {
-    forceSetUserNicknames(connection: Connection, user: User, nicknames: string[] | null): Promise<number>
+    forceSetUserNicknames(connection: Connection, user: User, nicknames: string[]): Promise<number>
 
-    setUserNicknames(connection: Connection, user: User, nicknames: string[] | null, options?: SetUserNicknamesOptions): Promise<number>
+    setUserNicknames(connection: Connection, user: User, nicknames: string[], options?: SetUserNicknamesOptions): Promise<number>
 
 
     forceDeleteAllUserNicknames(connection: Connection, user: User): Promise<void>
@@ -98,7 +98,7 @@ export class DefaultNicknameManager implements NicknameManager {
         this.logger      = options.logger
     }
 
-    async forceSetUserNicknames(connection: Connection, user: User, nicknames: string[] | null): Promise<number> {
+    async forceSetUserNicknames(connection: Connection, user: User, nicknames: string[]): Promise<number> {
         return await this.setUserNicknames(connection, user, nicknames, {
             throwOnInvalidNickname: true,
             throwOnDuplicate:       true,
@@ -107,13 +107,11 @@ export class DefaultNicknameManager implements NicknameManager {
         })
     }
 
-    async setUserNicknames(connection: Connection, user: User, nicknames: string[] | null, options: SetUserNicknamesOptions = {}): Promise<number> {
+    async setUserNicknames(connection: Connection, user: User, nicknames: string[], options: SetUserNicknamesOptions = {}): Promise<number> {
         this.logger?.debug(typeof user === "string" ? `Setting nicknames of user "${user}" to [${nicknames?.join(", ")}]...`
                                                     : `Setting nicknames of user with id ${user} to [${nicknames?.join(", ")}]...`)
 
-        const count = nicknames?.length ?? 0
-
-        if (count > this.config.logicMaxNicknames) {
+        if (nicknames.length > this.config.logicMaxNicknames) {
             const message = "Too many nicknames"
 
             if (options?.throwOnLimit)
@@ -137,7 +135,7 @@ export class DefaultNicknameManager implements NicknameManager {
 
         let setCount = 0
 
-        if (count > 0)
+        if (nicknames.length !== 0)
             await Promise.all(nicknames!.map(async nickname => {
                 const added = await this.addUserNickname(connection, userId, nickname, addOptions)
 

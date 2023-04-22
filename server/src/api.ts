@@ -141,9 +141,7 @@ const UPDATE_USER_PERMISSION_SCHEMA = z.object({
     isAdmin: z.boolean()
 })
 
-const UPDATE_NICKNAMES_SCHEMA = z.object({
-    nicknames: z.string().array().nullable()
-})
+const UPDATE_NICKNAMES_SCHEMA = z.string().array()
 
 export const units: UnitCollection = {
     isAnonymousAccessAllowed: {
@@ -697,7 +695,7 @@ export const units: UnitCollection = {
             if (name !== undefined)
                 await this.userManager.forceSetUserName(connection, user, name)
 
-            if (nicknames !== undefined)
+            if (nicknames != null)
                 await this.nicknameManager.forceSetUserNicknames(connection, user, nicknames)
 
             const authorization = req.headers.authorization
@@ -799,8 +797,8 @@ export const units: UnitCollection = {
                 return
             }
 
-            const { nicknames } = parsed.data
-            const user          = req.params.user
+            const nicknames = parsed.data
+            const user      = req.params.user
 
             await this.nicknameManager.forceSetUserNicknames(connection, user, nicknames)
 
