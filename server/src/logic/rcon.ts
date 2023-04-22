@@ -1,10 +1,11 @@
-import Server           from "Server"
+import Server             from "Server"
 
-import EventEmitter     from "events"
+import EventEmitter       from "events"
 
-import { WebSocket    } from "ws"
-import { Request      } from "express"
-import { RCON as Rcon } from "minecraft-server-util"
+import { WebSocket      } from "ws"
+import { Request        } from "express"
+import { RCON as Rcon   } from "minecraft-server-util"
+import { AssertionError } from "assert"
 
 export interface CreationOptions {
     readonly server:  Server
@@ -154,8 +155,16 @@ export class RconProxy extends    EventEmitter
                     logger?.info(`${this.address} issued server command /${message}`)
 
                     try {
-                        await rcon.execute(message.toString())
+                        const command = message.toString()
+
+                        if (command.length !== 0)
+                            await rcon.execute(command)
                     } catch (error) {
+                        if (error instanceof AssertionError) {
+                            logger?.debug(`Assertion error: ${error.message}`)
+                            return
+                        }
+
                         logger?.error(error)
                         this.close()
                     }
