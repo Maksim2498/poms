@@ -49,8 +49,9 @@ export default function Profile(props: ProfileProps) {
         if (editMode)
             return
 
-        setUser(savedUser.current)
+        setSaveError(undefined)
         setChanged(false)
+        setUser(savedUser.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editMode])
 
