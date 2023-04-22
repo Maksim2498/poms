@@ -162,6 +162,25 @@ export default class User {
         return undefined
     }
 
+    static checkUserName(name: string | null) {
+        const invalidReason = this.validateName(name)
+
+        if (invalidReason != null)
+            throw new Error(invalidReason)
+    }
+
+    static validateName(name: string | null): string | undefined {
+        if (name == null)
+            return undefined
+
+        const MAX_LENGTH = 255
+
+        if (name.length > MAX_LENGTH)
+            return `Name is too long. Maximum ${MAX_LENGTH} characters allowed`
+
+        return undefined
+    }
+
     static checkNickname(nickname: string) {
         const invalidReason = this.validateNickname(nickname)
 
