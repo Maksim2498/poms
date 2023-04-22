@@ -343,7 +343,7 @@ export const units: UnitCollection = {
     getUserLogin: {
         permission: "user",
         method:     "get",
-        path:       "/users/:user",
+        path:       "/users/:user/login",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user

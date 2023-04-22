@@ -377,7 +377,7 @@ Returns boolean value indicating weather is specified user administrator.
 __Request__:
 
 ```http
-GET /users/<user>/admin
+GET /users/<user>/is-admin
 ```
 
 ```http
