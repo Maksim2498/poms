@@ -4,6 +4,8 @@
 }
 
 .header {
+    overflow: hidden;
+
     padding: .8rem;
 
     background-color: #333;
