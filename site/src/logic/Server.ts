@@ -26,6 +26,7 @@ export default class Server {
             html:     z.string()
         }),
 
+        address: z.string().nullish(),
         favicon: z.string().nullish()
     })
 
@@ -59,6 +60,7 @@ export default class Server {
         readonly html:    string
     }
 
+    readonly address?: string
     readonly favicon?: string
 
     constructor(options: CreationOptions) {
@@ -79,6 +81,7 @@ export default class Server {
             html:   options.motd.html
         }
 
+        this.address = options.address ?? undefined
         this.favicon = options.favicon ?? undefined
     }
 }
