@@ -327,7 +327,7 @@ export class DefaultUserManager implements UserManager {
         } = options
 
         const login = normUserLogin(options.login)
-        const name  = normUserName(options.name ?? null)
+        const name  = normUserName(options.name)
 
         this.logger?.debug(`Creating user "${login}"...`)
 
@@ -349,7 +349,7 @@ export class DefaultUserManager implements UserManager {
         try {
             await connection.execute(sql, [
                 login,
-                name    ?? null,
+                name,
                 isAdmin ?? false,
                 creatorId,
                 toHash
@@ -673,9 +673,16 @@ export function validateUserName(name: string | null): string | undefined {
     return undefined
 }
 
-export function normUserName(name: string | null): string | null {
-    return name != null ? name.trim()
-                        : null
+export function normUserName(name: string | undefined | null): string | null {
+    if (name == null)
+        return null
+
+    name = name.trim()
+
+    if (name.length === 0)
+        return null
+
+    return name
 }
 
 export function userInfoToString(info: UserInfo): string {
