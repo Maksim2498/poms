@@ -48,7 +48,7 @@ is considered an error):
 | `mysql.serve.password`       | `string`           | -                            | No  (2)  | MySQL serving user password                                                        |
 | `logic.admin.create`         | `boolean`          | `true`                       | No       | Create default admin account on database initialization                            |
 | `logic.admin.login`          | `string`           | `admin`                      | No       | Default admin login                                                                |
-| `logic.admin.name`           | `string` or 'null' | `Administrator`              | No       | Default admin name                                                                 |
+| `logic.admin.name`           | `string` or `null` | `Administrator`              | No       | Default admin name                                                                 |
 | `logic.admin.password`       | `string`           | `admin`                      | No       | Default admin password. Will be set only on creation                               |
 | `logic.maxTokens`            | Unsigned `number`  | `10`                         | No       | Maximum number of tokens per user                                                  |
 | `logic.maxNicknames`         | Unsigned `number`  | `5`                          | No       | Maximum number of nicknames per user                                               |
@@ -65,6 +65,7 @@ is considered an error):
 | `rcon.host`                  | `string`           | Value of `mc.host`           | No       | RCON server's address                                                              |
 | `rcon.port`                  | Port `number`      | `25575`                      | No       | RCON server's port                                                                 |
 | `rcon.password`              | `string`           | -                            | No       | RCON server's password                                                             |
+| `mc.publicAddress`           | `string` or `null` | `null`                       | No       | Minecraft server's public address                                                  |
 | `mc.host`                    | `string`           | `localhost`                  | No       | Minecraft server's address                                                         |
 | `mc.port`                    | Port `number`      | `25565`                      | No       | Minecraft server's port                                                            |
 | `mc.statusLifetime`          | Duration `string`  | `10s`                        | No       | Minecraft server's status cache lifetime                                           |

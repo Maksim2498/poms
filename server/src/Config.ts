@@ -9,17 +9,17 @@ import { normalize, join, dirname } from "path"
 import { Logger                   } from "winston"
 import { deepAssign               } from "./util/object"
 
-const OPORT      = z.number().int().nonnegative().max(65535).optional()
-const OSTRING    = z.ostring()
-const NSTRING    = z.string().nullish()
-const OHOST      = z.string().transform(s => s.trim()).optional()
-const OHTTP_HOST = OHOST.nullable()
-const OURI_PATH  = z.string().transform(s => normalize("/" + s)).optional()
-const OPATH      = z.string().transform(s => Config.placehold(normalize(s))).optional()
-const OBOOLEAN   = z.oboolean()
-const OUINT      = z.number().int().nonnegative().optional()
-const ODB_NAME   = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).optional()
-const ODUR       = z.string().transform((val, ctx) => {
+const OPORT     = z.number().int().nonnegative().max(65535).optional()
+const OSTRING   = z.ostring()
+const NSTRING   = z.string().nullish()
+const OHOST     = z.string().transform(s => s.trim()).optional()
+const NHOST     = OHOST.nullable()
+const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
+const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
+const OBOOLEAN  = z.oboolean()
+const OUINT     = z.number().int().nonnegative().optional()
+const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).nullish()
+const ODUR      = z.string().transform((val, ctx) => {
     const parsed = parseDuration(val)
 
     if (parsed == null) {
@@ -37,7 +37,7 @@ const ODUR       = z.string().transform((val, ctx) => {
 const CONFIG_JSON_SCHEMA = z.object({
     http: z.object({
         apiPrefix:            OURI_PATH,
-        host:                 OHTTP_HOST,
+        host:                 NHOST,
         port:                 OPORT,
         socketPath:           OPATH,
         serveStatic:          OBOOLEAN,
@@ -102,6 +102,7 @@ const CONFIG_JSON_SCHEMA = z.object({
     }).strict().optional(),
 
     mc: z.object({
+        publicAddress:        NHOST,
         host:                 OHOST,
         port:                 OPORT,
         statusLifetime:       ODUR,
@@ -154,6 +155,7 @@ export default class Config {
     static readonly DEFAULT_RCON_ENABLE                  = false
     static readonly DEFAULT_RCON_PORT                    = 25575
 
+    static readonly DEFAULT_MC_PUBLIC_ADDRESS            = null
     static readonly DEFAULT_MC_HOST                      = "localhost"
     static readonly DEFAULT_MC_PORT                      = 25565
     static readonly DEFAULT_MC_STATUS_LIFETIME           = parseDuration("10s")
@@ -334,7 +336,10 @@ export default class Config {
     }
 
     get httpHost(): string | null {
-        return this.read.http?.host ?? Config.DEFAULT_HTTP_HOST
+        const read = this.read.http?.host
+
+        return read === undefined ? Config.DEFAULT_HTTP_HOST
+                                  : read
     }
 
     get httpPort(): number {
@@ -440,8 +445,11 @@ export default class Config {
         return this.read.logic?.admin?.password ?? Config.DEFAULT_LOGIC_ADMIN_PASSWORD
     }
 
-    get logicAdminName(): string {
-        return this.read.logic?.admin?.name ?? Config.DEFAULT_LOGIC_ADMIN_NAME
+    get logicAdminName(): string | null {
+        const read = this.read.logic?.admin?.name
+
+        return read === undefined ? Config.DEFAULT_LOGIC_ADMIN_NAME
+                                  : read
     }
 
     get logicATokenLifetime(): number {
@@ -507,6 +515,13 @@ export default class Config {
     get rconAvailable(): boolean {
         return this.rconEnable
             && this.read.rcon?.password != null
+    }
+
+    get mcPublicAddress(): string | null {
+        const read = this.read.mc?.publicAddress
+
+        return read === undefined ? Config.DEFAULT_MC_PUBLIC_ADDRESS
+                                  : read
     }
 
     get mcAddress(): string {
