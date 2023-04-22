@@ -5,6 +5,7 @@ import UserNotFoundError                                           from "./UserN
 
 import { Connection, FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
 import { Logger                                                  } from "winston"
+import { hasWs                                                   } from "util/string"
 
 export interface CreationOptions {
     readonly config:  Config
@@ -635,7 +636,7 @@ export function validateUserLogin(login: string): string | undefined {
     if (login.length > MAX_LENGTH)
         return `Login is too long. Maximum ${MAX_LENGTH} characters allowed`
 
-    if (login.match(/\s/))
+    if (hasWs(login))
         return `Login "${login}" contains whitespace`
 
     return undefined
@@ -655,8 +656,6 @@ function handleInvalidReason(invalidReason: string | undefined, throwOnFailure: 
             throw new LogicError(invalidReason)
 
         logger?.debug(logger)
-
-        return invalidReason
     }
 
     return undefined
