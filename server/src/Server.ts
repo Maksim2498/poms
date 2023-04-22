@@ -1,3 +1,4 @@
+import * as api                                                           from "./api"
 import http                                                               from "http"
 import cp                                                                 from "child_process"
 import open                                                               from "open"
@@ -5,6 +6,7 @@ import express                                                            from "
 import expressWs                                                          from "express-ws"
 import morgan                                                             from "morgan"
 import mysql                                                              from "mysql2/promise"
+import ThrottlingManager                                                  from "util/ThrottlingManager"
 import LogicError                                                         from "./logic/LogicError"
 import TokenExpiredError                                                  from "./logic/TokenExpiredError"
 import Config                                                             from "./Config"
@@ -22,8 +24,6 @@ import { StatusFetcher, DefaultStatusFetcher                            } from "
 import { AuthManager, DefaultAuthManager                                } from "./logic/auth"
 import { NicknameManager, DefaultNicknameManager                        } from "./logic/nickname"
 import { RconProxy                                                      } from "logic/rcon"
-
-import * as api                                                           from "./api"
 
 export type State = "created"
                   | "initializing"
@@ -66,6 +66,7 @@ export default class Server {
     readonly nicknameManager:    NicknameManager
     readonly wsApp:              WsApplication
     readonly pool:               Pool
+    readonly authThrottler:      ThrottlingManager
 
     constructor(config: Config, logger?: Logger) {
         const userManager     = new DefaultUserManager({ config, logger })
@@ -78,6 +79,7 @@ export default class Server {
         const wsApp           = expressWs(rawApp, httpServer)
         const app             = wsApp.app
         const pool            = createPool.call(this)
+        const authThrottler   = new ThrottlingManager(config.logicAuthDelay, logger)
 
         this.config           = config
         this.logger           = logger
@@ -89,6 +91,7 @@ export default class Server {
         this.wsApp            = wsApp
         this.httpServer       = httpServer
         this.pool             = pool
+        this.authThrottler    = authThrottler
 
         setupApp.call(this)
 

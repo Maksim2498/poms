@@ -496,6 +496,11 @@ export default class Config {
         return this.read.logic?.noAuthDelayInDev ?? Config.DEFAULT_LOGIC_NO_AUTH_DELAY_IN_DEV
     }
 
+    get logicUseAuthDelay(): boolean {
+        return  process.env.NODE_ENV === "production"
+            || !this.logicNoAuthDelayInDev
+    }
+
     get rconEnable(): boolean {
         return this.read.rcon?.enable ?? Config.DEFAULT_RCON_ENABLE
     }
