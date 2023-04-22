@@ -1,3 +1,4 @@
+import assert                                                      from "assert"
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
 import UserNotFoundError                                           from "./UserNotFoundError"
@@ -12,6 +13,16 @@ export interface CreationOptions {
 
 export type User = string | number
 
+export interface SetUserNameOptions {
+    throwOnInvalidName?: boolean
+    throwOnInvalidUser?: boolean
+}
+
+export interface SetUserPasswordOptions {
+    throwOnInvalidPassword?: boolean
+    throwOnInvalidUser?:     boolean
+}
+
 export interface ForceCreateAdminOptions {
     login?:    string
     password?: string
@@ -25,9 +36,9 @@ export interface CreateAdminOptions extends ForceCreateAdminOptions {
 export interface ForceCreateUserOptions {
     login:    string
     password: string
-    name?:    string
+    name?:    string | null
     isAdmin?: boolean
-    creator?: User
+    creator?: User   | null
 }
 
 export interface CreateUserOptions extends ForceCreateUserOptions {
@@ -35,19 +46,8 @@ export interface CreateUserOptions extends ForceCreateUserOptions {
     throwOnInvalidLogin?:    boolean
     throwOnInvalidPassword?: boolean
     throwOnInvalidCreator?:  boolean
-    throwOnExists?:          boolean
+    throwOnDuplicate?:       boolean
 } 
-
-export interface DeepUserInfo {
-    id:           number
-    login:        string
-    name:         string | null
-    passwordHash: Buffer
-    isAdmin:      boolean
-    isOnline:     boolean
-    created:      Date
-    creatorInfo:  UserInfo | null
-}
 
 export interface UserRow {
     id:            number
@@ -57,79 +57,106 @@ export interface UserRow {
     is_admin:      boolean
     is_online:     boolean
     cr_time:       Date
-    cr_id:         number
+    cr_id:         number | null
 }
 
 export interface UserInfo {
     id:           number
     login:        string
-    name:         string | null
+    name?:        string
     passwordHash: Buffer
     isAdmin:      boolean
     isOnline:     boolean
     created:      Date
-    creatorId:    number | null
+    creatorId?:   number
+}
+
+export interface DeepUserRow {
+    target:  UserRow
+    creator: UserRow | null
+}
+
+export interface DeepUserInfo {
+    id:           number
+    login:        string
+    name?:        string
+    passwordHash: Buffer
+    isAdmin:      boolean
+    isOnline:     boolean
+    created:      Date
+    creatorInfo?: UserInfo
 }
 
 export interface UserManager {
     forceSetUserName(connection: Connection, user: User, name: string | null): Promise<void>
 
-    setUserName(connection: Connection, user: User, name: string | null, force:  true):    Promise<true>
-    setUserName(connection: Connection, user: User, name: string | null, force?: boolean): Promise<boolean>
+    setUserName(connection: Connection, user: User, name: string | null, options?: SetUserNameOptions): Promise<boolean>
+
 
     forceSetUserPassword(connection: Connection, user: User, password: string): Promise<void>
 
-    setUserPassword(connection: Connection, user: User, password: string, force:  true):    Promise<true>
-    setUserPassword(connection: Connection, user: User, password: string, force?: boolean): Promise<boolean>
+    setUserPassword(connection: Connection, user: User, password: string, options?: SetUserPasswordOptions): Promise<boolean>
+
 
     forceSetUserPermission(connection: Connection, user: User, isAdmin: boolean): Promise<void>
 
-    setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  true):    Promise<true>
-    setUserPermission(connection: Connection, user: User, isAdmin: boolean, force?: boolean): Promise<boolean>
+    setUserPermission(connection: Connection, user: User, isAdmin: boolean, throwOnFailure:  true):    Promise<true>
+    setUserPermission(connection: Connection, user: User, isAdmin: boolean, throwOnFailure?: boolean): Promise<boolean>
 
-    forceCreateAdmin(connection: Connection, options?: CreateAdminOptions): Promise<void>
+
+    forceCreateAdmin(connection: Connection, options?: ForceCreateAdminOptions): Promise<void>
 
     createAdmin(connection: Connection, options?: CreateAdminOptions): Promise<boolean>
+
 
     forceCreateUser(connection: Connection, options: ForceCreateUserOptions): Promise<void>
 
     createUser(connection: Connection, options: CreateUserOptions): Promise<boolean>
 
+
     deleteAllUsers(connection: Connection): Promise<number>
+
 
     forceDeleteUser(connection: Connection, user: User): Promise<void>
 
-    deleteUser(connection: Connection, user: User, force:  true):    Promise<true>
-    deleteUser(connection: Connection, user: User, force?: boolean): Promise<boolean>
+    deleteUser(connection: Connection, user: User, throwOnFailure:  true):    Promise<true>
+    deleteUser(connection: Connection, user: User, throwOnFailure?: boolean): Promise<boolean>
+
 
     forceGetUserInfoByCredentials(connection: Connection, login: string, password: string): Promise<UserInfo>
 
-    getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):    Promise<UserInfo>
-    getUserInfoByCredentials(connection: Connection, login: string, password: string, force?: boolean): Promise<UserInfo | undefined>
+    getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure:  true):    Promise<UserInfo>
+    getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure?: boolean): Promise<UserInfo | undefined>
+
 
     getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]>
 
+
     forceGetDeepUserInfo(connection: Connection, user: User): Promise<DeepUserInfo>
 
-    getDeepUserInfo(connection: Connection, user: User, force: true):     Promise<DeepUserInfo>
-    getDeepUserInfo(connection: Connection, user: User, force?: boolean): Promise<DeepUserInfo | undefined>
+    getDeepUserInfo(connection: Connection, user: User, throwOnFailure: true):     Promise<DeepUserInfo>
+    getDeepUserInfo(connection: Connection, user: User, throwOnFailure?: boolean): Promise<DeepUserInfo | undefined>
+
 
     getAllUsersInfo(connection: Connection): Promise<UserInfo[]>
 
+
     forceGetUserLogin(connection: Connection, user: User): Promise<string>
 
-    getUserLogin(connection: Connection, user: User, checkUser?: true):    Promise<string>
-    getUserLogin(connection: Connection, user: User, checkUser?: boolean): Promise<string | undefined>
+    getUserLogin(connection: Connection, user: User, throwOnFailure?: true):    Promise<string>
+    getUserLogin(connection: Connection, user: User, throwOnFailure?: boolean): Promise<string | undefined>
+
 
     forceGetUserId(connection: Connection, user: User): Promise<number>
 
-    getUserId(connection: Connection, user: User, checkUser?: true):    Promise<number>
-    getUserId(connection: Connection, user: User, checkUser?: boolean): Promise<number | undefined>
+    getUserId(connection: Connection, user: User, throwOnFailure?: true):    Promise<number>
+    getUserId(connection: Connection, user: User, throwOnFailure?: boolean): Promise<number | undefined>
+
 
     forceGetUserInfo(connection: Connection, user: User): Promise<UserInfo>
 
-    getUserInfo(connection: Connection, user: User, force:  true):    Promise<UserInfo>
-    getUserInfo(connection: Connection, user: User, force?: boolean): Promise<UserInfo | undefined>
+    getUserInfo(connection: Connection, user: User, throwOnFailure:  true):    Promise<UserInfo>
+    getUserInfo(connection: Connection, user: User, throwOnFailure?: boolean): Promise<UserInfo | undefined>
 }
 
 export class DefaultUserManager implements UserManager {
@@ -142,44 +169,39 @@ export class DefaultUserManager implements UserManager {
     }
 
     async forceSetUserName(connection: Connection, user: User, name: string | null) {
-        await this.setUserName(connection, user, name, true)
+        await this.setUserName(connection, user, name, {
+            throwOnInvalidName: true,
+            throwOnInvalidUser: true
+        })
     }
 
-    async setUserName(connection: Connection, user: User, name: string | null, force:  true):            Promise<true>
-    async setUserName(connection: Connection, user: User, name: string | null, force?: boolean):         Promise<boolean>
-    async setUserName(connection: Connection, user: User, name: string | null, force:  boolean = false): Promise<boolean> {
+    async setUserName(connection: Connection, user: User, name: string | null, options?: SetUserNameOptions): Promise<boolean> {
         const numUser = typeof user === "number"
 
-        this.logger?.debug(numUser ? `Setting name property to ${name == null ? null : `"${name}"`} of user with id ${user}...`
-                                   : `Setting name property to ${name == null ? null : `"${name}"`} of user "${user}"...`)
+        if (this.logger) {
+            const property = name == null ? null : `"${name}"`
+            const message  = numUser ? `Setting name property to ${property} of user with id ${user}...`
+                                     : `Setting name property to ${property} of user "${user}"...`
 
-        if (name != null) {
-            const invalidReason = validateUserName(name)
-
-            if (invalidReason != null) {
-                if (force)
-                    throw new LogicError(invalidReason)
-
-                this.logger?.debug(invalidReason)
-
-                return false
-            }
-
-            name = name.trim()
-
-            if (name.length === 0)
-                name = null
+            this.logger?.debug(message)
         }
+
+        name = normUserName(name)
+
+        if (checkUserName(name, options?.throwOnInvalidName, this.logger) != null)
+            return false
 
         const whereSql = numUser ? "id = ?" : "login = ?"
         const sql      = `UPDATE Users SET name = ? WHERE ${whereSql}`
         const [result] = await connection.execute(sql, [name, user]) as [ResultSetHeader, FieldPacket[]]
 
         if (result.affectedRows === 0) {
-            if (force)
-                throw new UserNotFoundError(user)
+            const message = UserNotFoundError.makeMessage(user)
 
-            this.logger?.debug("User not found")
+            if (options?.throwOnInvalidUser)
+                throw new UserNotFoundError(user, message)
+
+            this.logger?.debug(message)
 
             return false
         }
@@ -190,36 +212,27 @@ export class DefaultUserManager implements UserManager {
     }
 
     async forceSetUserPassword(connection: Connection, user: User, password: string) {
-        await this.setUserPassword(connection, user, password, true)
+        await this.setUserPassword(connection, user, password, {
+            throwOnInvalidPassword: true,
+            throwOnInvalidUser:     true
+        })
     }
 
-    async setUserPassword(connection: Connection, user: User, password: string, force:  true):            Promise<true>
-    async setUserPassword(connection: Connection, user: User, password: string, force?: boolean):         Promise<boolean>
-    async setUserPassword(connection: Connection, user: User, password: string, force:  boolean = false): Promise<boolean> {
+    async setUserPassword(connection: Connection, user: User, password: string, options?: SetUserPasswordOptions): Promise<boolean> {
         const numUser = typeof user === "number"
 
-        this.logger?.debug(numUser ? `Updating password of user with id ${user}...`
-                                   : `Updating password of user "${user}"...`)
+        this.logger?.debug(numUser ? `Setting password of user with id ${user}...`
+                                   : `Setting password of user "${user}"...`)
 
-        const invalidReason = validateUserPassword(password)
-
-        if (invalidReason != null) {
-            if (force)
-                throw new LogicError(invalidReason)
-
-            this.logger?.debug(invalidReason)
-
+        if (checkUserPassword(password, options?.throwOnInvalidPassword, this.logger) != null)
             return false
-        }
 
-        const login = await this.getUserLogin(connection, user, force)
+        const login = await this.getUserLogin(connection, user, options?.throwOnInvalidUser)
 
-        if (login == null) {
-            this.logger?.debug("User not found")
+        if (login == null)
             return false
-        }
 
-        const toHash   = `${login.toLowerCase()}:${password}`
+        const toHash   = makePasswordHashString(login, password)
         const whereSql = numUser ? "id = ?" : "login = ?"
         const sql      = `UPDATE Users SET password_hash = UNHEX(SHA2(?, 512)) WHERE ${whereSql}`
 
@@ -234,9 +247,9 @@ export class DefaultUserManager implements UserManager {
         await this.setUserPermission(connection, user, isAdmin, true)
     }
 
-    async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  true):            Promise<true>
-    async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force?: boolean):         Promise<boolean>
-    async setUserPermission(connection: Connection, user: User, isAdmin: boolean, force:  boolean = false): Promise<boolean> {
+    async setUserPermission(connection: Connection, user: User, isAdmin: boolean, throwOnFailure:  true):            Promise<true>
+    async setUserPermission(connection: Connection, user: User, isAdmin: boolean, throwOnFailure?: boolean):         Promise<boolean>
+    async setUserPermission(connection: Connection, user: User, isAdmin: boolean, throwOnFailure:  boolean = false): Promise<boolean> {
         const numUser = typeof user === "number"
 
         this.logger?.debug(numUser ? `Setting isAdmin property to ${isAdmin} of user with id ${user}...`
@@ -247,10 +260,12 @@ export class DefaultUserManager implements UserManager {
         const [result] = await connection.execute(sql, [isAdmin, user]) as [ResultSetHeader, FieldPacket[]]
 
         if (result.affectedRows === 0) {
-            if (force)
-                throw new UserNotFoundError(user)
+            const message = UserNotFoundError.makeMessage(user)
 
-            this.logger?.debug("User not found")
+            if (throwOnFailure)
+                throw new UserNotFoundError(user, message)
+
+            this.logger?.debug(message)
 
             return false
         }
@@ -279,9 +294,12 @@ export class DefaultUserManager implements UserManager {
             login,
             password,
             name,
-            isAdmin:       true,
-            throwOnExists: force,
-            throwOnInvalidCreator:  force
+            isAdmin:                true,
+            throwOnInvalidLogin:    force,
+            throwOnInvalidPassword: force,
+            throwOnInvalidName:     force,
+            throwOnInvalidCreator:  force,
+            throwOnDuplicate:       force
         })
 
         this.logger?.debug(created ? "Created" : "Not created")
@@ -292,34 +310,29 @@ export class DefaultUserManager implements UserManager {
     async forceCreateUser(connection: Connection, options: ForceCreateUserOptions) {
         await this.createUser(connection, {
             ...options,
-            throwOnInvalidName:     true,
-            throwOnInvalidCreator:  true,
             throwOnInvalidLogin:    true,
             throwOnInvalidPassword: true,
-            throwOnExists: true
+            throwOnInvalidName:     true,
+            throwOnInvalidCreator:  true,
+            throwOnDuplicate:       true
         })
     }
 
     async createUser(connection: Connection, options: CreateUserOptions): Promise<boolean> {
         const {
-            login,
             creator,
             password,
             isAdmin,
-            throwOnInvalidCreator,
-            throwOnInvalidLogin,
-            throwOnInvalidPassword,
-            throwOnInvalidName,
-            throwOnExists
         } = options
 
-        let name = options.name?.trim()
+        const login = normUserLogin(options.login)
+        const name  = normUserName(options.name ?? null)
 
         this.logger?.debug(`Creating user "${login}"...`)
 
-        const invalid =  checkLogin.call(this)
-                      || checkPassword.call(this)
-                      || checkName.call(this)
+        const invalid =  checkUserLogin(login, options.throwOnInvalidLogin, this.logger)          != null
+                      || checkUserPassword(password, options.throwOnInvalidPassword, this.logger) != null
+                      || checkUserName(name, options.throwOnInvalidName, this.logger)             != null
 
         if (invalid)
             return false
@@ -330,7 +343,7 @@ export class DefaultUserManager implements UserManager {
             return false
 
         const sql    = "INSERT INTO Users (login, name, is_admin, cr_id, password_hash) VALUES (?, ?, ?, ?, UNHEX(SHA2(?, 512)))"
-        const toHash = `${login.toLowerCase()}:${password}`
+        const toHash = makePasswordHashString(login, password)
 
         try {
             await connection.execute(sql, [
@@ -341,82 +354,34 @@ export class DefaultUserManager implements UserManager {
                 toHash
             ]) as [ResultSetHeader, FieldPacket[]]
         } catch (error) {
-            if (throwOnExists) {
-                const code = (error as any).code
+            if ((error as any).code !== "ER_DUP_ENTRY")
+                throw error
 
-                if (code === "ER_DUP_ENTRY")
-                    throw new LogicError(`User "${login}" already exists`)
-            }
+            const message = `User "${login}" already exists`
 
-            this.logger?.debug("User already exists")
+            if (options.throwOnDuplicate)
+                throw new LogicError(message)
+
+            this.logger?.debug(message)
 
             return false
         }
 
-        this.logger?.debug("Created")
+        this.logger?.debug(`User "${login}" is created`)
 
         return true
-
-        function checkLogin(this: DefaultUserManager): boolean {
-            const invalidReason = validateUserLogin(login)
-
-            if (invalidReason != null) {
-                if (throwOnInvalidLogin)
-                    throw new LogicError(invalidReason)
-
-                this.logger?.debug(invalidReason)
-
-                return true
-            }
-
-            return false
-        }
-
-        function checkPassword(this: DefaultUserManager): boolean {
-            const invalidReason = validateUserPassword(password)
-
-            if (invalidReason != null) {
-                if (throwOnInvalidPassword)
-                    throw new LogicError(invalidReason)
-
-                this.logger?.debug(invalidReason)
-
-                return true
-            }
-
-            return false
-        }
-
-        function checkName(this: DefaultUserManager): boolean {
-            if (name == null)
-                return false
-
-            const invalidReason = validateUserName(name)
-
-            if (invalidReason != null) {
-                if (throwOnInvalidName)
-                    throw new LogicError(name)
-
-                this.logger?.debug(invalidReason)
-
-                return false
-            }
-
-            return false
-        }
 
         async function getCreatorId(this: DefaultUserManager): Promise<number | null | "not-found"> {
             if (creator == null)
                 return null
 
-            const id = await this.getUserId(connection, creator, throwOnInvalidCreator)
+            this.logger?.debug(typeof creator === "string" ? `Getting info of creator "${creator}"...`
+                                                           : `Getting info of creator with id ${creator}...`)
+
+            const id = await this.getUserId(connection, creator, options.throwOnInvalidCreator)
 
             if (id == null) {
-                if (throwOnInvalidCreator)
-                    throw new LogicError("Creator not found")
-
                 this.logger?.debug("Creator not found")
-
                 return "not-found"
             }
 
@@ -439,9 +404,9 @@ export class DefaultUserManager implements UserManager {
         await this.deleteUser(connection, user, true)
     }
 
-    async deleteUser(connection: Connection, user: User, force:  true):            Promise<true>
-    async deleteUser(connection: Connection, user: User, force?: boolean):         Promise<boolean>
-    async deleteUser(connection: Connection, user: User, force:  boolean = false): Promise<boolean> {
+    async deleteUser(connection: Connection, user: User, throwOnFailure:  true):            Promise<true>
+    async deleteUser(connection: Connection, user: User, throwOnFailure?: boolean):         Promise<boolean>
+    async deleteUser(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<boolean> {
         const numUser = typeof user === "number"
 
         this.logger?.debug(numUser ? `Deleting user with id ${user}...`
@@ -452,10 +417,12 @@ export class DefaultUserManager implements UserManager {
         const [result] = await connection.execute(sql, [user]) as [ResultSetHeader, FieldPacket[]]
 
         if (result.affectedRows === 0) {
-            if (force)
-                throw new UserNotFoundError(user)
+            const message = UserNotFoundError.makeMessage(user)
+
+            if (throwOnFailure)
+                throw new UserNotFoundError(user, message)
             
-            this.logger?.debug("Not found")
+            this.logger?.debug(message)
 
             return false
         }
@@ -467,9 +434,9 @@ export class DefaultUserManager implements UserManager {
         return await this.getUserInfoByCredentials(connection, login, password, true)
     }
 
-    async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  true):            Promise<UserInfo>
-    async getUserInfoByCredentials(connection: Connection, login: string, password: string, force?: boolean):         Promise<UserInfo | undefined>
-    async getUserInfoByCredentials(connection: Connection, login: string, password: string, force:  boolean = false): Promise<UserInfo | undefined> {
+    async getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure:  true):            Promise<UserInfo>
+    async getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure?: boolean):         Promise<UserInfo | undefined>
+    async getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure:  boolean = false): Promise<UserInfo | undefined> {
         this.logger?.debug(`Getting info of user "${login}" by his/her credentials...`)
 
         const toHash   = `${login.toLowerCase()}:${password}`
@@ -478,10 +445,12 @@ export class DefaultUserManager implements UserManager {
         const [rows]   = await connection.execute(sql, [login, toHash]) as [UserRow[], FieldPacket[]]
 
         if (rows.length === 0) {
-            if (force)
-                throw new LogicError("Invalid login and/or password")
+            const message = "Invalid credentials"
+
+            if (throwOnFailure)
+                throw new LogicError(message)
             
-            this.logger?.debug("Invalid credentials")
+            this.logger?.debug(message)
             
             return undefined
         }
@@ -502,27 +471,7 @@ export class DefaultUserManager implements UserManager {
         }) as [RowDataPacket[], FieldPacket[]]
 
         return rows.map((row, i) => {
-            const { target: t, creator: c } = row
-
-            const info = {
-                id:           t.id,
-                login:        t.login,
-                name:         t.name,
-                passwordHash: t.password_hash,
-                isAdmin:      Boolean(t.is_admin),
-                isOnline:     Boolean(t.is_online),
-                created:      t.cr_time,
-                creatorInfo:  t.cr_id != null ? {
-                    id:            c.id,
-                    login:         c.login,
-                    name:          c.name,
-                    passwordHash:  c.password_hash,
-                    isAdmin:       Boolean(c.is_admin),
-                    isOnline:      Boolean(c.is_online),
-                    created:       c.cr_time,
-                    creatorId:     c.cr_id
-                } : null
-            }
+            const info = deepUserRowToDeepUserInfo(row as DeepUserRow)
 
             this.logger?.debug(`Got (${i}): ${deepUserInfoToString(info)}`)
 
@@ -534,9 +483,9 @@ export class DefaultUserManager implements UserManager {
         return await this.getDeepUserInfo(connection, user, true)
     }
 
-    async getDeepUserInfo(connection: Connection, user: User, force: true):            Promise<DeepUserInfo>
-    async getDeepUserInfo(connection: Connection, user: User, force?: boolean):        Promise<DeepUserInfo | undefined>
-    async getDeepUserInfo(connection: Connection, user: User, force: boolean = false): Promise<DeepUserInfo | undefined> {
+    async getDeepUserInfo(connection: Connection, user: User, throwOnFailure:  true):            Promise<DeepUserInfo>
+    async getDeepUserInfo(connection: Connection, user: User, throwOnFailure?: boolean):        Promise<DeepUserInfo | undefined>
+    async getDeepUserInfo(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<DeepUserInfo | undefined> {
         const numUser = typeof user === "number"
 
         this.logger?.debug(numUser ? `Getting deep info of user with id ${user}...`
@@ -547,35 +496,17 @@ export class DefaultUserManager implements UserManager {
         const [rows]   = await connection.execute({ sql, nestTables: true }, [user]) as [RowDataPacket[], FieldPacket[]]
 
         if (rows.length === 0) {
-            if (force)
-                throw new UserNotFoundError(user)
+            const message = UserNotFoundError.makeMessage(user)
 
-            this.logger?.debug("Not found")
+            if (throwOnFailure)
+                throw new UserNotFoundError(user, message)
+
+            this.logger?.debug(message)
         
             return undefined
         }
 
-        const { target: t, creator: c } = rows[0]
-
-        const info = {
-            id:           t.id,
-            login:        t.login,
-            name:         t.name,
-            passwordHash: t.password_hash,
-            isAdmin:      Boolean(t.is_admin),
-            isOnline:     Boolean(t.is_online),
-            created:      t.cr_time,
-            creatorInfo:  t.cr_id != null ? {
-                id:            c.id,
-                login:         c.login,
-                name:          c.name,
-                passwordHash:  c.password_hash,
-                isAdmin:       Boolean(c.is_admin),
-                isOnline:      Boolean(c.is_online),
-                created:       c.cr_time,
-                creatorId:     c.cr_id
-            } : null
-        }
+        const info = deepUserRowToDeepUserInfo(rows[0] as DeepUserRow)
 
         this.logger?.debug(`Got: ${deepUserInfoToString(info)}`)
 
@@ -600,11 +531,11 @@ export class DefaultUserManager implements UserManager {
         return await this.getUserLogin(connection, user, true)
     }
 
-    async getUserLogin(connection: Connection, user: User, checkUser?: true):            Promise<string>
-    async getUserLogin(connection: Connection, user: User, checkUser?: boolean):         Promise<string | undefined>
-    async getUserLogin(connection: Connection, user: User, checkUser:  boolean = false): Promise<string | undefined> {
-        if (checkUser) {
-            const info = await this.getUserInfo(connection, user, true)
+    async getUserLogin(connection: Connection, user: User, throwOnFailure?: true):            Promise<string>
+    async getUserLogin(connection: Connection, user: User, throwOnFailure?: boolean):         Promise<string | undefined>
+    async getUserLogin(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<string | undefined> {
+        if (throwOnFailure) {
+            const info = await this.forceGetUserInfo(connection, user)
             return info.login
         }
 
@@ -620,11 +551,11 @@ export class DefaultUserManager implements UserManager {
         return await this.getUserId(connection, user, true)
     }
 
-    async getUserId(connection: Connection, user: User, checkUser?: true):            Promise<number>
-    async getUserId(connection: Connection, user: User, checkUser?: boolean):         Promise<number | undefined>
-    async getUserId(connection: Connection, user: User, checkUser:  boolean = false): Promise<number | undefined> {
-        if (checkUser) {
-            const info = await this.getUserInfo(connection, user, true)
+    async getUserId(connection: Connection, user: User, throwOnFailure?: true):            Promise<number>
+    async getUserId(connection: Connection, user: User, throwOnFailure?: boolean):         Promise<number | undefined>
+    async getUserId(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<number | undefined> {
+        if (throwOnFailure) {
+            const info = await this.forceGetUserInfo(connection, user)
             return info.id
         }
 
@@ -640,9 +571,9 @@ export class DefaultUserManager implements UserManager {
         return await this.getUserInfo(connection, user, true)
     }
 
-    async getUserInfo(connection: Connection, user: User, force:  true):            Promise<UserInfo>
-    async getUserInfo(connection: Connection, user: User, force?: boolean):         Promise<UserInfo | undefined>
-    async getUserInfo(connection: Connection, user: User, force:  boolean = false): Promise<UserInfo | undefined> {
+    async getUserInfo(connection: Connection, user: User, throwOnFailure:  true):            Promise<UserInfo>
+    async getUserInfo(connection: Connection, user: User, throwOnFailure?: boolean):         Promise<UserInfo | undefined>
+    async getUserInfo(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<UserInfo | undefined> {
         const numUser = typeof user === "number"
 
         this.logger?.debug(numUser ? `Getting info of user with id ${user}...`
@@ -653,10 +584,12 @@ export class DefaultUserManager implements UserManager {
         const [rows]   = await connection.execute(sql, [user]) as [UserRow[], FieldPacket[]]
 
         if (rows.length === 0) {
-            if (force)
-                throw new UserNotFoundError(user)
+            const message = UserNotFoundError.makeMessage(user)
 
-            this.logger?.debug("Not found")
+            if (throwOnFailure)
+                throw new UserNotFoundError(user, message)
+
+            this.logger?.debug(message)
         
             return undefined
         }
@@ -669,11 +602,8 @@ export class DefaultUserManager implements UserManager {
     }
 }
 
-export function checkUserPassword(password: string) {
-    const invalidReason = validateUserPassword(password)
-
-    if (invalidReason != null)
-        throw new LogicError(invalidReason)
+export function checkUserPassword(password: string, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
+    return handleInvalidReason(validateUserPassword(password))
 }
 
 export function validateUserPassword(password: string): string | undefined {
@@ -690,11 +620,8 @@ export function validateUserPassword(password: string): string | undefined {
     return undefined
 }
 
-export function checkUserLogin(login: string) {
-    const invalidReason = validateUserLogin(login)
-
-    if (invalidReason != null)
-        throw new LogicError(invalidReason)
+export function checkUserLogin(login: string, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
+    return handleInvalidReason(validateUserLogin(login))
 }
 
 export function validateUserLogin(login: string): string | undefined {
@@ -714,15 +641,30 @@ export function validateUserLogin(login: string): string | undefined {
     return undefined
 }
 
-export function checkUserName(name: string) {
-    const invalidReason = validateUserName(name)
-
-    if (invalidReason != null)
-        throw new LogicError(invalidReason)
+export function normUserLogin(login: string): string {
+    return login.trim()
 }
 
-export function validateUserName(name: string): string | undefined {
-    name = name.trim()
+export function checkUserName(name: string | null, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
+    return handleInvalidReason(validateUserName(name))
+}
+
+function handleInvalidReason(invalidReason: string | undefined, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
+    if (invalidReason != null) {
+        if (throwOnFailure)
+            throw new LogicError(invalidReason)
+
+        logger?.debug(logger)
+
+        return invalidReason
+    }
+
+    return undefined
+}
+
+export function validateUserName(name: string | null): string | undefined {
+    if (name == null)
+        return undefined
 
     const MAX_LENGTH = 255
 
@@ -730,6 +672,11 @@ export function validateUserName(name: string): string | undefined {
         return `Name is too long. Maximum ${MAX_LENGTH} characters allowed`
 
     return undefined
+}
+
+export function normUserName(name: string | null): string | null {
+    return name != null ? name.trim()
+                        : null
 }
 
 export function userInfoToString(info: UserInfo): string {
@@ -771,11 +718,33 @@ export function userRowToUserInfo(row: UserRow): UserInfo {
     return {
         id:           row.id,
         login:        row.login,
-        name:         row.name,
+        name:         row.name  ?? undefined,
         passwordHash: row.password_hash,
         isAdmin:      Boolean(row.is_admin),
         isOnline:     Boolean(row.is_online),
         created:      row.cr_time,
-        creatorId:    row.cr_id
+        creatorId:    row.cr_id ?? undefined
     }
+}
+
+export function deepUserRowToDeepUserInfo(rows: DeepUserRow): DeepUserInfo {
+    const { target: t, creator: c } = rows
+
+    assert(t.cr_id == c?.id)
+
+    return {
+        id:           t.id,
+        login:        t.login,
+        name:         t.name ?? undefined,
+        passwordHash: t.password_hash,
+        isAdmin:      Boolean(t.is_admin),
+        isOnline:     Boolean(t.is_online),
+        created:      t.cr_time,
+        creatorInfo:  t.cr_id != null ? userRowToUserInfo(c!)
+                                      : undefined
+    }
+}
+
+export function makePasswordHashString(login: string, password: string): string {
+    return `${login.toLowerCase()}:${password}`
 }
