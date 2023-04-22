@@ -64,39 +64,49 @@ export interface RTokenRow {
 }
 
 export interface TokenManager {
-    deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser?: boolean): Promise<number>
+    deleteUserExtraATokens(connection: Connection, user: User, limit: number, throwOnFailure?: boolean): Promise<number>
+
 
     forceGetUserATokenCount(connection: Connection, user: User): Promise<number>
 
-    getUserATokenCount(connection: Connection, user: User, checkUser?: boolean): Promise<number>
+    getUserATokenCount(connection: Connection, user: User, throwOnFailure?: boolean): Promise<number>
+
 
     checkATokenIsActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<void>
 
+
     isATokenActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<boolean>
 
-    createTokenPair(connection: Connection, user: User, checkUser:  true):    Promise<TokenPair>
-    createTokenPair(connection: Connection, user: User, checkUser?: boolean): Promise<TokenPair | undefined>
+    forceCreateTokenPair(connection: Connection, user: User): Promise<TokenPair>
 
-    deleteAllUserATokens(connection: Connection, user: User, checkUser?: boolean): Promise<number>
+    createTokenPair(connection: Connection, user: User, throwOnFailure:  true):    Promise<TokenPair>
+    createTokenPair(connection: Connection, user: User, throwOnFailure?: boolean): Promise<TokenPair | undefined>
+
 
     forceDeleteAllUserATokens(connection: Connection, user: User): Promise<number>
 
+    deleteAllUserATokens(connection: Connection, user: User, throwOnFailure?: boolean): Promise<number>
+
+
     deleteAllATokens(connection: Connection): Promise<number>
+
 
     forceDeleteAToken(connection: Connection, aTokenId: Buffer): Promise<void>
 
-    deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):    Promise<true>
-    deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<boolean>
+    deleteAToken(connection: Connection, aTokenId: Buffer, throwOnFailure:  true):    Promise<true>
+    deleteAToken(connection: Connection, aTokenId: Buffer, throwOnFailure?: boolean): Promise<boolean>
+
 
     forceGetATokenInfo(connection: Connection, aTokenId: Buffer): Promise<ATokenInfo>
 
-    getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):    Promise<ATokenInfo>
-    getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean): Promise<ATokenInfo | undefined>
+    getATokenInfo(connection: Connection, aTokenId: Buffer, throwOnFailure:  true):    Promise<ATokenInfo>
+    getATokenInfo(connection: Connection, aTokenId: Buffer, throwOnFailure?: boolean): Promise<ATokenInfo | undefined>
+
 
     forceGetRTokenInfo(connection: Connection, rTokenId: Buffer): Promise<RTokenInfo>
 
-    getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):    Promise<RTokenInfo>
-    getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean): Promise<RTokenInfo | undefined>
+    getRTokenInfo(connection: Connection, rTokenId: Buffer, throwOnFailure:  true):    Promise<RTokenInfo>
+    getRTokenInfo(connection: Connection, rTokenId: Buffer, throwOnFailure?: boolean): Promise<RTokenInfo | undefined>
 }
 
 export class DefaultTokenManager implements TokenManager {
@@ -110,16 +120,14 @@ export class DefaultTokenManager implements TokenManager {
         this.logger      = options.logger
     }
 
-    async deleteUserExtraATokens(connection: Connection, user: User, limit: number, checkUser: boolean = false): Promise<number> {
+    async deleteUserExtraATokens(connection: Connection, user: User, limit: number, throwOnFailure: boolean = false): Promise<number> {
         this.logger?.debug(typeof user === "string" ? `Deleting all a-tokens except last ${limit} of user "${user}"...`
                                                     : `Deleting all a-tokens except last ${limit} of user with id ${user}...`)
 
-        const id = await this.userManager.getUserId(connection, user, checkUser)
+        const id = await this.userManager.getUserId(connection, user, throwOnFailure)
 
-        if (id == null) {
-            this.logger?.debug("Not found")
+        if (id == null)
             return 0
-        }
 
         const count = await this.getUserATokenCount(connection, user)
 
@@ -146,16 +154,14 @@ export class DefaultTokenManager implements TokenManager {
         return await this.getUserATokenCount(connection, user, true)
     }
 
-    async getUserATokenCount(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
+    async getUserATokenCount(connection: Connection, user: User, throwOnFailure: boolean = false): Promise<number> {
         this.logger?.debug(typeof user === "string" ? `Getting a-tokens count of user "${user}"...`
                                                     : `Getting a-tokens count of user with id ${user}...`)
         
-        const id = await this.userManager.getUserId(connection, user, checkUser)
+        const id = await this.userManager.getUserId(connection, user, throwOnFailure)
 
-        if (id == null) {
-            this.logger?.debug("Not found")
+        if (id == null)
             return 0
-        }
         
         const [rows] = await connection.execute("SELECT COUNT(*) AS count FROM ATokens WHERE user_id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
         const count  = rows[0].count
@@ -171,24 +177,27 @@ export class DefaultTokenManager implements TokenManager {
     }
 
     async isATokenActive(connection: Connection, tokenId: ATokenInfo | Buffer | undefined | null): Promise<boolean> {
-        const info = tokenId instanceof Buffer ?  await this.getATokenInfo(connection, tokenId)
+        const info = tokenId instanceof Buffer ? await this.getATokenInfo(connection, tokenId)
                                                : tokenId
 
-        return info != null && info.exp > new Date()
+        return info     != null 
+            && info.exp >  new Date()
     }
 
-    async createTokenPair(connection: Connection, user: User, checkUser:  true):            Promise<TokenPair>
-    async createTokenPair(connection: Connection, user: User, checkUser?: boolean):         Promise<TokenPair | undefined>
-    async createTokenPair(connection: Connection, user: User, checkUser:  boolean = false): Promise<TokenPair | undefined> {
+    async forceCreateTokenPair(connection: Connection, user: User): Promise<TokenPair> {
+        return await this.createTokenPair(connection, user, true)
+    }
+
+    async createTokenPair(connection: Connection, user: User, throwOnFailure:  true):            Promise<TokenPair>
+    async createTokenPair(connection: Connection, user: User, throwOnFailure?: boolean):         Promise<TokenPair | undefined>
+    async createTokenPair(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<TokenPair | undefined> {
         this.logger?.debug(typeof user === "string" ? `Creating token pair for user "${user}"...`
                                                     : `Creating token pair for user with id ${user}...`)
         
-        const id = await this.userManager.getUserId(connection, user, checkUser)
+        const id = await this.userManager.getUserId(connection, user, throwOnFailure)
 
-        if (id == null) {
-            this.logger?.debug("User not found")
+        if (id == null)
             return undefined
-        }
 
         const aTokenId  = createTokenId()
         const aTokenExp = dateMillisecondsAhead(this.config.logicATokenLifetime)
@@ -227,16 +236,14 @@ export class DefaultTokenManager implements TokenManager {
         return await this.deleteAllUserATokens(connection, user, true)
     }
 
-    async deleteAllUserATokens(connection: Connection, user: User, checkUser: boolean = false): Promise<number> {
+    async deleteAllUserATokens(connection: Connection, user: User, throwOnFailure: boolean = false): Promise<number> {
         this.logger?.debug(typeof user === "string" ? `Deleting all a-tokens of user "${user}"...`
                                                     : `Deleting all a-tokens of user with id ${user}...`)
 
-        const id = await this.userManager.getUserId(connection, user, checkUser)
+        const id = await this.userManager.getUserId(connection, user, throwOnFailure)
 
-        if (id == null) {
-            this.logger?.debug("User not found")
+        if (id == null)
             return 0
-        }
 
         const [result] = await connection.execute("DELETE FROM ATokens WHERE user_id = ?", [id]) as [ResultSetHeader, FieldPacket[]]
         const count    = result.affectedRows
@@ -261,9 +268,9 @@ export class DefaultTokenManager implements TokenManager {
         await this.deleteAToken(connection, aTokenId, true)
     }
 
-    async deleteAToken(connection: Connection, aTokenId: Buffer, force:  true):            Promise<true>
-    async deleteAToken(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<boolean>
-    async deleteAToken(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<boolean> {
+    async deleteAToken(connection: Connection, aTokenId: Buffer, throwOnFailure:  true):            Promise<true>
+    async deleteAToken(connection: Connection, aTokenId: Buffer, throwOnFailure?: boolean):         Promise<boolean>
+    async deleteAToken(connection: Connection, aTokenId: Buffer, throwOnFailure:  boolean = false): Promise<boolean> {
         this.logger?.debug(`Deleting a-token with id ${aTokenId.toString("hex")}...`)
 
         checkTokenId(aTokenId)
@@ -271,10 +278,12 @@ export class DefaultTokenManager implements TokenManager {
         const [result] = await connection.execute("DELETE FROM ATokens WHERE id = ?", [aTokenId]) as [ResultSetHeader, FieldPacket[]]
 
         if (result.affectedRows === 0) {
-            if (force)
-                throw new TokenNotFoundError(aTokenId)
+            const message = TokenNotFoundError.makeMessage(aTokenId)
 
-            this.logger?.debug("Not found")
+            if (throwOnFailure)
+                throw new TokenNotFoundError(aTokenId, message)
+
+            this.logger?.debug(message)
 
             return false
         }
@@ -288,9 +297,9 @@ export class DefaultTokenManager implements TokenManager {
         return await this.getATokenInfo(connection, aTokenId, true)
     }
 
-    async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  true):            Promise<ATokenInfo>
-    async getATokenInfo(connection: Connection, aTokenId: Buffer, force?: boolean):         Promise<ATokenInfo | undefined>
-    async getATokenInfo(connection: Connection, aTokenId: Buffer, force:  boolean = false): Promise<ATokenInfo | undefined> {
+    async getATokenInfo(connection: Connection, aTokenId: Buffer, throwOnFailure:  true):            Promise<ATokenInfo>
+    async getATokenInfo(connection: Connection, aTokenId: Buffer, throwOnFailure?: boolean):         Promise<ATokenInfo | undefined>
+    async getATokenInfo(connection: Connection, aTokenId: Buffer, throwOnFailure:  boolean = false): Promise<ATokenInfo | undefined> {
         this.logger?.debug(`Getting info of a-token with id ${aTokenId.toString("hex")}...`)
 
         checkTokenId(aTokenId)
@@ -298,10 +307,12 @@ export class DefaultTokenManager implements TokenManager {
         const [rows] = await connection.execute("SELECT * FROM ATokens WHERE id = ?", [aTokenId]) as [ATokenRow[], FieldPacket[]]
 
         if (rows.length === 0) {
-            if (force)
-                throw new TokenNotFoundError(aTokenId)
+            const message = TokenNotFoundError.makeMessage(aTokenId)
 
-            this.logger?.debug("Not found")
+            if (throwOnFailure)
+                throw new TokenNotFoundError(aTokenId, message)
+
+            this.logger?.debug(message)
             
             return undefined
         }
@@ -317,9 +328,9 @@ export class DefaultTokenManager implements TokenManager {
         return await this.getRTokenInfo(connection, rTokenId, true)
     }
 
-    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  true):            Promise<RTokenInfo>
-    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force?: boolean):         Promise<RTokenInfo | undefined>
-    async getRTokenInfo(connection: Connection, rTokenId: Buffer, force:  boolean = false): Promise<RTokenInfo | undefined> {
+    async getRTokenInfo(connection: Connection, rTokenId: Buffer, throwOnFailure:  true):            Promise<RTokenInfo>
+    async getRTokenInfo(connection: Connection, rTokenId: Buffer, throwOnFailure?: boolean):         Promise<RTokenInfo | undefined>
+    async getRTokenInfo(connection: Connection, rTokenId: Buffer, throwOnFailure:  boolean = false): Promise<RTokenInfo | undefined> {
         this.logger?.debug(`Getting info of r-token with id ${rTokenId.toString("hex")}...`)
 
         checkTokenId(rTokenId)
@@ -327,10 +338,12 @@ export class DefaultTokenManager implements TokenManager {
         const [rows] = await connection.execute("SELECT * FROM RTokens WHERE id = ?", [rTokenId]) as [RTokenRow[], FieldPacket[]]
 
         if (rows.length === 0) {
-            if (force)
-                throw new TokenNotFoundError(rTokenId)
+            const message = TokenNotFoundError.makeMessage(rTokenId)
 
-            this.logger?.debug("Not found")
+            if (throwOnFailure)
+                throw new TokenNotFoundError(rTokenId, message)
+
+            this.logger?.debug(message)
             
             return undefined
         }
