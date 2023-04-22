@@ -2,6 +2,7 @@ import z                                          from "zod"
 import Cookies                                    from "js-cookie"
 import AuthInfo                                   from "./AuthInfo"
 
+import { hasWs                               } from "util/string"
 import { AuthController, del, get, post, put } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof User.USER_JSON_SCHEMA>
@@ -134,7 +135,7 @@ export default class User {
         if (login.length > MAX_LENGTH)
             return `Login is too long. Maximum ${MAX_LENGTH} characters allowed`
 
-        if (login.match(/\s/))
+        if (hasWs(login))
             return `Login "${login}" contains whitespace`
 
         return undefined
@@ -157,6 +158,30 @@ export default class User {
 
         if (password.length > MAX_LENGTH)
             return `Password is too long. Maximum ${MAX_LENGTH} characters allowed`
+
+        return undefined
+    }
+
+    static checkNickname(nickname: string) {
+        const invalidReason = this.validateNickname(nickname)
+
+        if (invalidReason != null)
+            throw new Error(invalidReason)
+    }
+
+    static validateNickname(nickname: string): string | undefined {
+        const MIN_LENGTH = 4
+
+        if (nickname.length < MIN_LENGTH)
+            return `Nickname "${nickname}" is too short. Minimum ${MIN_LENGTH} characters required`
+
+        const MAX_LENGTH = 255
+
+        if (nickname.length > MAX_LENGTH)
+            return `Nickname is too long. Maximum ${MAX_LENGTH} characters allowed`
+
+        if (hasWs(nickname))
+            return `Nickname "${nickname}" contains whitespace`
 
         return undefined
     }
