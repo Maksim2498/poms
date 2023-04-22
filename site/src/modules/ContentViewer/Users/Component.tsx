@@ -142,15 +142,7 @@ export default function Users(props: UsersProps) {
 
     async function getUsers(): Promise<(User | undefined)[]> {
         const users       = await User.fetchAll({ authController })
-        const sortedUsers = users.sort((lhs, rhs) => {
-            if (lhs.isAdmin && !rhs.isAdmin)
-                return -1
-
-            if (!lhs.isAdmin && rhs.isAdmin)
-                return 1
-
-            return (lhs.name ?? lhs.login) >= (rhs.name ?? rhs.login) ? 1 : -1
-        })
+        const sortedUsers = User.sort(users)
 
         return sortedUsers
     }

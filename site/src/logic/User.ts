@@ -564,6 +564,18 @@ export default class User {
             name
         })
     }
+    
+    static sort(users: User[]): User[] {
+        return users.sort((lhs, rhs) => {
+            if (lhs.isAdmin && !rhs.isAdmin)
+                return -1
+
+            if (!lhs.isAdmin && rhs.isAdmin)
+                return 1
+
+            return (lhs.name ?? lhs.login) >= (rhs.name ?? rhs.login) ? 1 : -1
+        })
+    }
 
     readonly login:      string
     readonly name?:      string
