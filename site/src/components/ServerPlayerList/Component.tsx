@@ -17,7 +17,7 @@ export default function ServerPlayerList(props: ServerPlayerListProps) {
 
     useEffect(() => {
         if (error != null)
-            error != null && console.error(error)
+            console.error(error)
     }, [error])
 
     if (loading)
@@ -26,14 +26,19 @@ export default function ServerPlayerList(props: ServerPlayerListProps) {
         </div>
 
     if (error != null)
-        return <div className={styles.error}>
-            <ErrorText>Loading failed</ErrorText>
-        </div>
+        return <ErrorText>Loading failed</ErrorText>
 
-    return <List listClassName = {styles.loaded}
+    const { online, max } = server.players
+
+    return <List header        = {`Players (${online}/${max})`}
                  itemClassName = {styles.item}
+                 showIfEmpty   = {true}
                  evalKey       = {card => card.props.player.nickname}>
-        {players.map(player => <PlayerCard player={player} onClick={onPlayerClick} key={player.nickname} />)}
+        {
+            players.map(player => <PlayerCard player  = {player}
+                                              onClick = {onPlayerClick}
+                                              key     = {player.nickname} />)
+        }
     </List>
 
     async function getPlayers(): Promise<Player[]> {

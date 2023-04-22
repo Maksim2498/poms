@@ -1,35 +1,34 @@
 .server {
     height: 100%;
 
+    padding: 1rem;
+
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: center
 }
 
-.server > * {
-    margin: 1rem
+.server > :not(:first-child) {
+    margin-top: 2rem
+}
+
+.general {
+    display: flex;
+    flex-direction: column;
+    align-items: center
 }
 
 .icon {
+    margin-bottom: 1rem;
+
     width: 10rem;
     height: 10rem
 }
 
 .motd {
-    font-size: 2rem;
-    margin-bottom: 0rem
+    font-size: 2rem
 }
 
 .version {
-    margin-top: 0;
     color: gray
-}
-
-.players {
-    margin-top: 2rem;
-    flex-grow: 1
-}
-
-.players > .header {
-    text-align: center
 }

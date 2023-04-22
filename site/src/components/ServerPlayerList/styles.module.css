@@ -1,14 +1,8 @@
-.list {
+.loading {
     position: relative;
-    min-height: 5rem
-}
 
-.loading, .error, .loaded {
-    composes: list
-}
-
-.loaded {
-    list-style: none
+    width: 5rem;
+    height: 2rem
 }
 
 .item {
