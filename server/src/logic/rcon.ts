@@ -158,7 +158,9 @@ export class RconProxy extends    EventEmitter
                         const command = message.toString()
 
                         if (command.length !== 0)
-                            await rcon.execute(command)
+                            // extra whitespace added because of
+                            // invalid length assertion in minecraft-server-util package
+                            await rcon.execute(command + " ") 
                     } catch (error) {
                         if (error instanceof AssertionError) {
                             logger?.debug(`Assertion error: ${error.message}`)
