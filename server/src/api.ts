@@ -293,10 +293,10 @@ export const units: UnitCollection = {
                     id:            i.id,
                     json:          {
                         login:     i.login,
-                        name:      i.name,
+                        name:      i.name ?? null,
                         isAdmin:   i.isAdmin,
                         isOnline:  i.isOnline,
-                        nicknames: null as null | string[],
+                        nicknames: undefined as string[] | undefined,
                         reg:       {
                             time:  i.created.toISOString(),
                             login: i.creatorInfo?.login ?? null
@@ -323,10 +323,10 @@ export const units: UnitCollection = {
             const info = await this.userManager.forceGetDeepUserInfo(connection, user)
             const json = {
                 login:     info.login,
-                name:      info.name,
+                name:      info.name ?? null,
                 isAdmin:   info.isAdmin,
                 isOnline:  info.isOnline,
-                nicknames: null as null | string[],
+                nicknames: undefined as string[] | undefined,
                 reg:       {
                     time:  info.created.toISOString(),
                     login: info.creatorInfo?.login ?? null
@@ -346,10 +346,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/login",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const user = req.params.user
-            const info = await this.userManager.forceGetDeepUserInfo(connection, user)
+            const user      = req.params.user
+            const { login } = await this.userManager.forceGetDeepUserInfo(connection, user)
 
-            res.json({ login: info.login })
+            res.json({ login })
         }
     },
 
@@ -359,10 +359,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/is-admin",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const user = req.params.user
-            const info = await this.userManager.forceGetUserInfo(connection, user)
+            const user        = req.params.user
+            const { isAdmin } = await this.userManager.forceGetUserInfo(connection, user)
             
-            res.json({ isAdmin: info.isAdmin })
+            res.json({ isAdmin })
         }
     },
 
@@ -372,10 +372,10 @@ export const units: UnitCollection = {
         path:       "/users/:user/is-online",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const user = req.params.user
-            const info = await this.userManager.forceGetUserInfo(connection, user)
+            const user         = req.params.user
+            const { isOnline } = await this.userManager.forceGetUserInfo(connection, user)
             
-            res.json({ isOnline: info.isOnline })
+            res.json({ isOnline })
         }
     },
 
@@ -390,7 +390,7 @@ export const units: UnitCollection = {
 
             res.json({
                 time:  info.created.toISOString(),
-                login: info.creatorInfo?.login
+                login: info.creatorInfo?.login ?? null
             })
         }
     },
@@ -417,7 +417,7 @@ export const units: UnitCollection = {
             const user = req.params.user
             const info = await this.userManager.forceGetDeepUserInfo(connection, user)
 
-            res.json({ login: info.creatorInfo?.login })
+            res.json({ login: info.creatorInfo?.login ?? null })
         }
     },
 
@@ -430,7 +430,7 @@ export const units: UnitCollection = {
             const user = req.params.user
             const info = await this.userManager.forceGetUserInfo(connection, user)
 
-            res.json({ name: info.name })
+            res.json({ name: info.name ?? null })
         }
     },
 
@@ -475,8 +475,10 @@ export const units: UnitCollection = {
         path:       "/server/version/name",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ name: status.version.name })
+            const status   = await this.statusFetcher.fetch(connection)
+            const { name } = status.version
+
+            res.json({ name })
         }
     },
 
@@ -486,8 +488,10 @@ export const units: UnitCollection = {
         path:       "/server/version/protocol",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ protocol: status.version.protocol })
+            const status       = await this.statusFetcher.fetch(connection)
+            const { protocol } = status.version
+
+            res.json({ protocol })
         }
     },
 
@@ -508,12 +512,10 @@ export const units: UnitCollection = {
         path:       "/server/players/count",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
+            const { players     } = await this.statusFetcher.fetch(connection)
+            const { online, max } = players
 
-            res.json({
-                online: status.players.online,
-                max:    status.players.max
-            })
+            res.json({ online, max })
         }
     },
 
@@ -523,8 +525,10 @@ export const units: UnitCollection = {
         path:       "/server/players/online",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ online: status.players.online })
+            const status     = await this.statusFetcher.fetch(connection)
+            const { online } = status.players
+
+            res.json({ online })
         }
     },
 
@@ -534,8 +538,10 @@ export const units: UnitCollection = {
         path:       "/server/players/max",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ max: status.players.max })
+            const status  = await this.statusFetcher.fetch(connection)
+            const { max } = status.players
+
+            res.json({ max })
         }
     },
 
@@ -567,8 +573,10 @@ export const units: UnitCollection = {
         path:       "/server/motd/raw",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ raw: status.motd.raw })
+            const status  = await this.statusFetcher.fetch(connection)
+            const { raw } = status.motd
+
+            res.json({ raw })
         }
     },
 
@@ -578,8 +586,10 @@ export const units: UnitCollection = {
         path:       "/server/motd/clean",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ clean: status.motd.clean })
+            const status    = await this.statusFetcher.fetch(connection)
+            const { clean } = status.motd
+
+            res.json({ clean })
         }
     },
 
@@ -589,8 +599,10 @@ export const units: UnitCollection = {
         path:       "/server/motd/html",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ html: status.motd.html })
+            const status   = await this.statusFetcher.fetch(connection)
+            const { html } = status.motd
+
+            res.json({ html })
         }
     },
 
@@ -600,8 +612,10 @@ export const units: UnitCollection = {
         path:       "/server/favicon",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const status = await this.statusFetcher.fetch(connection)
-            res.json({ favicon: status.favicon })
+            const status      = await this.statusFetcher.fetch(connection)
+            const { favicon } = status
+
+            res.json({ favicon })
         }
     },
 
@@ -623,7 +637,9 @@ export const units: UnitCollection = {
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
             const user = req.params.user
+
             await this.userManager.forceDeleteUser(connection, user)
+
             res.json({})
         }
     },
@@ -833,7 +849,7 @@ export const units: UnitCollection = {
                 password,
                 name,
                 isAdmin,
-                creator:  creatorId
+                creator: creatorId
             })
         
             res.json({})

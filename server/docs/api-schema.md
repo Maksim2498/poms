@@ -298,15 +298,15 @@ __Response__:
 
 ```ts
 {
-    login:     string
-    name:      string   | null
-    nicknames: string[] | null // Added if <nicknames> option is set
-    isAdmin:   boolean
-    isOnline:  boolean
+    login:      string
+    name:       string   | null
+    nicknames?: string[]        // Added if <nicknames> option is set
+    isAdmin:    boolean
+    isOnline:   boolean
 
     reg: {
-        time:  string          // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
-        login: string | null
+        time:   string          // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+        login:  string   | null
     }
 }[]
 ```
@@ -331,15 +331,15 @@ __Response__:
 
 ```ts
 {
-    login:     string
-    name:      string   | null
-    nicknames: string[] | null // Not null if <nicknames> option is set
-    isAdmin:   boolean
-    isOnline:  boolean
+    login:      string
+    name:       string   | null
+    nicknames?: string[]        // Not null if <nicknames> option is set
+    isAdmin:    boolean
+    isOnline:   boolean
 
     reg: {
-        time:  string          // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
-        login: string | null
+        time:   string          // In ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
+        login:  string | null
     }
 }
 ```
