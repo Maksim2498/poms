@@ -18,6 +18,8 @@ export default function Terminal(props: TerminalProps) {
 
     useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [records])
 
+    const sendDisabled = disabled || input.length === 0
+
     return <div className={styles.terminal}>
         <ol className={styles.output}>
             {recordsToElementList(records)}
@@ -25,7 +27,7 @@ export default function Terminal(props: TerminalProps) {
         </ol>
         <form onSubmit={onSubmit} onKeyDown={onKeyDown} className={styles.form}>
             <Input placeholder="Enter a command..." value={input} onChange={setInput} autoFocus={true} disabled={disabled} ref={inputElement} />
-            <Button type="submit" disabled={disabled}>Send</Button>
+            <Button type="submit" disabled={sendDisabled}>Send</Button>
         </form>
     </div>
 
