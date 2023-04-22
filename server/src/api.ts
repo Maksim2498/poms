@@ -604,6 +604,19 @@ export const units: UnitCollection = {
         }
     },
 
+    getServerAddress: {
+        permission: "user",
+        method:     "get",
+        path:       "/server/address",
+
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const status      = await this.statusFetcher.fetch(connection)
+            const { address } = status
+
+            res.json({ address })
+        }
+    },
+
     getServerFavicon: {
         permission: "user",
         method:     "get",

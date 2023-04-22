@@ -34,6 +34,7 @@ export interface Fetch {
         html:         string
     }
 
+    address:          string | null
     favicon:          string | null
 }
 
@@ -107,6 +108,7 @@ export class DefaultStatusFetcher implements StatusFetcher {
                 html:     raw.motd.html,
             },
 
+            address:      this.config.mcPublicAddress,
             favicon:      raw.favicon
         }
     }

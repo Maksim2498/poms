@@ -37,6 +37,7 @@
   - [Get Server Raw MOTD](#get-server-raw-motd);
   - [Get Server Clean MOTD](#get-server-clean-motd);
   - [Get Server HTML MOTD](#get-server-html-motd);
+  - [Get Server Address](#get-server-address);
   - [Get Server Favicon](#get-server-favicon);
   - [Delete All Users](#delete-all-users);
   - [Delete User](#delete-user);
@@ -577,6 +578,7 @@ __Response__:
         html:         string
     }
 
+    address:          string | null
     favicon:          string | null // "data:image/png;base64,..."
 }
 ```
@@ -876,6 +878,30 @@ __Response__:
 ```ts
 {
     html: string
+}
+```
+
+<hr />
+
+### __Get Server Address__
+
+Returns server's public address.
+
+__Request__:
+
+```http
+GET /server/address
+```
+
+```http
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    address: string | null
 }
 ```
 
