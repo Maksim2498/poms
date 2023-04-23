@@ -36,6 +36,7 @@ const ODUR      = z.string().transform((val, ctx) => {
 
 const CONFIG_JSON_SCHEMA = z.object({
     http: z.object({
+        proxied:              OBOOLEAN,
         apiPrefix:            OURI_PATH,
         host:                 NHOST,
         port:                 OPORT,
@@ -121,6 +122,7 @@ export default class Config {
 
     static readonly DEFAULT_PATH                         = this.FILE_NAME
 
+    static readonly DEFAULT_HTTP_PROXIED                 = false
     static readonly DEFAULT_HTTP_API_PREFIX              = "/api"
     static readonly DEFAULT_HTTP_HOST                    = null
     static readonly DEFAULT_HTTP_PORT                    = 8000
@@ -329,6 +331,10 @@ export default class Config {
 
             throw new Error('Missing "mysql.password" configuration option')
         }
+    }
+
+    get httpProxied(): boolean {
+        return this.read.http?.proxied ?? Config.DEFAULT_HTTP_PROXIED
     }
 
     get httpApiPrefix(): string {

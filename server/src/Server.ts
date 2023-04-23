@@ -96,6 +96,9 @@ export default class Server {
         setupApp.call(this)
 
         function setupApp(this: Server) {
+            if (config.httpProxied)
+                app.set("trust proxy", true)
+
             if (logger)
                 setupLogger()
 

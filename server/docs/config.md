@@ -26,6 +26,7 @@ is considered an error):
 
 | Field Path                   | Type               | Default Value                | Required | Description                                                                        |
 |------------------------------|--------------------|------------------------------|----------|------------------------------------------------------------------------------------|
+| `http.proxied`               | `boolean`   `      | `false"`                     | No       | Indicates that server is behind a proxy and that it should use X-proxy-headers     |
 | `http.apiPrefix`             | Path `string`      | `"/api"`                     | No       | HTTP path prefix of all API-requests                                               |
 | `http.host`                  | `string` or 'null' | `null'                       | No       | HTTP server address                                                                |
 | `http.port`                  | Port `number`      | `8000`                       | No       | HTTP server port                                                                   |
