@@ -21,11 +21,11 @@ export interface RconProxyEvents {
 export class RconProxy extends    EventEmitter
                        implements RconProxyEvents {
     private readonly socket:  WebSocket
+    private          _ip:     string | undefined
     private          _id?:    number
     private          _login?: string
 
     readonly         server:  Server
-    readonly         ip:      string
 
     constructor(options: CreationOptions) {
         super()
@@ -40,7 +40,7 @@ export class RconProxy extends    EventEmitter
 
         this.server = server
         this.socket = socket
-        this.ip     = ip
+        this._ip    = ip
 
         const { logger } = server
 
@@ -183,11 +183,13 @@ export class RconProxy extends    EventEmitter
         return this._login
     }
 
-    get address(): string {
-        const ip = this.ip ?? "-"
+    get ip(): string {
+        return this._ip ?? "-"
+    }
 
-        return this.authorized ? `${this._login}[${this._id}]@${ip}`
-                               : `@${ip}`
+    get address(): string {
+        return this.authorized ? `${this._login}[${this._id}]@${this.ip}`
+                               : `@${this.ip}`
     }
 
     get authorized(): boolean {
