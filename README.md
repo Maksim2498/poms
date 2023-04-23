@@ -120,6 +120,7 @@ __Server__:
 - [Configuration](/server/docs/config.md);
 - [Database Schema](/server/docs/db-schema.md);
 - [API Schema](/server/docs/api-schema.md);
+- [Nginx](/server/docs/nginx.md);
 - [Console Proxy](/server/docs/ws-console-schema.md).
 
 __Site__:
