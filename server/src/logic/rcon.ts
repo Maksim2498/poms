@@ -184,8 +184,10 @@ export class RconProxy extends    EventEmitter
     }
 
     get address(): string {
-        return this.authorized ? `${this._login}[${this._id}]@${this.ip}`
-                               : `@${this.ip}`
+        const ip = this.ip ?? "-"
+
+        return this.authorized ? `${this._login}[${this._id}]@${ip}`
+                               : `@${ip}`
     }
 
     get authorized(): boolean {
