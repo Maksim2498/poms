@@ -57,10 +57,10 @@ This document contains detailed description on all supported API methods and the
 
 ## Authoriztion
 
-Almost all API methods require `Authorization` header to be set but when `logic.allowAnonymousAccess`
-configuration option is set to `true` all `GET`-methods (except [`/anonymous-access-allowed`](#is-anonymous-access-allowed))
-doesn't require it anymore. When `Authorization` header is required for `GET`-methods it must contain
-user's `access-token`.
+Almost all API methods (except [`/anonymous-access-allowed`](#is-anonymous-access-allowed)) require
+`Authorization` header to be set but when `logic.allowAnonymousAccess` configuration option is set
+to `true` all `GET`-methods doesn't require it anymore. When `Authorization` header is required for
+`GET`-methods it must contain user's `access-token`.
 
 ## Error Handling
 
