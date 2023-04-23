@@ -21,7 +21,7 @@ export default function Modal(props: ModalProps) {
     return <div className={styles.container}>
         <Dim />
         <div className={styles.modal}>
-            {header   && <h3  className={styles.header  }>{header  }</h3> }
+            {header   && <div className={styles.header  }>{header  }</div> }
             {question && <div className={styles.question}>{question}</div>}
             <div className={styles.answers}>
                 {answers && Object.entries(answers).map(([key, answer]) => {
