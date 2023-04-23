@@ -106,11 +106,14 @@ export default class Server {
             setup500()
 
             function setupLogger() {
-                const middleware = morgan("tiny", {
-                    stream: {
-                        write: message => logger!.http(message.trim())
+                const middleware = morgan(
+                    ":remote-addr :method :url :status :res[content-length] - :response-time ms",
+                    {
+                        stream: {
+                            write: message => logger!.http(message.trim())
+                        }
                     }
-                })
+                )
 
                 app.use(middleware)
             }
