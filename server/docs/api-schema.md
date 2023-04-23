@@ -57,10 +57,10 @@ This document contains detailed description on all supported API methods and the
 
 ## Authoriztion
 
-Almost all API methods (except [`/anonymous-access-allowed`](#is-anonymous-access-allowed)) require
-`Authorization` header to be set but when `logic.allowAnonymousAccess` configuration option is set
-to `true` all `GET`-methods doesn't require it anymore. When `Authorization` header is required for
-`GET`-methods it must contain user's `access-token`.
+If mentioned in method's description, `Authorization` HTTP header with user's _access token_ must
+be provided. To get access token user must first authenticate with `/auth` API method. Some method
+require access token conditionally based on `logic.allowAnonymousAccess` configuration option's value.
+It's state can be queried with `/anonymous-access-allowed` API method.
 
 ## Error Handling
 
@@ -98,7 +98,7 @@ following is a complete API method list.
 
 ### __Is Anonymous Access Allowed__
 
-Returns the value indicating whether anonymous access to `GET`-methods is allowed
+Returns the value indicating whether anonymous access is allowed
 
 __Request__:
 
@@ -131,6 +131,7 @@ GET /max-nicknames
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -156,6 +157,7 @@ GET /console-available
 ```
 
 ```http
+Authorization: Bearer <admin access token>
 Accept: application/json
 ```
 
@@ -181,6 +183,7 @@ GET /max-tokens
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -294,6 +297,7 @@ GET /users?[nicknames]
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -327,6 +331,7 @@ GET /users/<user>?[nicknames]
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -360,6 +365,7 @@ GET /users/<user>/login
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -384,6 +390,7 @@ GET /users/<user>/is-admin
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -408,6 +415,7 @@ GET /users/<user>/online
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -432,6 +440,7 @@ GET /users/<user>/reg
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -457,6 +466,7 @@ GET /users/<user>/reg/time
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -481,6 +491,7 @@ GET /users/<user>/reg/user
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -505,6 +516,7 @@ GET /users/<user>/name
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -529,6 +541,7 @@ GET /users/<user>/nicknames/
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -551,6 +564,7 @@ GET /server
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -596,6 +610,7 @@ GET /server/version
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -621,6 +636,7 @@ GET /server/version/name
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -645,6 +661,7 @@ GET /server/version/protocol
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -669,6 +686,7 @@ GET /server/players
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -698,6 +716,7 @@ GET /server/players/count
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -723,6 +742,7 @@ GET /server/players/online
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -747,6 +767,7 @@ GET /server/players/max
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -771,6 +792,7 @@ GET /server/players/sample
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -796,6 +818,7 @@ GET /server/motd
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -822,6 +845,7 @@ GET /server/motd/raw
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -846,6 +870,7 @@ GET /server/motd/clean
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -870,6 +895,7 @@ GET /server/motd/html
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -894,6 +920,7 @@ GET /server/address
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -918,6 +945,7 @@ GET /server/favicon
 ```
 
 ```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
 Accept: application/json
 ```
 
@@ -942,7 +970,7 @@ DELETE /users
 ```
 
 ```http
-Authorization: Bearer <access token>
+Authorization: Bearer <admin access token>
 Accept: application/json
 ```
 
@@ -958,8 +986,9 @@ __Response__:
 
 ### __Delete User__
 
-Deletes specified user. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Deletes specified user.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -976,8 +1005,9 @@ Accept: application/json
 
 ### __Delete All User nicknames__
 
-Deletes all nicknames of specified user. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Deletes all nicknames of specified user.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1002,8 +1032,9 @@ __Response__:
 
 ### __Delete User Nickname__
 
-Deletes specified nickname of given user. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Deletes specified nickname of given user.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1026,8 +1057,9 @@ __Response__:
 
 ### __Update User__
 
-Updates all user fields. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Updates all user fields.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1055,8 +1087,9 @@ __Response__:
 
 ### __Update User Name__
 
-Updates specified user name. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Updates specified user name.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1086,8 +1119,9 @@ __Response__:
 
 ### __Update User Password__
 
-Updates specified user password. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Updates specified user password.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1126,7 +1160,7 @@ PUT /users/<user>/is-admin
 ```
 
 ```http
-Authorization: Bearer <access token>
+Authorization: Bearer <admin access token>
 Content-Type: application/json
 Accept: application/json
 ```
@@ -1147,8 +1181,9 @@ __Response__:
 
 ### __Update User Nicknames__
 
-Updates user nicknames. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Updates user nicknames.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1172,8 +1207,9 @@ string[]
 
 ### __Add User Nickname__
 
-Adds nickname to the user. If issued with administator's access token
-`user` - can be any user's login otherwise can only be a token owener's login.
+Adds nickname to the user.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
 
 __Request__:
 
@@ -1205,7 +1241,7 @@ POST /users/<user>
 ```
 
 ```http
-Authorization: Bearer <access token>
+Authorization: Bearer <admin access token>
 Content-Type: application/json
 Accept: application/json
 ```
