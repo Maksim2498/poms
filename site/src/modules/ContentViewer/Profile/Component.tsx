@@ -70,18 +70,18 @@ export default function Profile(props: ProfileProps) {
 
     return <div className={editMode ? styles.editableProfile : styles.profile}>
         <div className={styles.icon}>
-            <UserIcon user={user} />
+            <UserIcon user={user} editMode={editMode} onChange={onChange} />
         </div>
 
         <div className={styles.sections}>
             <div className={styles.general}>
-                {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user!} onChange={onChanged} />}
-                <UserName user={user!} editMode={editMode} onChange={onChanged} />
+                {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user!} onChange={onChange} />}
+                <UserName user={user!} editMode={editMode} onChange={onChange} />
                 <UserTag user={user!} />
                 <UserOnlineIndicator user={user!} />
             </div>
             <UserRegInfo   user={user!} onTagClick={innerOnTagClick} />
-            <UserNicknames user={user!} editMode={editMode} onChange={onChanged}/>
+            <UserNicknames user={user!} editMode={editMode} onChange={onChange}/>
         </div>
 
         <ErrorText>{saveError}</ErrorText>
@@ -106,7 +106,7 @@ export default function Profile(props: ProfileProps) {
         }
 
         {
-            resetingPassword && <Modal header="Password Reseting">
+            resetingPassword && <Modal header="Password Resetting">
                 {{
                     password: {
                         type:         "input",
@@ -148,7 +148,7 @@ export default function Profile(props: ProfileProps) {
         })
     }
 
-    function onChanged(newUser: User) {
+    function onChange(newUser: User) {
         setChanged(!savedUser.current || !newUser.equalTo(savedUser.current))
         setUser(newUser)
     }

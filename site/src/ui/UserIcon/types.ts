@@ -1,8 +1,12 @@
-import User from "logic/User"
+import User         from "logic/User"
+
+import { OnChange } from "logic/User"
 
 export interface UserIconProps {
-    onClick?: OnUserIconClick
-    user?:    User
+    editMode?: boolean
+    onClick?:  OnUserIconClick
+    user?:     User
+    onChange?: OnChange
 }
 
 export type OnUserIconClick = (user?: User) => void

@@ -1,13 +1,28 @@
 .regular {
-    width: 100%;
-    aspect-ratio: 1/1;
+    position: relative;
     border-radius: 50%;
     border: thin solid #666;
-    background-color: black
+    background-color: black;
+    overflow: hidden
 }
 
 .admin {
     composes: regular;
     border: thin solid gold;
     box-shadow: gold 0 0 .5rem
+}
+
+.regular, .icon, .editContainer {
+    width: 100%;
+    aspect-ratio: 1/1
+}
+
+.editContainer {
+    display: none;
+    position: absolute;
+    top: 0
+}
+
+.regular:hover .editContainer {
+    display: block
 }
