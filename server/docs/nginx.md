@@ -55,8 +55,8 @@ Or something like this for HTTPS:
 server {
     listen 443 ssl;
 
-    ssl_certificate     /path/to/your/certificate.cert;
-    ssl_certificate_key /path/to/your/key.key;
+    ssl_certificate     ...;
+    ssl_certificate_key ...;
 
     server_name ...;
 
