@@ -35,3 +35,7 @@
 .options > * {
     width: 100%
 }
+
+.options > :not(:first-child) {
+    margin-top: .5rem
+}

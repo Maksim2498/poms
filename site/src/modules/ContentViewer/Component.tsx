@@ -1,28 +1,24 @@
-import User                               from "logic/User"
-import Player                             from "logic/Player"
-import AuthControllerContext              from "App/AuthControllerContext"
-import UserContext                        from "App/UserContext"
-import ContentStackContext                from "./Context"
-import ContentSelector                    from "./ContentSelector/Component"
-import ContentWindow                      from "./ContentWindow/Component"
-import Console                            from "./Console/Component"
-import Profile                            from "./Profile/Component"
-import Server                             from "./ServerViewer/Component"
-import Users                              from "./Users/Component"
-import styles                             from "./styles.module.css"
+import AuthControllerContext                                             from "App/AuthControllerContext"
+import UserContext                                                       from "App/UserContext"
+import ContentStackContext                                               from "./Context"
+import ContentSelector                                                   from "./ContentSelector/Component"
+import ContentWindow                                                     from "./ContentWindow/Component"
+import styles                                                            from "./styles.module.css"
 
-import { useContext                     } from "react"
-import { HOME_CONTENT                   } from "./constants"
-import { Content, ContentComponentProps } from "./types"
+import { useContext                                                    } from "react"
+import { CONSOLE_CONTENT, HOME_CONTENT                                 } from "./constants"
+import { Content                                                       } from "./types"
+import { createProfileContent, createServerContent, createUsersContent } from "./util"
 
 export default function ContentViewer() {
-    const [user                                          ] = useContext(UserContext)
-    const [authInfo                                      ] = useContext(AuthControllerContext)
-    const contentSelectionList                             = makeContentSelectionList()
-    const [contentStack, setContentStack, contentStackRef] = useContext(ContentStackContext)
-    const topContent                                       = contentStack[contentStack.length - 1]
-    const showBack                                         = contentStack.length > 1
-    const { editable                                     } = topContent
+    const [user                         ] = useContext(UserContext)
+    const [authInfo                     ] = useContext(AuthControllerContext)
+    const contentStackContext             = useContext(ContentStackContext)
+    const contentSelectionList            = makeContentSelectionList()
+    const [contentStack, setContentStack] = contentStackContext
+    const topContent                      = contentStack[contentStack.length - 1]
+    const showBack                        = contentStack.length > 1
+    const { editable                    } = topContent
 
     return <div className={styles.viewer}>
         <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
@@ -35,94 +31,32 @@ export default function ContentViewer() {
     </div>
 
     function makeContentSelectionList() {
-        const contentList = makeBasicContent()
+        const contentList = [HOME_CONTENT]
 
-        if (authInfo.allowAnonymAccess)
-            addCommonContent()
-
+        addCommonContent()
         addUserContent()
 
         return contentList
 
-        function makeBasicContent(): Content[] {
-            return [HOME_CONTENT]
-        }
-
         function addCommonContent() {
-            contentList.push(
-                createServerContent(),
-                createUsersContent()
-            )
-
-            function createServerContent(): Content {
-                const name       = "Server Status"
-                const selectName = "Server"
-                const component  = () => Server({ onPlayerClick })
-
-                return { name, selectName, component }
-
-                function onPlayerClick(player: Player) {
-                    const { user } = player
-
-                    if (user)
-                        pushUserContent(user.login)
-                }
-            }
-
-            function createUsersContent(): Content {
-                const name       = "Users List"
-                const selectName = "Users"
-                const component  = ({ editMode }: ContentComponentProps) => Users({ onUserClick, editMode })
-                const editable   = user?.isAdmin
-
-                return { name, selectName, component, editable }
-
-                function onUserClick(user: User) {
-                    pushUserContent(user.login)
-                }
-            }
+            if (authInfo.allowAnonymAccess)
+                contentList.push(
+                    createServerContent(contentStackContext, user),
+                    createUsersContent(contentStackContext, user)
+                )
         }
 
         function addUserContent() {
             if (user == null)
                 return
 
-            contentList.push(createProfileContent())
+            contentList.push(createProfileContent(contentStackContext, user, user))
 
             if (!authInfo.allowAnonymAccess)
                 addCommonContent()
 
             if (user.isAdmin)
-                contentList.push({
-                    name:       "Server Console",
-                    selectName: "Console",
-                    component:  Console
-                })
-
-            function createProfileContent(): Content {
-                const name       = "Your Profile"
-                const selectName = "Profile"
-                const component  = ({ editMode }: ContentComponentProps) => Profile({ editMode, login: user!.login, onTagClick: onUserTagClick })
-                const editable   = true
-
-                return { name, selectName, component, editable }
-            }
-        }
-
-        function pushUserContent(login: string) {
-            const component       = ({ editMode }: ContentComponentProps) => Profile({ editMode, login, onTagClick: onUserTagClick })
-            const name            = `${login}'s Profile`
-            const editable        = login === user?.login || (user?.isAdmin ?? false)
-            const newContent      = { name, component, editable }
-            const oldContentStack = contentStackRef.current ?? []
-            const newContentStack = [...oldContentStack, newContent]
-
-            setContentStack(newContentStack)
-        }
-
-        function onUserTagClick(newLogin: string, oldLogin: string) {
-            if (!User.areLoginsEqual(newLogin, oldLogin))
-                pushUserContent(newLogin)
+                contentList.push(CONSOLE_CONTENT)
         }
     }
 
