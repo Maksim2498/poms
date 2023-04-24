@@ -20,13 +20,6 @@ export default function Modal(props: ModalProps) {
     const [states, setStates ] = useState(makeStates())
     const [error,  setError  ] = useState(undefined as string | undefined)
 
-    useEffect(() => () => {
-        for (const state of Object.values(states))
-            if (state.type === "canvas")
-                state.canvas.remove()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-
     return <div className={styles.container}>
         <Dim />
         <div className={styles.modal}>
