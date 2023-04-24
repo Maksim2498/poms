@@ -138,7 +138,7 @@ export class RconProxy extends    EventEmitter
             async function loginRcon(this: RconProxy) {
                 logger?.debug(`Logging ${this.address} in RCON...`)
 
-                const password = server.config.read.rcon?.password
+                const password = server.config.rconPassword
 
                 await rcon.login(password!)
 

@@ -16,6 +16,7 @@ const OHOST     = z.string().transform(s => s.trim()).optional()
 const NHOST     = OHOST.nullable()
 const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
 const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
+const NPATH     = OPATH.nullable()
 const OBOOLEAN  = z.oboolean()
 const OUINT     = z.number().int().nonnegative().optional()
 const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).nullish()
@@ -40,7 +41,7 @@ const CONFIG_JSON_SCHEMA = z.object({
         apiPrefix:            OURI_PATH,
         host:                 NHOST,
         port:                 OPORT,
-        socketPath:           OPATH,
+        socketPath:           NPATH,
         serveStatic:          OBOOLEAN,
         staticPath:           OPATH,
         error404Path:         OPATH,
@@ -55,19 +56,19 @@ const CONFIG_JSON_SCHEMA = z.object({
         database:             ODB_NAME,
         host:                 OHOST,
         port:                 OPORT,
-        socketPath:           OPATH,
-        login:                OSTRING,
-        password:             OSTRING,
+        socketPath:           NPATH,
+        login:                NSTRING,
+        password:             NSTRING,
         connectionLimit:      OUINT,
 
         init: z.object({
-            login:            OSTRING,
-            password:         OSTRING,
+            login:            NSTRING,
+            password:         NSTRING,
         }).strict().optional(),
 
         serve: z.object({
-            login:            OSTRING,
-            password:         OSTRING,
+            login:            NSTRING,
+            password:         NSTRING,
         }).strict().optional()
     }).strict(),
 
@@ -99,7 +100,7 @@ const CONFIG_JSON_SCHEMA = z.object({
         enable:               OBOOLEAN,
         host:                 OHOST,
         port:                 OPORT,
-        password:             OSTRING,
+        password:             NSTRING,
     }).strict().optional(),
 
     mc: z.object({
@@ -126,6 +127,7 @@ export default class Config {
     static readonly DEFAULT_HTTP_API_PREFIX              = "/api"
     static readonly DEFAULT_HTTP_HOST                    = null
     static readonly DEFAULT_HTTP_PORT                    = 8000
+    static readonly DEFAULT_HTTP_SOCKET_PATH             = null
     static readonly DEFAULT_HTTP_SERVE_STATIC            = true
     static readonly DEFAULT_HTTP_STATIC_PATH             = this.placehold("<SITE_PATH>/build")
     static readonly DEFAULT_HTTP_ERROR_404_PATH          = this.placehold("<SITE_PATH>/build/404.html")
@@ -136,7 +138,14 @@ export default class Config {
     static readonly DEFAULT_MYSQL_DATABASE               = "poms"
     static readonly DEFAULT_MYSQL_HOST                   = "localhost"
     static readonly DEFAULT_MYSQL_PORT                   = 3306
+    static readonly DEFAULT_MYSQL_SOCKET_PATH            = null
+    static readonly DEFAULT_MYSQL_LOGIN                  = null
+    static readonly DEFAULT_MYSQL_PASSWORD               = null
     static readonly DEFAULT_MYSQL_CONNECTION_LIMIT       = 10
+    static readonly DEFAULT_MYSQL_INIT_LOGIN             = null
+    static readonly DEFAULT_MYSQL_INIT_PASSWORD          = null
+    static readonly DEFAULT_MYSQL_SERVE_LOGIN            = null
+    static readonly DEFAULT_MYSQL_SERVE_PASSWORD         = null
 
     static readonly DEFAULT_LOGIC_ADMIN_CREATE           = true
     static readonly DEFAULT_LOGIC_ADMIN_NAME             = "Administrator"
@@ -156,6 +165,7 @@ export default class Config {
 
     static readonly DEFAULT_RCON_ENABLE                  = false
     static readonly DEFAULT_RCON_PORT                    = 25575
+    static readonly DEFAULT_RCON_PASSWORD                = null
 
     static readonly DEFAULT_MC_PUBLIC_ADDRESS            = null
     static readonly DEFAULT_MC_HOST                      = "localhost"
@@ -217,8 +227,7 @@ export default class Config {
 
     private static async readJson(path: string): Promise<any> {
         try {
-            const buffer = await fsp.readFile(path)
-            const string = buffer.toString();
+            const string = await fsp.readFile(path, "utf-8")
 
             try {
                 return JSON.parse(string)
@@ -352,6 +361,13 @@ export default class Config {
         return this.read.http?.port ?? Config.DEFAULT_HTTP_PORT
     }
 
+    get httpSocketPath(): string | null {
+        const read = this.read.http?.socketPath
+
+        return read === undefined ? Config.DEFAULT_HTTP_SOCKET_PATH
+                                  : read
+    }
+
     get httpServeStatic(): boolean {
         return this.read.http?.serveStatic ?? Config.DEFAULT_HTTP_SERVE_STATIC
     }
@@ -369,20 +385,14 @@ export default class Config {
     }
 
     get httpApiAddress(): string {
-        const prefix     = this.httpApiPrefix
-        const socketPath = this.read.http?.socketPath
+        const address = this.httpAddress.slice(0, -1) // Remove trailing "/"
+        const prefix  = this.httpApiPrefix
 
-        if (socketPath != null)
-            return `http://unix:${socketPath}${prefix}/`
-
-        const host = this.httpHost ?? "localhost"
-        const port = this.httpPort
-
-        return `http://${host}:${port}${prefix}/`
+        return `${address}${prefix}/`
     }
 
     get httpAddress(): string {
-        const socketPath = this.read.http?.socketPath
+        const socketPath = this.httpSocketPath
 
         if (socketPath != null)
             return `http://unix:${socketPath}/`
@@ -397,12 +407,61 @@ export default class Config {
         return this.read.ws?.prefix ?? Config.DEFAULT_WS_PREFXI
     }
 
-    get mysqlHost() {
+    get mysqlHost(): string {
         return this.read.mysql?.host ?? Config.DEFAULT_MYSQL_HOST
     }
 
-    get mysqlPort() {
+    get mysqlPort(): number {
         return this.read.mysql?.port ?? Config.DEFAULT_MYSQL_PORT
+    }
+
+    get mysqlSocketPath(): string | null {
+        const read = this.read.mysql.socketPath
+
+        return read === undefined ? Config.DEFAULT_MYSQL_SOCKET_PATH
+                                  : read
+    }
+
+    get mysqlLogin(): string | null {
+        const read = this.read.mysql?.login
+
+        return read === undefined ? Config.DEFAULT_MYSQL_LOGIN
+                                  : read
+    }
+
+    get mysqlPassword(): string | null {
+        const read = this.read.mysql?.password
+
+        return read === undefined ? Config.DEFAULT_MYSQL_PASSWORD
+                                  : read
+    }
+
+    get mysqlInitLogin(): string | null {
+        const read = this.read.mysql?.init?.login
+
+        return read === undefined ? Config.DEFAULT_MYSQL_INIT_LOGIN
+                                  : read
+    }
+
+    get mysqlInitPassword(): string | null {
+        const read = this.read.mysql?.init?.password
+
+        return read === undefined ? Config.DEFAULT_MYSQL_INIT_PASSWORD
+                                  : read
+    }
+
+    get mysqlServeLogin(): string | null {
+        const read = this.read.mysql?.serve?.login
+
+        return read === undefined ? Config.DEFAULT_MYSQL_SERVE_LOGIN
+                                  : read
+    }
+
+    get mysqlServePassword(): string | null {
+        const read = this.read.mysql?.serve?.password
+
+        return read === undefined ? Config.DEFAULT_MYSQL_SERVE_PASSWORD
+                                  : read
     }
 
     get mysqlDatabase(): string {
@@ -410,7 +469,7 @@ export default class Config {
     }
 
     get mysqlAddress(): string {
-        const socketPath = this.read.mysql.socketPath
+        const socketPath = this.mysqlSocketPath
 
         if (socketPath != null)
             return `unix:${socketPath}`
@@ -422,17 +481,13 @@ export default class Config {
     }
 
     get mysqlUseInitUser(): boolean {
-        const mysql = this.read.mysql
-
-        return mysql?.init?.login    != null 
-            && mysql?.init?.password != null
+        return this.mysqlInitLogin    != null
+            && this.mysqlInitPassword != null
     }
 
     get mysqlUseServeUser(): boolean {
-        const mysql = this.read.mysql
-
-        return mysql?.serve?.login    != null 
-            && mysql?.serve?.password != null
+        return this.mysqlServeLogin    != null
+            && this.mysqlServePassword != null
     }
 
     get mysqlConnectionLimit(): number {
@@ -525,7 +580,14 @@ export default class Config {
 
     get rconAvailable(): boolean {
         return this.rconEnable
-            && this.read.rcon?.password != null
+            && this.rconPassword != null
+    }
+
+    get rconPassword(): string | null {
+        const read = this.read.rcon?.password
+
+        return read === undefined ? Config.DEFAULT_RCON_PASSWORD
+                                  : read
     }
 
     get mcPublicAddress(): string | null {

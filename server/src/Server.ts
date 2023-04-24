@@ -304,11 +304,11 @@ export default class Server {
             const database        = config.mysqlDatabase
             const host            = config.mysqlHost
             const port            = config.mysqlPort
-            const socketPath      = config.read.mysql.socketPath
+            const socketPath      = config.mysqlSocketPath ?? undefined
             const useServe        = config.mysqlUseServeUser
             const connectionLimit = config.mysqlConnectionLimit
-            const user            = useServe ? config.read.mysql.serve?.login!    : config.read.mysql.login!
-            const password        = useServe ? config.read.mysql.serve?.password! : config.read.mysql.password!
+            const user            = useServe ? config.mysqlServeLogin!    : config.mysqlLogin!
+            const password        = useServe ? config.mysqlServePassword! : config.mysqlPassword!
 
             return mysql.createPool({
                 database,
@@ -412,10 +412,10 @@ export default class Server {
             async function createConnection(this: Server): Promise<Connection> {
                 const host       = this.config.mysqlHost
                 const port       = this.config.mysqlPort
-                const socketPath = this.config.read.mysql.socketPath
+                const socketPath = this.config.mysqlSocketPath ?? undefined
                 const useInit    = this.config.mysqlUseInitUser
-                const user       = useInit ? this.config.read.mysql.init?.login!    : this.config.read.mysql.login!
-                const password   = useInit ? this.config.read.mysql.init?.password! : this.config.read.mysql.password!
+                const user       = useInit ? this.config.mysqlInitLogin!    : this.config.mysqlLogin!
+                const password   = useInit ? this.config.mysqlInitPassword! : this.config.mysqlPassword!
 
                 return await mysql.createConnection({
                     host,
@@ -577,7 +577,7 @@ export default class Server {
                 try {
                     this.httpServer.on("error", reject)
 
-                    const socketPath = this.config.read.http?.socketPath
+                    const socketPath = this.config.httpSocketPath
                     const listening  = () => {
                         this.httpServer.removeListener("error", reject)
 
