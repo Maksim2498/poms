@@ -36,6 +36,11 @@ export default function UserIcon(props: UserIconProps) {
         {
             changing && <Modal header="Icon Changing">
                 {{
+                    image: {
+                        type:      "image",
+                        onCanvasCreated: onCanvasSet
+                    },
+
                     cancel: {
                         type:      "button",
                         text:      "Cancel",
@@ -52,4 +57,39 @@ export default function UserIcon(props: UserIconProps) {
             </Modal>
         }
     </div>
+
+    function onCanvasSet(canvas: HTMLCanvasElement) {
+        const context = canvas.getContext("2d")
+
+        if (context == null) {
+            console.error("Canvas isn't supported")
+            return
+        }
+
+        let x = Math.random() * canvas.width
+        let y = Math.random() * canvas.height
+
+        const w = 100
+        const h = 100
+
+        context.fillStyle = "red"
+
+        const draw = () => {
+            context.clearRect(0, 0, canvas.width, canvas.height)
+            context.fillRect(x, y, w, h)
+
+            x += 1
+            y += 1
+
+            if (x > canvas.width)
+                x = -w
+
+            if (y > canvas.height)
+                y = -h
+
+            requestAnimationFrame(draw)
+        }
+
+        requestAnimationFrame(draw)
+    }
 }

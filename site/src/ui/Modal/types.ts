@@ -14,6 +14,7 @@ export interface Answers {
 export type Answer = ButtonAnswer
                    | InputAnswer
                    | CheckBoxAnswer
+                   | CanvasAnswer
 
 export interface AnswerBase {
     type:       AnswerType
@@ -45,14 +46,18 @@ export interface CheckBoxAnswer extends AnswerBase {
     label?:   string
 }
 
-export type AnswerType = "button"
-                       | "input"
-                       | "check-box"
+export interface CanvasAnswer extends AnswerBase {
+    type:             "image"
+    width?:           number
+    height?:          number
+    onCanvasCreated?: OnCanvasCreated
+}
 
 export type ValidateInput       = (input: string) => string | undefined
 export type OnAnswerButtonClick = (states: AnswerStates) => void | Promise<void>
 export type FormatInput         = (input: string) => string
 export type DisableAnswer       = (values: AnswerStates) => boolean
+export type OnCanvasCreated     = (canvas: HTMLCanvasElement) => void
 
 export interface AnswerStates {
     [key: string]: AnswerState
@@ -61,6 +66,7 @@ export interface AnswerStates {
 export type AnswerState = ButtonAnswerState
                         | InputAnswerState
                         | CheckBoxAnswerState
+                        | CanvasAnswerState
 
 export interface AnswerStateBase {
     type:     AnswerType
@@ -84,3 +90,14 @@ export interface CheckBoxAnswerState extends AnswerStateBase {
     checked: boolean
     changed: boolean
 }
+
+export interface CanvasAnswerState extends AnswerStateBase {
+    type:   "image"
+    canvas: HTMLCanvasElement
+}
+
+
+export type AnswerType = "button"
+                       | "input"
+                       | "check-box"
+                       | "image"

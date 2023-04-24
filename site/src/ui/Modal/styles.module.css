@@ -66,3 +66,16 @@
 
     width: 100%
 }
+
+.canvasContainer {
+    overflow: hidden;
+    width: calc(100% - 1rem);
+    aspect-ratio: 1/1;
+    background-color: black;
+    border-radius: .4rem
+}
+
+.canvas {
+    width: 100%;
+    aspect-ratio: 1/1
+}

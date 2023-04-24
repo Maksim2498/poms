@@ -1,12 +1,14 @@
-import Dim                                                                                    from "ui/Dim/Component"
-import Button                                                                                 from "ui/Button/Component"
-import Input                                                                                  from "ui/Input/Component"
-import FormErrorText                                                                          from "ui/FormErrorText/Component"
-import CheckBox                                                                               from "ui/CheckBox/Component"
-import styles                                                                                 from "./styles.module.css"
+import Dim                                                            from "ui/Dim/Component"
+import Button                                                         from "ui/Button/Component"
+import Input                                                          from "ui/Input/Component"
+import FormErrorText                                                  from "ui/FormErrorText/Component"
+import CheckBox                                                       from "ui/CheckBox/Component"
+import styles                                                         from "./styles.module.css"
 
-import { useState                                                                           } from "react"
-import { ModalProps, AnswerStates, InputAnswerState, ButtonAnswerState, CheckBoxAnswerState } from "./types"
+import { useState                                                   } from "react"
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH                } from "./constants"
+import { ModalProps,        AnswerStates,        InputAnswerState,
+         ButtonAnswerState, CheckBoxAnswerState, CanvasAnswerState  } from "./types"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -198,6 +200,29 @@ export default function Modal(props: ModalProps) {
                             }
                         }
 
+                        case "image": {
+                            const {
+                                canvas,
+                                disabled: oldDisabled
+                            } = states[key] as CanvasAnswerState
+
+                            const disabled  = disable?.(states) ?? false
+
+                            if (disabled !== oldDisabled)
+                                setStates({
+                                    ...states,
+                                    [key]: {
+                                        disabled,
+                                        canvas,
+                                        type: "image",
+                                    }
+                                })
+
+                            return <div key       = {key}
+                                        className = {styles.canvasContainer}
+                                        ref       = {ref => ref?.appendChild(canvas)} />
+                        }
+
                         default:
                             return null
                     }
@@ -251,6 +276,27 @@ export default function Modal(props: ModalProps) {
                         disabled: false,
                         changed:  false
                     }
+
+                    break
+                }
+
+                case "image": {
+                    const { width, height, onCanvasCreated } = answer
+
+                    const canvas = document.createElement("canvas")
+
+                    canvas.width     = width  ?? DEFAULT_CANVAS_WIDTH
+                    canvas.height    = height ?? DEFAULT_CANVAS_HEIGHT
+                    canvas.className = styles.canvas
+                    canvas.innerHTML = "Canvas isn't supported"
+
+                    states[key] = {
+                        canvas,
+                        type:     "image",
+                        disabled: false
+                    }
+
+                    onCanvasCreated?.(canvas)
 
                     break
                 }
