@@ -9,6 +9,8 @@ import { normalize, join, dirname } from "path"
 import { Logger                   } from "winston"
 import { deepAssign               } from "./util/object"
 
+import "reflect-metadata"
+
 const OPORT     = z.number().int().nonnegative().max(65535).optional()
 const OSTRING   = z.ostring()
 const NSTRING   = z.string().nullish()
@@ -111,7 +113,36 @@ const CONFIG_JSON_SCHEMA = z.object({
     }).strict().optional(),
 })
 
-export type ConfigJson = z.infer<typeof CONFIG_JSON_SCHEMA>
+export type ConfigJson  = z.infer<typeof CONFIG_JSON_SCHEMA>
+export type ConfigState = {
+    [key: string]: {
+        path:  string
+        value: any
+    }
+}
+
+export type SchemaAccessors = SchemaAccessor[]
+
+export type SchemaAccessor = {
+    path: string
+    key:  keyof Config
+}
+
+export const SCHEMA_KEY = "schema"
+
+export function Schema(path: string) {
+    return (target: Object, key: keyof Config, descriptor: PropertyDescriptor) => {
+        if (!Reflect.hasMetadata(SCHEMA_KEY, target))
+            Reflect.defineMetadata(SCHEMA_KEY, [], target)
+
+        const accessors = Reflect.getMetadata(SCHEMA_KEY, target) as SchemaAccessors
+
+        accessors.push({
+            path,
+            key
+        })
+    }
+}
 
 export default class Config {
     static readonly POMS_PATH                            = dirname(dirname(__dirname)) // this file is in /server/src/
@@ -342,14 +373,24 @@ export default class Config {
         }
     }
 
+    get state(): ConfigState {
+        const accessors = Reflect.getMetadata(SCHEMA_KEY, this) as SchemaAccessors
+        const entries   = accessors.map(({ path, key }) => [path, this[key]])
+
+        return Object.fromEntries(entries)
+    }
+
+    @Schema("http.proxied")
     get httpProxied(): boolean {
         return this.read.http?.proxied ?? Config.DEFAULT_HTTP_PROXIED
     }
 
+    @Schema("http.apiPrefix")
     get httpApiPrefix(): string {
         return this.read.http?.apiPrefix ?? Config.DEFAULT_HTTP_API_PREFIX
     }
 
+    @Schema("http.host")
     get httpHost(): string | null {
         const read = this.read.http?.host
 
@@ -357,10 +398,12 @@ export default class Config {
                                   : read
     }
 
+    @Schema("http.port")
     get httpPort(): number {
         return this.read.http?.port ?? Config.DEFAULT_HTTP_PORT
     }
 
+    @Schema("http.socketPath")
     get httpSocketPath(): string | null {
         const read = this.read.http?.socketPath
 
@@ -368,18 +411,22 @@ export default class Config {
                                   : read
     }
 
+    @Schema("http.serveStatic")
     get httpServeStatic(): boolean {
         return this.read.http?.serveStatic ?? Config.DEFAULT_HTTP_SERVE_STATIC
     }
 
+    @Schema("http.staticPath")
     get httpStaticPath(): string {   
         return this.read.http?.staticPath ?? Config.DEFAULT_HTTP_STATIC_PATH
     }
 
+    @Schema("http.error404Path")
     get httpError404Path(): string {
         return this.read.http?.error404Path ?? Config.DEFAULT_HTTP_ERROR_404_PATH
     }
 
+    @Schema("http.error500Path")
     get httpError500Path(): string {
         return this.read.http?.error500Path ?? Config.DEFAULT_HTTP_ERROR_500_PATH
     }
@@ -403,18 +450,22 @@ export default class Config {
         return `http://${host}:${port}/`
     }
 
+    @Schema("ws.prefix")
     get wsPrefix(): string {
         return this.read.ws?.prefix ?? Config.DEFAULT_WS_PREFXI
     }
 
+    @Schema("mysql.host")
     get mysqlHost(): string {
         return this.read.mysql?.host ?? Config.DEFAULT_MYSQL_HOST
     }
 
+    @Schema("mysql.port")
     get mysqlPort(): number {
         return this.read.mysql?.port ?? Config.DEFAULT_MYSQL_PORT
     }
 
+    @Schema("mysql.socketPath")
     get mysqlSocketPath(): string | null {
         const read = this.read.mysql.socketPath
 
@@ -422,6 +473,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mysql.login")
     get mysqlLogin(): string | null {
         const read = this.read.mysql?.login
 
@@ -429,6 +481,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mysql.password")
     get mysqlPassword(): string | null {
         const read = this.read.mysql?.password
 
@@ -436,6 +489,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mysql.init.login")
     get mysqlInitLogin(): string | null {
         const read = this.read.mysql?.init?.login
 
@@ -443,6 +497,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mysql.initPassword")
     get mysqlInitPassword(): string | null {
         const read = this.read.mysql?.init?.password
 
@@ -450,6 +505,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mysql.serve.login")
     get mysqlServeLogin(): string | null {
         const read = this.read.mysql?.serve?.login
 
@@ -457,6 +513,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mysql.serve.password")
     get mysqlServePassword(): string | null {
         const read = this.read.mysql?.serve?.password
 
@@ -464,6 +521,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mysql.database")
     get mysqlDatabase(): string {
         return this.read.mysql?.database ?? Config.DEFAULT_MYSQL_DATABASE
     }
@@ -490,22 +548,27 @@ export default class Config {
             && this.mysqlServePassword != null
     }
 
+    @Schema("mysql.connectionLimit")
     get mysqlConnectionLimit(): number {
         return this.read.mysql.connectionLimit ?? Config.DEFAULT_MYSQL_CONNECTION_LIMIT
     }
 
+    @Schema("mysql.admin.create")
     get logicAdminCreate(): boolean {
         return this.read.logic?.admin?.create ?? Config.DEFAULT_LOGIC_ADMIN_CREATE
     }
 
+    @Schema("mysql.admin.login")
     get logicAdminLogin(): string {
         return this.read.logic?.admin?.login ?? Config.DEFAULT_LOGIC_ADMIN_LOGIN
     }
 
+    @Schema("mysql.admin.password")
     get logicAdminPassword(): string { 
         return this.read.logic?.admin?.password ?? Config.DEFAULT_LOGIC_ADMIN_PASSWORD
     }
 
+    @Schema("mysql.admin.name")
     get logicAdminName(): string | null {
         const read = this.read.logic?.admin?.name
 
@@ -513,46 +576,57 @@ export default class Config {
                                   : read
     }
 
+    @Schema("logic.aTokenLifeTime")
     get logicATokenLifetime(): number {
         return this.read.logic?.aTokenLifetime ?? Config.DEFAULT_LOGIC_A_TOKEN_LIFETIME
     }
 
+    @Schema("logic.rTokenLifeTime")
     get logicRTokenLifetime(): number {
         return this.read.logic?.rTokenLifetime ?? Config.DEFAULT_LOGIC_R_TOKEN_LIFETIME
     }
 
+    @Schema("logic.maxTokens")
     get logicMaxTokens(): number {
         return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_TOKENS
     }
 
+    @Schema("logic.maxNicknames")
     get logicMaxNicknames(): number {
         return this.read.logic?.maxNicknames ?? Config.DEFAULT_LOGIC_MAX_NICKNAMES
     }
 
+    @Schema("logic.static.build")
     get logicStaticBuild(): boolean {
         return this.read.logic?.static?.build ?? Config.DEFAULT_LOGIC_STAITC_BUILD
     }
 
+    @Schema("logic.static.buildPath")
     get logicStaticBuildPath(): string {
         return this.read.logic?.static?.buildPath ?? Config.DEFAULT_LOGIC_STAITC_BUILD_PATH
     }
 
+    @Schema("logic.static.forceBuild")
     get logicStaticForceBuild(): boolean {
         return this.read.logic?.static?.forceBuild ?? Config.DEFAULT_LOGIC_STAITC_FORCE_BUILD
     }
 
+    @Schema("logic.openBrowser")
     get logicOpenBrowser(): boolean {
         return this.read.logic?.openBrowser ?? Config.DEFAULT_LOGIC_OPEN_BROWSER
     }
 
+    @Schema("logic.allowAnonymousAccess")
     get logicAllowAnonymousAccess(): boolean {
         return this.read.logic?.allowAnonymousAccess ?? Config.DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS
     }
 
+    @Schema("logic.authDelay")
     get logicAuthDelay(): number {
         return this.read.logic?.authDelay ?? Config.DEFAULT_LOGIC_AUTH_DURATION
     }
 
+    @Schema("logic.noAuthDelayInDev")
     get logicNoAuthDelayInDev(): boolean {
         return this.read.logic?.noAuthDelayInDev ?? Config.DEFAULT_LOGIC_NO_AUTH_DELAY_IN_DEV
     }
@@ -562,6 +636,7 @@ export default class Config {
             || !this.logicNoAuthDelayInDev
     }
 
+    @Schema("rcon.enable")
     get rconEnable(): boolean {
         return this.read.rcon?.enable ?? Config.DEFAULT_RCON_ENABLE
     }
@@ -570,10 +645,12 @@ export default class Config {
         return `${this.rconHost}:${this.rconPort}`
     }
 
+    @Schema("rcon.host")
     get rconHost(): string {
         return this.read.rcon?.host ?? this.mcHost
     }
 
+    @Schema("rcon.port")
     get rconPort(): number {
         return this.read.rcon?.port ?? Config.DEFAULT_RCON_PORT
     }
@@ -583,6 +660,7 @@ export default class Config {
             && this.rconPassword != null
     }
 
+    @Schema("rcon.password")
     get rconPassword(): string | null {
         const read = this.read.rcon?.password
 
@@ -590,6 +668,7 @@ export default class Config {
                                   : read
     }
 
+    @Schema("mc.publicAddress")
     get mcPublicAddress(): string | null {
         const read = this.read.mc?.publicAddress
 
@@ -601,14 +680,17 @@ export default class Config {
         return `${this.mcHost}:${this.mcPort}`
     }
 
+    @Schema("mc.host")
     get mcHost(): string {
         return this.read.mc?.host ?? Config.DEFAULT_MC_HOST
     }
 
+    @Schema("mc.port")
     get mcPort(): number {
         return this.read.mc?.port ?? Config.DEFAULT_MC_PORT
     }
 
+    @Schema("mc.statusLifetime")
     get mcStatusLifetime(): number {
         return this.read.mc?.statusLifetime ?? Config.DEFAULT_MC_STATUS_LIFETIME
     }

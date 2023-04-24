@@ -39,6 +39,7 @@
     "mysql2": "^3.2.0",
     "open": "^8.4.2",
     "parse-duration": "^1.0.3",
+    "reflect-metadata": "^0.1.13",
     "string-placeholder": "^1.0.2",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.1.2",
