@@ -37,7 +37,7 @@ export default function UserIcon(props: UserIconProps) {
             changing && <Modal header="Icon Changing">
                 {{
                     image: {
-                        type:      "image",
+                        type:      "canvas",
                         onCanvasCreated: onCanvasSet
                     },
 

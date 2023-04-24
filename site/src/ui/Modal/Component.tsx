@@ -5,7 +5,7 @@ import FormErrorText                                                  from "ui/F
 import CheckBox                                                       from "ui/CheckBox/Component"
 import styles                                                         from "./styles.module.css"
 
-import { useState                                                   } from "react"
+import { useState, useEffect                                        } from "react"
 import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH                } from "./constants"
 import { ModalProps,        AnswerStates,        InputAnswerState,
          ButtonAnswerState, CheckBoxAnswerState, CanvasAnswerState  } from "./types"
@@ -19,6 +19,13 @@ export default function Modal(props: ModalProps) {
 
     const [states, setStates ] = useState(makeStates())
     const [error,  setError  ] = useState(undefined as string | undefined)
+
+    useEffect(() => () => {
+        for (const state of Object.values(states))
+            if (state.type === "canvas")
+                state.canvas.remove()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return <div className={styles.container}>
         <Dim />
@@ -200,7 +207,7 @@ export default function Modal(props: ModalProps) {
                             }
                         }
 
-                        case "image": {
+                        case "canvas": {
                             const {
                                 canvas,
                                 disabled: oldDisabled
@@ -214,7 +221,7 @@ export default function Modal(props: ModalProps) {
                                     [key]: {
                                         disabled,
                                         canvas,
-                                        type: "image",
+                                        type: "canvas",
                                     }
                                 })
 
@@ -280,7 +287,7 @@ export default function Modal(props: ModalProps) {
                     break
                 }
 
-                case "image": {
+                case "canvas": {
                     const { width, height, onCanvasCreated } = answer
 
                     const canvas = document.createElement("canvas")
@@ -292,7 +299,7 @@ export default function Modal(props: ModalProps) {
 
                     states[key] = {
                         canvas,
-                        type:     "image",
+                        type:     "canvas",
                         disabled: false
                     }
 

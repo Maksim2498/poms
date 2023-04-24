@@ -47,7 +47,7 @@ export interface CheckBoxAnswer extends AnswerBase {
 }
 
 export interface CanvasAnswer extends AnswerBase {
-    type:             "image"
+    type:             "canvas"
     width?:           number
     height?:          number
     onCanvasCreated?: OnCanvasCreated
@@ -92,7 +92,7 @@ export interface CheckBoxAnswerState extends AnswerStateBase {
 }
 
 export interface CanvasAnswerState extends AnswerStateBase {
-    type:   "image"
+    type:   "canvas"
     canvas: HTMLCanvasElement
 }
 
@@ -100,4 +100,4 @@ export interface CanvasAnswerState extends AnswerStateBase {
 export type AnswerType = "button"
                        | "input"
                        | "check-box"
-                       | "image"
+                       | "canvas"
