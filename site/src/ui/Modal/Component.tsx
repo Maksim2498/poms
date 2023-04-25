@@ -5,7 +5,7 @@ import FormErrorText                                                  from "ui/F
 import CheckBox                                                       from "ui/CheckBox/Component"
 import styles                                                         from "./styles.module.css"
 
-import { useState, useEffect                                        } from "react"
+import { useState                                                   } from "react"
 import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH                } from "./constants"
 import { ModalProps,        AnswerStates,        InputAnswerState,
          ButtonAnswerState, CheckBoxAnswerState, CanvasAnswerState  } from "./types"
