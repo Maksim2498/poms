@@ -6,9 +6,9 @@ import CheckBox                                                         from "ui
 import FileInput                                                        from "ui/FileInput/Component"
 import styles                                                           from "./styles.module.css"
 
-import { useState                                                     } from "react"
-import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH                  } from "./constants"
+import { useState, useEffect                                          } from "react"
 import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState } from "./types"
+import { makeState                                                    } from "./util"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -20,6 +20,9 @@ export default function Modal(props: ModalProps) {
     const [states, setStates ] = useState(makeStates())
     const [error,  setError  ] = useState(undefined as string | undefined)
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(updateStates, [answers])
+
     return <div className={styles.container}>
         <Dim />
         <div className={styles.modal}>
@@ -27,7 +30,7 @@ export default function Modal(props: ModalProps) {
             {question && <div className={styles.question}>{question}</div>}
             <div className={styles.answers}>
                 {answers && Object.entries(answers).map(([key, answer]) => {
-                    if (!answer)
+                    if (answer == null || !(key in states))
                         return null
 
                     const { type, disable, autoFocus } = answer
@@ -175,7 +178,7 @@ export default function Modal(props: ModalProps) {
                         case "file": {
                             const { label, accept, onChange } = answer
 
-                            return <div className    = {styles.file}>
+                            return <div key={key} className={styles.file}>
                                 <FileInput accept    = {accept}
                                            disabled  = {disabled}
                                            autoFocus = {autoFocus}
@@ -228,78 +231,27 @@ export default function Modal(props: ModalProps) {
             if (!answer)
                 continue
 
-            switch (answer.type) {
-                case "button": {
-                    states[key] = {
-                        type:     "button",
-                        disabled: false,
-                        loading:  false
-                    }
-
-                    break
-                }
-
-                case "text": {
-                    const value = answer.value ?? ""
-
-                    states[key] = {
-                        type:     "text",
-                        disabled: false,
-                        value:    value,
-                        changed:  false,
-                        invalid:  answer.validate?.(value)
-                    }
-
-                    break
-                }
-
-                case "check-box": {
-                    const checked = answer.checked ?? false
-
-                    states[key] = {
-                        checked,
-                        type:     "check-box",
-                        disabled: false,
-                        changed:  false
-                    }
-
-                    break
-                }
-
-                case "file": {
-                    states[key] = {
-                        type:     "file",
-                        files:    null,
-                        disabled: false,
-                        changed:  false
-                    }
-
-                    break
-                }
-
-                case "canvas": {
-                    const { width, height, onCanvasCreated } = answer
-
-                    const canvas = document.createElement("canvas")
-
-                    canvas.width     = width  ?? DEFAULT_CANVAS_WIDTH
-                    canvas.height    = height ?? DEFAULT_CANVAS_HEIGHT
-                    canvas.className = styles.canvas
-                    canvas.innerHTML = "Canvas isn't supported"
-
-                    states[key] = {
-                        canvas,
-                        type:     "canvas",
-                        disabled: false
-                    }
-
-                    onCanvasCreated?.(canvas)
-
-                    break
-                }
-            }
+            states[key] = makeState(answer)
         }
 
         return states
+    }
+
+    function updateStates() {
+        console.log("Udpate")
+
+        if (!answers)
+            return
+
+        const newStates = { ...states }
+
+        for (const [key, answer] of Object.entries(answers)) {
+            if (!answer)
+                continue
+
+            newStates[key] = makeState(answer)
+        }
+
+        setStates(newStates)
     }
 }
