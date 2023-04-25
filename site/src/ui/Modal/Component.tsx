@@ -209,7 +209,14 @@ export default function Modal(props: ModalProps) {
                             return <div key       = {key}
                                         autoFocus = {autoFocus}
                                         className = {styles.canvasContainer}
-                                        ref       = {ref => ref?.appendChild(canvas)} />
+                                        ref       = {ref} />
+
+                            function ref(ref: HTMLDivElement | null) {
+                                if (!ref || ref.childElementCount > 0)
+                                    return
+
+                                ref.appendChild(canvas)
+                            }
                         }
 
                         default:
