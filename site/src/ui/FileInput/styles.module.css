@@ -1,0 +1,22 @@
+.input {
+    display: none
+}
+
+.label {
+    cursor: pointer;
+
+    border-radius: .4rem;
+    padding: .5rem;
+
+    transition: background-color .08s;
+
+    background-color: #484848
+}
+
+.input:enabled ~ .label:hover {
+    background-color: #555
+}
+
+.input:not([disabled]) ~ .label:active {
+    background-color: #444
+}
