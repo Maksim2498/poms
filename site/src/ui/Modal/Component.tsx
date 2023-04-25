@@ -88,7 +88,7 @@ export default function Modal(props: ModalProps) {
                             }
                         }
 
-                        case "input": {
+                        case "text": {
                             const {
                                 placeholder,
                                 autoComplete,
@@ -116,7 +116,7 @@ export default function Modal(props: ModalProps) {
                                         disabled,
                                         changed,
                                         invalid,
-                                        type:  "input",
+                                        type:  "text",
                                         value: oldValue
                                     }
                                 })
@@ -142,7 +142,7 @@ export default function Modal(props: ModalProps) {
                                     [key]: {
                                         value,
                                         disabled,
-                                        type:    "input",
+                                        type:    "text",
                                         changed: true,
                                         invalid: makeInvalid()
                                     }
@@ -253,11 +253,11 @@ export default function Modal(props: ModalProps) {
                     break
                 }
 
-                case "input": {
+                case "text": {
                     const value = answer.value ?? ""
 
                     states[key] = {
-                        type:     "input",
+                        type:     "text",
                         disabled: false,
                         value:    value,
                         changed:  false,

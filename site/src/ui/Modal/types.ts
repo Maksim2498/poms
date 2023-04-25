@@ -30,7 +30,7 @@ export interface ButtonAnswer extends AnswerBase {
 }
 
 export interface InputAnswer extends AnswerBase {
-    type:                   "input"
+    type:                   "text"
     placeholder?:           string
     autoComplete?:          string
     inputType?:             InputType
@@ -79,7 +79,7 @@ export interface ButtonAnswerState extends AnswerStateBase {
 }
 
 export interface InputAnswerState extends AnswerStateBase {
-    type:     "input"
+    type:     "text"
     value:    string
     changed:  boolean
     invalid?: string | undefined
@@ -98,6 +98,6 @@ export interface CanvasAnswerState extends AnswerStateBase {
 
 
 export type AnswerType = "button"
-                       | "input"
+                       | "text"
                        | "check-box"
                        | "canvas"

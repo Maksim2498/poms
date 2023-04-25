@@ -109,7 +109,7 @@ export default function Profile(props: ProfileProps) {
             resetingPassword && <Modal header="Password Resetting">
                 {{
                     password: {
-                        type:         "input",
+                        type:         "text",
                         inputType:    "password",
                         placeholder:  "New password",
                         autoComplete: "new-password",

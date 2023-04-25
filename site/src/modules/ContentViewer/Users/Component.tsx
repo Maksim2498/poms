@@ -93,14 +93,14 @@ export default function Users(props: UsersProps) {
             creating && <Modal header="User Creation">
                 {{
                     login: {
-                        type:         "input",
+                        type:         "text",
                         placeholder:  "Login",
                         validate:     User.validateNormedLogin.bind(User),
                         disable:      disableCreationItem
                     },
 
                     password: {
-                        type:         "input",
+                        type:         "text",
                         placeholder:  "Password",
                         inputType:    "password",
                         autoComplete: "new-password",
@@ -109,7 +109,7 @@ export default function Users(props: UsersProps) {
                     },
 
                     name: {
-                        type:         "input",
+                        type:         "text",
                         placeholder:  "Name",
                         validate:     User.validateName.bind(User),
                         disable:      disableCreationItem

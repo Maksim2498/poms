@@ -49,7 +49,7 @@ export default function UserNicknames(props: UserNicknamesProps) {
             adding && <Modal header="Nickname Adding">
                 {{
                     nickname: {
-                        type:        "input",
+                        type:        "text",
                         placeholder: "Nickname",
                         format:      nickname => nickname.trim(),
                         validate:    validateNickname
