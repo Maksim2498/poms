@@ -55,12 +55,15 @@ export default function Modal(props: ModalProps) {
 
                             async function rawOnClick() {
                                 try {
-                                    const result = onClick?.(states)
+                                    let result = onClick?.(states)
 
                                     if (result instanceof Promise) {
                                         setLoading(true)
-                                        await result
+                                        result = await result
                                     }
+
+                                    if (result != null)
+                                        setStates(result)
                                 } catch (error) {
                                     setError(error instanceof Error ? error.message : String(error))
                                 } finally {
@@ -116,7 +119,7 @@ export default function Modal(props: ModalProps) {
                                 if (format)
                                     value = format(value)
 
-                                const newStates = {
+                                let newStates = {
                                     ...states,
                                     [key]: {
                                         value,
@@ -127,8 +130,8 @@ export default function Modal(props: ModalProps) {
                                     }
                                 } as const
 
+                                newStates = onChange?.(value, newStates) ?? newStates
                                 setStates(newStates)
-                                onChange?.(value, newStates)
 
                                 function makeInvalid() {
                                     try {
@@ -154,7 +157,7 @@ export default function Modal(props: ModalProps) {
                             </div>
 
                             function rawOnChange(checked: boolean) {
-                                const newStates = {
+                                let newStates = {
                                     ...states,
                                     [key]: {
                                         checked,
@@ -164,8 +167,8 @@ export default function Modal(props: ModalProps) {
                                     }
                                 } as const
 
+                                newStates = onChange?.(checked, newStates) ?? newStates
                                 setStates(newStates)
-                                onChange?.(checked, newStates)
                             }
                         }
 
@@ -182,7 +185,7 @@ export default function Modal(props: ModalProps) {
                             </div>
 
                             function rawOnChange(files: FileList | null) {
-                                const newStates = {
+                                let newStates = {
                                     ...states,
                                     [key]: {
                                         files,
@@ -192,8 +195,8 @@ export default function Modal(props: ModalProps) {
                                     }
                                 } as const
 
+                                newStates = onChange?.(files, newStates) ?? newStates
                                 setStates(newStates)
-                                onChange?.(files, newStates)
                             }
                         }
 

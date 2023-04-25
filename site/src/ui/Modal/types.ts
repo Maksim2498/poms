@@ -64,10 +64,10 @@ export interface CanvasAnswer extends AnswerBase {
 }
 
 export type ValidateInput          = (input: string) => string | undefined
-export type OnButtonAnswerClick    = (states: AnswerStates) => void | Promise<void>
-export type OnTextAnswerChange     = (input: string, states: AnswerStates) => void
-export type OnCheckBoxAnswerChange = (checked: boolean, states: AnswerStates) => void
-export type OnFileAnswerChange     = (files: FileList | null, states: AnswerStates) => void
+export type OnButtonAnswerClick    = (states: AnswerStates) => AnswerStates | void | Promise<AnswerStates | void>
+export type OnTextAnswerChange     = (input: string, states: AnswerStates) => AnswerStates | void
+export type OnCheckBoxAnswerChange = (checked: boolean, states: AnswerStates) => AnswerStates | void
+export type OnFileAnswerChange     = (files: FileList | null, states: AnswerStates) => AnswerStates | void
 export type FormatInput            = (input: string) => string
 export type DisableAnswer          = (values: AnswerStates) => boolean
 export type OnCanvasCreated        = (canvas: HTMLCanvasElement) => void
