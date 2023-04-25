@@ -20,7 +20,7 @@ export default function FileInput(props: FileInputProps) {
 
     const id = Math.random().toFixed()
 
-    return <div className={styles.container}>
+    return <div className={disabled ? styles.disabledContainer : styles.container}>
         <input className   = {styles.input}
                id          = {id}
                type        = "file"
@@ -31,8 +31,7 @@ export default function FileInput(props: FileInputProps) {
                accept      = {accept} />
 
         {
-            label != null && <label htmlFor   = {id}
-                            className = {styles.label}>
+            label != null && <label htmlFor= {id}>
                 {label}
             </label>
         }
