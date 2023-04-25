@@ -3,8 +3,8 @@ export interface FileInputProps {
     autoFocus?: boolean
     disabled?:  boolean
     multiple?:  boolean
-    onChange?:  OnFileInputChanged
+    onChange?:  OnFileInputChange
     children?:  string
 }
 
-export type OnFileInputChanged = (newFiles: FileList | null) => void
+export type OnFileInputChange = (newFiles: FileList | null) => void
