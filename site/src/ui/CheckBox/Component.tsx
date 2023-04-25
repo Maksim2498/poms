@@ -14,7 +14,7 @@ export default function CheckBox(props: CheckBoxProps) {
     } = props
 
     return <div className={styles.checkBox}>
-        {label != null && <label>{label}</label>}
+        {label && <label>{label}</label>}
         <input checked      = {checked}
                onChange     = {rawOnChange}
                disabled     = {disabled}
