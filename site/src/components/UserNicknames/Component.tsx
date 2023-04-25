@@ -5,7 +5,7 @@ import MaxUserNicknamesContext             from "./Context"
 import styles                              from "./styles.module.css"
 
 import { useState, useContext, useEffect } from "react"
-import { InputAnswerState                } from "ui/Modal/types"
+import { TextAnswerState                } from "ui/Modal/types"
 import { UserNicknamesProps              } from "./types"
 
 export default function UserNicknames(props: UserNicknamesProps) {
@@ -66,8 +66,8 @@ export default function UserNicknames(props: UserNicknamesProps) {
                         type:        "button",
                         color:       "green",
                         text:        "Add",
-                        disable:     states => (states.nickname as InputAnswerState).invalid != null,
-                        onClick:     states => onAdd((states.nickname as InputAnswerState).value)
+                        disable:     states => (states.nickname as TextAnswerState).invalid != null,
+                        onClick:     states => onAdd((states.nickname as TextAnswerState).value)
                     }
                 }}
             </Modal>

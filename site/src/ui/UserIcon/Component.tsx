@@ -41,6 +41,11 @@ export default function UserIcon(props: UserIconProps) {
                         onCanvasCreated: onCanvasSet
                     },
 
+                    file: {
+                        type:      "file",
+                        label:     "Select icon file"
+                    },
+
                     cancel: {
                         type:      "button",
                         text:      "Cancel",

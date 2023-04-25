@@ -1,17 +1,17 @@
-import User                                                                       from "logic/User"
-import useAsync                                                                   from "hooks/useAsync"
-import AuthControllerContext                                                      from "App/AuthControllerContext"
-import UserContext                                                                from "App/UserContext"
-import LoadingContent                                                             from "modules/ContentViewer/LoadingContent/Component"
-import ErrorContent                                                               from "modules/ContentViewer/ErrorContent/Component"
-import UserCard                                                                   from "ui/UserCard/Component"
-import Button                                                                     from "ui/Button/Component"
-import Modal                                                                      from "ui/Modal/Component"
-import styles                                                                     from "./styles.module.css"
+import User                                                                      from "logic/User"
+import useAsync                                                                  from "hooks/useAsync"
+import AuthControllerContext                                                     from "App/AuthControllerContext"
+import UserContext                                                               from "App/UserContext"
+import LoadingContent                                                            from "modules/ContentViewer/LoadingContent/Component"
+import ErrorContent                                                              from "modules/ContentViewer/ErrorContent/Component"
+import UserCard                                                                  from "ui/UserCard/Component"
+import Button                                                                    from "ui/Button/Component"
+import Modal                                                                     from "ui/Modal/Component"
+import styles                                                                    from "./styles.module.css"
 
-import { useContext, useEffect, useState                                        } from "react"
-import { ButtonAnswerState, InputAnswerState, AnswerStates, CheckBoxAnswerState } from "ui/Modal/types"
-import { UsersProps                                                             } from "./types"
+import { useContext, useEffect, useState                                       } from "react"
+import { ButtonAnswerState, TextAnswerState, AnswerStates, CheckBoxAnswerState } from "ui/Modal/types"
+import { UsersProps                                                            } from "./types"
 
 export default function Users(props: UsersProps) {
     const { onUserClick, editMode     } = props
@@ -150,9 +150,9 @@ export default function Users(props: UsersProps) {
     }
 
     function disableCreateItem(states: AnswerStates) {
-        return (states.login    as InputAnswerState).invalid != null
-            || (states.password as InputAnswerState).invalid != null
-            || (states.name     as InputAnswerState).invalid != null
+        return (states.login    as TextAnswerState).invalid != null
+            || (states.password as TextAnswerState).invalid != null
+            || (states.name     as TextAnswerState).invalid != null
     }
 
     function onCreate() {
@@ -164,9 +164,9 @@ export default function Users(props: UsersProps) {
         if (!users)
             return
 
-        const { value:   login    } = states.login    as InputAnswerState
-        const { value:   password } = states.password as InputAnswerState
-        const { value:   name     } = states.name     as InputAnswerState
+        const { value:   login    } = states.login    as TextAnswerState
+        const { value:   password } = states.password as TextAnswerState
+        const { value:   name     } = states.name     as TextAnswerState
         const { checked: isAdmin  } = states.isAdmin  as CheckBoxAnswerState
 
         const newUser = await User.register({ authController, login, password, name, isAdmin })

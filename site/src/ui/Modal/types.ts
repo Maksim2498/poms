@@ -12,8 +12,9 @@ export interface Answers {
 }
 
 export type Answer = ButtonAnswer
-                   | InputAnswer
+                   | TextAnswer
                    | CheckBoxAnswer
+                   | FileAnswer
                    | CanvasAnswer
 
 export interface AnswerBase {
@@ -26,10 +27,10 @@ export interface ButtonAnswer extends AnswerBase {
     type:     "button"
     text:     string
     color?:   ButtonColor
-    onClick?: OnAnswerButtonClick
+    onClick?: OnButtonAnswerClick
 }
 
-export interface InputAnswer extends AnswerBase {
+export interface TextAnswer extends AnswerBase {
     type:                   "text"
     placeholder?:           string
     autoComplete?:          string
@@ -38,12 +39,21 @@ export interface InputAnswer extends AnswerBase {
     value?:                 string
     format?:                FormatInput
     showErrorIfNotChanged?: boolean
+    onChange?:              OnTextAnswerChange
 }
 
 export interface CheckBoxAnswer extends AnswerBase {
-    type:     "check-box"
-    checked?: boolean
-    label?:   string
+    type:      "check-box"
+    checked?:  boolean
+    label?:    string
+    onChange?: OnCheckBoxAnswerChange
+}
+
+export interface FileAnswer extends AnswerBase {
+    type:      "file"
+    label?:    string
+    accept?:   string
+    onChange?: OnFileAnswerChange
 }
 
 export interface CanvasAnswer extends AnswerBase {
@@ -53,19 +63,23 @@ export interface CanvasAnswer extends AnswerBase {
     onCanvasCreated?: OnCanvasCreated
 }
 
-export type ValidateInput       = (input: string) => string | undefined
-export type OnAnswerButtonClick = (states: AnswerStates) => void | Promise<void>
-export type FormatInput         = (input: string) => string
-export type DisableAnswer       = (values: AnswerStates) => boolean
-export type OnCanvasCreated     = (canvas: HTMLCanvasElement) => void
+export type ValidateInput          = (input: string) => string | undefined
+export type OnButtonAnswerClick    = (states: AnswerStates) => void | Promise<void>
+export type OnTextAnswerChange     = (input: string, states: AnswerStates) => void
+export type OnCheckBoxAnswerChange = (checked: boolean, states: AnswerStates) => void
+export type OnFileAnswerChange     = (files: FileList | null, states: AnswerStates) => void
+export type FormatInput            = (input: string) => string
+export type DisableAnswer          = (values: AnswerStates) => boolean
+export type OnCanvasCreated        = (canvas: HTMLCanvasElement) => void
 
 export interface AnswerStates {
     [key: string]: AnswerState
 }
 
 export type AnswerState = ButtonAnswerState
-                        | InputAnswerState
+                        | TextAnswerState
                         | CheckBoxAnswerState
+                        | FileAnswerState
                         | CanvasAnswerState
 
 export interface AnswerStateBase {
@@ -78,7 +92,7 @@ export interface ButtonAnswerState extends AnswerStateBase {
     loading: boolean
 }
 
-export interface InputAnswerState extends AnswerStateBase {
+export interface TextAnswerState extends AnswerStateBase {
     type:     "text"
     value:    string
     changed:  boolean
@@ -91,13 +105,19 @@ export interface CheckBoxAnswerState extends AnswerStateBase {
     changed: boolean
 }
 
+export interface FileAnswerState extends AnswerStateBase {
+    type:    "file"
+    changed: boolean
+    files:   FileList | null
+}
+
 export interface CanvasAnswerState extends AnswerStateBase {
     type:   "canvas"
     canvas: HTMLCanvasElement
 }
 
-
 export type AnswerType = "button"
                        | "text"
                        | "check-box"
+                       | "file"
                        | "canvas"

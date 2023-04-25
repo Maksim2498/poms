@@ -1,24 +1,24 @@
-import useAsync                                               from "hooks/useAsync"
-import User                                                   from "logic/User"
-import AuthControllerContext                                  from "App/AuthControllerContext"
-import UserContext                                            from "App/UserContext"
-import LoadingContent                                         from "modules/ContentViewer/LoadingContent/Component"
-import ErrorContent                                           from "modules/ContentViewer/ErrorContent/Component"
-import UserNicknames                                          from "components/UserNicknames/Component"
-import Button                                                 from "ui/Button/Component"
-import Modal                                                  from "ui/Modal/Component"
-import ErrorText                                              from "ui/ErrorText/Component"
-import UserTag                                                from "ui/UserTag/Component"
-import UserIsAdminCheckBox                                    from "ui/UserIsAdminCheckBox/Component"
-import UserName                                               from "ui/UserName/Component"
-import UserIcon                                               from "ui/UserIcon/Component"
-import UserOnlineIndicator                                    from "ui/UserOnlineIndicator/Component"
-import UserRegInfo                                            from "ui/UserRegInfo/Component"
-import styles                                                 from "./styles.module.css"
+import useAsync                                              from "hooks/useAsync"
+import User                                                  from "logic/User"
+import AuthControllerContext                                 from "App/AuthControllerContext"
+import UserContext                                           from "App/UserContext"
+import LoadingContent                                        from "modules/ContentViewer/LoadingContent/Component"
+import ErrorContent                                          from "modules/ContentViewer/ErrorContent/Component"
+import UserNicknames                                         from "components/UserNicknames/Component"
+import Button                                                from "ui/Button/Component"
+import Modal                                                 from "ui/Modal/Component"
+import ErrorText                                             from "ui/ErrorText/Component"
+import UserTag                                               from "ui/UserTag/Component"
+import UserIsAdminCheckBox                                   from "ui/UserIsAdminCheckBox/Component"
+import UserName                                              from "ui/UserName/Component"
+import UserIcon                                              from "ui/UserIcon/Component"
+import UserOnlineIndicator                                   from "ui/UserOnlineIndicator/Component"
+import UserRegInfo                                           from "ui/UserRegInfo/Component"
+import styles                                                from "./styles.module.css"
 
-import { useContext, useEffect, useRef, useState            } from "react"
-import { AnswerStates, ButtonAnswerState, InputAnswerState  } from "ui/Modal/types"
-import { ProfileProps                                       } from "./types"
+import { useContext, useEffect, useRef, useState           } from "react"
+import { AnswerStates, ButtonAnswerState, TextAnswerState  } from "ui/Modal/types"
+import { ProfileProps                                      } from "./types"
 
 export default function Profile(props: ProfileProps) {
     const authController                          = useContext(AuthControllerContext)
@@ -128,7 +128,7 @@ export default function Profile(props: ProfileProps) {
                         type:         "button",
                         text:         "Change",
                         color:        "green",
-                        disable:      states => (states.password as InputAnswerState).invalid != null,
+                        disable:      states => (states.password as TextAnswerState).invalid != null,
                         onClick:      onPasswordReset
                     }
                 }}
@@ -193,7 +193,7 @@ export default function Profile(props: ProfileProps) {
             return 
 
         const login    = user.login
-        const password = (states.password as InputAnswerState).value
+        const password = (states.password as TextAnswerState).value
 
         await User.setPassword({
             authController,

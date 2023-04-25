@@ -1,14 +1,14 @@
-import Dim                                                            from "ui/Dim/Component"
-import Button                                                         from "ui/Button/Component"
-import Input                                                          from "ui/Input/Component"
-import FormErrorText                                                  from "ui/FormErrorText/Component"
-import CheckBox                                                       from "ui/CheckBox/Component"
-import styles                                                         from "./styles.module.css"
+import Dim                                                              from "ui/Dim/Component"
+import Button                                                           from "ui/Button/Component"
+import Input                                                            from "ui/Input/Component"
+import FormErrorText                                                    from "ui/FormErrorText/Component"
+import CheckBox                                                         from "ui/CheckBox/Component"
+import FileInput                                                        from "ui/FileInput/Component"
+import styles                                                           from "./styles.module.css"
 
-import { useState                                                   } from "react"
-import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH                } from "./constants"
-import { ModalProps,        AnswerStates,        InputAnswerState,
-         ButtonAnswerState, CheckBoxAnswerState, CanvasAnswerState  } from "./types"
+import { useState                                                     } from "react"
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH                  } from "./constants"
+import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState } from "./types"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -31,27 +31,19 @@ export default function Modal(props: ModalProps) {
                         return null
 
                     const { type, disable, autoFocus } = answer
+                    const state                        = states[key]
+                    const { disabled: oldDisabled    } = state
+                    const disabled                     = disable?.(states) ?? false
+
+                    if (disabled !== oldDisabled)
+                        setStates({
+                            ...states,
+                            [key]: { ...state, disabled }
+                        })
 
                     switch (type) {
                         case "button": {
                             const { text, color, onClick } = answer
-
-                            const {
-                                loading,
-                                disabled: oldDisabled
-                            } = states[key] as ButtonAnswerState
-
-                            const disabled = disable?.(states) ?? false
-
-                            if (disabled !== oldDisabled)
-                                setStates({
-                                    ...states,
-                                    [key]: {
-                                        loading,
-                                        disabled,
-                                        type: "button"
-                                    }
-                                })
 
                             return <Button key       = {key}
                                            color     = {color}
@@ -96,30 +88,17 @@ export default function Modal(props: ModalProps) {
                                 value,
                                 inputType,
                                 showErrorIfNotChanged,
-                                format
+                                format,
+                                onChange
                             } = answer
 
                             const {
                                 changed,
                                 invalid,
-                                value:    oldValue,
-                                disabled: oldDisabled
-                            } = states[key] as InputAnswerState
+                            } = state as TextAnswerState
 
                             const errorText = changed || showErrorIfNotChanged ? invalid : undefined
                             const disabled  = disable?.(states) ?? false
-
-                            if (disabled !== oldDisabled)
-                                setStates({
-                                    ...states,
-                                    [key]: {
-                                        disabled,
-                                        changed,
-                                        invalid,
-                                        type:  "text",
-                                        value: oldValue
-                                    }
-                                })
 
                             return <div className={styles.input} key={key}>
                                 <Input placeholder  = {placeholder}
@@ -128,16 +107,16 @@ export default function Modal(props: ModalProps) {
                                        type         = {inputType}
                                        disabled     = {disabled}
                                        autoComplete = {autoComplete}
-                                       onChange     = {onChange} />
+                                       onChange     = {rawOnChange} />
                                 
                                 <FormErrorText>{errorText}</FormErrorText>
                             </div>
 
-                            function onChange(value: string) {
+                            function rawOnChange(value: string) {
                                 if (format)
                                     value = format(value)
 
-                                setStates({
+                                const newStates = {
                                     ...states,
                                     [key]: {
                                         value,
@@ -146,7 +125,10 @@ export default function Modal(props: ModalProps) {
                                         changed: true,
                                         invalid: makeInvalid()
                                     }
-                                })
+                                } as const
+
+                                setStates(newStates)
+                                onChange?.(value, newStates)
 
                                 function makeInvalid() {
                                     try {
@@ -160,35 +142,19 @@ export default function Modal(props: ModalProps) {
                         }
 
                         case "check-box": {
-                            const { checked, label } = answer
-
-                            const {
-                                changed,
-                                checked:  oldChecked,
-                                disabled: oldDisabled
-                            } = states[key] as CheckBoxAnswerState
-
-                            const disabled  = disable?.(states) ?? false
-
-                            if (disabled !== oldDisabled)
-                                setStates({
-                                    ...states,
-                                    [key]: {
-                                        disabled,
-                                        changed,
-                                        type: "check-box",
-                                        checked: oldChecked
-                                    }
-                                })
+                            const { checked, label, onChange } = answer
 
                             return <div key={key} className={styles.checkBox}>
-                                <CheckBox checked={checked} onChange={onChange}>
+                                <CheckBox checked   = {checked}
+                                          onChange  = {rawOnChange}
+                                          disabled  = {disabled}
+                                          autoFocus = {autoFocus}>
                                     {label}
                                 </CheckBox>
                             </div>
 
-                            function onChange(checked: boolean) {
-                                setStates({
+                            function rawOnChange(checked: boolean) {
+                                const newStates = {
                                     ...states,
                                     [key]: {
                                         checked,
@@ -196,29 +162,46 @@ export default function Modal(props: ModalProps) {
                                         type:    "check-box",
                                         changed: true
                                     }
-                                })
+                                } as const
+
+                                setStates(newStates)
+                                onChange?.(checked, newStates)
+                            }
+                        }
+
+                        case "file": {
+                            const { label, accept, onChange } = answer
+
+                            return <div className    = {styles.file}>
+                                <FileInput accept    = {accept}
+                                           disabled  = {disabled}
+                                           autoFocus = {autoFocus}
+                                           onChange  = {rawOnChange}>
+                                    {label}
+                                </FileInput>
+                            </div>
+
+                            function rawOnChange(files: FileList | null) {
+                                const newStates = {
+                                    ...states,
+                                    [key]: {
+                                        files,
+                                        disabled,
+                                        type:    "file",
+                                        changed: true
+                                    }
+                                } as const
+
+                                setStates(newStates)
+                                onChange?.(files, newStates)
                             }
                         }
 
                         case "canvas": {
-                            const {
-                                canvas,
-                                disabled: oldDisabled
-                            } = states[key] as CanvasAnswerState
-
-                            const disabled  = disable?.(states) ?? false
-
-                            if (disabled !== oldDisabled)
-                                setStates({
-                                    ...states,
-                                    [key]: {
-                                        disabled,
-                                        canvas,
-                                        type: "canvas",
-                                    }
-                                })
+                            const { canvas } = states[key] as CanvasAnswerState
 
                             return <div key       = {key}
+                                        autoFocus = {autoFocus}
                                         className = {styles.canvasContainer}
                                         ref       = {ref => ref?.appendChild(canvas)} />
                         }
@@ -273,6 +256,17 @@ export default function Modal(props: ModalProps) {
                     states[key] = {
                         checked,
                         type:     "check-box",
+                        disabled: false,
+                        changed:  false
+                    }
+
+                    break
+                }
+
+                case "file": {
+                    states[key] = {
+                        type:     "file",
+                        files:    null,
                         disabled: false,
                         changed:  false
                     }
