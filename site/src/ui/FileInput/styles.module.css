@@ -1,3 +1,7 @@
+.container {
+    flex-grow: 1
+}
+
 .input {
     display: none
 }

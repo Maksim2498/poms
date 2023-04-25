@@ -20,7 +20,7 @@ export default function FileInput(props: FileInputProps) {
 
     const id = Math.random().toFixed()
 
-    return <div>
+    return <div className={styles.container}>
         <input className   = {styles.input}
                id          = {id}
                type        = "file"
