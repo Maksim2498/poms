@@ -33,8 +33,8 @@ is considered an error):
 | `http.socketPath`            | Path `string` or `null` | `null`                         | No       | HTTP server Unix-socket path. When used `api.port` and `api.host` is ignored       |
 | `http.serveStatic`           | `boolean`               | `true`                         | No       | If `true` HTTP server will serve static content from `http.staticPath`             |
 | `http.staticPath`            | Path `string`           | `"<SITE_PATH>/build"`          | No       | Path to static content HTTP server to serve                                        |
-| `http.error404Path`          | Path `string`           | `"<SITE_PATH>/build/404.html"` | No       | Path to 404-error page                                                             |
-| `http.error500Path`          | Path `string`           | `"<SITE_PATH>/build/500.html"` | No       | Path to 500-error page                                                             |
+| `http.error.404Path`         | Path `string`           | `"<SITE_PATH>/build/404.html"` | No       | Path to 404-error page                                                             |
+| `http.error.500Path`         | Path `string`           | `"<SITE_PATH>/build/500.html"` | No       | Path to 500-error page                                                             |
 | `ws.prefix`                  | Path `string`           | `"/ws"`                        | No       | WebSocket URL path prefix                                                          |
 | `mysql.database`             | `string`                | `"poms"`                       | No       | Name of database to use                                                            |
 | `mysql.host`                 | `string`                | `"localhost"`                  | No       | MySQL server address                                                               |
@@ -49,8 +49,8 @@ is considered an error):
 | `mysql.serve.password`       | `string` or `null`      | `null`                         | No  (2)  | MySQL serving user password                                                        |
 | `logic.admin.create`         | `boolean`               | `true`                         | No       | Create default admin account on database initialization                            |
 | `logic.admin.login`          | `string`                | `admin`                        | No       | Default admin login                                                                |
-| `logic.admin.name`           | `string` or `null`      | `Administrator`                | No       | Default admin name                                                                 |
 | `logic.admin.password`       | `string`                | `admin`                        | No       | Default admin password. Will be set only on creation                               |
+| `logic.admin.name`           | `string` or `null`      | `Administrator`                | No       | Default admin name                                                                 |
 | `logic.maxTokens`            | Unsigned `number`       | `10`                           | No       | Maximum number of tokens per user                                                  |
 | `logic.maxNicknames`         | Unsigned `number`       | `5`                            | No       | Maximum number of nicknames per user                                               |
 | `logic.static.build`         | `boolean`               | `true`                         | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |

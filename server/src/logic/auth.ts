@@ -38,7 +38,7 @@ export class DefaultAuthManager implements AuthManager {
         this.logger?.debug(`Authenticating user "${login}"...`)
 
         const info      = await this.userManager.forceGetUserInfoByCredentials(connection, login, password)
-        const maxTokens = this.config.logicMaxTokens
+        const maxTokens = this.config.read.logic.maxTokens
 
         await this.tokenManager.deleteUserExtraATokens(connection, info.id, maxTokens - 1)
 

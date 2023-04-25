@@ -284,9 +284,9 @@ export class DefaultUserManager implements UserManager {
     }
 
     async createAdmin(connection: Connection, options?: CreateAdminOptions): Promise<boolean> {
-        const login    = options?.login    ?? this.config.logicAdminLogin
-        const password = options?.password ?? this.config.logicAdminPassword
-        const name     = options?.name     ?? this.config.logicAdminName
+        const login    = options?.login    ?? this.config.read.logic.admin.login
+        const password = options?.password ?? this.config.read.logic.admin.password
+        const name     = options?.name     ?? this.config.read.logic.admin.name
         const force    = options?.force    ?? false
 
         this.logger?.debug(`Creating admin "${login}"...`)

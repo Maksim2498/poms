@@ -32,7 +32,7 @@ export class RconProxy extends    EventEmitter
 
         const { server, request, socket } = options
 
-        if (!server.config.rconAvailable)
+        if (!server.config.isRconAvailable)
             throw new Error("RCON isn't available")
 
         const rcon   = new Rcon()
@@ -127,8 +127,8 @@ export class RconProxy extends    EventEmitter
                 logger?.debug(`Connecting ${this.address} to RCON...`)
 
                 const { config } = server
-                const host       = config.rconHost
-                const port       = config.rconPort
+                const host       = config.read.rcon.host
+                const port       = config.read.rcon.port
 
                 await rcon.connect(host, port)
 
@@ -138,7 +138,7 @@ export class RconProxy extends    EventEmitter
             async function loginRcon(this: RconProxy) {
                 logger?.debug(`Logging ${this.address} in RCON...`)
 
-                const password = server.config.rconPassword
+                const password = server.config.read.rcon.password
 
                 await rcon.login(password!)
 

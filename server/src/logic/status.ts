@@ -4,7 +4,6 @@ import DeepReadonly                   from "util/DeepReadonly";
 import { Logger                     } from "winston";
 import { Connection                 } from "mysql2/promise";
 import { JavaStatusResponse, status } from "minecraft-server-util"
-import { deepAssign                 } from "util/object";
 import { NicknameManager            } from "./nickname";
 
 export interface CreationOptions {
@@ -41,9 +40,7 @@ export interface Fetch {
 export type ReadonlyFetch = DeepReadonly<Fetch>
 
 export interface StatusFetcher {
-    cloneFetch(connection: Connection, force?: boolean): Promise<Fetch>
     fetch(connection: Connection, force?: boolean): Promise<ReadonlyFetch> 
-    cloneLastFetch(): Fetch | null
 
     get willRefetch(): boolean
     get lastFetch(): ReadonlyFetch | null
@@ -64,20 +61,15 @@ export class DefaultStatusFetcher implements StatusFetcher {
         this.logger          = options.logger
     }
 
-    async cloneFetch(connection: Connection, force: boolean = false): Promise<Fetch> {
-        await this.fetch(connection, force)
-        return this.cloneLastFetch()!
-    }
-
     async fetch(connection: Connection, force: boolean = false): Promise<ReadonlyFetch> {
         this.logger?.debug(`Fetching minecraft server status from ${this.config.mcAddress}...`)
 
         if (!force && !this.willRefetch) {
             this.logger?.debug("Fetched cached")
-            return this.cloneLastFetch()!
+            return this.lastFetch!
         }
 
-        const rawFetch = await status(this.config.mcHost, this.config.mcPort)
+        const rawFetch = await status(this.config.read.mc.host, this.config.read.mc.port)
         const fetch    = await this.rawFetchToFetch(connection, rawFetch)
 
         this.updateLast(fetch)
@@ -108,7 +100,7 @@ export class DefaultStatusFetcher implements StatusFetcher {
                 html:     raw.motd.html,
             },
 
-            address:      this.config.mcPublicAddress,
+            address:      this.config.read.mc.publicAddress,
             favicon:      raw.favicon
         }
     }
@@ -143,16 +135,11 @@ export class DefaultStatusFetcher implements StatusFetcher {
         const now  = new Date()
         const diff = now.valueOf() - this.lastFetchDate.valueOf()
 
-        return diff >= this.config.mcStatusLifetime
+        return diff >= this.config.read.mc.statusLifetime
     }
 
     get lastFetch(): ReadonlyFetch | null {
         return this._lastFetch
-    }
-
-    cloneLastFetch(): Fetch | null {
-        return this._lastFetch != null ? deepAssign({}, this._lastFetch)
-                                       : null
     }
 
     get lastFetchDate(): Date | null {

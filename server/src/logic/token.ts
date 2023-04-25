@@ -200,7 +200,7 @@ export class DefaultTokenManager implements TokenManager {
             return undefined
 
         const aTokenId  = createTokenId()
-        const aTokenExp = dateMillisecondsAhead(this.config.logicATokenLifetime)
+        const aTokenExp = dateMillisecondsAhead(this.config.read.logic.aTokenLifetime)
 
         await connection.execute(
             "INSERT INTO ATokens (id, user_id, exp_time) VALUES (?, ?, ?)",
@@ -208,7 +208,7 @@ export class DefaultTokenManager implements TokenManager {
         ) as [ResultSetHeader, FieldPacket[]]
 
         const rTokenId  = createTokenId()
-        const rTokenExp = dateMillisecondsAhead(this.config.logicRTokenLifetime)
+        const rTokenExp = dateMillisecondsAhead(this.config.read.logic.rTokenLifetime)
 
         await connection.execute(
             "INSERT INTO RTokens (id, atoken_id, exp_time) VALUES (?, ?, ?)",

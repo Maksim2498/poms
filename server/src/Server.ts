@@ -36,7 +36,7 @@ export default class Server {
     static readonly DEFAULT_ON_STARTED = async (server: Server) => {
         const config = server.config
 
-        if (!config.logicOpenBrowser)
+        if (!config.read.logic.openBrowser)
             return
 
         const logger = server.logger
@@ -79,7 +79,7 @@ export default class Server {
         const wsApp           = expressWs(rawApp, httpServer)
         const app             = wsApp.app
         const pool            = createPool.call(this)
-        const authThrottler   = new ThrottlingManager(config.logicAuthDelay, logger)
+        const authThrottler   = new ThrottlingManager(config.read.logic.authDelay, logger)
 
         this.config           = config
         this.logger           = logger
@@ -96,7 +96,7 @@ export default class Server {
         setupApp.call(this)
 
         function setupApp(this: Server) {
-            if (config.httpProxied)
+            if (config.read.http.proxied)
                 app.set("trust proxy", true)
 
             if (logger)
@@ -123,7 +123,7 @@ export default class Server {
 
             function setupAPI(this: Server) {
                 const router = createRouter.call(this)
-                const path   = config.httpApiPrefix
+                const path   = config.read.http.apiPrefix
 
                 app.use(path, router)
 
@@ -239,14 +239,14 @@ export default class Server {
 
             function setupWs(this: Server) {
                 const router = createRouter.call(this)
-                const path   = config.wsPrefix
+                const path   = config.read.ws.prefix
 
                 app.use(path, router)
 
                 function createRouter(this: Server) {
                     const router = Router()
 
-                    if (config.rconAvailable)
+                    if (config.isRconAvailable)
                         setupConsole.call(this)
 
                     return router
@@ -263,17 +263,17 @@ export default class Server {
             }
 
             function setupStatic() {
-                if (!config.httpServeStatic)
+                if (!config.read.http.serveStatic)
                     return
 
-                const middleware = express.static(config.httpStaticPath)
+                const middleware = express.static(config.read.http.staticPath)
 
                 app.use(middleware)
             }
         
             function setup404() {
                 app.use((req, res) => {
-                    res.status(404).sendFile(config.httpError404Path, error => {
+                    res.status(404).sendFile(config.read.http.error["404Path"], error => {
                         if (!error)
                             return
 
@@ -288,7 +288,7 @@ export default class Server {
                 app.use((error: Error, req: Request, res: Response, next: () => void) => {
                     logger?.error(error)
 
-                    res.status(500).sendFile(config.httpError500Path, error => {
+                    res.status(500).sendFile(config.read.http.error["500Path"], error => {
                         if (!error)
                             return
 
@@ -301,14 +301,14 @@ export default class Server {
         }
 
         function createPool(this: Server): Pool {
-            const database        = config.mysqlDatabase
-            const host            = config.mysqlHost
-            const port            = config.mysqlPort
-            const socketPath      = config.mysqlSocketPath ?? undefined
-            const useServe        = config.mysqlUseServeUser
-            const connectionLimit = config.mysqlConnectionLimit
-            const user            = useServe ? config.mysqlServeLogin!    : config.mysqlLogin!
-            const password        = useServe ? config.mysqlServePassword! : config.mysqlPassword!
+            const database        = config.read.mysql.database
+            const host            = config.read.mysql.host
+            const port            = config.read.mysql.port
+            const socketPath      = config.read.mysql.socketPath ?? undefined
+            const useServe        = config.useMysqlServeUser
+            const connectionLimit = config.read.mysql.connectionLimit
+            const user            = useServe ? config.read.mysql.serve.login!    : config.read.mysql.login!
+            const password        = useServe ? config.read.mysql.serve.password! : config.read.mysql.password!
 
             return mysql.createPool({
                 database,
@@ -348,7 +348,7 @@ export default class Server {
         }
 
         async function initStatic(this: Server) {
-            if (!this.config.logicStaticBuild)
+            if (!this.config.read.logic.static.build)
                 return
 
             this.logger?.info("Initializing static content...")
@@ -356,7 +356,7 @@ export default class Server {
             this.logger?.info("Static content is successfully initialized")
 
             async function createIfNeeded(this: Server) {
-                if (this.config.logicStaticForceBuild) {
+                if (this.config.read.logic.static.forceBuild) {
                     this.logger?.debug("Creating...")
                     build.call(this)
                     this.logger?.debug("Created")
@@ -373,7 +373,7 @@ export default class Server {
                 this.logger?.debug("Created")
 
                 async function exists(this: Server): Promise<boolean> {
-                    const path = this.config.httpStaticPath
+                    const path = this.config.read.http.staticPath
 
                     this.logger?.debug(`Cheking if static content at ${path} alreading already exists...`)
 
@@ -391,7 +391,7 @@ export default class Server {
                 }
 
                 function build(this: Server) {
-                    cp.execSync("npm run build", { cwd: this.config.logicStaticBuildPath })
+                    cp.execSync("npm run build", { cwd: this.config.read.logic.static.buildPath })
                 }
             }
         }
@@ -410,12 +410,12 @@ export default class Server {
             this.logger?.info("Database is successfully initialized")
 
             async function createConnection(this: Server): Promise<Connection> {
-                const host       = this.config.mysqlHost
-                const port       = this.config.mysqlPort
-                const socketPath = this.config.mysqlSocketPath ?? undefined
-                const useInit    = this.config.mysqlUseInitUser
-                const user       = useInit ? this.config.mysqlInitLogin!    : this.config.mysqlLogin!
-                const password   = useInit ? this.config.mysqlInitPassword! : this.config.mysqlPassword!
+                const host       = this.config.read.mysql.host
+                const port       = this.config.read.mysql.port
+                const socketPath = this.config.read.mysql.socketPath ?? undefined
+                const useInit    = this.config.useMysqlInitUser
+                const user       = useInit ? this.config.read.mysql.init.login!    : this.config.read.mysql.login!
+                const password   = useInit ? this.config.read.mysql.init.password! : this.config.read.mysql.password!
 
                 return await mysql.createConnection({
                     host,
@@ -434,11 +434,11 @@ export default class Server {
                 await createRTokensTable.call(this)
                 await createCleanUpEvent.call(this)
 
-                if (this.config.logicAdminCreate)
+                if (this.config.read.logic.admin.create)
                     await this.userManager.createAdmin(connection)
 
                 async function createDatabase(this: Server) {
-                    const database = this.config.mysqlDatabase
+                    const database = this.config.read.mysql.database
 
                     this.logger?.debug(`Creating database "${database}"...`)
                     const [result] = await connection.query("CREATE DATABASE IF NOT EXISTS ??", database) as [ResultSetHeader, FieldPacket[]]
@@ -557,9 +557,9 @@ export default class Server {
             if (!this.logger)
                 return
 
-            const serveStatic = this.config.httpServeStatic
+            const serveStatic = this.config.read.http.serveStatic
             const address     = this.config.httpAddress
-            const message     = serveStatic ? `Starting listening at ${address} and serving static content from ${this.config.httpStaticPath}...`
+            const message     = serveStatic ? `Starting listening at ${address} and serving static content from ${this.config.read.http.staticPath}...`
                                             : `Starting listening at ${address}...`
 
             this.logger.info(message)
@@ -577,12 +577,12 @@ export default class Server {
                 try {
                     this.httpServer.on("error", reject)
 
-                    const socketPath = this.config.httpSocketPath
+                    const socketPath = this.config.read.http.socketPath
                     const listening  = () => {
                         this.httpServer.removeListener("error", reject)
 
-                        this.logger?.info(this.config.httpServeStatic ? "Listening and serving static content..."
-                                                                      : "Listening...")
+                        this.logger?.info(this.config.read.http.serveStatic ? "Listening and serving static content..."
+                                                                            : "Listening...")
 
                         resolve()
                     }
@@ -593,8 +593,8 @@ export default class Server {
                         return
                     }
 
-                    const host = this.config.httpHost
-                    const port = this.config.httpPort
+                    const host = this.config.read.http.host
+                    const port = this.config.read.http.port
 
                     if (host != null) {
                         this.httpServer.listen(port, host, listening)

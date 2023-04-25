@@ -111,7 +111,7 @@ export class DefaultNicknameManager implements NicknameManager {
         this.logger?.debug(typeof user === "string" ? `Setting nicknames of user "${user}" to [${nicknames?.join(", ")}]...`
                                                     : `Setting nicknames of user with id ${user} to [${nicknames?.join(", ")}]...`)
 
-        if (nicknames.length > this.config.logicMaxNicknames) {
+        if (nicknames.length > this.config.read.logic.maxNicknames) {
             const message = "Too many nicknames"
 
             if (options?.throwOnLimit)
@@ -354,7 +354,7 @@ export class DefaultNicknameManager implements NicknameManager {
 
         const count = await this.getUserNicknameCount(connection, id)
 
-        if (count >= this.config.logicMaxNicknames) {
+        if (count >= this.config.read.logic.maxNicknames) {
             const message = "Too many nicknames"
 
             if (options?.throwOnLimit)

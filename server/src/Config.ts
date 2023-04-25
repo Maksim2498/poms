@@ -7,27 +7,56 @@ import ErrorList                    from "util/ErrorList"
 import { promises as fsp          } from "fs"
 import { normalize, join, dirname } from "path"
 import { Logger                   } from "winston"
-import { deepAssign               } from "./util/object"
 
-import "reflect-metadata"
+const PORT     = z.number().int().nonnegative().max(65535)
+const STRING   = z.string()
+const NSTRING  = STRING.nullable().default(null)
+const HOST     = z.string().transform(s => s.trim())
+const NHOST    = HOST.nullable().default(null)
+const URI_PATH = z.string().transform(s => normalize("/" + s))
+const PATH     = z.string().transform(s => Config.placehold(normalize(s)))
+const NPATH    = PATH.nullable().default(null)
+const BOOLEAN  = z.boolean().default(false)
+const UINT      = z.number().int().nonnegative()
 
-const OPORT     = z.number().int().nonnegative().max(65535).optional()
-const OSTRING   = z.ostring()
-const NSTRING   = z.string().nullish()
-const OHOST     = z.string().transform(s => s.trim()).optional()
-const NHOST     = OHOST.nullable()
-const OURI_PATH = z.string().transform(s => normalize("/" + s)).optional()
-const OPATH     = z.string().transform(s => Config.placehold(normalize(s))).optional()
-const NPATH     = OPATH.nullable()
-const OBOOLEAN  = z.oboolean()
-const OUINT     = z.number().int().nonnegative().optional()
-const ODB_NAME  = z.string().regex(/^\w+$/, { message: 'Configuration option "mysql.database" is an invalid database identifier' }).nullish()
-const ODUR      = z.string().transform((val, ctx) => {
-    const parsed = parseDuration(val)
+const SAME_AS_MC_HOST = Symbol()
+
+const RCON_HOST = z.custom<string>(value => {
+    if (typeof value === "string")
+        return value.trim()
+
+    return value
+}).superRefine((value, ctx) => {
+    if (value as any === SAME_AS_MC_HOST)
+        return
+
+    const type = typeof value
+
+    if (type === "string")
+        return
+
+    ctx.addIssue({
+        code:     "invalid_type",
+        expected: "string",
+        received: type
+    })
+}).default(SAME_AS_MC_HOST as any)
+
+const DB_NAME = z.string().superRefine((value, ctx) => {
+    if (value.match(/^[0-9,a-z,A-Z$_]+$/) == null) {
+        const path    = ctx.path.join(".")
+        const message = `Configuration option "${path}" is an invalid database identifier`
+
+        ctx.addIssue({ code: "custom", message })
+    }
+})
+
+const DUR = z.string().transform((value, ctx) => {
+    const parsed = parseDuration(value)
 
     if (parsed == null) {
         const path    = ctx.path.join(".")
-        const message = `Configuration option "${path}" is a invalid duration`
+        const message = `Configuration option "${path}" is an invalid duration`
 
         ctx.addIssue({ code: "custom", message })
 
@@ -35,176 +64,94 @@ const ODUR      = z.string().transform((val, ctx) => {
     }
 
     return parsed
-}).optional()
-
-const CONFIG_JSON_SCHEMA = z.object({
-    http: z.object({
-        proxied:              OBOOLEAN,
-        apiPrefix:            OURI_PATH,
-        host:                 NHOST,
-        port:                 OPORT,
-        socketPath:           NPATH,
-        serveStatic:          OBOOLEAN,
-        staticPath:           OPATH,
-        error404Path:         OPATH,
-        error500Path:         OPATH,
-    }).strict().optional(),
-
-    ws: z.object({
-        prefix:               OURI_PATH,
-    }).strict().optional(),
-
-    mysql: z.object({
-        database:             ODB_NAME,
-        host:                 OHOST,
-        port:                 OPORT,
-        socketPath:           NPATH,
-        login:                NSTRING,
-        password:             NSTRING,
-        connectionLimit:      OUINT,
-
-        init: z.object({
-            login:            NSTRING,
-            password:         NSTRING,
-        }).strict().optional(),
-
-        serve: z.object({
-            login:            NSTRING,
-            password:         NSTRING,
-        }).strict().optional()
-    }).strict(),
-
-    logic: z.object({
-        admin: z.object({
-            create:           OBOOLEAN,
-            name:             NSTRING,
-            login:            OSTRING,
-            password:         OSTRING,
-        }).strict().optional(),
-
-        static: z.object({
-            build:            OBOOLEAN,
-            buildPath:        OPATH,
-            forceBuild:       OBOOLEAN,
-        }).strict().optional(),
-
-        maxTokens:            OUINT,
-        maxNicknames:         OUINT,
-        openBrowser:          OBOOLEAN,
-        aTokenLifetime:       ODUR,
-        rTokenLifetime:       ODUR,
-        allowAnonymousAccess: OBOOLEAN,
-        authDelay:            ODUR,
-        noAuthDelayInDev:     OBOOLEAN,
-    }).strict().optional(),
-
-    rcon: z.object({
-        enable:               OBOOLEAN,
-        host:                 OHOST,
-        port:                 OPORT,
-        password:             NSTRING,
-    }).strict().optional(),
-
-    mc: z.object({
-        publicAddress:        NHOST,
-        host:                 OHOST,
-        port:                 OPORT,
-        statusLifetime:       ODUR,
-    }).strict().optional(),
 })
 
-export type ConfigJson  = z.infer<typeof CONFIG_JSON_SCHEMA>
-export type ConfigState = {
-    [key: string]: {
-        path:  string
-        value: any
-    }
-}
-
-export type SchemaAccessors = SchemaAccessor[]
-
-export type SchemaAccessor = {
-    path: string
-    key:  keyof Config
-}
-
-export const SCHEMA_KEY = "schema"
-
-export function Schema(path: string) {
-    return (target: Object, key: keyof Config, descriptor: PropertyDescriptor) => {
-        if (!Reflect.hasMetadata(SCHEMA_KEY, target))
-            Reflect.defineMetadata(SCHEMA_KEY, [], target)
-
-        const accessors = Reflect.getMetadata(SCHEMA_KEY, target) as SchemaAccessors
-
-        accessors.push({
-            path,
-            key
-        })
-    }
-}
+export type ConfigJson         = z.infer<typeof Config.JSON_SCHEMA>
+export type ReadonlyConfigJson = DeepReadonly<ConfigJson>
 
 export default class Config {
-    static readonly POMS_PATH                            = dirname(dirname(__dirname)) // this file is in /server/src/
-    static readonly PLUGIN_PATH                          = join(this.POMS_PATH, "plugin")
-    static readonly SERVER_PATH                          = join(this.POMS_PATH, "server")
-    static readonly SITE_PATH                            = join(this.POMS_PATH, "site")
+    static readonly JSON_SCHEMA = z.object({
+        http: z.object({
+            proxied:              BOOLEAN,
+            apiPrefix:            URI_PATH.default("/api"),
+            host:                 NHOST,
+            port:                 PORT.default(8000),
+            socketPath:           NPATH,
+            serveStatic:          BOOLEAN.default(true),
+            staticPath:           PATH.default("<SITE_PATH>/build"),
+            error:                z.object({
+                "404Path":        PATH.default("<SITE_PATH>/build/404.html"),
+                "500Path":        PATH.default("<SITE_PATH>/build/500.html"),
+            }).strict().default({}),
+        }).strict().default({}),
 
-    static readonly FILE_NAME                            = "poms-config.json"
+        ws: z.object({
+            prefix:               URI_PATH.default("/ws"),
+        }).strict().default({}),
 
-    static readonly DEFAULT_PATH                         = this.FILE_NAME
+        mysql: z.object({
+            database:             DB_NAME.default("poms"),
+            host:                 HOST.default("localhost"),
+            port:                 PORT.default(3306),
+            socketPath:           NPATH,
+            login:                NSTRING,
+            password:             NSTRING,
+            connectionLimit:      UINT.default(10),
 
-    static readonly DEFAULT_HTTP_PROXIED                 = false
-    static readonly DEFAULT_HTTP_API_PREFIX              = "/api"
-    static readonly DEFAULT_HTTP_HOST                    = null
-    static readonly DEFAULT_HTTP_PORT                    = 8000
-    static readonly DEFAULT_HTTP_SOCKET_PATH             = null
-    static readonly DEFAULT_HTTP_SERVE_STATIC            = true
-    static readonly DEFAULT_HTTP_STATIC_PATH             = this.placehold("<SITE_PATH>/build")
-    static readonly DEFAULT_HTTP_ERROR_404_PATH          = this.placehold("<SITE_PATH>/build/404.html")
-    static readonly DEFAULT_HTTP_ERROR_500_PATH          = this.placehold("<SITE_PATH>/build/500.html")
+            init: z.object({
+                login:            NSTRING,
+                password:         NSTRING,
+            }).strict().default({}),
 
-    static readonly DEFAULT_WS_PREFXI                    = "/ws"
+            serve: z.object({
+                login:            NSTRING,
+                password:         NSTRING,
+            }).strict().default({}),
+        }).strict().default({}),
 
-    static readonly DEFAULT_MYSQL_DATABASE               = "poms"
-    static readonly DEFAULT_MYSQL_HOST                   = "localhost"
-    static readonly DEFAULT_MYSQL_PORT                   = 3306
-    static readonly DEFAULT_MYSQL_SOCKET_PATH            = null
-    static readonly DEFAULT_MYSQL_LOGIN                  = null
-    static readonly DEFAULT_MYSQL_PASSWORD               = null
-    static readonly DEFAULT_MYSQL_CONNECTION_LIMIT       = 10
-    static readonly DEFAULT_MYSQL_INIT_LOGIN             = null
-    static readonly DEFAULT_MYSQL_INIT_PASSWORD          = null
-    static readonly DEFAULT_MYSQL_SERVE_LOGIN            = null
-    static readonly DEFAULT_MYSQL_SERVE_PASSWORD         = null
+        logic: z.object({
+            admin: z.object({
+                create:           BOOLEAN.default(true),
+                login:            STRING.default("admin"),
+                password:         STRING.default("admin"),
+                name:             NSTRING.default("Administrator"),
+            }).strict().default({}),
 
-    static readonly DEFAULT_LOGIC_ADMIN_CREATE           = true
-    static readonly DEFAULT_LOGIC_ADMIN_NAME             = "Administrator"
-    static readonly DEFAULT_LOGIC_ADMIN_LOGIN            = "admin"
-    static readonly DEFAULT_LOGIC_ADMIN_PASSWORD         = "admin"
-    static readonly DEFAULT_LOGIC_MAX_TOKENS             = 10
-    static readonly DEFAULT_LOGIC_MAX_NICKNAMES          = 5
-    static readonly DEFAULT_LOGIC_STAITC_BUILD           = true
-    static readonly DEFAULT_LOGIC_STAITC_BUILD_PATH      = this.placehold("<SITE_PATH>")
-    static readonly DEFAULT_LOGIC_STAITC_FORCE_BUILD     = false
-    static readonly DEFAULT_LOGIC_OPEN_BROWSER           = true
-    static readonly DEFAULT_LOGIC_A_TOKEN_LIFETIME       = parseDuration("30m")
-    static readonly DEFAULT_LOGIC_R_TOKEN_LIFETIME       = parseDuration("1w")
-    static readonly DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS = true
-    static readonly DEFAULT_LOGIC_AUTH_DURATION          = parseDuration("2s")
-    static readonly DEFAULT_LOGIC_NO_AUTH_DELAY_IN_DEV   = true
+            static: z.object({
+                build:            BOOLEAN.default(true),
+                buildPath:        PATH.default("<SITE_PATH>"),
+                forceBuild:       BOOLEAN,
+            }).strict().default({}),
 
-    static readonly DEFAULT_RCON_ENABLE                  = false
-    static readonly DEFAULT_RCON_PORT                    = 25575
-    static readonly DEFAULT_RCON_PASSWORD                = null
+            maxTokens:            UINT.default(10),
+            maxNicknames:         UINT.default(5),
+            openBrowser:          BOOLEAN.default(true),
+            aTokenLifetime:       DUR.default("30m"),
+            rTokenLifetime:       DUR.default("1w"),
+            allowAnonymousAccess: BOOLEAN.default(true),
+            authDelay:            DUR.default("2s"),
+            noAuthDelayInDev:     BOOLEAN.default(true),
+        }).strict().default({}),
 
-    static readonly DEFAULT_MC_PUBLIC_ADDRESS            = null
-    static readonly DEFAULT_MC_HOST                      = "localhost"
-    static readonly DEFAULT_MC_PORT                      = 25565
-    static readonly DEFAULT_MC_STATUS_LIFETIME           = parseDuration("10s")
+        rcon: z.object({
+            enable:               BOOLEAN,
+            host:                 RCON_HOST,
+            port:                 PORT.default(25575),
+            password:             NSTRING,
+        }).strict().default({}),
 
-    readonly read: DeepReadonly<ConfigJson>
-    readonly path: string
+        mc: z.object({
+            publicAddress:        NHOST,
+            host:                 HOST.default("localhost"),
+            port:                 PORT.default(25565),
+            statusLifetime:       DUR.default("10s"),
+        }).strict().default({}),
+    })
+
+    static readonly POMS_PATH   = dirname(dirname(__dirname)) // this file is in /server/src/
+    static readonly PLUGIN_PATH = join(this.POMS_PATH, "plugin")
+    static readonly SERVER_PATH = join(this.POMS_PATH, "server")
+    static readonly SITE_PATH   = join(this.POMS_PATH, "site")
 
     static placehold(path: string): string {
         return template(path, {
@@ -219,7 +166,8 @@ export default class Config {
     }
 
     static async readFromFile(path?: string, logger?: Logger): Promise<Config> {
-        path = path ?? await this.findConfig(logger)
+        if (path == null)
+            path = await this.findConfig(logger)
 
         logger?.info("Reading config...")
 
@@ -230,6 +178,8 @@ export default class Config {
 
         return config
     }
+
+    static readonly FILE_NAME = "poms-config.json"
 
     static async findConfig(logger?: Logger): Promise<string> {
         logger?.info("Searching for configuration file...")
@@ -282,18 +232,22 @@ export default class Config {
         }
     }
 
+    readonly read: ReadonlyConfigJson
+    readonly path: string
+
     constructor(json: any, path?: string) {
-        const parsedJson = CONFIG_JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
+        const parsedJson = Config.JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
 
         if (!parsedJson.success)
             throw Config.zodErrorToErrorList(parsedJson.error)
 
         Config.validateParsedJsonMysqlCredentials(parsedJson.data)
 
-        const read = deepAssign({}, parsedJson.data)
+        if (parsedJson.data.rcon.host as any === SAME_AS_MC_HOST)
+            parsedJson.data.rcon.host = parsedJson.data.mc.host
         
-        this.read = read
-        this.path = path ?? Config.DEFAULT_PATH
+        this.read = parsedJson.data
+        this.path = path ?? Config.FILE_NAME
     }
 
     private static zodErrorMap(issue: z.ZodIssueOptionalMessage, ctx: { defaultError: string, data: any }): { message: string } {
@@ -302,7 +256,8 @@ export default class Config {
                 const path     = makePath()
                 const expected = issue.expected
                 const received = issue.received
-                const message  = `Configuration option "${path}" is of type "${received}" but it was expected to be of type "${expected}"`
+                const message  = received !== "undefined" ? `Configuration option "${path}" is of type "${received}" but it was expected to be of type "${expected}"`
+                                                          : `Configuration option "${path}" is missing`
 
                 return { message }
             }
@@ -350,13 +305,13 @@ export default class Config {
         return new ErrorList(error.issues.map(issue => new Error(issue.message)))
     }
 
-    private static validateParsedJsonMysqlCredentials(config: ConfigJson) {
-        const noLogin         = config.mysql?.login           == null
-        const noPassword      = config.mysql?.password        == null
-        const noInitLogin     = config.mysql?.init?.login     == null
-        const noInitPassword  = config.mysql?.init?.password  == null
-        const noServeLogin    = config.mysql?.serve?.login    == null
-        const noServePassword = config.mysql?.serve?.password == null
+    private static validateParsedJsonMysqlCredentials(config: ReadonlyConfigJson) {
+        const noLogin         = config.mysql.login          == null
+        const noPassword      = config.mysql.password       == null
+        const noInitLogin     = config.mysql.init.login     == null
+        const noInitPassword  = config.mysql.init.password  == null
+        const noServeLogin    = config.mysql.serve.login    == null
+        const noServePassword = config.mysql.serve.password == null
         const noGeneral       = noLogin      || noPassword
         const noInit          = noInitLogin  || noInitPassword
         const noServe         = noServeLogin || noServePassword
@@ -373,325 +328,72 @@ export default class Config {
         }
     }
 
-    get state(): ConfigState {
-        const accessors = Reflect.getMetadata(SCHEMA_KEY, this) as SchemaAccessors
-        const entries   = accessors.map(({ path, key }) => [path, this[key]])
-
-        return Object.fromEntries(entries)
-    }
-
-    @Schema("http.proxied")
-    get httpProxied(): boolean {
-        return this.read.http?.proxied ?? Config.DEFAULT_HTTP_PROXIED
-    }
-
-    @Schema("http.apiPrefix")
-    get httpApiPrefix(): string {
-        return this.read.http?.apiPrefix ?? Config.DEFAULT_HTTP_API_PREFIX
-    }
-
-    @Schema("http.host")
-    get httpHost(): string | null {
-        const read = this.read.http?.host
-
-        return read === undefined ? Config.DEFAULT_HTTP_HOST
-                                  : read
-    }
-
-    @Schema("http.port")
-    get httpPort(): number {
-        return this.read.http?.port ?? Config.DEFAULT_HTTP_PORT
-    }
-
-    @Schema("http.socketPath")
-    get httpSocketPath(): string | null {
-        const read = this.read.http?.socketPath
-
-        return read === undefined ? Config.DEFAULT_HTTP_SOCKET_PATH
-                                  : read
-    }
-
-    @Schema("http.serveStatic")
-    get httpServeStatic(): boolean {
-        return this.read.http?.serveStatic ?? Config.DEFAULT_HTTP_SERVE_STATIC
-    }
-
-    @Schema("http.staticPath")
-    get httpStaticPath(): string {   
-        return this.read.http?.staticPath ?? Config.DEFAULT_HTTP_STATIC_PATH
-    }
-
-    @Schema("http.error404Path")
-    get httpError404Path(): string {
-        return this.read.http?.error404Path ?? Config.DEFAULT_HTTP_ERROR_404_PATH
-    }
-
-    @Schema("http.error500Path")
-    get httpError500Path(): string {
-        return this.read.http?.error500Path ?? Config.DEFAULT_HTTP_ERROR_500_PATH
-    }
-
     get httpApiAddress(): string {
-        const address = this.httpAddress.slice(0, -1) // Remove trailing "/"
-        const prefix  = this.httpApiPrefix
+        const address = this.httpAddress.slice(0, -1) // Removes trailing "/"
+        const path    = this.read.http.apiPrefix
 
-        return `${address}${prefix}/`
+        return `${address}${path}/`
     }
 
     get httpAddress(): string {
-        const socketPath = this.httpSocketPath
+        const socketPath = this.read.http.socketPath
 
         if (socketPath != null)
             return `http://unix:${socketPath}/`
 
-        const host = this.httpHost ?? "localhost"
-        const port = this.httpPort
+        const host = this.read.http.host ?? "localhost"
+        const port = this.read.http.port
 
         return `http://${host}:${port}/`
     }
 
-    @Schema("ws.prefix")
-    get wsPrefix(): string {
-        return this.read.ws?.prefix ?? Config.DEFAULT_WS_PREFXI
-    }
-
-    @Schema("mysql.host")
-    get mysqlHost(): string {
-        return this.read.mysql?.host ?? Config.DEFAULT_MYSQL_HOST
-    }
-
-    @Schema("mysql.port")
-    get mysqlPort(): number {
-        return this.read.mysql?.port ?? Config.DEFAULT_MYSQL_PORT
-    }
-
-    @Schema("mysql.socketPath")
-    get mysqlSocketPath(): string | null {
-        const read = this.read.mysql.socketPath
-
-        return read === undefined ? Config.DEFAULT_MYSQL_SOCKET_PATH
-                                  : read
-    }
-
-    @Schema("mysql.login")
-    get mysqlLogin(): string | null {
-        const read = this.read.mysql?.login
-
-        return read === undefined ? Config.DEFAULT_MYSQL_LOGIN
-                                  : read
-    }
-
-    @Schema("mysql.password")
-    get mysqlPassword(): string | null {
-        const read = this.read.mysql?.password
-
-        return read === undefined ? Config.DEFAULT_MYSQL_PASSWORD
-                                  : read
-    }
-
-    @Schema("mysql.init.login")
-    get mysqlInitLogin(): string | null {
-        const read = this.read.mysql?.init?.login
-
-        return read === undefined ? Config.DEFAULT_MYSQL_INIT_LOGIN
-                                  : read
-    }
-
-    @Schema("mysql.initPassword")
-    get mysqlInitPassword(): string | null {
-        const read = this.read.mysql?.init?.password
-
-        return read === undefined ? Config.DEFAULT_MYSQL_INIT_PASSWORD
-                                  : read
-    }
-
-    @Schema("mysql.serve.login")
-    get mysqlServeLogin(): string | null {
-        const read = this.read.mysql?.serve?.login
-
-        return read === undefined ? Config.DEFAULT_MYSQL_SERVE_LOGIN
-                                  : read
-    }
-
-    @Schema("mysql.serve.password")
-    get mysqlServePassword(): string | null {
-        const read = this.read.mysql?.serve?.password
-
-        return read === undefined ? Config.DEFAULT_MYSQL_SERVE_PASSWORD
-                                  : read
-    }
-
-    @Schema("mysql.database")
-    get mysqlDatabase(): string {
-        return this.read.mysql?.database ?? Config.DEFAULT_MYSQL_DATABASE
-    }
-
     get mysqlAddress(): string {
-        const socketPath = this.mysqlSocketPath
+        const socketPath = this.read.mysql.socketPath
 
         if (socketPath != null)
             return `unix:${socketPath}`
 
-        const port = this.mysqlPort
-        const host = this.mysqlHost
+        const port = this.read.mysql.port
+        const host = this.read.mysql.host
 
         return `${host}:${port}`
     }
 
-    get mysqlUseInitUser(): boolean {
-        return this.mysqlInitLogin    != null
-            && this.mysqlInitPassword != null
+    get useMysqlInitUser(): boolean {
+        return this.read.mysql.init.login    != null
+            && this.read.mysql.init.password != null
     }
 
-    get mysqlUseServeUser(): boolean {
-        return this.mysqlServeLogin    != null
-            && this.mysqlServePassword != null
+    get useMysqlServeUser(): boolean {
+        return this.read.mysql.serve.login    != null
+            && this.read.mysql.serve.password != null
     }
 
-    @Schema("mysql.connectionLimit")
-    get mysqlConnectionLimit(): number {
-        return this.read.mysql.connectionLimit ?? Config.DEFAULT_MYSQL_CONNECTION_LIMIT
-    }
-
-    @Schema("mysql.admin.create")
-    get logicAdminCreate(): boolean {
-        return this.read.logic?.admin?.create ?? Config.DEFAULT_LOGIC_ADMIN_CREATE
-    }
-
-    @Schema("mysql.admin.login")
-    get logicAdminLogin(): string {
-        return this.read.logic?.admin?.login ?? Config.DEFAULT_LOGIC_ADMIN_LOGIN
-    }
-
-    @Schema("mysql.admin.password")
-    get logicAdminPassword(): string { 
-        return this.read.logic?.admin?.password ?? Config.DEFAULT_LOGIC_ADMIN_PASSWORD
-    }
-
-    @Schema("mysql.admin.name")
-    get logicAdminName(): string | null {
-        const read = this.read.logic?.admin?.name
-
-        return read === undefined ? Config.DEFAULT_LOGIC_ADMIN_NAME
-                                  : read
-    }
-
-    @Schema("logic.aTokenLifeTime")
-    get logicATokenLifetime(): number {
-        return this.read.logic?.aTokenLifetime ?? Config.DEFAULT_LOGIC_A_TOKEN_LIFETIME
-    }
-
-    @Schema("logic.rTokenLifeTime")
-    get logicRTokenLifetime(): number {
-        return this.read.logic?.rTokenLifetime ?? Config.DEFAULT_LOGIC_R_TOKEN_LIFETIME
-    }
-
-    @Schema("logic.maxTokens")
-    get logicMaxTokens(): number {
-        return this.read.logic?.maxTokens ?? Config.DEFAULT_LOGIC_MAX_TOKENS
-    }
-
-    @Schema("logic.maxNicknames")
-    get logicMaxNicknames(): number {
-        return this.read.logic?.maxNicknames ?? Config.DEFAULT_LOGIC_MAX_NICKNAMES
-    }
-
-    @Schema("logic.static.build")
-    get logicStaticBuild(): boolean {
-        return this.read.logic?.static?.build ?? Config.DEFAULT_LOGIC_STAITC_BUILD
-    }
-
-    @Schema("logic.static.buildPath")
-    get logicStaticBuildPath(): string {
-        return this.read.logic?.static?.buildPath ?? Config.DEFAULT_LOGIC_STAITC_BUILD_PATH
-    }
-
-    @Schema("logic.static.forceBuild")
-    get logicStaticForceBuild(): boolean {
-        return this.read.logic?.static?.forceBuild ?? Config.DEFAULT_LOGIC_STAITC_FORCE_BUILD
-    }
-
-    @Schema("logic.openBrowser")
-    get logicOpenBrowser(): boolean {
-        return this.read.logic?.openBrowser ?? Config.DEFAULT_LOGIC_OPEN_BROWSER
-    }
-
-    @Schema("logic.allowAnonymousAccess")
-    get logicAllowAnonymousAccess(): boolean {
-        return this.read.logic?.allowAnonymousAccess ?? Config.DEFAULT_LOGIC_ALLOW_ANONYMOUS_ACCESS
-    }
-
-    @Schema("logic.authDelay")
-    get logicAuthDelay(): number {
-        return this.read.logic?.authDelay ?? Config.DEFAULT_LOGIC_AUTH_DURATION
-    }
-
-    @Schema("logic.noAuthDelayInDev")
-    get logicNoAuthDelayInDev(): boolean {
-        return this.read.logic?.noAuthDelayInDev ?? Config.DEFAULT_LOGIC_NO_AUTH_DELAY_IN_DEV
-    }
-
-    get logicUseAuthDelay(): boolean {
+    get useAuthDelay(): boolean {
         return  process.env.NODE_ENV === "production"
-            || !this.logicNoAuthDelayInDev
-    }
-
-    @Schema("rcon.enable")
-    get rconEnable(): boolean {
-        return this.read.rcon?.enable ?? Config.DEFAULT_RCON_ENABLE
+            || !this.read.logic.noAuthDelayInDev
     }
 
     get rconAddress(): string {
-        return `${this.rconHost}:${this.rconPort}`
+        const host = this.read.rcon.host
+        const port = this.read.rcon.port
+
+        return `${host}:${port}`
     }
 
-    @Schema("rcon.host")
-    get rconHost(): string {
-        return this.read.rcon?.host ?? this.mcHost
-    }
-
-    @Schema("rcon.port")
-    get rconPort(): number {
-        return this.read.rcon?.port ?? Config.DEFAULT_RCON_PORT
-    }
-
-    get rconAvailable(): boolean {
-        return this.rconEnable
-            && this.rconPassword != null
-    }
-
-    @Schema("rcon.password")
-    get rconPassword(): string | null {
-        const read = this.read.rcon?.password
-
-        return read === undefined ? Config.DEFAULT_RCON_PASSWORD
-                                  : read
-    }
-
-    @Schema("mc.publicAddress")
-    get mcPublicAddress(): string | null {
-        const read = this.read.mc?.publicAddress
-
-        return read === undefined ? Config.DEFAULT_MC_PUBLIC_ADDRESS
-                                  : read
+    get isRconAvailable(): boolean {
+        return this.read.rcon.enable
+            && this.read.rcon.password != null
     }
 
     get mcAddress(): string {
-        return `${this.mcHost}:${this.mcPort}`
+        const host = this.read.mc.host
+        const port = this.read.mc.port
+
+        return `${host}:${port}`
     }
 
-    @Schema("mc.host")
-    get mcHost(): string {
-        return this.read.mc?.host ?? Config.DEFAULT_MC_HOST
-    }
-
-    @Schema("mc.port")
-    get mcPort(): number {
-        return this.read.mc?.port ?? Config.DEFAULT_MC_PORT
-    }
-
-    @Schema("mc.statusLifetime")
-    get mcStatusLifetime(): number {
-        return this.read.mc?.statusLifetime ?? Config.DEFAULT_MC_STATUS_LIFETIME
+    toString(): string {
+        return JSON.stringify(this.read, null, 4)
     }
 }

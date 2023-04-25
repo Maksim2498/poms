@@ -50,7 +50,7 @@ export function disableGetCache(req: Request, res: Response, next: () => void) {
 }
 
 export async function checkPermission(this: Server, permission: Permission, req: Request, res: Response) {
-    if (this.config.logicAllowAnonymousAccess && permission === "user")
+    if (this.config.read.logic.allowAnonymousAccess && permission === "user")
         return
 
     const authorization = req.headers.authorization
@@ -148,7 +148,7 @@ export const units: UnitCollection = {
         path:   "/anonym-access-allowed",
 
         async handler(this: Server, req: Request, res: Response) {
-            const allowed = this.config.logicAllowAnonymousAccess
+            const allowed = this.config.read.logic.allowAnonymousAccess
             res.json({ allowed })
         }
     },
@@ -159,7 +159,7 @@ export const units: UnitCollection = {
         path:       "/max-nicknames",
 
         async handler(this: Server, req: Request, res: Response) {
-            const max = this.config.logicMaxNicknames
+            const max = this.config.read.logic.maxNicknames
             res.json({ max })
         }
     },
@@ -170,7 +170,7 @@ export const units: UnitCollection = {
         path:       "/console-available",
 
         async handler(this: Server, req: Request, res: Response) {
-            const available = this.config.rconAvailable
+            const available = this.config.isRconAvailable
             res.json({ available })
         }
     },
@@ -181,7 +181,7 @@ export const units: UnitCollection = {
         path:       "/max-tokens",
 
         async handler(this: Server, req: Request, res: Response) {
-            const max = this.config.logicMaxTokens
+            const max = this.config.read.logic.maxTokens
             res.json({ max })
         }
     },
@@ -191,7 +191,7 @@ export const units: UnitCollection = {
         path:   "/auth",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            if (this.config.logicUseAuthDelay)
+            if (this.config.useAuthDelay)
                 await this.authThrottler.throttle(req.ip)
 
             const authorization = req.headers.authorization
