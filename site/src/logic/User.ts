@@ -364,15 +364,15 @@ export default class User {
         return true
     }
 
-    static readonly DEFAULT_ICON_WIDTH  = 1024
-    static readonly DEFAULT_ICON_HEIGHT = 1024
+    static readonly MAX_ICON_WIDTH  = 1024
+    static readonly MAX_ICON_HEIGHT = 1024
 
     static renderDefaultIcon(options: MakeIconOptions): string {
         const FONT_SIZE_SCALE_FACTOR = .8
 
         const name   = (options.name   ?? options.login).trim()
-        const width  =  options.width  ?? this.DEFAULT_ICON_WIDTH
-        const height =  options.height ?? this.DEFAULT_ICON_HEIGHT
+        const width  =  options.width  ?? this.MAX_ICON_WIDTH
+        const height =  options.height ?? this.MAX_ICON_HEIGHT
         const canvas =  document.createElement("canvas")
 
         canvas.width  = width
