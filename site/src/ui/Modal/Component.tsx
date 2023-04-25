@@ -30,7 +30,7 @@ export default function Modal(props: ModalProps) {
             {question && <div className={styles.question}>{question}</div>}
             <div className={styles.answers}>
                 {answers && Object.entries(answers).map(([key, answer]) => {
-                    if (answer == null || !(key in states))
+                    if (!answer || !(key in states))
                         return null
 
                     const { type, disable, autoFocus } = answer
@@ -238,8 +238,6 @@ export default function Modal(props: ModalProps) {
     }
 
     function updateStates() {
-        console.log("Udpate")
-
         if (!answers)
             return
 

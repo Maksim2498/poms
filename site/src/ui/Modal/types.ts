@@ -8,7 +8,7 @@ export interface ModalProps {
 }
 
 export interface Answers {
-    [key: string]: Answer | undefined
+    [key: string]: Answer | undefined | null | false
 }
 
 export type Answer = ButtonAnswer
