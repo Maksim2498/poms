@@ -31,7 +31,7 @@ export default function FileInput(props: FileInputProps) {
                accept      = {accept} />
 
         {
-            label != null && <label htmlFor= {id}>
+            label != null && <label htmlFor={id} className={styles.label}>
                 {label}
             </label>
         }

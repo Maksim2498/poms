@@ -1,11 +1,8 @@
 .disabledContainer {
     flex-grow: 1;
 
-    cursor: pointer;
-
     border: thin solid #666;
     border-radius: .4rem;
-    padding: .5rem;
 
     transition: background-color .08s;
     background-color: #484848;
@@ -19,14 +16,22 @@
     composes: disabledContainer
 }
 
-.input {
-    display: none
-}
-
 .container:hover {
     background-color: #555
 }
 
 .container:active {
     background-color: #444
+}
+
+.input {
+    display: none
+}
+
+.label {
+    cursor: pointer;
+    display: block;
+    padding: .5rem;
+    width: 100%;
+    text-align: center
 }
