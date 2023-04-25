@@ -17,8 +17,8 @@ export default function Modal(props: ModalProps) {
         children: answers
     } = props
 
-    const [states, setStates ] = useState(makeStates())
-    const [error,  setError  ] = useState(undefined as string | undefined)
+    const [states, setStates] = useState(makeStates())
+    const [error,  setError ] = useState(undefined as string | undefined)
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(updateStates, [answers])
