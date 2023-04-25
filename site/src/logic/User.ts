@@ -147,8 +147,12 @@ export default class User {
     static validateNormedLogin(login: string): string | undefined {
         const MIN_LENGTH = 4
 
-        if (login.length < MIN_LENGTH)
-            return `Login "${login}" is too short. Minimum ${MIN_LENGTH} characters required`
+        if (login.length < MIN_LENGTH) {
+            const reason = login.length === 0 ? "Login is empty"
+                                              : `Login "${login}" is too short`
+
+            return `${reason}. Minimum ${MIN_LENGTH} characters required`
+        }
 
         const MAX_LENGTH = 255
 
@@ -175,8 +179,12 @@ export default class User {
     static validatePassword(password: string): string | undefined {
         const MIN_LENGTH = 4
 
-        if (password.length < MIN_LENGTH)
-            return `Password is too short. Minimum ${MIN_LENGTH} characters required`
+        if (password.length < MIN_LENGTH) {
+            const reason = password.length === 0 ? "Password is empty"
+                                                 : "Password is too short"
+
+            return `${reason}. Minimum ${MIN_LENGTH} characters required`
+        }
 
         const MAX_LENGTH = 255
 
@@ -279,8 +287,12 @@ export default class User {
     static validateNormedNickname(nickname: string): string | undefined {
         const MIN_LENGTH = 4
 
-        if (nickname.length < MIN_LENGTH)
-            return `Nickname "${nickname}" is too short. Minimum ${MIN_LENGTH} characters required`
+        if (nickname.length < MIN_LENGTH) {
+            const reason = nickname.length === 0 ? "Nickname is empty"
+                                                 : `Nickname "${nickname}" is too short`
+
+            return `${reason}. Minimum ${MIN_LENGTH} characters required`
+        }
 
         const MAX_LENGTH = 255
 
