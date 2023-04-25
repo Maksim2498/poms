@@ -50,7 +50,7 @@ is considered an error):
 | `logic.admin.create`         | `boolean`               | `true`                         | No       | Create default admin account on database initialization                            |
 | `logic.admin.login`          | `string`                | `admin`                        | No       | Default admin login                                                                |
 | `logic.admin.password`       | `string`                | `admin`                        | No       | Default admin password. Will be set only on creation                               |
-| `logic.admin.name`           | `string` or `null`      | `Administrator`                | No       | Default admin name                                                                 |
+| `logic.admin.name`           | `string` or `null`      | `"Administrator"`              | No       | Default admin name                                                                 |
 | `logic.maxTokens`            | Unsigned `number`       | `10`                           | No       | Maximum number of tokens per user                                                  |
 | `logic.maxNicknames`         | Unsigned `number`       | `5`                            | No       | Maximum number of nicknames per user                                               |
 | `logic.static.build`         | `boolean`               | `true`                         | No       | Build static conent if `http.staticPath` is empty or doesn't exits                 |
