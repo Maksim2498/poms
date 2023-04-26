@@ -208,18 +208,22 @@ export default function Modal(props: ModalProps) {
                                 onCanvasSet,
                                 onMouseMove,
                                 onMouseDown,
-                                onMouseUp
+                                onMouseUp,
+                                onMouseEnter,
+                                onMouseLeave,
                             } = answer
 
                             const { canvas } = states[key] as CanvasAnswerState
 
-                            return <div key         = {key}
-                                        autoFocus   = {autoFocus}
-                                        className   = {styles.canvasContainer}
-                                        onMouseMove = {rawOnMouseMove}
-                                        onMouseDown = {rawOnMouseDown}
-                                        onMouseUp   = {rawOnMouseUp}
-                                        ref         = {ref} />
+                            return <div key          = {key}
+                                        autoFocus    = {autoFocus}
+                                        className    = {styles.canvasContainer}
+                                        onMouseMove  = {rawOnMouseMove}
+                                        onMouseDown  = {rawOnMouseDown}
+                                        onMouseUp    = {rawOnMouseUp}
+                                        onMouseEnter = {rawOnMouseEnter}
+                                        onMouseLeave = {rawOnMouseLeave}
+                                        ref          = {ref} />
 
                             function ref(ref: HTMLDivElement | null) {
                                 if (ref == null)
@@ -241,6 +245,14 @@ export default function Modal(props: ModalProps) {
 
                             function rawOnMouseUp(event: MouseEvent<HTMLDivElement>) {
                                 passMouseEvent(event, onMouseUp)
+                            }
+
+                            function rawOnMouseEnter(event: MouseEvent<HTMLDivElement>) {
+                                passMouseEvent(event, onMouseEnter)
+                            }
+
+                            function rawOnMouseLeave(event: MouseEvent<HTMLDivElement>) {
+                                passMouseEvent(event, onMouseLeave)
                             }
 
                             function passMouseEvent(event: MouseEvent<HTMLDivElement>, handler?: MouseEventHandler) {

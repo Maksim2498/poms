@@ -57,13 +57,15 @@ export interface FileAnswer extends AnswerBase {
 }
 
 export interface CanvasAnswer extends AnswerBase {
-    type:         "canvas"
-    width?:       number
-    height?:      number
-    onCanvasSet?: OnCanvasSet
-    onMouseMove?: MouseEventHandler
-    onMouseDown?: MouseEventHandler
-    onMouseUp?:   MouseEventHandler
+    type:          "canvas"
+    width?:        number
+    height?:       number
+    onCanvasSet?:  OnCanvasSet
+    onMouseMove?:  MouseEventHandler
+    onMouseDown?:  MouseEventHandler
+    onMouseUp?:    MouseEventHandler
+    onMouseEnter?: MouseEventHandler
+    onMouseLeave?: MouseEventHandler
 }
 
 export type ValidateInput          = (input: string) => string | undefined
