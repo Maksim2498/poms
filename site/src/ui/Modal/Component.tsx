@@ -1,14 +1,14 @@
-import Dim                                                                           from "ui/Dim/Component"
-import Button                                                                        from "ui/Button/Component"
-import Input                                                                         from "ui/Input/Component"
-import FormErrorText                                                                 from "ui/FormErrorText/Component"
-import CheckBox                                                                      from "ui/CheckBox/Component"
-import FileInput                                                                     from "ui/FileInput/Component"
-import styles                                                                        from "./styles.module.css"
+import Dim                                                                                              from "ui/Dim/Component"
+import Button                                                                                           from "ui/Button/Component"
+import Input                                                                                            from "ui/Input/Component"
+import FormErrorText                                                                                    from "ui/FormErrorText/Component"
+import CheckBox                                                                                         from "ui/CheckBox/Component"
+import FileInput                                                                                        from "ui/FileInput/Component"
+import styles                                                                                           from "./styles.module.css"
 
-import { useState, useEffect, MouseEvent                                           } from "react"
-import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState, AnswerState } from "./types"
-import { makeState, updateState                                                    } from "./util"
+import { useState, useEffect, MouseEvent                                                              } from "react"
+import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState, AnswerState, MouseEventHandler } from "./types"
+import { makeState, updateState                                                                       } from "./util"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -232,30 +232,24 @@ export default function Modal(props: ModalProps) {
                             }
 
                             function rawOnMouseMove(event: MouseEvent<HTMLDivElement>) {
-                                if (!onMouseMove)
-                                    return
-
-                                const [x, y] = mouseEventToPos(event)
-
-                                return onMouseMove(x, y)
+                                passMouseEvent(event, onMouseMove)
                             }
 
                             function rawOnMouseDown(event: MouseEvent<HTMLDivElement>) {
-                                if (!onMouseDown)
-                                    return
-
-                                const [x, y] = mouseEventToPos(event)
-
-                                return onMouseDown(x, y)
+                                passMouseEvent(event, onMouseDown)
                             }
 
                             function rawOnMouseUp(event: MouseEvent<HTMLDivElement>) {
-                                if (!onMouseUp)
+                                passMouseEvent(event, onMouseUp)
+                            }
+
+                            function passMouseEvent(event: MouseEvent<HTMLDivElement>, handler?: MouseEventHandler) {
+                                if (!handler)
                                     return
 
                                 const [x, y] = mouseEventToPos(event)
 
-                                onMouseUp(x, y)
+                                handler(x, y)
                             }
 
                             function mouseEventToPos(event: MouseEvent<HTMLDivElement>): [number, number] {
