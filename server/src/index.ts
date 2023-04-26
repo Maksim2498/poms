@@ -32,21 +32,30 @@ async function main() {
 }
 
 function createLogger() {
-    const Console  = winston.transports.Console
-    const fmt      = winston.format
+    const { Console } = winston.transports
+
     const handlers = [new Console()]
+
+    const {
+        combine,
+        errors,
+        colorize,
+        timestamp,
+        align,
+        printf
+    } = winston.format
 
     return winston.createLogger({
         level:             process.env.NODE_ENV === "production" ? "http" : "debug",
         transports:        handlers,
         exceptionHandlers: handlers,
         rejectionHandlers: handlers,
-        format:            fmt.combine(
-            fmt.errors(),
-            fmt.colorize({ all: true }),
-            fmt.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-            fmt.align(),
-            fmt.printf(entry => `[${entry.timestamp}] ${entry.level}: ${entry.message}`)
+        format:            combine(
+            errors(),
+            colorize({ all: true }),
+            timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+            align(),
+            printf(entry => `[${entry.timestamp}] ${entry.level}: ${entry.message}`)
         )
     })
 }
