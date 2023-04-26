@@ -4,6 +4,28 @@ import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH                            
 import { ButtonAnswer,      CanvasAnswer,      CheckBoxAnswer,      FileAnswer,      TextAnswer,      Answer, 
          ButtonAnswerState, CanvasAnswerState, CheckBoxAnswerState, FileAnswerState, TextAnswerState, AnswerState } from "./types"
 
+export function updateState(state: AnswerState, answer: Answer): AnswerState {
+    switch (answer.type) {
+        case "canvas":
+            if (state.type !== "canvas")
+                return makeState(answer)
+
+            const { width, height } = answer
+            const { canvas        } = state
+
+            if (width != null)
+                canvas.width  = width
+
+            if (height != null)
+                canvas.height = height
+
+            return state
+
+        default:
+            return makeState(answer)
+    }
+}
+
 export function makeState(answer: Answer): AnswerState {
     switch (answer.type) {
         case "button":
@@ -62,7 +84,7 @@ export function makeFileState(answer: FileAnswer): FileAnswerState {
 }
 
 export function makeCanvasState(answer: CanvasAnswer): CanvasAnswerState {
-    const { width, height, onCanvasCreated } = answer
+    const { width, height } = answer
 
     const canvas = document.createElement("canvas")
 
@@ -70,8 +92,6 @@ export function makeCanvasState(answer: CanvasAnswer): CanvasAnswerState {
     canvas.height    = height ?? DEFAULT_CANVAS_HEIGHT
     canvas.className = styles.canvas
     canvas.innerHTML = "Canvas isn't supported"
-
-    onCanvasCreated?.(canvas)
 
     return {
         canvas,

@@ -1,14 +1,14 @@
-import Dim                                                              from "ui/Dim/Component"
-import Button                                                           from "ui/Button/Component"
-import Input                                                            from "ui/Input/Component"
-import FormErrorText                                                    from "ui/FormErrorText/Component"
-import CheckBox                                                         from "ui/CheckBox/Component"
-import FileInput                                                        from "ui/FileInput/Component"
-import styles                                                           from "./styles.module.css"
+import Dim                                                                           from "ui/Dim/Component"
+import Button                                                                        from "ui/Button/Component"
+import Input                                                                         from "ui/Input/Component"
+import FormErrorText                                                                 from "ui/FormErrorText/Component"
+import CheckBox                                                                      from "ui/CheckBox/Component"
+import FileInput                                                                     from "ui/FileInput/Component"
+import styles                                                                        from "./styles.module.css"
 
-import { useState, useEffect                                          } from "react"
-import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState } from "./types"
-import { makeState                                                    } from "./util"
+import { useState, useEffect                                                       } from "react"
+import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState, AnswerState } from "./types"
+import { makeState, updateState                                                    } from "./util"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -34,7 +34,7 @@ export default function Modal(props: ModalProps) {
                         return null
 
                     const { type, disable, autoFocus } = answer
-                    const state                        = states[key]
+                    const state                        = states[key]!
                     const { disabled: oldDisabled    } = state
                     const disabled                     = disable?.(states) ?? false
 
@@ -204,7 +204,8 @@ export default function Modal(props: ModalProps) {
                         }
 
                         case "canvas": {
-                            const { canvas } = states[key] as CanvasAnswerState
+                            const { onCanvasSet } = answer
+                            const { canvas      } = states[key] as CanvasAnswerState
 
                             return <div key       = {key}
                                         autoFocus = {autoFocus}
@@ -212,10 +213,13 @@ export default function Modal(props: ModalProps) {
                                         ref       = {ref} />
 
                             function ref(ref: HTMLDivElement | null) {
-                                if (!ref || ref.childElementCount > 0)
+                                if (ref == null)
                                     return
 
+                                ref.innerHTML = ""
                                 ref.appendChild(canvas)
+
+                                onCanvasSet?.(canvas)
                             }
                         }
 
@@ -232,16 +236,16 @@ export default function Modal(props: ModalProps) {
         if (!answers)
             return {}
 
-        const states = {} as AnswerStates
+        const entries = [] as [string, AnswerState][]
 
         for (const [key, answer] of Object.entries(answers)) {
             if (!answer)
                 continue
 
-            states[key] = makeState(answer)
+            entries.push([key, makeState(answer)])
         }
 
-        return states
+        return Object.fromEntries(entries)
     }
 
     function updateStates() {
@@ -254,7 +258,10 @@ export default function Modal(props: ModalProps) {
             if (!answer)
                 continue
 
-            newStates[key] = makeState(answer)
+            const state = states[key]
+
+            newStates[key] = state != null ? updateState(state, answer)
+                                           : makeState(answer)
         }
 
         setStates(newStates)

@@ -57,10 +57,10 @@ export interface FileAnswer extends AnswerBase {
 }
 
 export interface CanvasAnswer extends AnswerBase {
-    type:             "canvas"
-    width?:           number
-    height?:          number
-    onCanvasCreated?: OnCanvasCreated
+    type:         "canvas"
+    width?:       number
+    height?:      number
+    onCanvasSet?: OnCanvasSet
 }
 
 export type ValidateInput          = (input: string) => string | undefined
@@ -70,10 +70,10 @@ export type OnCheckBoxAnswerChange = (checked: boolean, states: AnswerStates) =>
 export type OnFileAnswerChange     = (files: FileList | null, states: AnswerStates) => AnswerStates | void
 export type FormatInput            = (input: string) => string
 export type DisableAnswer          = (values: AnswerStates) => boolean
-export type OnCanvasCreated        = (canvas: HTMLCanvasElement) => void
+export type OnCanvasSet            = (canvas: HTMLCanvasElement) => void
 
 export interface AnswerStates {
-    [key: string]: AnswerState
+    [key: string]: AnswerState | undefined
 }
 
 export type AnswerState = ButtonAnswerState
