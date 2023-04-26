@@ -6,7 +6,7 @@ import CheckBox                                                                 
 import FileInput                                                                     from "ui/FileInput/Component"
 import styles                                                                        from "./styles.module.css"
 
-import { useState, useEffect                                                       } from "react"
+import { useState, useEffect, MouseEvent                                           } from "react"
 import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState, AnswerState } from "./types"
 import { makeState, updateState                                                    } from "./util"
 
@@ -204,13 +204,22 @@ export default function Modal(props: ModalProps) {
                         }
 
                         case "canvas": {
-                            const { onCanvasSet } = answer
-                            const { canvas      } = states[key] as CanvasAnswerState
+                            const {
+                                onCanvasSet,
+                                onMouseMove,
+                                onMouseDown,
+                                onMouseUp
+                            } = answer
 
-                            return <div key       = {key}
-                                        autoFocus = {autoFocus}
-                                        className = {styles.canvasContainer}
-                                        ref       = {ref} />
+                            const { canvas } = states[key] as CanvasAnswerState
+
+                            return <div key         = {key}
+                                        autoFocus   = {autoFocus}
+                                        className   = {styles.canvasContainer}
+                                        onMouseMove = {rawOnMouseMove}
+                                        onMouseDown = {rawOnMouseDown}
+                                        onMouseUp   = {rawOnMouseUp}
+                                        ref         = {ref} />
 
                             function ref(ref: HTMLDivElement | null) {
                                 if (ref == null)
@@ -220,6 +229,41 @@ export default function Modal(props: ModalProps) {
                                 ref.appendChild(canvas)
 
                                 onCanvasSet?.(canvas)
+                            }
+
+                            function rawOnMouseMove(event: MouseEvent<HTMLDivElement>) {
+                                if (!onMouseMove)
+                                    return
+
+                                const [x, y] = mouseEventToPos(event)
+
+                                return onMouseMove(x, y)
+                            }
+
+                            function rawOnMouseDown(event: MouseEvent<HTMLDivElement>) {
+                                if (!onMouseDown)
+                                    return
+
+                                const [x, y] = mouseEventToPos(event)
+
+                                return onMouseDown(x, y)
+                            }
+
+                            function rawOnMouseUp(event: MouseEvent<HTMLDivElement>) {
+                                if (!onMouseUp)
+                                    return
+
+                                const [x, y] = mouseEventToPos(event)
+
+                                onMouseUp(x, y)
+                            }
+
+                            function mouseEventToPos(event: MouseEvent<HTMLDivElement>): [number, number] {
+                                const rect = event.currentTarget.getBoundingClientRect()
+                                const x    = (event.clientX - rect.x) / rect.width  * canvas.width
+                                const y    = (event.clientY - rect.y) / rect.height * canvas.height
+
+                                return [x, y]
                             }
                         }
 
