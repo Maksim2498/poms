@@ -144,6 +144,10 @@ const UPDATE_USER_NAME_SCHEMA = z.object({
     name: z.string().nullable(),
 })
 
+const UPDATE_USER_ICON_SCHEMA = z.object({
+    icon: ICON_SCHEMA.nullable()
+})
+
 const UPDATE_USER_PASSWORD_SCHEMA = z.object({
     password: z.string(),
 })
@@ -733,6 +737,29 @@ export const units: UnitCollection = {
 
             if (icon !== undefined)
                 await this.userManager.forceSetUserIcon(connection, user, icon)
+
+            res.json({})
+        }
+    },
+
+    updateUserIcon: {
+        permission: "mixed",
+        method:     "put",
+        path:       "/users/:user/icon",
+
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const json        = req.body
+            const parseResult = UPDATE_USER_ICON_SCHEMA.safeParse(json)
+
+            if (!parseResult.success) {
+                res.sendStatus(400)
+                return
+            }
+
+            const { icon } = parseResult.data
+            const user     = req.params.user
+
+            await this.userManager.forceSetUserIcon(connection, user, icon)
 
             res.json({})
         }

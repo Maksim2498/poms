@@ -45,6 +45,7 @@
   - [Delete User Nickname](#delete-user-nickname);
   - [Update User](#update-user);
   - [Update User Name](#update-user-name);
+  - [Update User Icon](#update-user-icon);
   - [Update User Password](#update-user-password);
   - [Update User Permissions](#update-user-permissions);
   - [Update User Nicknames](#update-user-nicknames);
@@ -1107,6 +1108,38 @@ Accept: application/json
 ```ts
 {
     name: string | null
+}
+```
+
+__Response__:
+
+```ts
+{}
+```
+
+<hr />
+
+### __Update User Icon__
+
+Updates specified user icon.
+
+If issued with administator's access token `user` - can be any user's login otherwise can only be a token owener's login.
+
+__Request__:
+
+```http
+PUT /users/<user>/icon
+```
+
+```http
+Authorization: Bearer <access token>
+Content-Type: application/json
+Accept: application/json
+```
+
+```ts
+{
+    icon: string | null // "data:image/png;base64,..."
 }
 ```
 
