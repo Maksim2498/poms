@@ -1,9 +1,12 @@
-import styles       from "./styles.module.css"
+import styles               from "./styles.module.css"
 
-import { DimProps } from "./types"
+import { DEFAULT_DIM_TYPE } from "./constants"
+import { DimProps         } from "./types"
 
 export default function Dim(props: DimProps) {
-    return <div className={styles.dim}>
+    const type = props.type ?? DEFAULT_DIM_TYPE
+
+    return <div className={type === "dark" ? styles.dark : styles.light}>
         {props.children}
     </div>
 }

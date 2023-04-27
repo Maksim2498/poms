@@ -1,6 +1,4 @@
 .dim {
-    background-color: rgba(0, 0, 0, 50%);
-
     position: absolute;
     left: 0;
     top: 0;
@@ -12,6 +10,18 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+.light, .dark {
+    composes: dim
+}
+
+.light {
+    background-color: rgba(255, 255, 255, 20%)
+}
+
+.dark {
+    background-color: rgba(0, 0, 0, 50%)
 }
 
 .dim > :not(:first-child) {

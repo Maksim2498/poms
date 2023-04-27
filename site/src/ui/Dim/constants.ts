@@ -1,0 +1,1 @@
+export const DEFAULT_DIM_TYPE = "light"
