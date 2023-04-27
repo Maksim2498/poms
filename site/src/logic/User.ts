@@ -12,6 +12,7 @@ export interface CreationOptions extends z.TypeOf<typeof User.USER_JSON_SCHEMA> 
 export interface FetchAllOptions {
     authController:  AuthController
     fetchNicknames?: boolean
+    fetchIcon?:      boolean
     acceptInvalid?:  boolean
 }
 
@@ -19,6 +20,7 @@ export interface FetchOptions {
     login:           string
     authController:  AuthController
     fetchNicknames?: boolean
+    fetchIcon?:      boolean
     acceptInvalid?:  boolean
 }
 
@@ -94,10 +96,20 @@ export default class User {
         const {
             authController,
             fetchNicknames,
+            fetchIcon,
             acceptInvalid
         } = options
 
-        const url     = `users${fetchNicknames ? "?nicknames" : ""}`
+        const urlOptions = [] as string[]
+
+        if (fetchNicknames)
+            urlOptions.push("nicknames")
+
+        if (fetchIcon)
+            urlOptions.push("icon")
+
+        const url = `users?${urlOptions.join("&")}`
+
         const [jsons] = (await get(authController, url)) as [any[], AuthInfo]
 
         return jsons.map(json => {
@@ -114,11 +126,16 @@ export default class User {
         const {
             authController,
             fetchNicknames,
+            fetchIcon,
             login,
             acceptInvalid
         } = options
 
-        const url    = this.makeUrl(login, undefined, { nicknames: fetchNicknames })
+        const url = this.makeUrl(login, undefined, {
+            nicknames: fetchNicknames,
+            icon:      fetchIcon
+        })
+
         const [json] = await get(authController, url)
         
         return User.fromJson(json, acceptInvalid)
