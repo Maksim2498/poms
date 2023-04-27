@@ -78,7 +78,8 @@ export default function UserIcon(props: UserIconProps) {
                 type:             "button",
                 text:             "Save",
                 disable:          () => imageRef.current == null,
-                color:            "green"
+                color:            "green",
+                onClick:          onSave
             }
         } as Answers
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -137,6 +138,45 @@ export default function UserIcon(props: UserIconProps) {
         resizingRef.current     = false
         oldRectRef.current      = undefined
         draggingRef.current     = false
+    }
+
+    function onSave() {
+        if (!onChange || !user) {
+            setChanging(false)
+            return
+        }
+
+        const image  = imageRef.current
+        const canvas = contextRef.current?.canvas
+        const rect   = rectRef.current
+
+        if (image == null || canvas == null || rect == null) {
+            setChanging(false)
+            return
+        }
+
+        const iconCanvas = document.createElement("canvas")
+
+        const { x, y, size } = rect
+
+        iconCanvas.width  = size
+        iconCanvas.height = size
+
+        const context = iconCanvas.getContext("2d")
+
+        if (context == null) {
+            console.error("Canvas isn't supported")
+            setChanging(false)
+            return
+        }
+
+        context.drawImage(image, 0, 0, image.width, image.height, -x, -y, canvas.width, canvas.height)
+
+        const icon = iconCanvas.toDataURL()
+
+        onChange(user?.withIcon(icon), user)
+
+        setChanging(false)
     }
 
     function onFileChange(files: FileList | null) {
