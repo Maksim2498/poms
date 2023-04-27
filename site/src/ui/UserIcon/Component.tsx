@@ -22,7 +22,7 @@ export default function UserIcon(props: UserIconProps) {
         editMode,
         onClick,
         user,
-        //onChange
+        onChange
     } = props
 
     const [changing,  setChanging ] = useState(false)
@@ -78,16 +78,25 @@ export default function UserIcon(props: UserIconProps) {
 
     return <div className={user?.isAdmin ? styles.admin : styles.regular}>
         <img className = {styles.icon}
-             src       = {user?.icon ?? defaultIconSrc}
+             src       = {user?.displayIcon ?? defaultIconSrc}
              alt       = "User profile icon"
              onClick   = {() => onClick?.(user)} />
 
         {
             editMode && <div className={styles.editContainer}>
                 <Dim>
-                    <Button onClick={() => setChanging(true)}>
-                        Change
-                    </Button>
+                    <div className={styles.button}>
+                        <Button onClick={() => setChanging(true)}>
+                            Change
+                        </Button>
+                    </div>
+                    {
+                        user?.icon && <div className={styles.button}>
+                            <Button onClick={() => onChange?.(user.withIcon(), user)} color="red">
+                                Reset
+                            </Button>
+                        </div>
+                    }
                 </Dim>
             </div>
         }

@@ -26,3 +26,7 @@
 .regular:hover .editContainer {
     display: block
 }
+
+.button > * {
+    width: 5rem
+}

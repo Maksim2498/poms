@@ -589,15 +589,16 @@ export default class User {
         })
     }
 
-    readonly login:      string
-    readonly name?:      string
-    readonly nicknames?: string[]
-    readonly isAdmin:    boolean
-    readonly isOnline:   boolean
-    readonly icon:       string
-    readonly reg:        {
-        readonly time:   Date
-        readonly login?: string
+    readonly login:       string
+    readonly name?:       string
+    readonly nicknames?:  string[]
+    readonly isAdmin:     boolean
+    readonly isOnline:    boolean
+    readonly icon?:       string
+    readonly displayIcon: string
+    readonly reg:         {
+        readonly time:    Date
+        readonly login?:  string
     }
 
     constructor(options: CreationOptions) {
@@ -613,19 +614,21 @@ export default class User {
             User.checkNormedNicknames(nicknames)
         }
 
-        const isAdmin   = options.isAdmin      ?? false
-        const isOnline  = options.isOnline     ?? false
-        const regTime   = options.reg?.time    ?? new Date()
-        const regLogin  = options.reg?.login   ?? undefined
-        const icon      = User.renderDefaultIcon({ login, name })
+        const isAdmin     = options.isAdmin      ?? false
+        const isOnline    = options.isOnline     ?? false
+        const regTime     = options.reg?.time    ?? new Date()
+        const regLogin    = options.reg?.login   ?? undefined
+        const icon        = undefined
+        const displayIcon = icon ?? User.renderDefaultIcon({ login, name })
 
-        this.login      = login
-        this.name       = name
-        this.nicknames  = nicknames
-        this.isAdmin    = isAdmin
-        this.isOnline   = isOnline
-        this.icon       = icon
-        this.reg        = {
+        this.login       = login
+        this.name        = name
+        this.nicknames   = nicknames
+        this.isAdmin     = isAdmin
+        this.isOnline    = isOnline
+        this.icon        = icon
+        this.displayIcon = displayIcon
+        this.reg         = {
             time:  regTime,
             login: regLogin
         }
@@ -676,6 +679,14 @@ export default class User {
         return new User({
             ...this,
             nicknames,
+            acceptInvalid: true
+        })
+    }
+
+    withIcon(icon?: string): User {
+        return new User({
+            ...this,
+            icon,
             acceptInvalid: true
         })
     }
