@@ -26,6 +26,7 @@ export interface FetchOptions {
 
 export interface UpdatedOptions {
     updateNicknames?: boolean
+    updateIcon?:      boolean
     authController:   AuthController
 }
 
@@ -653,12 +654,17 @@ export default class User {
     }
 
     async updated(options: UpdatedOptions): Promise<User> {
-        const { authController, updateNicknames } = options
+        const {
+            authController,
+            updateNicknames,
+            updateIcon,
+        } = options
 
         return await User.fetch({
             authController,
             login:          this.login,
-            fetchNicknames: updateNicknames
+            fetchIcon:      updateIcon,
+            fetchNicknames: updateNicknames,
         })
     }
 
