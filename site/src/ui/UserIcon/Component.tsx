@@ -1,5 +1,6 @@
 import User                                     from "logic/User"
-import DimButton                                from "ui/DimButton/Component"
+import Button                                   from "ui/Button/Component"
+import Dim                                      from "ui/Dim/Component"
 import Modal                                    from "ui/Modal/Component"
 import defaultIconSrc                           from "./default-icon.svg"
 import styles                                   from "./styles.module.css"
@@ -83,7 +84,11 @@ export default function UserIcon(props: UserIconProps) {
 
         {
             editMode && <div className={styles.editContainer}>
-                <DimButton onClick={() => setChanging(true)}>Change</DimButton>
+                <Dim>
+                    <Button onClick={() => setChanging(true)}>
+                        Change
+                    </Button>
+                </Dim>
             </div>
         }
 

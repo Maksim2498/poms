@@ -1,5 +1,9 @@
-import styles from "./styles.module.css"
+import styles       from "./styles.module.css"
 
-export default function Dim() {
-    return <div className={styles.dim} />
+import { DimProps } from "./types"
+
+export default function Dim(props: DimProps) {
+    return <div className={styles.dim}>
+        {props.children}
+    </div>
 }
