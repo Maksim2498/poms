@@ -141,8 +141,9 @@ export default function Profile(props: ProfileProps) {
             return props.user
 
         return await User.fetch({
-            fetchNicknames: true,
             login:          props.login,
+            fetchNicknames: true,
+            fetchIcon:      true,
             acceptInvalid:  true,
             authController
         })

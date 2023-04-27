@@ -95,7 +95,10 @@ export default function App() {
                 return
             }
 
-            const updatedUser = await user?.updated({ authController: [authInfo, setAuthInfo] })
+            const updatedUser = await user?.updated({
+                authController: [authInfo, setAuthInfo],
+                updateIcon:     true
+            })
 
             setUser(updatedUser)
         } catch (error) {
