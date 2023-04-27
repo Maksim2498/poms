@@ -594,7 +594,8 @@ export default class User {
         const {
             authController,
             login,
-            isAdmin
+            icon,
+            isAdmin,
         } = options
 
         const url = this.makeUrl(login)
@@ -612,8 +613,9 @@ export default class User {
 
         await put(authController, url, {
             isAdmin,
+            name,
+            icon,
             nicknames,
-            name
         })
     }
     
