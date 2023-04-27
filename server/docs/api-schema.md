@@ -1250,7 +1250,8 @@ Accept: application/json
 ```ts
 {
     password: string
-    name?:    string
+    name?:    string | null
+    icon?:    string | null // "data:image/png;base64,..."
     isAdmin?: boolean
 }
 ```

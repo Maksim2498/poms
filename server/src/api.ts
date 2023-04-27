@@ -116,38 +116,40 @@ export async function checkPermission(this: Server, permission: Permission, req:
     }
 }
 
+const ICON_SCHEMA = z.string()
+                     .regex(/^\s*data\s*:\s*image\s*\/\s*png\s*;\s*base64\s*,\s*[a-z0-9+/=]*$/i)
+                     .transform(url => {
+                         const commaPos = url.indexOf(",")
+                         const data     = url.slice(commaPos + 1)
+                         const icon     = Buffer.from(data, "hex")
+
+                         return icon
+                     })
+
 const ADD_USER_SCHEMA = z.object({
     password: z.string(),
     name:     z.ostring(),
-    isAdmin:  z.oboolean()
+    icon:     ICON_SCHEMA.nullish(),
+    isAdmin:  z.oboolean(),
 })
 
 const UPDATE_USER_SCHEMA = z.object({
     name:      z.string().nullish(),
+    icon:      ICON_SCHEMA.nullish(),
     nicknames: z.string().array().nullish(),
     isAdmin:   z.oboolean(),
-    icon:      z.string()
-                .regex(/^\s*data\s*:\s*image\s*\/\s*png\s*;\s*base64\s*,\s*[a-z0-9+/=]*$/i)
-                .transform(url => {
-                    const commaPos = url.indexOf(",")
-                    const data     = url.slice(commaPos + 1)
-                    const icon     = Buffer.from(data, "hex")
-
-                    return icon
-                })
-                .nullish()
 })
 
 const UPDATE_USER_NAME_SCHEMA = z.object({
-    name: z.string().nullable()
+    name: z.string().nullable(),
 })
 
 const UPDATE_USER_PASSWORD_SCHEMA = z.object({
-    password: z.string()
+    password: z.string(),
 })
 
 const UPDATE_USER_PERMISSION_SCHEMA = z.object({
-    isAdmin: z.boolean()
+    isAdmin: z.boolean(),
 })
 
 const UPDATE_NICKNAMES_SCHEMA = z.string().array()
@@ -858,17 +860,24 @@ export const units: UnitCollection = {
                 return
             }
 
-            const { password, name, isAdmin } = parsed.data
-            const authorization               = req.headers.authorization!
-            const aTokenId                    = parseTokenId(authorization)
-            const aTokenInfo                  = await this.tokenManager.forceGetATokenInfo(connection, aTokenId)
-            const creatorId                   = aTokenInfo.userId
-            const login                       = req.params.user
+            const {
+                password,
+                name,
+                icon,
+                isAdmin
+            } = parsed.data
+
+            const authorization = req.headers.authorization!
+            const aTokenId      = parseTokenId(authorization)
+            const aTokenInfo    = await this.tokenManager.forceGetATokenInfo(connection, aTokenId)
+            const creatorId     = aTokenInfo.userId
+            const login         = req.params.user
         
             await this.userManager.forceCreateUser(connection, {
                 login,
                 password,
                 name,
+                icon,
                 isAdmin,
                 creator: creatorId
             })
