@@ -1,5 +1,6 @@
 import z                                                   from "zod"
 import isBase64                                            from "is-base64"
+import bufferToDataUrl                                     from "buffer-to-data-url"
 import Server                                              from "./Server"
 
 import { Request, Response                               } from "express"
@@ -442,6 +443,22 @@ export const units: UnitCollection = {
             const info = await this.userManager.forceGetUserInfo(connection, user)
 
             res.json({ name: info.name ?? null })
+        }
+    },
+
+    getUserIcon: {
+        permission: "user",
+        method:     "get",
+        path:       "/users/:user/icon",
+
+        async handler(this: Server, connection: Connection, req: Request, res: Response) {
+            const user     = req.params.user
+            const { icon } = await this.userManager.forceGetUserInfo(connection, user, { fetchIcon: true })
+
+            res.json({
+                icon: icon != null ? bufferToDataUrl("image/png", icon)
+                                   : null
+            })
         }
     },
 

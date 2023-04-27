@@ -23,6 +23,7 @@
   - [Get User Registration Time](#get-user-registration-time);
   - [Get User Registrar](#get-user-registrar);
   - [Get User Name](#get-user-name);
+  - [Get User Icon](#get-user-icon);
   - [Get User Nicknames](#get-user-nicknames);
   - [Get Server Status](#get-server-status);
   - [Get Server Version](#get-server-version);
@@ -525,9 +526,35 @@ __Response__:
 
 ```ts
 {
-    name: string
+    name: string | null
 }
 ```
+
+<hr />
+
+### __Get User Icon__
+
+Returns icon of specified user.
+
+__Request__:
+
+```http
+GET /users/<user>/icon
+```
+
+```http
+Authorization: Bearer <access token> -- needed if anonym access isn't allowed
+Accept: application/json
+```
+
+__Response__:
+
+```ts
+{
+    icon: string | null // "data:image/png;base64,..."
+}
+```
+
 
 <hr />
 
