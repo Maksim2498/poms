@@ -122,7 +122,9 @@ const ICON_SCHEMA = z.string()
                      .transform(url => {
                          const commaPos = url.indexOf(",")
                          const data     = url.slice(commaPos + 1)
-                         const icon     = Buffer.from(data, "hex")
+                         const icon     = Buffer.from(data, "base64")
+
+                         console.log(data)
 
                          return icon
                      })
