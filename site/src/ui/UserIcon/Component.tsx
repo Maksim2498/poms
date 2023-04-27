@@ -60,6 +60,7 @@ export default function UserIcon(props: UserIconProps) {
             save: {
                 type:             "button",
                 text:             "Save",
+                disable:          () => imageRef.current == null,
                 color:            "green"
             }
         } as Answers
