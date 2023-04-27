@@ -9,6 +9,17 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { UserIconProps                        } from "./types"
 import { Answers                              } from "ui/Modal/types"
 
+/*
+
+    Corner Numbering
+
+    0----1
+    |    |
+    |    |
+    3----2
+
+*/
+
 export default function UserIcon(props: UserIconProps) {
     type Rect = {
         x:    number
@@ -16,7 +27,10 @@ export default function UserIcon(props: UserIconProps) {
         size: number
     }
 
-    const DRAGGER_SIZE = 50
+    type Corner = 0 | 1 | 2 | 3
+
+    const CORNER_SIZE = 80
+    const MIN_SIZE    = 100
 
     const {
         editMode,
@@ -31,6 +45,9 @@ export default function UserIcon(props: UserIconProps) {
     const contextRef                = useRef(undefined as CanvasRenderingContext2D | undefined)
     const rectRef                   = useRef(undefined as Rect                     | undefined)
     const insideRef                 = useRef(false)
+    const insideCornerRef           = useRef(false     as Corner                   | false    )
+    const resizingRef               = useRef(false     as Corner                   | false    )
+    const oldRectRef                = useRef(undefined as Rect                     | undefined)
     const draggingRef               = useRef(false)
     const answers                   = useMemo(() => {
         return {
@@ -113,9 +130,13 @@ export default function UserIcon(props: UserIconProps) {
         setChanging(false)
         setIconReady(false)
 
-        imageRef.current   = undefined
-        contextRef.current = undefined
-        insideRef.current  = false
+        imageRef.current        = undefined
+        contextRef.current      = undefined
+        insideRef.current       = false
+        insideCornerRef.current = false
+        resizingRef.current     = false
+        oldRectRef.current      = undefined
+        draggingRef.current     = false
     }
 
     function onFileChange(files: FileList | null) {
@@ -199,42 +220,93 @@ export default function UserIcon(props: UserIconProps) {
     }
 
     function onMouseMove(x: number, y: number, dx: number, dy: number) {
-        setInside(rectContains(x, y))
+        const corner = cornerContains(x, y)
+
+        setInsideCorner(corner)
+        setInside(corner === false ? rectContains(x, y) : false)
 
         if (draggingRef.current)
             moveRect(dx, dy)
+        
+        if (resizingRef.current !== false)
+            resizeRect(x, y, dx, dy)
     }
 
     function onMouseDown(x: number, y: number) {
-        if (insideRef.current)
-            setDragging(true)
+        setDragging(insideRef.current)
+        setResizing(insideCornerRef.current)
     }
 
     function onMouseUp(x: number, y: number) {
         setDragging(false)
+        setResizing(false)
     }
 
     function onMouseLeave() {
         setInside(false)
+        setInsideCorner(false)
         setDragging(false)
+        setResizing(false)
     }
 
     function setInside(inside: boolean) {
         insideRef.current = inside
         updateCursor()
+        redraw()
+    }
+
+    function setInsideCorner(inside: Corner | false) {
+        insideCornerRef.current = inside
+        updateCursor()
+        redraw()
     }
 
     function setDragging(dragging: boolean) {
         draggingRef.current = dragging
         updateCursor()
+        redraw()
+    }
+
+    function setResizing(resizing: Corner | false) {
+        resizingRef.current =  resizing
+        oldRectRef.current  =  resizing        !== false
+                            && rectRef.current !=  null  ? { ...rectRef.current }
+                                                         : undefined
+
+        updateCursor()
+        redraw()
     }
 
     function updateCursor() {
-        const cursor = draggingRef.current ? "grabbing"
-                                           : insideRef.current ? "grab"
-                                                               : "auto"
+        setCursor(cursor())
 
-        setCursor(cursor)
+        function cursor(): string {
+            if (draggingRef.current)
+                return "grabbing"
+
+            if (resizingRef.current !== false)
+                return cornerCursor(resizingRef.current)
+
+            if (insideRef.current)
+                return "grab"
+
+            if (insideCornerRef.current !== false)
+                return cornerCursor(insideCornerRef.current)
+
+            return "auto"
+
+            function cornerCursor(corner: Corner): string {
+                switch (corner) {
+                    case 1:
+                    case 3:
+                        return "nesw-resize"
+
+                    case 0:
+                    case 2:
+                        return "nwse-resize"
+                }
+            }
+        }
     }
 
     function setCursor(cursor: string) {
@@ -246,14 +318,54 @@ export default function UserIcon(props: UserIconProps) {
         context.canvas.style.cursor = cursor
     }
 
-    function rectContains(x: number, y: number): boolean {
-        const rect = rectRef.current
-
+    function rectContains(x: number, y: number, rect: Rect | undefined = rectRef.current): boolean {
         if (rect == null)
             return false
 
         return x > rect.x && x < rect.x + rect.size
             && y > rect.y && y < rect.y + rect.size
+    }
+
+    function cornerContains(x: number, y: number, rect: Rect | undefined = rectRef.current): Corner | false {
+        const rects = makeCornerRects(rect)
+
+        for (const [i, rect] of rects.entries())
+            if (rectContains(x, y, rect))
+                return i as Corner
+
+        return false
+    }
+
+    function makeCornerRects(rect: Rect | undefined = rectRef.current): Rect[] {
+        if (rect == null)
+            return []
+
+        const { x, y, size } = rect
+
+        const halfSize = CORNER_SIZE / 2
+
+        return [
+            {
+                x: x        - halfSize,
+                y: y        - halfSize,
+                size: CORNER_SIZE,
+            },
+            {
+                x: x + size - halfSize,
+                y: y        - halfSize,
+                size: CORNER_SIZE,
+            },
+            {
+                x: x + size - halfSize,
+                y: y + size - halfSize,
+                size: CORNER_SIZE,
+            },
+            {
+                x: x        - halfSize,
+                y: y + size - halfSize,
+                size: CORNER_SIZE,
+            },
+        ]
     }
 
     function moveRect(dx: number, dy: number) {
@@ -278,6 +390,78 @@ export default function UserIcon(props: UserIconProps) {
             rect.y = 0
         else if (y + size > height)
             rect.y = height - size
+
+        redraw()
+    }
+
+    function resizeRect(x: number, y: number, dx: number, dy: number) {
+        const canvas  = contextRef.current?.canvas
+        const rect    = rectRef.current
+        const oldRect = oldRectRef.current
+        const corner  = resizingRef.current
+
+        if (rect == null || canvas == null || oldRect == null || corner === false)
+            return
+        
+        const {
+            x:    oX,
+            y:    oY,
+            size: oSize
+        } = oldRect
+
+        const newRect = { ...rect }
+
+        switch (corner) {
+            case 0: {
+                const delta = Math.max(x - oX, y - oY)
+
+                newRect.x    = oX    + delta
+                newRect.y    = oY    + delta
+                newRect.size = oSize - delta
+
+                break
+            }
+
+            case 1: {
+                const delta = Math.max(oX - x, y - oY)
+
+                newRect.y    = oY    + delta
+                newRect.size = oSize - delta
+
+                break
+            }
+
+            case 2: {
+                newRect.size = Math.max(x - rect.x, y - rect.y)
+                break
+            }
+
+            case 3: {
+                const delta = Math.max(x - oX, oY - y)
+
+                newRect.x    = oX    + delta
+                newRect.size = oSize - delta
+
+                break
+            }
+        }
+
+        if (newRect.size < MIN_SIZE)
+            return
+
+        if (newRect.x < 0)
+            return
+
+        if (newRect.y < 0)
+            return
+
+        if (newRect.x + newRect.size > canvas.width)
+            return
+
+        if (newRect.y + newRect.size > canvas.height)
+            return
+
+        rectRef.current = newRect
 
         redraw()
     }
@@ -339,16 +523,22 @@ export default function UserIcon(props: UserIconProps) {
         // Fourth
         context.fillRect(x, y + size, size, canvas.height - y - size)
 
+        const updating =  draggingRef.current
+                       || resizingRef.current !== false
+
+        const style = updating ? "white"
+                               : "rgba(255, 255, 255, 50%)"
+
         // Border drawing
 
-        context.strokeStyle = "white"
+        context.strokeStyle = style
         context.lineWidth   = 10
 
         context.strokeRect(x, y, size, size)
 
         // Corners drawing
 
-        context.fillStyle = "white"
+        context.fillStyle = style
 
         const cornerPoses = [
             [x,        y       ],
@@ -357,9 +547,9 @@ export default function UserIcon(props: UserIconProps) {
             [x + size, y + size],
         ]
 
-        const offset = DRAGGER_SIZE / 2
+        const offset = CORNER_SIZE / 2
 
         for (const [x, y] of cornerPoses)
-            context.fillRect(x - offset, y - offset, DRAGGER_SIZE, DRAGGER_SIZE)
+            context.fillRect(x - offset, y - offset, CORNER_SIZE, CORNER_SIZE)
     }
 }
