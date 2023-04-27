@@ -450,16 +450,16 @@ export default function UserIcon(props: UserIconProps) {
             return
 
         if (newRect.x < 0)
-            return
+            newRect.x = 0
 
         if (newRect.y < 0)
-            return
+            newRect.y = 0
 
         if (newRect.x + newRect.size > canvas.width)
-            return
+            newRect.size = canvas.width - newRect.x
 
         if (newRect.y + newRect.size > canvas.height)
-            return
+            newRect.size = canvas.height - newRect.y
 
         rectRef.current = newRect
 
