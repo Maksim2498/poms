@@ -813,7 +813,7 @@ export function makePasswordHashString(login: string, password: string): string 
     return `${login.toLowerCase()}:${password}`
 }
 
-export default class UserNotFoundError extends LogicError {
+export class UserNotFoundError extends LogicError {
     readonly user: User
 
     static makeMessage(user: User): string {
