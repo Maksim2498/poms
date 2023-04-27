@@ -125,7 +125,17 @@ const ADD_USER_SCHEMA = z.object({
 const UPDATE_USER_SCHEMA = z.object({
     name:      z.string().nullish(),
     nicknames: z.string().array().nullish(),
-    isAdmin:   z.oboolean()
+    isAdmin:   z.oboolean(),
+    icon:      z.string()
+                .regex(/^\s*data\s*:\s*image\s*\/\s*png\s*;\s*base64\s*,\s*[a-z0-9+/=]*$/i)
+                .transform(url => {
+                    const commaPos = url.indexOf(",")
+                    const data     = url.slice(commaPos + 1)
+                    const icon     = Buffer.from(data, "hex")
+
+                    return icon
+                })
+                .nullish()
 })
 
 const UPDATE_USER_NAME_SCHEMA = z.object({
@@ -695,6 +705,7 @@ export const units: UnitCollection = {
 
             const {
                 name,
+                icon,
                 nicknames,
                 isAdmin
             } = parsedResult.data
@@ -717,6 +728,9 @@ export const units: UnitCollection = {
                 if (userInfo?.isAdmin)
                     await this.userManager.forceSetUserPermission(connection, user, isAdmin)
             }
+
+            if (icon !== undefined)
+                await this.userManager.forceSetUserIcon(connection, user, icon)
 
             res.json({})
         }

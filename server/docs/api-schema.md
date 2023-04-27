@@ -1078,6 +1078,7 @@ __Response__:
 ```ts
 {
     name?:      string   | null
+    icon?:      string   | null // "data:image/png;base64,..."
     nicknames?: string[]
     isAdmin?:   boolean         // Ignored if issuer is not an admin
 }
