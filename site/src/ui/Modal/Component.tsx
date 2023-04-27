@@ -239,9 +239,8 @@ export default function Modal(props: ModalProps) {
                                 if (!onMouseMove)
                                     return
 
-                                const [x, y] = mouseEventToPos(event)
-                                const dx     = event.movementX
-                                const dy     = event.movementY
+                                const [x,  y ] = mouseEventToPos(event)
+                                const [dx, dy] = mouseEventToPosDelta(event)
 
                                 onMouseMove(x, y, dx, dy)
                             }
@@ -277,6 +276,14 @@ export default function Modal(props: ModalProps) {
                                 const y    = (event.clientY - rect.y) / rect.height * canvas.height
 
                                 return [x, y]
+                            }
+
+                            function mouseEventToPosDelta(event: MouseEvent<HTMLDivElement>): [number, number] {
+                                const rect = event.currentTarget.getBoundingClientRect()
+                                const dx   = event.movementX / rect.width  * canvas.width
+                                const dy   = event.movementY / rect.height * canvas.height
+
+                                return [dx, dy]
                             }
                         }
 
