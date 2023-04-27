@@ -1,7 +1,6 @@
 import assert                                                      from "assert"
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
-import UserNotFoundError                                           from "./UserNotFoundError"
 
 import { Connection, FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
 import { Logger                                                  } from "winston"
@@ -812,4 +811,18 @@ export function deepUserRowToDeepUserInfo(rows: DeepUserRow): DeepUserInfo {
 
 export function makePasswordHashString(login: string, password: string): string {
     return `${login.toLowerCase()}:${password}`
+}
+
+export default class UserNotFoundError extends LogicError {
+    readonly user: User
+
+    static makeMessage(user: User): string {
+        return typeof user === "string" ? `User "${user}" not found`
+                                        : `User with id ${user} not found`
+    }
+
+    constructor(user: User, message: string = UserNotFoundError.makeMessage(user)) {
+        super(message)
+        this.user = user
+    }
 }
