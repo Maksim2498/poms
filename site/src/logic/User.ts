@@ -100,6 +100,18 @@ export default class User {
         }).nullish()
     })
 
+    static readonly ICON_JSON_SCHEMA = z.object({
+        icon: z.string().nullish()
+    })
+
+    static async getIcon(authController: AuthController, login: string): Promise<string | null> {
+        const url      = this.makeUrl(login, "icon")
+        const [json]   = await get(authController, url)
+        const { icon } = this.ICON_JSON_SCHEMA.parse(json)
+
+        return icon ?? null
+    }
+
     static async getAll(options: GetAllOptions): Promise<User[]> {
         const {
             authController,
