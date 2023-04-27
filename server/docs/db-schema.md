@@ -35,6 +35,7 @@ CREATE TABLE Users (
     id            BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
     login         VARCHAR(255) NOT NULL UNIQUE,
     name          VARCHAR(255),
+    icon          MEDIUMBLOB,
     cr_id         BIGINT,
     cr_time       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     password_hash BINARY(64)   NOT NULL,
