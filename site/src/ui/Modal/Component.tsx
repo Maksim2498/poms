@@ -228,11 +228,14 @@ export default function Modal(props: ModalProps) {
                             function ref(ref: HTMLDivElement | null) {
                                 if (ref == null)
                                     return
+                                
+                                const { children } = ref
 
-                                ref.innerHTML = ""
-                                ref.appendChild(canvas)
-
-                                onCanvasSet?.(canvas)
+                                if (children.length !== 1 || children[0] !== canvas) {
+                                    ref.innerHTML = ""
+                                    ref.appendChild(canvas)
+                                    onCanvasSet?.(canvas)
+                                }
                             }
 
                             function rawOnMouseMove(event: MouseEvent<HTMLDivElement>) {
