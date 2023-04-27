@@ -456,7 +456,7 @@ export const units: UnitCollection = {
             const { icon } = await this.userManager.forceGetUserInfo(connection, user, { fetchIcon: true })
 
             res.json({
-                icon: icon != null ? bufferToDataUrl("image/png", icon)
+                icon: icon != null ? await bufferToDataUrl("image/png", icon)
                                    : null
             })
         }
