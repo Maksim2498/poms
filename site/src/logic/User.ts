@@ -9,14 +9,14 @@ export interface CreationOptions extends z.TypeOf<typeof User.USER_JSON_SCHEMA> 
     acceptInvalid?: boolean
 }
 
-export interface FetchAllOptions {
+export interface GetAllOptions {
     authController:  AuthController
     fetchNicknames?: boolean
     fetchIcon?:      boolean
     acceptInvalid?:  boolean
 }
 
-export interface FetchOptions {
+export interface GetOptions {
     login:           string
     authController:  AuthController
     fetchNicknames?: boolean
@@ -100,7 +100,7 @@ export default class User {
         }).nullish()
     })
 
-    static async getAll(options: FetchAllOptions): Promise<User[]> {
+    static async getAll(options: GetAllOptions): Promise<User[]> {
         const {
             authController,
             fetchNicknames,
@@ -130,7 +130,7 @@ export default class User {
         }).filter(user => user != null) as User[]
     }
 
-    static async get(options: FetchOptions): Promise<User> {
+    static async get(options: GetOptions): Promise<User> {
         const {
             authController,
             fetchNicknames,
