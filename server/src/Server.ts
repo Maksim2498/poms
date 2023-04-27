@@ -95,8 +95,7 @@ export default class Server {
         setupApp.call(this)
 
         function setupApp(this: Server) {
-            if (config.read.http.proxied)
-                app.set("trust proxy", true)
+            setupCommon()
 
             if (logger)
                 setupLogger()
@@ -106,6 +105,11 @@ export default class Server {
             setupWs.call(this)
             setup404()
             setup500()
+
+            function setupCommon() {
+                if (config.read.http.proxied)
+                    app.set("trust proxy", true)
+            }
 
             function setupLogger() {
                 const middleware = morgan(
@@ -143,7 +147,7 @@ export default class Server {
 
                     function createJsonParser(): (RequestHandler | ErrorRequestHandler)[] {
                         return [
-                            express.json(),
+                            express.json({ limit: "20mb" }),
                             (error: Error, req: Request, res: Response, next: (error: any) => void) => {
                                 if (error instanceof SyntaxError) {
                                     res.sendStatus(400)
