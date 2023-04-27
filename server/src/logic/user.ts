@@ -57,6 +57,10 @@ export interface CreateUserOptions extends ForceCreateUserOptions {
     throwOnDuplicate?:       boolean
 } 
 
+export interface GetAllUsersInfoOptions {
+    fetchIcon?: boolean
+}
+
 export interface UserRow {
     id:            number
     login:         string
@@ -165,7 +169,7 @@ export interface UserManager {
     getDeepUserInfo(connection: Connection, user: User, options?: GetDeepUserInfoOptions): Promise<DeepUserInfo | undefined>
 
 
-    getAllUsersInfo(connection: Connection): Promise<UserInfo[]>
+    getAllUsersInfo(connection: Connection, options?: GetAllUsersInfoOptions): Promise<UserInfo[]>
 
 
     forceGetUserLogin(connection: Connection, user: User): Promise<string>
@@ -559,10 +563,12 @@ export class DefaultUserManager implements UserManager {
         return info
     }
 
-    async getAllUsersInfo(connection: Connection): Promise<UserInfo[]> {
+    async getAllUsersInfo(connection: Connection, options?: GetAllUsersInfoOptions): Promise<UserInfo[]> {
         this.logger?.debug("Getting all users info...")
 
-        const [rows] = await connection.execute("SELECT * FROM Users") as [UserRow[], FieldPacket[]]
+        const columnsSql = `id, login, name, cr_id, cr_time, password_hash, is_admin, is_online${options?.fetchIcon ? ", icon" : ""}`
+        const sql        = `SELECT ${columnsSql} FROM Users`
+        const [rows]     = await connection.execute(sql) as [UserRow[], FieldPacket[]]
 
         return rows.map((row, i) => {
             const info = userRowToUserInfo(row)
