@@ -28,16 +28,23 @@ export interface ForceCreateAdminOptions {
     login?:    string
     password?: string
     name?:     string
+    icon?:     Buffer | null
+    creator?:  User   | null
 }
 
 export interface CreateAdminOptions extends ForceCreateAdminOptions {
-    force?: boolean
+    throwOnInvalidName?:     boolean
+    throwOnInvalidLogin?:    boolean
+    throwOnInvalidPassword?: boolean
+    throwOnInvalidCreator?:  boolean
+    throwOnDuplicate?:       boolean
 }
 
 export interface ForceCreateUserOptions {
     login:    string
     password: string
     name?:    string | null
+    icon?:    Buffer | null
     isAdmin?: boolean
     creator?: User   | null
 }
@@ -54,6 +61,7 @@ export interface UserRow {
     id:            number
     login:         string
     name:          string | null
+    icon:          Buffer | null
     password_hash: Buffer
     is_admin:      boolean
     is_online:     boolean
@@ -65,11 +73,20 @@ export interface UserInfo {
     id:           number
     login:        string
     name?:        string
+    icon?:        Buffer
     passwordHash: Buffer
     isAdmin:      boolean
     isOnline:     boolean
     created:      Date
     creatorId?:   number
+}
+
+export interface ForceGetUserInfoOptions {
+    fetchIcon?: boolean
+}
+
+export interface GetUserInfoOptions extends ForceGetUserInfoOptions {
+    throwOnFailure?: boolean
 }
 
 export interface DeepUserRow {
@@ -81,6 +98,7 @@ export interface DeepUserInfo {
     id:           number
     login:        string
     name?:        string
+    icon?:        Buffer
     passwordHash: Buffer
     isAdmin:      boolean
     isOnline:     boolean
@@ -154,10 +172,9 @@ export interface UserManager {
     getUserId(connection: Connection, user: User, throwOnFailure?: boolean): Promise<number | undefined>
 
 
-    forceGetUserInfo(connection: Connection, user: User): Promise<UserInfo>
+    forceGetUserInfo(connection: Connection, user: User, options?: ForceGetUserInfoOptions): Promise<UserInfo>
 
-    getUserInfo(connection: Connection, user: User, throwOnFailure:  true):    Promise<UserInfo>
-    getUserInfo(connection: Connection, user: User, throwOnFailure?: boolean): Promise<UserInfo | undefined>
+    getUserInfo(connection: Connection, user: User, options?: GetUserInfoOptions): Promise<UserInfo | undefined>
 }
 
 export class DefaultUserManager implements UserManager {
@@ -279,7 +296,11 @@ export class DefaultUserManager implements UserManager {
     async forceCreateAdmin(connection: Connection, options?: CreateAdminOptions) {
         await this.createAdmin(connection, {
             ...options,
-            force: true
+            throwOnInvalidLogin:    true,
+            throwOnInvalidPassword: true,
+            throwOnInvalidName:     true,
+            throwOnInvalidCreator:  true,
+            throwOnDuplicate:       true
         })
     }
 
@@ -287,20 +308,31 @@ export class DefaultUserManager implements UserManager {
         const login    = options?.login    ?? this.config.read.logic.admin.login
         const password = options?.password ?? this.config.read.logic.admin.password
         const name     = options?.name     ?? this.config.read.logic.admin.name
-        const force    = options?.force    ?? false
+
+        const {
+            icon,
+            creator,
+            throwOnInvalidLogin,
+            throwOnInvalidPassword,
+            throwOnInvalidName,
+            throwOnInvalidCreator,
+            throwOnDuplicate
+        } = options ?? {}
 
         this.logger?.debug(`Creating admin "${login}"...`)
 
         const created = await this.createUser(connection, {
+            isAdmin: true,
             login,
             password,
             name,
-            isAdmin:                true,
-            throwOnInvalidLogin:    force,
-            throwOnInvalidPassword: force,
-            throwOnInvalidName:     force,
-            throwOnInvalidCreator:  force,
-            throwOnDuplicate:       force
+            icon,
+            creator,
+            throwOnInvalidLogin,
+            throwOnInvalidPassword,
+            throwOnInvalidName,
+            throwOnInvalidCreator,
+            throwOnDuplicate,
         })
 
         this.logger?.debug(created ? "Created" : "Not created")
@@ -324,6 +356,7 @@ export class DefaultUserManager implements UserManager {
             creator,
             password,
             isAdmin,
+            icon,
         } = options
 
         const login = normUserLogin(options.login)
@@ -343,13 +376,14 @@ export class DefaultUserManager implements UserManager {
         if (creatorId === "not-found")
             return false
 
-        const sql    = "INSERT INTO Users (login, name, is_admin, cr_id, password_hash) VALUES (?, ?, ?, ?, UNHEX(SHA2(?, 512)))"
+        const sql    = "INSERT INTO Users (login, name, icon, is_admin, cr_id, password_hash) VALUES (?, ?, ?, ?, ?, UNHEX(SHA2(?, 512)))"
         const toHash = makePasswordHashString(login, password)
 
         try {
             await connection.execute(sql, [
                 login,
                 name,
+                icon    ?? null,
                 isAdmin ?? false,
                 creatorId,
                 toHash
@@ -568,26 +602,28 @@ export class DefaultUserManager implements UserManager {
         return info?.id
     }
 
-    async forceGetUserInfo(connection: Connection, user: User): Promise<UserInfo> {
-        return await this.getUserInfo(connection, user, true)
+    async forceGetUserInfo(connection: Connection, user: User, options?: ForceGetUserInfoOptions): Promise<UserInfo> {
+        return (await this.getUserInfo(connection, user, {
+            ...options,
+            throwOnFailure: true
+        }))!
     }
 
-    async getUserInfo(connection: Connection, user: User, throwOnFailure:  true):            Promise<UserInfo>
-    async getUserInfo(connection: Connection, user: User, throwOnFailure?: boolean):         Promise<UserInfo | undefined>
-    async getUserInfo(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<UserInfo | undefined> {
+    async getUserInfo(connection: Connection, user: User, options?: GetUserInfoOptions): Promise<UserInfo | undefined> {
         const numUser = typeof user === "number"
 
         this.logger?.debug(numUser ? `Getting info of user with id ${user}...`
                                    : `Getting info of user "${user}"...`)
 
-        const whereSql = numUser ? "id = ?" : "login = ?"
-        const sql      = `SELECT * FROM Users WHERE ${whereSql}`
-        const [rows]   = await connection.execute(sql, [user]) as [UserRow[], FieldPacket[]]
+        const whereSql   = numUser ? "id = ?" : "login = ?"
+        const columnsSql = `id, login, name, cr_id, cr_time, password_hash, is_admin, is_online${options?.fetchIcon ? ", icon" : ""}`
+        const sql        = `SELECT * FROM Users WHERE ${whereSql}`
+        const [rows]     = await connection.execute(sql, [user]) as [UserRow[], FieldPacket[]]
 
         if (rows.length === 0) {
             const message = UserNotFoundError.makeMessage(user)
 
-            if (throwOnFailure)
+            if (options?.throwOnFailure)
                 throw new UserNotFoundError(user, message)
 
             this.logger?.debug(message)
@@ -729,6 +765,7 @@ export function userRowToUserInfo(row: UserRow): UserInfo {
         id:           row.id,
         login:        row.login,
         name:         row.name  ?? undefined,
+        icon:         row.icon  ?? undefined,
         passwordHash: row.password_hash,
         isAdmin:      Boolean(row.is_admin),
         isOnline:     Boolean(row.is_online),
@@ -746,6 +783,7 @@ export function deepUserRowToDeepUserInfo(rows: DeepUserRow): DeepUserInfo {
         id:           t.id,
         login:        t.login,
         name:         t.name ?? undefined,
+        icon:         t.icon ?? undefined,
         passwordHash: t.password_hash,
         isAdmin:      Boolean(t.is_admin),
         isOnline:     Boolean(t.is_online),
