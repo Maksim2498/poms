@@ -106,6 +106,15 @@ export interface DeepUserInfo {
     creatorInfo?: UserInfo
 }
 
+export interface ForceGetDeepUserInfoOptions {
+    fetchIcon?:        boolean
+    fetchCreatorIcon?: boolean
+}
+
+export interface GetDeepUserInfoOptions extends ForceGetDeepUserInfoOptions {
+    throwOnFailure?: boolean
+}
+
 export interface UserManager {
     forceSetUserName(connection: Connection, user: User, name: string | null): Promise<void>
 
@@ -151,10 +160,9 @@ export interface UserManager {
     getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]>
 
 
-    forceGetDeepUserInfo(connection: Connection, user: User): Promise<DeepUserInfo>
+    forceGetDeepUserInfo(connection: Connection, user: User, options?: ForceGetDeepUserInfoOptions): Promise<DeepUserInfo>
 
-    getDeepUserInfo(connection: Connection, user: User, throwOnFailure: true):     Promise<DeepUserInfo>
-    getDeepUserInfo(connection: Connection, user: User, throwOnFailure?: boolean): Promise<DeepUserInfo | undefined>
+    getDeepUserInfo(connection: Connection, user: User, options?: GetDeepUserInfoOptions): Promise<DeepUserInfo | undefined>
 
 
     getAllUsersInfo(connection: Connection): Promise<UserInfo[]>
@@ -514,26 +522,29 @@ export class DefaultUserManager implements UserManager {
         })
     }
 
-    async forceGetDeepUserInfo(connection: Connection, user: User): Promise<DeepUserInfo> {
-        return await this.getDeepUserInfo(connection, user, true)
+    async forceGetDeepUserInfo(connection: Connection, user: User, options?: ForceGetDeepUserInfoOptions): Promise<DeepUserInfo> {
+        return (await this.getDeepUserInfo(connection, user, {
+            ...options,
+            throwOnFailure: true
+        }))!
     }
 
-    async getDeepUserInfo(connection: Connection, user: User, throwOnFailure:  true):            Promise<DeepUserInfo>
-    async getDeepUserInfo(connection: Connection, user: User, throwOnFailure?: boolean):        Promise<DeepUserInfo | undefined>
-    async getDeepUserInfo(connection: Connection, user: User, throwOnFailure:  boolean = false): Promise<DeepUserInfo | undefined> {
+    async getDeepUserInfo(connection: Connection, user: User, options?: GetDeepUserInfoOptions): Promise<DeepUserInfo | undefined> {
         const numUser = typeof user === "number"
 
         this.logger?.debug(numUser ? `Getting deep info of user with id ${user}...`
                                    : `Getting deep info of user "${user}"...`)
 
-        const whereSql = numUser ? "target.id = ?" : "target.login = ?"
-        const sql      = `SELECT * FROM Users target LEFT JOIN Users creator ON target.cr_id = creator.id WHERE ${whereSql}`
-        const [rows]   = await connection.execute({ sql, nestTables: true }, [user]) as [RowDataPacket[], FieldPacket[]]
+        const whereSql   = numUser ? "target.id = ?" : "target.login = ?"
+        const columnsSql = `target.id, target.login, target.name, target.cr_id, target.cr_time, target.password_hash, target.is_admin, target.is_online${options?.fetchIcon ? ", target.icon" : ""}, `
+                         + `creator.id, creator.login, creator.name, creator.cr_id, creator.cr_time, creator.password_hash, creator.is_admin, creator.is_online${options?.fetchCreatorIcon ? ", creator.icon" : ""}`
+        const sql        = `SELECT ${columnsSql} FROM Users target LEFT JOIN Users creator ON target.cr_id = creator.id WHERE ${whereSql}`
+        const [rows]     = await connection.execute({ sql, nestTables: true }, [user]) as [RowDataPacket[], FieldPacket[]]
 
         if (rows.length === 0) {
             const message = UserNotFoundError.makeMessage(user)
 
-            if (throwOnFailure)
+            if (options?.throwOnFailure)
                 throw new UserNotFoundError(user, message)
 
             this.logger?.debug(message)
@@ -617,7 +628,7 @@ export class DefaultUserManager implements UserManager {
 
         const whereSql   = numUser ? "id = ?" : "login = ?"
         const columnsSql = `id, login, name, cr_id, cr_time, password_hash, is_admin, is_online${options?.fetchIcon ? ", icon" : ""}`
-        const sql        = `SELECT * FROM Users WHERE ${whereSql}`
+        const sql        = `SELECT ${columnsSql} FROM Users WHERE ${whereSql}`
         const [rows]     = await connection.execute(sql, [user]) as [UserRow[], FieldPacket[]]
 
         if (rows.length === 0) {
