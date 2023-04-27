@@ -127,10 +127,11 @@ const ICON_SCHEMA = z.string()
                      })
 
 const ADD_USER_SCHEMA = z.object({
-    password: z.string(),
-    name:     z.ostring(),
-    icon:     ICON_SCHEMA.nullish(),
-    isAdmin:  z.oboolean(),
+    password:  z.string(),
+    name:      z.ostring(),
+    icon:      ICON_SCHEMA.nullish(),
+    isAdmin:   z.oboolean(),
+    nicknames: z.string().array().nullish(),
 })
 
 const UPDATE_USER_SCHEMA = z.object({
@@ -891,7 +892,8 @@ export const units: UnitCollection = {
                 password,
                 name,
                 icon,
-                isAdmin
+                isAdmin,
+                nicknames,
             } = parsed.data
 
             const authorization = req.headers.authorization!
@@ -908,6 +910,9 @@ export const units: UnitCollection = {
                 isAdmin,
                 creator: creatorId
             })
+
+            if (nicknames != null && nicknames.length > 0)
+                await this.nicknameManager.forceSetUserNicknames(connection, login, nicknames)
         
             res.json({})
         }
