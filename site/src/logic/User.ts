@@ -57,6 +57,12 @@ export interface SetNameOptions {
     name:           string | null
 }
 
+export interface SetIconOptions {
+    authController: AuthController
+    login:          string
+    icon:           string | null
+}
+
 export interface SetIsAdminOptions {
     authController: AuthController
     login:          string
@@ -73,6 +79,7 @@ export interface SetOptions {
     authController: AuthController
     login:          string
     name?:          string | null
+    icon?:          string | null
     nicknames?:     string[]
     isAdmin?:       boolean
 }
@@ -534,6 +541,20 @@ export default class User {
         })
     }
 
+    static async setIcon(options: SetIconOptions) {
+        const {
+            authController,
+            login,
+            icon
+        } = options
+
+        const url = this.makeUrl(login, "icon")
+
+        await put(authController, url, {
+            icon: icon ?? null
+        })
+    }
+
     static async setIsAdmin(options: SetIsAdminOptions) {
         const {
             authController,
@@ -725,12 +746,14 @@ export default class User {
 
     async saveDiff(authController: AuthController, user: User) {
         const name      = this.name    === user.name                             ? undefined : this.name ?? null
+        const icon      = this.icon    === user.icon                             ? undefined : this.icon ?? null
         const isAdmin   = this.isAdmin === user.isAdmin                          ? undefined : this.isAdmin
         const nicknames = User.areNicknamesEqual(this.nicknames, user.nicknames) ? undefined : this.nicknames
 
         await User.set({
             authController,
             name,
+            icon,
             isAdmin,
             nicknames,
             login: this.login
