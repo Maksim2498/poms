@@ -1,8 +1,6 @@
 import crypto                                                      from "crypto"
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
-import TokenExpiredError                                           from "./TokenExpiredError"
-import TokenNotFoundError                                          from "./TokenNotFoundError"
 
 import { Connection, FieldPacket, RowDataPacket, ResultSetHeader } from "mysql2/promise"
 import { Logger                                                  } from "winston"
@@ -478,4 +476,23 @@ export function tokenPairToString(pair: TokenPair): string {
     }
 
     return JSON.stringify(json, null, 4)
+}
+
+export class TokenNotFoundError extends LogicError {
+    readonly token: Buffer
+
+    static makeMessage(token: Buffer): string {
+        return `Token with id ${token.toString("hex")} not found`
+    }
+
+    constructor(token: Buffer, message: string = TokenNotFoundError.makeMessage(token)) {
+        super(message)
+        this.token = token
+    }
+}
+
+export class TokenExpiredError extends LogicError {
+    constructor() {
+        super("Unregistered or expired token")
+    }
 }
