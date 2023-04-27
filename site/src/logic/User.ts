@@ -83,6 +83,7 @@ export default class User {
         nicknames: z.string().array().nullish(),
         isAdmin:   z.boolean().nullish(),
         isOnline:  z.boolean().nullish(),
+        icon:      z.string().nullish(),
         reg:       z.object({
             time:  z.coerce.date().nullish(),
             login: z.string().nullish()
@@ -614,12 +615,12 @@ export default class User {
             User.checkNormedNicknames(nicknames)
         }
 
-        const isAdmin     = options.isAdmin      ?? false
-        const isOnline    = options.isOnline     ?? false
-        const regTime     = options.reg?.time    ?? new Date()
-        const regLogin    = options.reg?.login   ?? undefined
-        const icon        = undefined
-        const displayIcon = icon ?? User.renderDefaultIcon({ login, name })
+        const isAdmin     = options.isAdmin    ?? false
+        const isOnline    = options.isOnline   ?? false
+        const regTime     = options.reg?.time  ?? new Date()
+        const regLogin    = options.reg?.login ?? undefined
+        const icon        = options.icon       ?? undefined
+        const displayIcon = icon               ?? User.renderDefaultIcon({ login, name })
 
         this.login       = login
         this.name        = name
