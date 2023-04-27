@@ -299,29 +299,46 @@ export const units: UnitCollection = {
         path:       "/users",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const info        = await this.userManager.getAllUsersDeepInfo(connection)
-            const jsonsWithId = info.map(i => {
-                return {
-                    id:            i.id,
-                    json:          {
-                        login:     i.login,
-                        name:      i.name ?? null,
-                        isAdmin:   i.isAdmin,
-                        isOnline:  i.isOnline,
-                        nicknames: undefined as string[] | undefined,
-                        reg:       {
-                            time:  i.created.toISOString(),
-                            login: i.creatorInfo?.login ?? null
-                        }
+            const fetchIcon      = "icon"     in req.query
+            const fetchNicknames = "nickname" in req.query
+            const info           = await this.userManager.getAllUsersDeepInfo(connection, { fetchIcon })
+            const jsonPromises   = info.map(async i => {
+                const {
+                    id,
+                    login,
+                    isAdmin,
+                    isOnline,
+                } = i
+
+                const name = i.name ?? null
+
+                const icon = fetchIcon ? i.icon != null ? await bufferToDataUrl("image/png", i.icon)
+                                                        : null
+                                       : undefined
+                
+                const nicknames = fetchNicknames ? await this.nicknameManager.getUserNicknames(connection, id)
+                                                 : undefined
+
+                const created = i.created.toISOString()
+                const creator = i.creatorInfo?.login ?? null
+
+                return  {
+                    login,
+                    name,
+                    icon,
+                    isAdmin,
+                    isOnline,
+                    nicknames,
+                    reg: {
+                        time:  created,
+                        login: creator
                     }
                 }
             })
 
-            if ("nicknames" in req.query)
-                for (const { id, json } of jsonsWithId)
-                    json.nicknames = await this.nicknameManager.getUserNicknames(connection, id)
+            const json = await Promise.all(jsonPromises)
 
-            res.json(jsonsWithId.map(j => j.json))
+            res.json(json)
         }
     },
 
@@ -331,22 +348,43 @@ export const units: UnitCollection = {
         path:       "/users/:user",
 
         async handler(this: Server, connection: Connection, req: Request, res: Response) {
-            const user = req.params.user
-            const info = await this.userManager.forceGetDeepUserInfo(connection, user)
+            const user           = req.params.user
+            const fetchIcon      = "icon"      in req.query
+            const fetchNicknames = "nicknames" in req.query
+
+            const info = await this.userManager.forceGetDeepUserInfo(connection, user, { fetchIcon })
+
+            const {
+                id,
+                login,
+                isAdmin,
+                isOnline
+            } = info
+
+            const name = info.name ?? null
+
+            const icon = fetchIcon ? info.icon != null ? await bufferToDataUrl("image/png", info.icon)
+                                                       : null
+                                   : undefined
+
+            const nicknames = fetchNicknames ? await this.nicknameManager.getUserNicknames(connection, id)
+                                             : undefined
+
+            const created = info.created.toISOString()
+            const creator = info.creatorInfo?.login ?? null
+
             const json = {
-                login:     info.login,
-                name:      info.name ?? null,
-                isAdmin:   info.isAdmin,
-                isOnline:  info.isOnline,
-                nicknames: undefined as string[] | undefined,
-                reg:       {
-                    time:  info.created.toISOString(),
-                    login: info.creatorInfo?.login ?? null
+                login,
+                name,
+                icon,
+                isAdmin,
+                isOnline,
+                nicknames,
+                reg: {
+                    time:  created,
+                    login: creator
                 }
             }
-
-            if ("nicknames" in req.query)
-                json.nicknames = await this.nicknameManager.getUserNicknames(connection, info.id)
 
             res.json(json)
         }

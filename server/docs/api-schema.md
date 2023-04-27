@@ -295,7 +295,7 @@ Returns full information on all users.
 __Request__:
 
 ```http
-GET /users?[nicknames]
+GET /users?[nicknames][icon]
 ```
 
 ```http
@@ -309,7 +309,8 @@ __Response__:
 {
     login:      string
     name:       string   | null
-    nicknames?: string[]        // Added if <nicknames> option is set
+    icon?:      string   | null // Added if <icon> URL option is set ("data:image/png;base64,...")
+    nicknames?: string[]        // Added if <nicknames> URL option is set
     isAdmin:    boolean
     isOnline:   boolean
 
@@ -329,7 +330,7 @@ Returns full information on specified user.
 __Request__:
 
 ```http
-GET /users/<user>?[nicknames]
+GET /users/<user>?[nicknames][icon]
 ```
 
 ```http
@@ -343,7 +344,8 @@ __Response__:
 {
     login:      string
     name:       string   | null
-    nicknames?: string[]        // Not null if <nicknames> option is set
+    icon?:      string   | null // Added if <icon> URL option is set ("data:image/png;base64,...")
+    nicknames?: string[]        // Added if <nicknames> URL option is set
     isAdmin:    boolean
     isOnline:   boolean
 
