@@ -1,14 +1,14 @@
-import Dim                                                                                              from "ui/Dim/Component"
-import Button                                                                                           from "ui/Button/Component"
-import Input                                                                                            from "ui/Input/Component"
-import FormErrorText                                                                                    from "ui/FormErrorText/Component"
-import CheckBox                                                                                         from "ui/CheckBox/Component"
-import FileInput                                                                                        from "ui/FileInput/Component"
-import styles                                                                                           from "./styles.module.css"
+import Dim                                                                                                   from "ui/Dim/Component"
+import Button                                                                                                from "ui/Button/Component"
+import Input                                                                                                 from "ui/Input/Component"
+import FormErrorText                                                                                         from "ui/FormErrorText/Component"
+import CheckBox                                                                                              from "ui/CheckBox/Component"
+import FileInput                                                                                             from "ui/FileInput/Component"
+import styles                                                                                                from "./styles.module.css"
 
-import { useState, useEffect, MouseEvent                                                              } from "react"
-import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState, AnswerState, MouseEventHandler } from "./types"
-import { makeState, updateState                                                                       } from "./util"
+import { useState, useEffect, MouseEvent                                                                   } from "react"
+import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState, AnswerState, BasicMouseEventHandler } from "./types"
+import { makeState, updateState                                                                            } from "./util"
 
 export default function Modal(props: ModalProps) {
     const {
@@ -236,26 +236,33 @@ export default function Modal(props: ModalProps) {
                             }
 
                             function rawOnMouseMove(event: MouseEvent<HTMLDivElement>) {
-                                passMouseEvent(event, onMouseMove)
+                                if (!onMouseMove)
+                                    return
+
+                                const [x, y] = mouseEventToPos(event)
+                                const dx     = event.movementX
+                                const dy     = event.movementY
+
+                                onMouseMove(x, y, dx, dy)
                             }
 
                             function rawOnMouseDown(event: MouseEvent<HTMLDivElement>) {
-                                passMouseEvent(event, onMouseDown)
+                                passBasicMouseEvent(event, onMouseDown)
                             }
 
                             function rawOnMouseUp(event: MouseEvent<HTMLDivElement>) {
-                                passMouseEvent(event, onMouseUp)
+                                passBasicMouseEvent(event, onMouseUp)
                             }
 
                             function rawOnMouseEnter(event: MouseEvent<HTMLDivElement>) {
-                                passMouseEvent(event, onMouseEnter)
+                                passBasicMouseEvent(event, onMouseEnter)
                             }
 
                             function rawOnMouseLeave(event: MouseEvent<HTMLDivElement>) {
-                                passMouseEvent(event, onMouseLeave)
+                                passBasicMouseEvent(event, onMouseLeave)
                             }
 
-                            function passMouseEvent(event: MouseEvent<HTMLDivElement>, handler?: MouseEventHandler) {
+                            function passBasicMouseEvent(event: MouseEvent<HTMLDivElement>, handler?: BasicMouseEventHandler) {
                                 if (!handler)
                                     return
 

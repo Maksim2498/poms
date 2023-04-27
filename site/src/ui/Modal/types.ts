@@ -61,11 +61,11 @@ export interface CanvasAnswer extends AnswerBase {
     width?:        number
     height?:       number
     onCanvasSet?:  OnCanvasSet
-    onMouseMove?:  MouseEventHandler
-    onMouseDown?:  MouseEventHandler
-    onMouseUp?:    MouseEventHandler
-    onMouseEnter?: MouseEventHandler
-    onMouseLeave?: MouseEventHandler
+    onMouseMove?:  OnMouseMove
+    onMouseDown?:  OnMouseDown
+    onMouseUp?:    OnMouseUp
+    onMouseEnter?: OnMouseEnter
+    onMouseLeave?: OnMouseLeave
 }
 
 export type ValidateInput          = (input: string) => string | undefined
@@ -76,7 +76,12 @@ export type OnFileAnswerChange     = (files: FileList | null, states: AnswerStat
 export type FormatInput            = (input: string) => string
 export type DisableAnswer          = (values: AnswerStates) => boolean
 export type OnCanvasSet            = (canvas: HTMLCanvasElement) => void
-export type MouseEventHandler      = (x: number, y: number) => void
+export type OnMouseMove            = (x: number, y: number, dx: number, dy: number) => void
+export type OnMouseDown            = BasicMouseEventHandler
+export type OnMouseUp              = BasicMouseEventHandler
+export type OnMouseEnter           = BasicMouseEventHandler
+export type OnMouseLeave           = BasicMouseEventHandler
+export type BasicMouseEventHandler = (x: number, y: number) => void
 
 export interface AnswerStates {
     [key: string]: AnswerState | undefined
