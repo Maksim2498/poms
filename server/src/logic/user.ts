@@ -13,6 +13,11 @@ export interface CreationOptions {
 
 export type User = string | number
 
+export interface SetUserIconOptions {
+    throwOnTooBig?:      boolean
+    throwOnInvalidUser?: boolean
+}
+
 export interface SetUserNameOptions {
     throwOnInvalidName?: boolean
     throwOnInvalidUser?: boolean
@@ -124,6 +129,11 @@ export interface GetDeepUserInfoOptions extends ForceGetDeepUserInfoOptions {
 }
 
 export interface UserManager {
+    forceSetUserIcon(connection: Connection, user: User, icon: Buffer | null): Promise<void>
+
+    setUserIcon(connection: Connection, user: User, icon: Buffer | null, options?: SetUserIconOptions): Promise<boolean>
+
+
     forceSetUserName(connection: Connection, user: User, name: string | null): Promise<void>
 
     setUserName(connection: Connection, user: User, name: string | null, options?: SetUserNameOptions): Promise<boolean>
@@ -202,6 +212,57 @@ export class DefaultUserManager implements UserManager {
         this.logger = options.logger
     }
 
+    async forceSetUserIcon(connection: Connection, user: User, icon: Buffer | null) {
+        await this.setUserIcon(connection, user, icon, {
+            throwOnInvalidUser: true,
+            throwOnTooBig:      true,
+        })
+    }
+
+    async setUserIcon(connection: Connection, user: User, icon: Buffer | null, options?: SetUserIconOptions): Promise<boolean> {
+        const MAX_SIZE = 2 ** 24 // Max MEDIUMBLOB size
+
+        const numUser = typeof user === "number"
+
+        if (this.logger) {
+            const iconMessage = icon !=  null ? iconBufferToString(icon) : null
+            const message     = numUser       ? `Setting icon of user with id ${user} to ${iconMessage}...`
+                                              : `Setting icon of user "${user}" to ${iconMessage}...`
+
+            this.logger?.debug(message)
+        }
+
+        if (icon != null && icon.length > MAX_SIZE) {
+            const message = `Icon is too big`
+
+            if (options?.throwOnTooBig)
+                throw new LogicError(message)
+
+            this.logger?.debug(message)
+
+            return false
+        }
+
+        const whereSql = numUser ? "id = ?" : "login = ?"
+        const sql      = `UPDATE Users SET icon = ? WHERE ${whereSql}`
+        const [result] = await connection.execute(sql, [icon, user]) as [ResultSetHeader, FieldPacket[]]
+
+        if (result.affectedRows === 0) {
+            const message = UserNotFoundError.makeMessage(user)
+
+            if (options?.throwOnInvalidUser)
+                throw new UserNotFoundError(user, message)
+
+            this.logger?.debug(message)
+
+            return false
+        }
+
+        this.logger?.debug("Set")
+        
+        return true
+    }
+
     async forceSetUserName(connection: Connection, user: User, name: string | null) {
         await this.setUserName(connection, user, name, {
             throwOnInvalidName: true,
@@ -213,9 +274,9 @@ export class DefaultUserManager implements UserManager {
         const numUser = typeof user === "number"
 
         if (this.logger) {
-            const property = name == null ? null : `"${name}"`
-            const message  = numUser ? `Setting name property to ${property} of user with id ${user}...`
-                                     : `Setting name property to ${property} of user "${user}"...`
+            const nameMessage = name != null ? `"${name}"` : null
+            const message     = numUser      ? `Setting name of user with id ${user} to ${nameMessage} ...`
+                                             : `Setting name of user "${user}" to ${nameMessage}...`
 
             this.logger?.debug(message)
         }
