@@ -140,7 +140,7 @@ export default function Profile(props: ProfileProps) {
         if ("user" in props)
             return props.user
 
-        return await User.fetch({
+        return await User.get({
             login:          props.login,
             fetchNicknames: true,
             fetchIcon:      true,

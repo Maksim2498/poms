@@ -100,7 +100,7 @@ export default class User {
         }).nullish()
     })
 
-    static async fetchAll(options: FetchAllOptions): Promise<User[]> {
+    static async getAll(options: FetchAllOptions): Promise<User[]> {
         const {
             authController,
             fetchNicknames,
@@ -130,7 +130,7 @@ export default class User {
         }).filter(user => user != null) as User[]
     }
 
-    static async fetch(options: FetchOptions): Promise<User> {
+    static async get(options: FetchOptions): Promise<User> {
         const {
             authController,
             fetchNicknames,
@@ -683,7 +683,7 @@ export default class User {
             updateIcon,
         } = options
 
-        return await User.fetch({
+        return await User.get({
             authController,
             login:          this.login,
             fetchIcon:      updateIcon,

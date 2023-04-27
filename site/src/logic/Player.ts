@@ -18,7 +18,7 @@ export interface CreationOptions {
 export default class Player {
     static async fetch(options: FetchOptions): Promise<Player> {
         const { nickname } = options
-        const user         = await User.fetch(options)
+        const user         = await User.get(options)
 
         return new Player({
             nickname,
