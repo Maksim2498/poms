@@ -56,6 +56,11 @@ export interface CreateUserOptions extends ForceCreateUserOptions {
     throwOnDuplicate?:       boolean
 } 
 
+export interface GetAllUsersDeepInfoOptions {
+    fetchIcon?:        boolean
+    fetchCreatorIcon?: boolean
+}
+
 export interface GetAllUsersInfoOptions {
     fetchIcon?: boolean
 }
@@ -160,7 +165,7 @@ export interface UserManager {
     getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure?: boolean): Promise<UserInfo | undefined>
 
 
-    getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]>
+    getAllUsersDeepInfo(connection: Connection, options?: GetAllUsersDeepInfoOptions): Promise<DeepUserInfo[]>
 
 
     forceGetDeepUserInfo(connection: Connection, user: User, options?: ForceGetDeepUserInfoOptions): Promise<DeepUserInfo>
@@ -508,11 +513,15 @@ export class DefaultUserManager implements UserManager {
         return info
     }
 
-    async getAllUsersDeepInfo(connection: Connection): Promise<DeepUserInfo[]> {
+    async getAllUsersDeepInfo(connection: Connection, options?: GetAllUsersDeepInfoOptions): Promise<DeepUserInfo[]> {
         this.logger?.debug("Getting all users info...")
 
+        const columnsSql = `target.id, target.login, target.name, target.cr_id, target.cr_time, target.password_hash, target.is_admin, target.is_online${options?.fetchIcon ? ", target.icon" : ""}, `
+                         + `creator.id, creator.login, creator.name, creator.cr_id, creator.cr_time, creator.password_hash, creator.is_admin, creator.is_online${options?.fetchCreatorIcon ? ", creator.icon" : ""}`
+        const sql        = `SELECT ${columnsSql} FROM Users target LEFT JOIN Users creator ON target.cr_id = creator.id`
+
         const [rows] = await connection.execute({
-            sql:        `SELECT * FROM Users target LEFT JOIN Users creator ON target.cr_id = creator.id`,
+            sql,
             nestTables: true
         }) as [RowDataPacket[], FieldPacket[]]
 
@@ -742,15 +751,29 @@ export function normUserName(name: string | undefined | null): string | null {
 }
 
 export function userInfoToString(info: UserInfo): string {
+    const {
+        id,
+        login,
+        isOnline,
+        isAdmin
+    } = info
+
+    const name         = info.name         ?? null
+    const icon         = info.icon != null ?  iconBufferToString(info.icon) : null
+    const passwordHash = info.passwordHash.toString("hex")
+    const created      = info.created.toISOString()
+    const creatorId    = info.creatorId    ?? null
+
     return JSON.stringify({
-        id:           info.id,
-        login:        info.login,
-        name:         info.name,
-        passwordHash: info.passwordHash.toString("hex"),
-        isOnline:     info.isOnline,
-        isAdmin:      info.isAdmin,
-        created:      info.created.toISOString(),
-        creatorId:    info.creatorId
+        id,
+        login,
+        name,
+        icon,
+        passwordHash,
+        isOnline,
+        isAdmin,
+        created,
+        creatorId
     }, null, 4)
 }
 
@@ -758,7 +781,8 @@ export function deepUserInfoToString(info: DeepUserInfo): string {
     return JSON.stringify({
         id:           info.id,
         login:        info.login,
-        name:         info.name,
+        name:         info.name                ?? null,
+        icon:         info.icon        != null ?  iconBufferToString(info.icon) : null,
         passwordHash: info.passwordHash.toString("hex"),
         isOnline:     info.isOnline,
         isAdmin:      info.isAdmin,
@@ -766,14 +790,19 @@ export function deepUserInfoToString(info: DeepUserInfo): string {
         creatorInfo:  info.creatorInfo != null ? {
             id:           info.creatorInfo.id,
             login:        info.creatorInfo.login,
-            name:         info.creatorInfo.name,
+            name:         info.creatorInfo.name         ?? null,
+            icon:         info.creatorInfo.icon != null ?  iconBufferToString(info.creatorInfo.icon) : null,
             passwordHash: info.creatorInfo.passwordHash.toString("hex"),
             isOnline:     info.creatorInfo.isOnline,
             isAdmin:      info.creatorInfo.isAdmin,
             created:      info.creatorInfo.created.toISOString(),
-            creatorId:    info.creatorInfo.creatorId
+            creatorId:    info.creatorInfo.creatorId    ?? null
         } : null
     }, null, 4)
+}
+
+export function iconBufferToString(icon: Buffer): string {
+    return `<${icon.length} bytes>`
 }
 
 export function userRowToUserInfo(row: UserRow): UserInfo {
