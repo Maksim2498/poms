@@ -8,7 +8,7 @@ import styles                                       from "./styles.module.css"
 
 import { useContext, useState, useEffect, useRef  } from "react"
 import { deauth                                   } from "logic/api"
-import { pushProfileContent                       } from "modules/ContentViewer/util"
+import { setProfileContent                        } from "modules/ContentViewer/util"
 import { UserButtonProps                          } from "./types"
 
 export default function UserButton(props: UserButtonProps) {
@@ -46,7 +46,7 @@ export default function UserButton(props: UserButtonProps) {
 
         {
             showOptions && <div className={styles.options}>
-                <Button onClick={() => pushProfileContent(contentStackContext, user, user)}>Profile</Button>
+                <Button onClick={() => setProfileContent(contentStackContext, user, user)}>Profile</Button>
                 <Button color="red" onClick={onSignOut}>Sign Out</Button>
             </div>
         }
