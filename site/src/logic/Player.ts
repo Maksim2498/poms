@@ -71,4 +71,20 @@ export default class Player {
             return false
         }
     }
+
+    withUser(user: User | undefined): Player {
+        return new Player({
+            ...this,
+            user,
+            dontCheckNicknames: true,
+        })
+    }
+
+    withNickname(nickname: string): Player {
+        return new Player({
+            ...this,
+            nickname,
+            dontCheckNicknames: true,
+        })
+    }
 }
