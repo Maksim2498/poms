@@ -88,6 +88,20 @@ export default function UserIcon(props: UserIconProps) {
     }, [iconReady])
 
     useEffect(() => {
+        const listener = (event: ClipboardEvent) => {
+            const files = event.clipboardData?.files
+
+            if (files != null)
+                onFileChange(files)
+        }
+
+        document.addEventListener("paste", listener)
+
+        return () => document.removeEventListener("paste", listener)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    useEffect(() => {
         if (!changing)
             reset()
     }, [changing])

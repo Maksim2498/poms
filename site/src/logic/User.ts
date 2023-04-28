@@ -437,7 +437,7 @@ export default class User {
         return true
     }
 
-    static readonly MAX_ICON_SIZE  = 512
+    static readonly MAX_ICON_SIZE = 512
 
     static renderDefaultIcon(options: MakeIconOptions): string {
         const FONT_SIZE_SCALE_FACTOR = .8
