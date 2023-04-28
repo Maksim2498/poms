@@ -33,5 +33,6 @@
     display: block;
     padding: .5rem;
     width: 100%;
+    word-break: break-all;
     text-align: center
 }
