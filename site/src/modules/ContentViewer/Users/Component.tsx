@@ -27,26 +27,8 @@ export default function Users(props: UsersProps) {
     useEffect(clearTarget, [editMode])
 
     useEffect(() => {
-        if (!users)
-            return
-
-        for (const user of users) {
-            if (user == null)
-                continue
-
-            const updateContextUser =  contextUser
-                                    && User.areLoginsEqual(user.login, contextUser.login)
-                                    && !contextUser.equalTo(user)
-
-            if (updateContextUser)
-                setContextUser(user)
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [users])
-
-    useEffect(() => {
         if (error != null)
-            error != null && console.error(error)
+            console.error(error)
     }, [error])
 
     if (loading)
@@ -153,30 +135,36 @@ export default function Users(props: UsersProps) {
         for (const user of sortedUsers)
             if (user.icon instanceof Promise)
                 user.icon
-                    .then(icon => {
-                        const index = indexOf(user)
-
-                        if (index === -1)
-                            return
-
-                        sortedUsers[index] = user.withIcon(icon)
-
-                        forceRerender()
-                    })
+                    .then(icon => userIconReady(user, icon))
                     .catch(error => {
                         console.error(error)
-
-                        const index = indexOf(user)
-
-                        if (index === -1)
-                            return
-
-                        sortedUsers[index] = user.withIcon(undefined)
-
-                        forceRerender()
+                        userIconReady(user, undefined)
                     })
 
         return sortedUsers
+
+        function userIconReady(user: User, icon: string | undefined) {
+            const index = indexOf(user)
+
+            if (index === -1)
+                return
+            
+            const newUser = user.withIcon(icon)
+
+            sortedUsers[index] = newUser
+
+            updateContextUserIfNeeded(newUser)
+            forceRerender()
+        }
+
+        function updateContextUserIfNeeded(user: User) {
+            const updateContextUser =  contextUser
+                                    && User.areLoginsEqual(user.login, contextUser.login)
+                                    && !contextUser.equalTo(user)
+
+            if (updateContextUser)
+                setContextUser(user)
+        }
 
         function indexOf(targetUser: User): number {
             for (const [i, user] of sortedUsers.entries())
