@@ -143,7 +143,7 @@ export default function Users(props: UsersProps) {
     </div>
 
     async function getUsers(): Promise<(User | undefined)[]> {
-        const gotUsers = await User.getAll({
+        const gotUsers = await User.fetchAll({
             authController,
             deferIconLoading: true,
         })

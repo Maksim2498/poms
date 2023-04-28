@@ -149,7 +149,7 @@ export default function Profile(props: ProfileProps) {
         if ("user" in props)
             return props.user
 
-        const user = await User.get({
+        const user = await User.fetch({
             login:            props.login,
             fetchNicknames:   true,
             acceptInvalid:    true,
@@ -215,7 +215,7 @@ export default function Profile(props: ProfileProps) {
         const login    = user.login
         const password = (states.password as TextAnswerState).value
 
-        await User.setPassword({
+        await User.sendPassword({
             authController,
             login,
             password

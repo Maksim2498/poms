@@ -2,11 +2,13 @@ import User               from "./User"
 
 import { AuthController } from "./api"
 
-export interface GetOptions {
-    authController:  AuthController
-    login:           string
-    nickname:        string
-    fetchNicknames?: boolean
+export interface FetchOptions {
+    authController:    AuthController
+    login:             string
+    nickname:          string
+    deferIconLoading?: boolean
+    fetchNicknames?:   boolean
+    fetchIcon?:        boolean
 }
 
 export interface CreationOptions {
@@ -16,9 +18,9 @@ export interface CreationOptions {
 }
 
 export default class Player {
-    static async get(options: GetOptions): Promise<Player> {
+    static async fetch(options: FetchOptions): Promise<Player> {
         const { nickname } = options
-        const user         = await User.get(options)
+        const user         = await User.fetch(options)
 
         return new Player({
             nickname,

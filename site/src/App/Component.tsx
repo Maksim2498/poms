@@ -117,7 +117,7 @@ export default function App() {
 
     async function getMaxNicknames(): Promise<number> {
         try {
-            return await User.getMaxNicknames([authInfo, setAuthInfo])
+            return await User.fetchMaxNicknames([authInfo, setAuthInfo])
         } catch (error) {
             console.error(error)
             return 5

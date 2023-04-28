@@ -17,7 +17,7 @@ export interface FromJsonOptions {
     authController?:   AuthController
 }
 
-export interface GetAllOptions {
+export interface FetchAllOptions {
     authController:    AuthController
     fetchNicknames?:   boolean
     fetchIcon?:        boolean
@@ -25,7 +25,7 @@ export interface GetAllOptions {
     acceptInvalid?:    boolean
 }
 
-export interface GetOptions {
+export interface FetchOptions {
     login:             string
     authController:    AuthController
     fetchNicknames?:   boolean
@@ -56,37 +56,37 @@ export interface RegisterUserOptions {
     isAdmin?:       boolean
 }
 
-export interface SetPasswordOptions {
+export interface SendPasswordOptions {
     authController: AuthController
     login:          string
     password:       string
 }
 
-export interface SetNameOptions {
+export interface SendNameOptions {
     authController: AuthController
     login:          string
     name:           string | null
 }
 
-export interface SetIconOptions {
+export interface SendIconOptions {
     authController: AuthController
     login:          string
     icon:           string | null
 }
 
-export interface SetIsAdminOptions {
+export interface SendIsAdminOptions {
     authController: AuthController
     login:          string
     isAdmin:        boolean
 }
 
-export interface SetNicknamesOptions {
+export interface SendNicknamesOptions {
     authController: AuthController
     login:          string
     nicknames?:     string[]
 }
 
-export interface SetOptions {
+export interface SendOptions {
     authController: AuthController
     login:          string
     name?:          string | null
@@ -115,7 +115,7 @@ export default class User {
         icon: z.string().nullish()
     })
 
-    static async getIcon(authController: AuthController, login: string): Promise<string | undefined> {
+    static async fetchIcon(authController: AuthController, login: string): Promise<string | undefined> {
         const url      = this.makeUrl(login, "icon")
         const [json]   = await get(authController, url)
         const { icon } = this.ICON_JSON_SCHEMA.parse(json)
@@ -123,7 +123,7 @@ export default class User {
         return icon ?? undefined
     }
 
-    static async getAll(options: GetAllOptions): Promise<User[]> {
+    static async fetchAll(options: FetchAllOptions): Promise<User[]> {
         const {
             authController,
             fetchNicknames,
@@ -158,7 +158,7 @@ export default class User {
         }).filter(user => user != null) as User[]
     }
 
-    static async get(options: GetOptions): Promise<User> {
+    static async fetch(options: FetchOptions): Promise<User> {
         const {
             authController,
             fetchNicknames,
@@ -558,7 +558,7 @@ export default class User {
         return new User({ login, name, isAdmin })
     }
 
-    static async setPassword(options: SetPasswordOptions) {
+    static async sendPassword(options: SendPasswordOptions) {
         const {
             authController,
             login,
@@ -572,7 +572,7 @@ export default class User {
         await put(authController, url, { password })
     }
 
-    static async setName(options: SetNameOptions) {
+    static async sendName(options: SendNameOptions) {
         const {
             authController,
             login
@@ -588,7 +588,7 @@ export default class User {
         })
     }
 
-    static async setIcon(options: SetIconOptions) {
+    static async sendIcon(options: SendIconOptions) {
         const {
             authController,
             login,
@@ -602,7 +602,7 @@ export default class User {
         })
     }
 
-    static async setIsAdmin(options: SetIsAdminOptions) {
+    static async sendIsAdmin(options: SendIsAdminOptions) {
         const {
             authController,
             login,
@@ -618,14 +618,14 @@ export default class User {
         max: z.number()
     })
 
-    static async getMaxNicknames(authController: AuthController): Promise<number> {
+    static async fetchMaxNicknames(authController: AuthController): Promise<number> {
         const [json] = await get(authController, "max-nicknames")
         const parsed = this.MAX_NICKNAMES_JSON_SCHMEA.parse(json)
 
         return parsed.max
     }
 
-    static async setNicknames(options: SetNicknamesOptions) {
+    static async sendNicknames(options: SendNicknamesOptions) {
         const { authController, login } = options
 
         const url = this.makeUrl(login, "nicknames")
@@ -637,7 +637,7 @@ export default class User {
         await put(authController, url, nicknames)
     }
 
-    static async set(options: SetOptions) {
+    static async send(options: SendOptions) {
         const {
             authController,
             login,
@@ -720,7 +720,7 @@ export default class User {
         const icon         =  deferIconLoading
                            && options.icon       == null
                            && authController     != null
-                           ?  User.getIcon(authController, login)
+                           ?  User.fetchIcon(authController, login)
                            :  options.icon       ?? undefined
                           
         this.login         =  login
@@ -748,7 +748,7 @@ export default class User {
             deferIconLoading,
         } = options
 
-        return await User.get({
+        return await User.fetch({
             authController,
             deferIconLoading,
             login:          this.login,
@@ -818,7 +818,7 @@ export default class User {
         const isAdmin   = this.isAdmin     === user.isAdmin                          ? undefined : this.isAdmin
         const nicknames = User.areNicknamesEqual(this.nicknames, user.nicknames) ? undefined : this.nicknames
 
-        await User.set({
+        await User.send({
             authController,
             name,
             isAdmin,
