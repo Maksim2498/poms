@@ -30,8 +30,9 @@ export default function UserIcon(props: UserIconProps) {
 
     type Corner = 0 | 1 | 2 | 3
 
-    const CORNER_SIZE = 80
-    const MIN_SIZE    = 100
+    const CORNER_SIZE = User.MAX_ICON_SIZE / 20
+    const LINE_WIDTH  = User.MAX_ICON_SIZE / 100
+    const MIN_SIZE    = User.MAX_ICON_SIZE / 10
 
     const {
         editMode,
@@ -238,20 +239,12 @@ export default function UserIcon(props: UserIconProps) {
 
         let { width, height } = image
 
-        const hor = width >= height
-        const ver = !hor
+        const hor    = width >= height
+        const ver    = !hor
+        const factor = (hor ? width : height) / User.MAX_ICON_SIZE
 
-        if (hor) {
-            const factor = width / User.MAX_ICON_WIDTH
-
-            width  /= factor
-            height /= factor
-        } else {
-            const factor = height / User.MAX_ICON_HEIGHT
-
-            width  /= factor
-            height /= factor
-        }
+        width  /= factor
+        height /= factor
 
         const { canvas } = context
 
@@ -580,7 +573,7 @@ export default function UserIcon(props: UserIconProps) {
         // Border drawing
 
         context.strokeStyle = style
-        context.lineWidth   = 10
+        context.lineWidth   = LINE_WIDTH
 
         context.strokeRect(x, y, size, size)
 
