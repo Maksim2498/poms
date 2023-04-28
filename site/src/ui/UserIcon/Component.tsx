@@ -30,9 +30,10 @@ export default function UserIcon(props: UserIconProps) {
 
     type Corner = 0 | 1 | 2 | 3
 
-    const CORNER_SIZE = User.MAX_ICON_SIZE / 20
-    const LINE_WIDTH  = User.MAX_ICON_SIZE / 100
-    const MIN_SIZE    = User.MAX_ICON_SIZE / 10
+    const MISSING_CONTEXT_MESSAGE = "Canvas isn't supported"
+    const CORNER_SIZE             = User.MAX_ICON_SIZE / 20
+    const LINE_WIDTH              = User.MAX_ICON_SIZE / 100
+    const MIN_SIZE                = User.MAX_ICON_SIZE / 10
 
     const {
         editMode,
@@ -45,6 +46,7 @@ export default function UserIcon(props: UserIconProps) {
     const [iconReady, setIconReady] = useState(false)
     const imageRef                  = useRef(undefined as HTMLImageElement         | undefined)
     const contextRef                = useRef(undefined as CanvasRenderingContext2D | undefined)
+    const topContextRef             = useRef(undefined as CanvasRenderingContext2D | undefined)
     const rectRef                   = useRef(undefined as Rect                     | undefined)
     const insideRef                 = useRef(false)
     const insideCornerRef           = useRef(false     as Corner                   | false    )
@@ -156,6 +158,7 @@ export default function UserIcon(props: UserIconProps) {
 
         imageRef.current        = undefined
         contextRef.current      = undefined
+        topContextRef.current   = undefined
         insideRef.current       = false
         insideCornerRef.current = false
         resizingRef.current     = false
@@ -188,7 +191,7 @@ export default function UserIcon(props: UserIconProps) {
         const context = iconCanvas.getContext("2d")
 
         if (context == null) {
-            console.error("Canvas isn't supported")
+            console.error(MISSING_CONTEXT_MESSAGE)
             setChanging(false)
             return
         }
@@ -232,11 +235,21 @@ export default function UserIcon(props: UserIconProps) {
         const context = canvas.getContext("2d")
 
         if (context == null) {
-            console.error("Canvas isn't supported")
+            console.error(MISSING_CONTEXT_MESSAGE)
             return 
         }
 
         contextRef.current = context
+
+        const topCanvas  = document.createElement("canvas")
+        const topContext = topCanvas.getContext("2d")
+
+        if (topContext == null) {
+            console.error(MISSING_CONTEXT_MESSAGE)
+            return
+        }
+
+        topContextRef.current = topContext
 
         update()
         redraw()
@@ -272,6 +285,16 @@ export default function UserIcon(props: UserIconProps) {
         const y    = ver ? height / 2 - size / 2 : 0
 
         rectRef.current = { x, y, size }
+
+        // Top canvas size update
+
+        const topCanvas = topContextRef.current?.canvas
+
+        if (topCanvas == null)
+            return
+
+        topCanvas.width  = width
+        topCanvas.height = height
     }
 
     function onMouseMove(x: number, y: number, dx: number, dy: number) {
@@ -530,53 +553,30 @@ export default function UserIcon(props: UserIconProps) {
 
         const { canvas } = context
 
+        // Image drawing
+
         context.clearRect(0, 0, canvas.width, canvas.height)
         context.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height)
 
-        const rect = rectRef.current
+        // Dimming
 
-        if (rect == null)
+        const topContext = topContextRef.current
+        const rect       = rectRef.current
+
+        if (topContext == null || rect == null)
             return
 
-        /*
-           Rects drawing schema:
+        const topCanvas = topContext.canvas
 
-               | Third
-               v
+        topContext.clearRect(0, 0, topCanvas.width, topCanvas.height)
 
-           $$  ###########  $$
-           $$  ###########  $$
-           $$               $$
-           $$  +---------+  $$
-           $$  |Selection|  $$
-           $$  +---------+  $$
-           $$               $$
-           $$  ###########  $$
-           $$  ###########  $$
+        topContext.fillStyle = "rgba(0, 0, 0, 60%)"
 
-           ^   ^            ^
-           |   |            | Second
-           |   |
-           |   | Fourth
-           |
-           | First
-        */
+        topContext.fillRect(0, 0, topCanvas.width, topCanvas.height)
 
         const { x, y, size } = rect
 
-        context.fillStyle = "rgba(0, 0, 0, 60%)"
-
-        // First
-        context.fillRect(0, 0, x, canvas.height)
-
-        // Second
-        context.fillRect(x + size, 0, canvas.width - x - size, canvas.height)
-
-        // Third
-        context.fillRect(x, 0, size, y)
-
-        // Fourth
-        context.fillRect(x, y + size, size, canvas.height - y - size)
+        topContext.clearRect(x, y, size, size)
 
         const updating =  draggingRef.current
                        || resizingRef.current !== false
@@ -586,14 +586,14 @@ export default function UserIcon(props: UserIconProps) {
 
         // Border drawing
 
-        context.strokeStyle = style
-        context.lineWidth   = LINE_WIDTH
+        topContext.strokeStyle = style
+        topContext.lineWidth   = LINE_WIDTH
 
-        context.strokeRect(x, y, size, size)
+        topContext.strokeRect(x, y, size, size)
 
         // Corners drawing
 
-        context.fillStyle = style
+        topContext.fillStyle = style
 
         const cornerPoses = [
             [x,        y       ],
@@ -605,6 +605,10 @@ export default function UserIcon(props: UserIconProps) {
         const offset = CORNER_SIZE / 2
 
         for (const [x, y] of cornerPoses)
-            context.fillRect(x - offset, y - offset, CORNER_SIZE, CORNER_SIZE)
+            topContext.fillRect(x - offset, y - offset, CORNER_SIZE, CORNER_SIZE)
+
+        // Drawing selection
+
+        context.drawImage(topCanvas, 0, 0)
     }
 }
