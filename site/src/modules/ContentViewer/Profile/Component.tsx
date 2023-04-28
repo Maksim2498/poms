@@ -24,6 +24,7 @@ export default function Profile(props: ProfileProps) {
     const authController                          = useContext(AuthControllerContext)
     const [contextUser, setContextUser          ] = useContext(UserContext)
     const [loadedUser, , error                  ] = useAsync(getUser)
+    const [initUser, setInitUser                ] = useState(undefined as User | undefined)
     const [user, setUser                        ] = useState(undefined as User | undefined)
     const [changed, setChanged                  ] = useState(false)
     const [changingPassword, setChangingPassword] = useState(false)
@@ -34,16 +35,24 @@ export default function Profile(props: ProfileProps) {
     const { onTagClick, editMode                } = props
 
     useEffect(() => {
-        if (!loadedUser)
+        if (loadedUser != null)
+            setInitUser(loadedUser)
+    }, [loadedUser])
+
+    useEffect(() => {
+        if (!initUser)
             return
 
-        setUser(loadedUser)
-        savedUser.current = loadedUser
+        setUser(initUser)
+        savedUser.current = initUser
 
-        if (User.areLoginsEqual(loadedUser.login, contextUser?.login))
-            setContextUser(loadedUser)
+        const updateContextUser =  User.areLoginsEqual(initUser.login, contextUser?.login)
+                                && !(initUser.icon instanceof Promise)
+
+        if (updateContextUser)
+            setContextUser(initUser)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loadedUser])
+    }, [initUser])
 
     useEffect(() => {
         if (editMode)
@@ -140,13 +149,23 @@ export default function Profile(props: ProfileProps) {
         if ("user" in props)
             return props.user
 
-        return await User.get({
-            login:          props.login,
-            fetchNicknames: true,
-            fetchIcon:      true,
-            acceptInvalid:  true,
-            authController
+        const user = await User.get({
+            login:            props.login,
+            fetchNicknames:   true,
+            acceptInvalid:    true,
+            deferIconLoading: true,
+            authController,
         })
+
+        if (user.icon instanceof Promise)
+            user.icon
+                .then(icon => setInitUser(user.withIcon(icon)))
+                .catch(error => {
+                    console.error(error)
+                    setInitUser(user.withIcon(undefined))
+                })
+
+        return user
     }
 
     function onChange(newUser: User) {

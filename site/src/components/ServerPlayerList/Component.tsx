@@ -45,7 +45,7 @@ export default function ServerPlayerList(props: ServerPlayerListProps) {
         const { sample } = server.players
 
         const playerPromises = sample.map(({login, nickname}) => login == null ? new Player({ nickname })
-                                                                               : Player.fetch({ authController, login, nickname }))
+                                                                               : Player.get({ authController, login, nickname }))
                                      .filter(s => s != null) as Promise<Player>[]
 
         const players = await Promise.all(playerPromises)

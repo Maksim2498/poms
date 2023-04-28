@@ -6,28 +6,39 @@ import { hasWs                               } from "util/string"
 import { AuthController, del, get, post, put } from "./api"
 
 export interface CreationOptions extends z.TypeOf<typeof User.USER_JSON_SCHEMA> {
-    acceptInvalid?: boolean
+    acceptInvalid?:    boolean
+    deferIconLoading?: boolean
+    authController?:   AuthController
+}
+
+export interface FromJsonOptions {
+    acceptInvalid?:    boolean
+    deferIconLoading?: boolean
+    authController?:   AuthController
 }
 
 export interface GetAllOptions {
-    authController:  AuthController
-    fetchNicknames?: boolean
-    fetchIcon?:      boolean
-    acceptInvalid?:  boolean
+    authController:    AuthController
+    fetchNicknames?:   boolean
+    fetchIcon?:        boolean
+    deferIconLoading?: boolean
+    acceptInvalid?:    boolean
 }
 
 export interface GetOptions {
-    login:           string
-    authController:  AuthController
-    fetchNicknames?: boolean
-    fetchIcon?:      boolean
-    acceptInvalid?:  boolean
+    login:             string
+    authController:    AuthController
+    fetchNicknames?:   boolean
+    fetchIcon?:        boolean
+    deferIconLoading?: boolean
+    acceptInvalid?:    boolean
 }
 
 export interface UpdatedOptions {
-    updateNicknames?: boolean
-    updateIcon?:      boolean
-    authController:   AuthController
+    updateNicknames?:  boolean
+    updateIcon?:       boolean
+    deferIconLoading?: boolean
+    authController:    AuthController
 }
 
 export interface MakeIconOptions {
@@ -93,7 +104,7 @@ export default class User {
         nicknames: z.string().array().nullish(),
         isAdmin:   z.boolean().nullish(),
         isOnline:  z.boolean().nullish(),
-        icon:      z.string().nullish(),
+        icon:      z.string().nullish().or(z.string().optional().promise()),
         reg:       z.object({
             time:  z.coerce.date().nullish(),
             login: z.string().nullish()
@@ -104,12 +115,12 @@ export default class User {
         icon: z.string().nullish()
     })
 
-    static async getIcon(authController: AuthController, login: string): Promise<string | null> {
+    static async getIcon(authController: AuthController, login: string): Promise<string | undefined> {
         const url      = this.makeUrl(login, "icon")
         const [json]   = await get(authController, url)
         const { icon } = this.ICON_JSON_SCHEMA.parse(json)
 
-        return icon ?? null
+        return icon ?? undefined
     }
 
     static async getAll(options: GetAllOptions): Promise<User[]> {
@@ -117,7 +128,8 @@ export default class User {
             authController,
             fetchNicknames,
             fetchIcon,
-            acceptInvalid
+            acceptInvalid,
+            deferIconLoading,
         } = options
 
         const urlOptions = [] as string[]
@@ -134,7 +146,11 @@ export default class User {
 
         return jsons.map(json => {
             try {
-                return User.fromJson(json, acceptInvalid)
+                return User.fromJson(json, {
+                    authController,
+                    acceptInvalid,
+                    deferIconLoading,
+                })
             } catch (error) {
                 console.error(error)
                 return undefined
@@ -148,7 +164,8 @@ export default class User {
             fetchNicknames,
             fetchIcon,
             login,
-            acceptInvalid
+            acceptInvalid,
+            deferIconLoading,
         } = options
 
         const url = this.makeUrl(login, undefined, {
@@ -157,12 +174,30 @@ export default class User {
         })
 
         const [json] = await get(authController, url)
-        
-        return User.fromJson(json, acceptInvalid)
+        const user   = User.fromJson(json, {
+            authController,
+            acceptInvalid,
+            deferIconLoading,
+        })
+
+        return user
     }
 
-    static fromJson(json: any, acceptInvalid?: boolean): User {
-        return new User({ ...this.USER_JSON_SCHEMA.parse(json), acceptInvalid})
+    static fromJson(json: any, options?: FromJsonOptions): User {
+        const {
+            acceptInvalid,
+            deferIconLoading,
+            authController,
+        } = options ?? {}
+
+        const user = new User({
+            ...this.USER_JSON_SCHEMA.parse(json),
+            deferIconLoading,
+            authController,
+            acceptInvalid,
+        })
+
+        return user
     }
 
     static readonly LOGIN_COOKIE_NAME = "login"
@@ -643,20 +678,26 @@ export default class User {
         })
     }
 
-    readonly login:       string
-    readonly name?:       string
-    readonly nicknames?:  string[]
-    readonly isAdmin:     boolean
-    readonly isOnline:    boolean
-    readonly icon?:       string
-    readonly displayIcon: string
-    readonly reg:         {
-        readonly time:    Date
-        readonly login?:  string
+    readonly login:        string
+    readonly name?:        string
+    readonly nicknames?:   string[]
+    readonly isAdmin:      boolean
+    readonly isOnline:     boolean
+    readonly icon?:        string | Promise<string | undefined>
+    readonly displayIcon:  string
+    readonly reg: {
+        readonly time:     Date
+        readonly login?:   string
     }
 
     constructor(options: CreationOptions) {
-        const validate  = !options.acceptInvalid
+        const {
+            acceptInvalid,
+            deferIconLoading,
+            authController
+        } = options
+
+        const validate  = !acceptInvalid
 
         const login     = User.normLogin(options.login)
         const name      = User.normName(options.name)
@@ -668,24 +709,35 @@ export default class User {
             User.checkNormedNicknames(nicknames)
         }
 
-        const isAdmin     = options.isAdmin    ?? false
-        const isOnline    = options.isOnline   ?? false
-        const regTime     = options.reg?.time  ?? new Date()
-        const regLogin    = options.reg?.login ?? undefined
-        const icon        = options.icon       ?? undefined
-        const displayIcon = icon               ?? User.renderDefaultIcon({ login, name })
-
-        this.login       = login
-        this.name        = name
-        this.nicknames   = nicknames
-        this.isAdmin     = isAdmin
-        this.isOnline    = isOnline
-        this.icon        = icon
-        this.displayIcon = displayIcon
-        this.reg         = {
+        const isAdmin      =  options.isAdmin    ?? false
+        const isOnline     =  options.isOnline   ?? false
+        const regTime      =  options.reg?.time  ?? new Date()
+        const regLogin     =  options.reg?.login ?? undefined
+        const displayIcon  =  options.icon       == null
+                           || options.icon instanceof Promise
+                           ?  User.renderDefaultIcon({ login, name })
+                           :  options.icon
+        const icon         =  deferIconLoading
+                           && options.icon       == null
+                           && authController     != null
+                           ?  User.getIcon(authController, login)
+                           :  options.icon       ?? undefined
+                          
+        this.login         =  login
+        this.name          =  name
+        this.nicknames     =  nicknames
+        this.isAdmin       =  isAdmin
+        this.isOnline      =  isOnline
+        this.icon          =  icon
+        this.displayIcon   =  displayIcon
+        this.reg           =  {
             time:  regTime,
             login: regLogin
         }
+    }
+
+    get iconLoading(): boolean {
+        return this.icon instanceof Promise
     }
 
     async updated(options: UpdatedOptions): Promise<User> {
@@ -693,10 +745,12 @@ export default class User {
             authController,
             updateNicknames,
             updateIcon,
+            deferIconLoading,
         } = options
 
         return await User.get({
             authController,
+            deferIconLoading,
             login:          this.login,
             fetchIcon:      updateIcon,
             fetchNicknames: updateNicknames,
@@ -714,13 +768,13 @@ export default class User {
         await User.del(authController, this.login)
     }
 
-    withName(name: string): User {
+    withName(name: string | undefined): User {
         User.checkName(name)
 
         return new User({
             ...this,
             name,
-            acceptInvalid: true
+            acceptInvalid: true,
         })
     }
 
@@ -728,7 +782,7 @@ export default class User {
         return new User({
             ...this,
             isAdmin,
-            acceptInvalid: true
+            acceptInvalid: true,
         })
     }
 
@@ -738,39 +792,39 @@ export default class User {
         return new User({
             ...this,
             nicknames,
-            acceptInvalid: true
+            acceptInvalid: true,
         })
     }
 
-    withIcon(icon?: string): User {
+    withIcon(icon: string | undefined): User {
         return new User({
             ...this,
             icon,
-            acceptInvalid: true
+            acceptInvalid: true,
         })
     }
 
     equalTo(user: User): boolean {
         return User.areLoginsEqual(this.login, user.login)
             && User.areNicknamesEqual(this.nicknames, user.nicknames)
-            && this.name    === user.name
-            && this.isAdmin === user.isAdmin
-            && this.icon    === user.icon
+            && this.name        === user.name
+            && this.isAdmin     === user.isAdmin
+            && this.displayIcon === user.displayIcon
     }
 
     async saveDiff(authController: AuthController, user: User) {
-        const name      = this.name    === user.name                             ? undefined : this.name ?? null
-        const icon      = this.icon    === user.icon                             ? undefined : this.icon ?? null
-        const isAdmin   = this.isAdmin === user.isAdmin                          ? undefined : this.isAdmin
+        const name      = this.name        === user.name                             ? undefined : this.name        ?? null
+        const icon      = this.displayIcon === user.displayIcon                      ? undefined : this.displayIcon ?? null
+        const isAdmin   = this.isAdmin     === user.isAdmin                          ? undefined : this.isAdmin
         const nicknames = User.areNicknamesEqual(this.nicknames, user.nicknames) ? undefined : this.nicknames
 
         await User.set({
             authController,
             name,
-            icon,
             isAdmin,
             nicknames,
-            login: this.login
+            icon,
+            login: this.login,
         })
     }
 }

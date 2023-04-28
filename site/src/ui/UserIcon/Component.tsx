@@ -1,6 +1,7 @@
 import User                                     from "logic/User"
 import Button                                   from "ui/Button/Component"
 import Dim                                      from "ui/Dim/Component"
+import Loading                                  from "ui/Loading/Component"
 import Modal                                    from "ui/Modal/Component"
 import defaultIconSrc                           from "./default-icon.svg"
 import styles                                   from "./styles.module.css"
@@ -95,7 +96,14 @@ export default function UserIcon(props: UserIconProps) {
             reset()
     }, [editMode])
 
-    return <div className={user?.isAdmin ? styles.admin : styles.regular}>
+    const className = user?.isAdmin ? styles.admin : styles.regular
+
+    if (user?.iconLoading)
+        return <div className={className}>
+            <Loading />
+        </div>
+
+    return <div className={className}>
         <img className = {styles.icon}
              src       = {user?.displayIcon ?? defaultIconSrc}
              alt       = "User profile icon"
@@ -111,7 +119,7 @@ export default function UserIcon(props: UserIconProps) {
                     </div>
                     {
                         user?.icon && <div className={styles.button}>
-                            <Button onClick={() => onChange?.(user.withIcon(), user)} color="red">
+                            <Button onClick={() => onChange?.(user.withIcon(undefined), user)} color="red">
                                 Reset
                             </Button>
                         </div>

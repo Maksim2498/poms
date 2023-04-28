@@ -1,5 +1,6 @@
 import User                                                                      from "logic/User"
 import useAsync                                                                  from "hooks/useAsync"
+import useForceRerender                                                          from "hooks/useForceRerender"
 import AuthControllerContext                                                     from "App/AuthControllerContext"
 import UserContext                                                               from "App/UserContext"
 import LoadingContent                                                            from "modules/ContentViewer/LoadingContent/Component"
@@ -14,6 +15,7 @@ import { ButtonAnswerState, TextAnswerState, AnswerStates, CheckBoxAnswerState }
 import { UsersProps                                                            } from "./types"
 
 export default function Users(props: UsersProps) {
+    const forceRerender                 = useForceRerender()
     const { onUserClick, editMode     } = props
     const [contextUser, setContextUser] = useContext(UserContext)
     const authController                = useContext(AuthControllerContext)
@@ -141,8 +143,48 @@ export default function Users(props: UsersProps) {
     </div>
 
     async function getUsers(): Promise<(User | undefined)[]> {
-        const users = await User.getAll({ authController, fetchIcon: true })
-        return User.sort(users)
+        const gotUsers = await User.getAll({
+            authController,
+            deferIconLoading: true,
+        })
+
+        const sortedUsers = User.sort(gotUsers)
+
+        for (const user of sortedUsers)
+            if (user.icon instanceof Promise)
+                user.icon
+                    .then(icon => {
+                        const index = indexOf(user)
+
+                        if (index === -1)
+                            return
+
+                        sortedUsers[index] = user.withIcon(icon)
+
+                        forceRerender()
+                    })
+                    .catch(error => {
+                        console.error(error)
+
+                        const index = indexOf(user)
+
+                        if (index === -1)
+                            return
+
+                        sortedUsers[index] = user.withIcon(undefined)
+
+                        forceRerender()
+                    })
+
+        return sortedUsers
+
+        function indexOf(targetUser: User): number {
+            for (const [i, user] of sortedUsers.entries())
+                if (User.areLoginsEqual(targetUser.login, user?.login))
+                    return i
+
+            return -1
+        }
     }
 
     function disableCreationItem(states: AnswerStates) {

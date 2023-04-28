@@ -2,7 +2,7 @@ import User               from "./User"
 
 import { AuthController } from "./api"
 
-export interface FetchOptions {
+export interface GetOptions {
     authController:  AuthController
     login:           string
     nickname:        string
@@ -16,7 +16,7 @@ export interface CreationOptions {
 }
 
 export default class Player {
-    static async fetch(options: FetchOptions): Promise<Player> {
+    static async get(options: GetOptions): Promise<Player> {
         const { nickname } = options
         const user         = await User.get(options)
 

@@ -96,9 +96,18 @@ export default function App() {
             }
 
             const updatedUser = await user?.updated({
-                authController: [authInfo, setAuthInfo],
-                updateIcon:     true
+                authController:   [authInfo, setAuthInfo],
+                deferIconLoading: true,
             })
+            
+
+            if (updatedUser?.icon instanceof Promise)
+                updatedUser?.icon
+                    .then(icon => setUser(updatedUser?.withIcon(icon)))
+                    .catch(error => {
+                        console.error(error)
+                        setUser(updatedUser.withIcon(undefined))
+                    })
 
             setUser(updatedUser)
         } catch (error) {
