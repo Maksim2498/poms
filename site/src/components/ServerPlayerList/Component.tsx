@@ -1,7 +1,9 @@
+import User                      from "logic/User"
 import Player                    from "logic/Player"
 import useAsync                  from "hooks/useAsync"
 import useForceRerender          from "hooks/useForceRerender"
 import AuthControllerContext     from "App/AuthControllerContext"
+import UserContext               from "App/UserContext"
 import LoadingIndicator          from "ui/LoadingIndicator/Component"
 import PlayerCard                from "ui/PlayerCard/Component"
 import ErrorText                 from "ui/ErrorText/Component"
@@ -12,10 +14,11 @@ import { useContext, useEffect } from "react"
 import { ServerPlayerListProps } from "./types"
 
 export default function ServerPlayerList(props: ServerPlayerListProps) {
-    const { server, onPlayerClick } = props
-    const forceRerender             = useForceRerender()
-    const authController            = useContext(AuthControllerContext)
-    const [players, loading, error] = useAsync(getPlayers)
+    const { server, onPlayerClick     } = props
+    const forceRerender                 = useForceRerender()
+    const authController                = useContext(AuthControllerContext)
+    const [contextUser, setContextUser] = useContext(UserContext)
+    const [players, loading, error    ] = useAsync(getPlayers)
 
     useEffect(() => {
         if (error != null)
@@ -67,6 +70,15 @@ export default function ServerPlayerList(props: ServerPlayerListProps) {
                     const newPlayer = player.withUser(newUser)
 
                     sortedPlayers[i] = newPlayer
+
+                    if (newUser != null) {
+                        const updateContextUser =  contextUser
+                                                && User.areLoginsEqual(newUser?.login, contextUser.login)
+                                                && !contextUser.equalTo(newUser)
+
+                        if (updateContextUser)
+                            setContextUser(newUser)
+                    }
 
                     forceRerender()
                 }
