@@ -592,7 +592,7 @@ export default class Server {
                     }
 
                     if (socketPath != null) {
-                        await fsp.rm(socketPath)
+                        await fsp.rm(socketPath, { force: true })
                         this.httpServer.listen(socketPath, listening)
                         return
                     }
@@ -622,6 +622,7 @@ export default class Server {
         await closeMysqlPool.call(this)
         closeRconProxies.call(this)
         await closeHttp.call(this)
+        await removeSockets.call(this)
 
         async function closeMysqlPool(this: Server) {
             this.logger?.debug("Closing all pooled MySQL connections...")
@@ -654,6 +655,24 @@ export default class Server {
             })
 
             await this.runPromise
+        }
+
+        async function removeSockets(this: Server) {
+            const httpSocketPath = this.config.read.http.socketPath
+
+            if (httpSocketPath != null) {
+                this.logger?.debug("Removing HTTP socket...")
+                await fsp.rm(httpSocketPath, { force: true })
+                this.logger?.debug("Removed")
+            }
+
+            const mysqlSocketPath = this.config.read.mysql.socketPath
+
+            if (mysqlSocketPath != null) {
+                this.logger?.debug("Removing MySQL socket...")
+                await fsp.rm(mysqlSocketPath, { force: true })
+                this.logger?.debug("Removed")
+            }
         }
     }
 
