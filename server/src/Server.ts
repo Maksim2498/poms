@@ -1,29 +1,29 @@
-import * as api                                                           from "./api"
-import http                                                               from "http"
-import cp                                                                 from "child_process"
-import open                                                               from "open"
-import express                                                            from "express"
-import expressWs                                                          from "express-ws"
-import morgan                                                             from "morgan"
-import mysql                                                              from "mysql2/promise"
-import ThrottlingManager                                                  from "util/ThrottlingManager"
-import LogicError                                                         from "./logic/LogicError"
-import Config                                                             from "./Config"
+import * as api                                                 from "./api"
+import http                                                     from "http"
+import cp                                                       from "child_process"
+import open                                                     from "open"
+import express                                                  from "express"
+import expressWs                                                from "express-ws"
+import morgan                                                   from "morgan"
+import mysql                                                    from "mysql2/promise"
+import ThrottlingManager                                        from "util/ThrottlingManager"
+import LogicError                                               from "./logic/LogicError"
+import Config                                                   from "./Config"
 
-import { promises as fsp                                                } from "fs"
-import { Server   as HttpServer                                         } from "http"
-import { dirname                                                        } from "path"
-import { isHttpError                                                    } from "http-errors"
-import { Router, Request, Response, RequestHandler, ErrorRequestHandler } from "express"
-import { Instance as WsApplication                                      } from "express-ws"
-import { Logger                                                         } from "winston"
-import { Pool, Connection, FieldPacket, ResultSetHeader                 } from "mysql2/promise"
-import { TokenManager, DefaultTokenManager, TokenExpiredError           } from "./logic/token"
-import { UserManager, DefaultUserManager                                } from "./logic/user"
-import { StatusFetcher, DefaultStatusFetcher                            } from "./logic/status"
-import { AuthManager, DefaultAuthManager                                } from "./logic/auth"
-import { NicknameManager, DefaultNicknameManager                        } from "./logic/nickname"
-import { RconProxy                                                      } from "logic/rcon"
+import { promises as fsp                                      } from "fs"
+import { Server   as HttpServer                               } from "http"
+import { dirname                                              } from "path"
+import { isHttpError                                          } from "http-errors"
+import { Router, Request, Response, RequestHandler            } from "express"
+import { Instance as WsApplication                            } from "express-ws"
+import { Logger                                               } from "winston"
+import { Pool, Connection, FieldPacket, ResultSetHeader       } from "mysql2/promise"
+import { TokenManager, DefaultTokenManager, TokenExpiredError } from "./logic/token"
+import { UserManager, DefaultUserManager                      } from "./logic/user"
+import { StatusFetcher, DefaultStatusFetcher                  } from "./logic/status"
+import { AuthManager, DefaultAuthManager                      } from "./logic/auth"
+import { NicknameManager, DefaultNicknameManager              } from "./logic/nickname"
+import { RconProxy                                            } from "logic/rcon"
 
 export type State = "created"
                   | "initializing"
@@ -148,18 +148,10 @@ export default class Server {
 
                     return router
 
-                    function createJsonParser(): (RequestHandler | ErrorRequestHandler)[] {
-                        return [
-                            express.json({ limit: config.read.http.maxBodySize }),
-                            (error: Error, req: Request, res: Response, next: (error: any) => void) => {
-                                if (isHttpError(error)) {
-                                    res.sendStatus(error.status)
-                                    return
-                                }
-
-                                next(error)
-                            }
-                        ]
+                    function createJsonParser(): RequestHandler {
+                        return express.json({
+                            limit: config.read.http.maxBodySize
+                        })
                     }
 
                     function registerUnits(this: Server) {
@@ -224,12 +216,25 @@ export default class Server {
                 function setupErrorHandler() {
                     const handler = (error: Error, req: Request, res: Response, next: () => void) => {
                         if (error instanceof LogicError) {
-                            logger?.debug(`Failed: ${error.message}`)
+                            const { message } = error
+
+                            logger?.debug(`Failed: ${message}`)
                             
                             res.json({
-                                error:       error.message,
+                                error:       message,
                                 needRefresh: error instanceof TokenExpiredError
                             })
+
+                            return
+                        }
+
+                        if (isHttpError(error)) {
+                            const { status } = error
+
+                            if (status >= 500)
+                                logger?.error(error.message)
+
+                            res.sendStatus(status)
 
                             return
                         }
