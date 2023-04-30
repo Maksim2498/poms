@@ -13,6 +13,7 @@ import Config                                                             from "
 import { promises as fsp                                                } from "fs"
 import { Server   as HttpServer                                         } from "http"
 import { dirname                                                        } from "path"
+import { isHttpError                                                    } from "http-errors"
 import { Router, Request, Response, RequestHandler, ErrorRequestHandler } from "express"
 import { Instance as WsApplication                                      } from "express-ws"
 import { Logger                                                         } from "winston"
@@ -151,8 +152,8 @@ export default class Server {
                         return [
                             express.json({ limit: config.read.http.maxBodySize }),
                             (error: Error, req: Request, res: Response, next: (error: any) => void) => {
-                                if (error instanceof SyntaxError) {
-                                    res.sendStatus(400)
+                                if (isHttpError(error)) {
+                                    res.sendStatus(error.status)
                                     return
                                 }
 
