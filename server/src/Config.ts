@@ -1,3 +1,4 @@
+import bytes                        from "bytes"
 import z                            from "zod"
 import parseDuration                from "parse-duration"
 import template                     from "string-placeholder"
@@ -66,6 +67,21 @@ const DUR = z.string().transform((value, ctx) => {
     return parsed
 })
 
+const SIZE = z.string().transform((value, ctx) => {
+    const parsed = bytes(value)
+
+    if (parsed == null) {
+        const path    = ctx.path.join(".")
+        const message = `Configuration option "${path}" is an invalid size`
+
+        ctx.addIssue({ code: "custom", message })
+
+        return z.NEVER
+    }
+
+    return parsed
+})
+
 export type ConfigJson         = z.infer<typeof Config.JSON_SCHEMA>
 export type ReadonlyConfigJson = DeepReadonly<ConfigJson>
 
@@ -74,6 +90,7 @@ export default class Config {
         http: z.object({
             proxied:              BOOLEAN,
             apiPrefix:            URI_PATH.default("/api"),
+            maxBodySize:          SIZE.default("22mb"),
             host:                 NHOST,
             port:                 PORT.default(8000),
             socketPath:           NPATH,

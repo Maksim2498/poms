@@ -124,8 +124,6 @@ const ICON_SCHEMA = z.string()
                          const data     = url.slice(commaPos + 1)
                          const icon     = Buffer.from(data, "base64")
 
-                         console.log(data)
-
                          return icon
                      })
 

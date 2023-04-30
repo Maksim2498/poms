@@ -10,7 +10,8 @@
 - [Format](#format);
   - [Port Number](#port-number);
   - [Path String](#path-string);
-  - [Duration Strings](#duration-strings).
+  - [Duration Strings](#duration-strings);
+  - [Size String](#size-strings).
 
 ## About
 
@@ -28,6 +29,7 @@ is considered an error):
 |------------------------------|-------------------------|--------------------------------|----------|------------------------------------------------------------------------------------|
 | `http.proxied`               | `boolean`               | `false`                        | No       | Indicates that server is behind a proxy and that it should use X-proxy-headers     |
 | `http.apiPrefix`             | Path `string`           | `"/api"`                       | No       | HTTP path prefix of all API-requests                                               |
+| `http.maxBodySize`           | Size `string`           | `"22mb"`                       | No       | Maximim allowed sized of HTTP request's body                                       |
 | `http.host`                  | `string` or 'null'      | `null'                         | No       | HTTP server address                                                                |
 | `http.port`                  | Port `number`           | `8000`                         | No       | HTTP server port                                                                   |
 | `http.socketPath`            | Path `string` or `null` | `null`                         | No       | HTTP server Unix-socket path. When used `api.port` and `api.host` is ignored       |
@@ -119,5 +121,10 @@ A valid file system path.
 
 ### Duration Strings
 
-Duration strings are parsed with [parse-duration](https://github.com/jkroso/parse-duration#readme)
-npm package. Every string valid for parse-duration package is valid for POMS server.
+Duration strings are parsed with [_parse-duration_](https://github.com/jkroso/parse-duration#readme)
+npm package. Every string that is valid for parse-duration package is valid for POMS server.
+
+### Size Strings
+
+Size strings are parsed with [_bytes_](https://www.npmjs.com/package/bytes)
+npm package. Every string that is valid for bytes package is valid for POMS server.

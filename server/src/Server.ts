@@ -149,7 +149,7 @@ export default class Server {
 
                     function createJsonParser(): (RequestHandler | ErrorRequestHandler)[] {
                         return [
-                            express.json({ limit: "22mb" }),
+                            express.json({ limit: config.read.http.maxBodySize }),
                             (error: Error, req: Request, res: Response, next: (error: any) => void) => {
                                 if (error instanceof SyntaxError) {
                                     res.sendStatus(400)
