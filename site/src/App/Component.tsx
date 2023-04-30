@@ -22,9 +22,9 @@ export default function App() {
     const [contentStack, setContentStack, contentStackRef] = useStateRef([HOME_CONTENT])
     const [records,      setRecords,      recordsRef     ] = useStateRef([] as TerminalRecord[])
     const [authInfo,     setAuthInfo                     ] = useState(AuthInfo.loadOrDefault())
+    const [,             authInfoLoading                 ] = useAsync(updateAuthInfo)
     const [user,         setUser                         ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
     const [showAuthForm, setShowAuthForm                 ] = useState(false)
-    const [,             authInfoLoading                 ] = useAsync(updateAuthInfo)
     const [,             userLoading                     ] = useAsync(updateUser,      [authInfo])
     const [maxNicknames, maxNicknamesLoading             ] = useAsync(getMaxNicknames, [authInfo])
     const oldUser                                          = useRef(undefined as User | undefined)
@@ -89,6 +89,9 @@ export default function App() {
     }
 
     async function updateUser() {
+        if (authInfoLoading)
+            return
+
         try {
             if (authInfo.tokenPair == null) {
                 setUser(undefined)
@@ -116,11 +119,16 @@ export default function App() {
     }
 
     async function getMaxNicknames(): Promise<number> {
+        const DEFAULT = 5
+
+        if (authInfoLoading)
+            return DEFAULT
+
         try {
             return await User.fetchMaxNicknames([authInfo, setAuthInfo])
         } catch (error) {
             console.error(error)
-            return 5
+            return DEFAULT
         }
     }
 
