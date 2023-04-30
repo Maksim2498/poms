@@ -20,7 +20,7 @@ export default class Server {
             }).array().nullish()
         }),
 
-        motd:    z.object({
+        motd: z.object({
             raw:      z.string(),
             clean:    z.string(),
             html:     z.string()

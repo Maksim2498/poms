@@ -1,6 +1,5 @@
 import z                                       from "zod"
 import Cookies                                 from "js-cookie"
-import AuthInfo                                from "./AuthInfo"
 
 import { hasWs                               } from "util/string"
 import { AuthController, del, get, post, put } from "./api"
@@ -42,10 +41,9 @@ export interface UpdatedOptions {
 }
 
 export interface MakeIconOptions {
-    login:   string
-    name?:   string | null
-    width?:  number
-    height?: number
+    login: string
+    name?: string | null
+    size?: number
 }
 
 export interface RegisterUserOptions {
@@ -83,7 +81,7 @@ export interface SendIsAdminOptions {
 export interface SendNicknamesOptions {
     authController: AuthController
     login:          string
-    nicknames?:     string[]
+    nicknames:      string[]
 }
 
 export interface SendOptions {
@@ -111,13 +109,15 @@ export default class User {
         }).nullish()
     })
 
+    static readonly USERS_JSON_SCHEMA = this.USER_JSON_SCHEMA.array()
+
     static readonly ICON_JSON_SCHEMA = z.object({
         icon: z.string().nullish()
     })
 
     static async fetchIcon(authController: AuthController, login: string): Promise<string | undefined> {
-        const url      = this.makeUrl(login, "icon")
-        const [json]   = await get(authController, url)
+        const method   = this.makeMethod(login, "icon")
+        const [json]   = await get(authController, method)
         const { icon } = this.ICON_JSON_SCHEMA.parse(json)
 
         return icon ?? undefined
@@ -132,30 +132,27 @@ export default class User {
             deferIconLoading,
         } = options
 
-        const urlOptions = [] as string[]
+        const [jsons] = await get(authController, "users", {
+            urlOptions: {
+                nicknames: fetchNicknames,
+                icon:      fetchIcon,
+            },
+        })
 
-        if (fetchNicknames)
-            urlOptions.push("nicknames")
+        return this.fromJsons(jsons, {
+            authController,
+            acceptInvalid,
+            deferIconLoading,
+        })
+    }
 
-        if (fetchIcon)
-            urlOptions.push("icon")
-
-        const url = `users?${urlOptions.join("&")}`
-
-        const [jsons] = (await get(authController, url)) as [any[], AuthInfo]
-
-        return jsons.map(json => {
-            try {
-                return User.fromJson(json, {
-                    authController,
-                    acceptInvalid,
-                    deferIconLoading,
-                })
-            } catch (error) {
-                console.error(error)
-                return undefined
-            }
-        }).filter(user => user != null) as User[]
+    static fromJsons(jsons: any, options: FromJsonOptions = {}): User[] {
+        return this.USERS_JSON_SCHEMA
+            .parse(jsons)
+            .map(parsed => new User({
+                ...parsed,
+                ...options
+            }))
     }
 
     static async fetch(options: FetchOptions): Promise<User> {
@@ -168,49 +165,40 @@ export default class User {
             deferIconLoading,
         } = options
 
-        const url = this.makeUrl(login, undefined, {
-            nicknames: fetchNicknames,
-            icon:      fetchIcon
+        const [json] = await get(authController, this.makeMethod(login), {
+            urlOptions: {
+                nicknames: fetchNicknames,
+                icon:      fetchIcon
+            },
         })
 
-        const [json] = await get(authController, url)
-        const user   = User.fromJson(json, {
+        return User.fromJson(json, {
             authController,
             acceptInvalid,
             deferIconLoading,
         })
-
-        return user
     }
 
-    static fromJson(json: any, options?: FromJsonOptions): User {
-        const {
-            acceptInvalid,
-            deferIconLoading,
-            authController,
-        } = options ?? {}
-
-        const user = new User({
+    static fromJson(json: any, options: FromJsonOptions = {}): User {
+        return new User({
             ...this.USER_JSON_SCHEMA.parse(json),
-            deferIconLoading,
-            authController,
-            acceptInvalid,
+            ...options,
         })
-
-        return user
     }
 
     static readonly LOGIN_COOKIE_NAME = "login"
 
-    static checkLogin(login: string) {
+    static checkLogin(login: string): string {
         return this.checkNormedLogin(this.normLogin(login))
     }
 
-    static checkNormedLogin(login: string) {
+    static checkNormedLogin(login: string): string {
         const invalidReason = this.validateNormedLogin(login)
 
         if (invalidReason != null)
             throw new Error(invalidReason)
+
+        return login
     }
 
     static validateLogin(login: string): string | undefined {
@@ -242,11 +230,13 @@ export default class User {
         return login.trim()
     }
 
-    static checkPassword(password: string) {
+    static checkPassword(password: string): string {
         const invalidReason = this.validatePassword(password)
 
         if (invalidReason != null)
             throw new Error(invalidReason)
+
+        return password
     }
 
     static validatePassword(password: string): string | undefined {
@@ -267,15 +257,21 @@ export default class User {
         return undefined
     }
 
-    static checkName(name: string | undefined | null) {
+    static checkName(name: undefined | null):          undefined
+    static checkName(name: string | undefined | null): string | undefined
+    static checkName(name: string | undefined | null): string | undefined {
         return this.checkNormedName(this.normName(name))
     }
 
-    static checkNormedName(name: string | undefined) {
+    static checkNormedName(name: undefined):          undefined
+    static checkNormedName(name: string | undefined): string | undefined
+    static checkNormedName(name: string | undefined): string | undefined {
         const invalidReason = this.validateNormedName(name)
 
         if (invalidReason != null)
             throw new Error(invalidReason)
+
+        return name
     }
 
     static validateName(name: undefined | null):          undefined
@@ -312,16 +308,19 @@ export default class User {
         return name
     }
 
-    static checkNicknames(nicknames: string[] | undefined | null) {
-        if (nicknames)
-            for (const nickname of nicknames)
-                this.checkNickname(nickname)
+    static checkNicknames(nicknames: string[]):                    string[]
+    static checkNicknames(nicknames: undefined | null):            undefined
+    static checkNicknames(nicknames: string[] | undefined | null): string[] | undefined
+    static checkNicknames(nicknames: string[] | undefined | null): string[] | undefined {
+        return this.checkNormedNicknames(this.normNicknames(nicknames))
     }
 
-    static checkNormedNicknames(nicknames: string[] | undefined) {
+    static checkNormedNicknames(nicknames: string[] | undefined): string[] | undefined {
         if (nicknames)
             for (const nickname of nicknames)
                 this.checkNormedNickname(nickname)
+
+        return nicknames
     }
 
     static validateNicknames(nicknames: string[] | undefined | null): (string | undefined)[] {
@@ -342,15 +341,17 @@ export default class User {
                                  : undefined
     }
 
-    static checkNickname(nickname: string) {
+    static checkNickname(nickname: string): string {
         return this.checkNormedNickname(this.normNickname(nickname))
     }
 
-    static checkNormedNickname(nickname: string) {
+    static checkNormedNickname(nickname: string): string {
         const invalidReason = this.validateNormedNickname(nickname)
 
         if (invalidReason != null)
             throw new Error(invalidReason)
+
+        return nickname
     }
 
     static validateNickname(nickname: string): string | undefined {
@@ -442,13 +443,12 @@ export default class User {
     static renderDefaultIcon(options: MakeIconOptions): string {
         const FONT_SIZE_SCALE_FACTOR = .8
 
-        const name   = (options.name   ?? options.login).trim()
-        const width  =  options.width  ?? this.MAX_ICON_SIZE
-        const height =  options.height ?? this.MAX_ICON_SIZE
+        const name   = (options.name ?? options.login).trim()
+        const size   =  options.size ?? this.MAX_ICON_SIZE
         const canvas =  document.createElement("canvas")
 
-        canvas.width  = width
-        canvas.height = height
+        canvas.width  = size
+        canvas.height = size
 
         const context = canvas.getContext("2d")
 
@@ -457,24 +457,25 @@ export default class User {
 
         context.fillStyle = "black"
 
-        context.fillRect(0, 0, width, height)
+        context.fillRect(0, 0, size, size)
 
         const text         = makeIconText()
-        const initFontSize = width
+        const initFontSize = size
 
-        context.font         = `${width}px sans-serif`
+        context.font         = `${size}px sans-serif`
         context.textBaseline = "middle"
         context.textAlign    = "center"
         context.fillStyle    = "white"
 
         const metrics  = context.measureText(text)
-        const fontSize = FONT_SIZE_SCALE_FACTOR * Math.min(width * initFontSize / metrics.width, height)
+        const fontSize = FONT_SIZE_SCALE_FACTOR * Math.min(size * initFontSize / metrics.width, size)
 
         context.font =`${fontSize}px sans-serif`
 
         const heightDelta = evalHeightDelta()
+        const halfSize    = size / 2
 
-        context.fillText(text, width / 2, height / 2 + heightDelta)
+        context.fillText(text, halfSize, halfSize + heightDelta)
 
         const dataUrl = canvas.toDataURL()
 
@@ -501,57 +502,26 @@ export default class User {
     }
 
     static async del(authController: AuthController, login: string) {
-        const url = this.makeUrl(login)
-        await del(authController, url)
-    }
-
-    static makeUrl(login: string, suffix?: string | null, options: { [key: string]: any } = {}): string {
-        login = this.normLogin(login)
-
-        this.checkNormedLogin(login)
-
-        const encodedLogin   = encodeURIComponent(login)
-        const encodedOptions = Object.entries(options)
-                                     .map(([key, value]) => {
-                                        if (!value)
-                                            return null
-
-                                        const encodedKey = encodeURIComponent(key)
-
-                                        if (typeof value === "boolean")
-                                            return encodedKey
-
-                                        const encodedValue = encodeURIComponent(String(value))
-
-                                        return`${encodedKey}=${encodedValue}`
-                                     })
-                                     .filter(arg => arg != null)
-                                     .join("&")
-
-        return suffix ? `users/${encodedLogin}/${suffix}?${encodedOptions}`
-                      : `users/${encodedLogin}?${encodedOptions}`
+        await del(authController, this.makeMethod(login))
     }
 
     static async register(options: RegisterUserOptions): Promise<User> {
         const {
             authController,
             login,
-            password,
-            isAdmin
+            isAdmin,
         } = options
 
-        const url = this.makeUrl(login)
-
-        this.checkPassword(password)
-
-        const name = this.normName(options.name)
-
-        this.checkNormedName(name)
+        const method   = this.makeMethod(login)
+        const password = this.checkPassword(options.password)
+        const name     = this.checkName(options.name)
     
-        await post(authController, url, {
-            name,
-            password,
-            isAdmin
+        await post(authController, method, {
+            body: {
+                name,
+                password,
+                isAdmin,
+            },
         })
 
         return new User({ login, name, isAdmin })
@@ -561,14 +531,14 @@ export default class User {
         const {
             authController,
             login,
-            password
         } = options
 
-        const url = this.makeUrl(login, "password")
-
-        this.checkPassword(password)
+        const method   = this.makeMethod(login, "password")
+        const password = this.checkPassword(options.password)
         
-        await put(authController, url, { password })
+        await put(authController, method, {
+            body: { password },
+        })
     }
 
     static async sendName(options: SendNameOptions) {
@@ -577,13 +547,11 @@ export default class User {
             login
         } = options
 
-        const url  = this.makeUrl(login, "name")
-        const name = this.normName(options.name)
+        const method = this.makeMethod(login, "name")
+        const name   = this.checkName(options.name) ?? null
 
-        this.checkNormedName(name)
-
-        await put(authController, url, {
-            name: name ?? null
+        await put(authController, method, {
+            body: { name },
         })
     }
 
@@ -591,13 +559,13 @@ export default class User {
         const {
             authController,
             login,
-            icon
+            icon,
         } = options
 
-        const url = this.makeUrl(login, "icon")
+        const method = this.makeMethod(login, "icon")
 
-        await put(authController, url, {
-            icon: icon ?? null
+        await put(authController, method, {
+            body: { icon },
         })
     }
 
@@ -605,12 +573,14 @@ export default class User {
         const {
             authController,
             login,
-            isAdmin
+            isAdmin,
         } = options
 
-        const url = this.makeUrl(login, "is-admin")
+        const method = this.makeMethod(login, "is-admin")
 
-        await put(authController, url, { isAdmin })
+        await put(authController, method, {
+            body: { isAdmin },
+        })
     }
 
     static readonly MAX_NICKNAMES_JSON_SCHMEA = z.object({
@@ -618,22 +588,24 @@ export default class User {
     })
 
     static async fetchMaxNicknames(authController: AuthController): Promise<number> {
-        const [json] = await get(authController, "max-nicknames")
-        const parsed = this.MAX_NICKNAMES_JSON_SCHMEA.parse(json)
+        const [json]  = await get(authController, "max-nicknames")
+        const { max } = this.MAX_NICKNAMES_JSON_SCHMEA.parse(json)
 
-        return parsed.max
+        return max
     }
 
     static async sendNicknames(options: SendNicknamesOptions) {
-        const { authController, login } = options
+        const {
+            authController,
+            login,
+        } = options
 
-        const url = this.makeUrl(login, "nicknames")
+        const method    = this.makeMethod(login, "nicknames")
+        const nicknames = this.checkNicknames(options.nicknames)
 
-        const nicknames = this.normNicknames(options.nicknames) ?? []
-
-        this.checkNormedNicknames(nicknames)
-
-        await put(authController, url, nicknames)
+        await put(authController, method, {
+            body: nicknames
+        })
     }
 
     static async send(options: SendOptions) {
@@ -644,37 +616,51 @@ export default class User {
             isAdmin,
         } = options
 
-        const url = this.makeUrl(login)
+        const method = this.makeMethod(login)
 
-        const name = options.name !== undefined ? this.normName(options.name) ?? null
+        const name = options.name !== undefined ? this.checkName(options.name) ?? null
                                                 : undefined
 
-        if (name != null)
-            this.checkNormedName(name)
+        const nicknames = this.checkNicknames(options.nicknames)
 
-        const nicknames = this.normNicknames(options.nicknames) ?? undefined
-
-        if (nicknames != null)
-            this.checkNormedNicknames(nicknames)
-
-        await put(authController, url, {
-            isAdmin,
-            name,
-            icon,
-            nicknames,
+        await put(authController, method, {
+            body: {
+                isAdmin,
+                name,
+                icon,
+                nicknames,
+            },
         })
     }
+
+    static makeMethod(login: string, property?: string): string {
+        const normedLogin = this.checkLogin(login)
+
+        return property ? `users/${normedLogin}/${property}`
+                        : `users/${normedLogin}`
+    }
     
-    static sort(users: User[]): User[] {
-        return users.sort((lhs, rhs) => {
-            if (lhs.isAdmin && !rhs.isAdmin)
-                return -1
+    static sort(users: User[]): typeof users {
+        return users.sort(this.collate)
+    }
 
-            if (!lhs.isAdmin && rhs.isAdmin)
-                return 1
+    static collate(lhs: User, rhs: User): -1 | 0 | 1 {
+        if (lhs.isAdmin && !rhs.isAdmin)
+            return -1
 
-            return (lhs.name ?? lhs.login) >= (rhs.name ?? rhs.login) ? 1 : -1
-        })
+        if (!lhs.isAdmin && rhs.isAdmin)
+            return 1
+
+        const lhsDisplayName = lhs.displayName
+        const rhsDisplayName = rhs.displayName
+
+        if (lhsDisplayName > rhsDisplayName)
+            return 1
+
+        if (lhsDisplayName < rhsDisplayName)
+            return -1
+
+        return 0
     }
 
     readonly login:        string
@@ -737,6 +723,10 @@ export default class User {
 
     get iconLoading(): boolean {
         return this.icon instanceof Promise
+    }
+
+    get displayName(): string {
+        return this.name ?? this.login
     }
 
     async updated(options: UpdatedOptions): Promise<User> {
@@ -811,19 +801,24 @@ export default class User {
             && this.displayIcon === user.displayIcon
     }
 
+    collate(user: User): -1 | 0 | 1 {
+        return User.collate(this, user)
+    }
+
     async saveDiff(authController: AuthController, user: User) {
-        const name      = this.name        === user.name                             ? undefined : this.name        ?? null
-        const icon      = this.displayIcon === user.displayIcon                      ? undefined : this.displayIcon ?? null
-        const isAdmin   = this.isAdmin     === user.isAdmin                          ? undefined : this.isAdmin
+        const { login } = this
+        const name      = this.name        === user.name                         ? undefined : this.name        ?? null
+        const icon      = this.displayIcon === user.displayIcon                  ? undefined : this.displayIcon ?? null
+        const isAdmin   = this.isAdmin     === user.isAdmin                      ? undefined : this.isAdmin
         const nicknames = User.areNicknamesEqual(this.nicknames, user.nicknames) ? undefined : this.nicknames
 
         await User.send({
             authController,
+            login,
             name,
+            icon,
             isAdmin,
             nicknames,
-            icon,
-            login: this.login,
         })
     }
 }

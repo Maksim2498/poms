@@ -1,6 +1,7 @@
-import z          from "zod"
-import Cookies    from "js-cookie";
-import TokenPair  from "./TokenPair";
+import Cookies                   from "js-cookie";
+import TokenPair                 from "./TokenPair";
+
+import { isAnonymAccessAllowed } from "./api";
 
 export interface CreationOptions {
     readonly allowAnonymAccess?: boolean
@@ -76,29 +77,21 @@ export default class AuthInfo {
         })
     }
 
-    private static readonly IS_ANONYM_ACCESS_ALLOWED_SCHEMA = z.object({
-        allowed: z.boolean()
-    })
-
     async withUpdatedAllowAnonymAccess(): Promise<AuthInfo> {
-        const response = await fetch("/api/anonym-access-allowed", { cache: "no-store" })
-        
-        if (!response.ok)
-            throw new Error(response.statusText)
-
-        const json        = await response.json()
-        const { allowed } = AuthInfo.IS_ANONYM_ACCESS_ALLOWED_SCHEMA.parse(json)
-
+        const allowed = await isAnonymAccessAllowed()
         return this.withAllowAnonymAccess(allowed)
     }
 
     save() {
-        if (this.tokenPair == null)
-            TokenPair.remove()
-        else
-            this.tokenPair.save()
-
+        saveTokenPair.call(this)
         saveAllowAnonymAccess.call(this)
+
+        function saveTokenPair(this: AuthInfo) {
+            if (this.tokenPair == null)
+                TokenPair.remove()
+            else
+                this.tokenPair.save()
+        }
 
         function saveAllowAnonymAccess(this: AuthInfo) {
             Cookies.set(
@@ -110,8 +103,10 @@ export default class AuthInfo {
     }
 
     toHeaders(type: HeadersType = "access"): Headers {
-        const headers = new Headers()
+        return this.modifyHeaders(new Headers(), type)
+    }
 
+    modifyHeaders(headers: Headers, type: HeadersType = "access"): typeof headers {
         if (type === "refresh") {
             if (this.tokenPair == null)
                 throw new Error("Missing refresh token")

@@ -1,19 +1,48 @@
+import z          from "zod"
 import AuthInfo   from "./AuthInfo";
 import LogicError from "./LogicError";
 import TokenPair  from "./TokenPair";
 
 import { encode } from "js-base64";
 
+export const API_PREFIX = "/api"
+
 export type AuthController = [AuthInfo, SetAuthInfo]
 
 export type SetAuthInfo = (authInfo: AuthInfo) => void
 
-export type Method = "get"
-                   | "post"
-                   | "delete"
-                   | "put"
+export type HttpMethod = "get"
+                       | "post"
+                       | "delete"
+                       | "put"
+
+export interface ApiOptions {
+    urlOptions?: UrlOptions
+    headers?:    Headers
+    body?:       any
+}
 
 export type ApiResult = [any, AuthInfo]
+
+export type UrlOptions = {
+    [key: string]: any
+}
+
+const IS_ANONYM_ACCESS_ALLOWED_SCHEMA = z.object({
+    allowed: z.boolean()
+})
+
+export async function isAnonymAccessAllowed() {
+    const response = await fetch(makeUrl("anonym-access-allowed"), { cache: "no-store" })
+    
+    if (!response.ok)
+        throw new Error(response.statusText)
+
+    const json        = await response.json()
+    const { allowed } = IS_ANONYM_ACCESS_ALLOWED_SCHEMA.parse(json)
+
+    return allowed
+}
 
 export async function auth(authController: AuthController, login: string, password: string): Promise<AuthInfo> {
     const base64Login    = encode(login)
@@ -21,7 +50,7 @@ export async function auth(authController: AuthController, login: string, passwo
     const Authorization  = `${base64Login}:${base64Password}`
     const method         = "POST"
     const headers        = new Headers({ Authorization })
-    const result         = await fetch("/api/auth", { method, headers })
+    const result         = await fetch(makeUrl("auth"), { method, headers })
 
     if (!result.ok)
         throw new Error(result.statusText)
@@ -66,7 +95,7 @@ export async function reauth(authController: AuthController): Promise<AuthInfo> 
     async function reauthPromise(): Promise<AuthInfo> {
         const method   = "POST"
         const headers  = new Headers({ Authorization: rTokenId })
-        const response = await fetch("/api/reauth", { method, headers })
+        const response = await fetch(makeUrl("reauth"), { method, headers })
 
         if (!response.ok)
             throw new Error(response.statusText)
@@ -98,7 +127,7 @@ export async function deauth(authController: AuthController): Promise<AuthInfo> 
     const method        = "POST"
     const Authorization = tokenPair.access.id
     const headers       = new Headers({ Authorization })
-    const response      = await fetch("/api/deauth", { method, headers })
+    const response      = await fetch(makeUrl("deauth"), { method, headers })
 
     if (!response.ok)
         throw new Error(response.statusText)
@@ -115,27 +144,33 @@ export async function deauth(authController: AuthController): Promise<AuthInfo> 
     return newAuthInfo
 }
 
-export async function get(authController: AuthController, url: string, body?: any) {
-    return await api(authController, "get", url, body)
+export async function get(authController: AuthController, apiMethod: string, options?: ApiOptions) {
+    return await api(authController, "get", apiMethod, options)
 }
 
-export async function post(authController: AuthController, url: string, body?: any) {
-    return await api(authController, "post", url, body)
+export async function post(authController: AuthController, apiMethod: string, options?: ApiOptions) {
+    return await api(authController, "post", apiMethod, options)
 }
 
-export async function put(authController: AuthController, url: string, body?: any) {
-    return await api(authController, "put", url, body)
+export async function put(authController: AuthController, apiMethod: string, options?: ApiOptions) {
+    return await api(authController, "put", apiMethod, options)
 }
 
-export async function del(authController: AuthController, url: string, body?: any) {
-    return await api(authController, "delete", url, body)
+export async function del(authController: AuthController, apiMethod: string, options?: ApiOptions) {
+    return await api(authController, "delete", apiMethod, options)
 }
 
-export async function api(authController: AuthController, method: Method, url: string, body?: any): Promise<ApiResult> {
-    url = "/api/" + url
+export async function api(authController: AuthController, httpMethod: HttpMethod, apiMethod: string, options?: ApiOptions): Promise<ApiResult> {
+    const url     = makeUrl(apiMethod, options?.urlOptions)
+    const headers = options?.headers ?? new Headers()
+    let   body    = options?.body
 
-    if (body)
+    headers.set("Accept", "application/json")
+
+    if (body !== undefined) {
+        headers.set("Content-Type", "application/json")
         body = JSON.stringify(body)
+    }
 
     const [authInfo, setAuthInfo] = authController
     const { tokenPair           } = authInfo
@@ -143,7 +178,7 @@ export async function api(authController: AuthController, method: Method, url: s
     let newerAuthInfo: AuthInfo | undefined
 
     if (tokenPair == null)
-        return await tryFetchAsAnonym()
+        return await fetchApiAsAnonym()
 
     if (tokenPair.refreshExpired)
         refreshExpired()
@@ -151,18 +186,13 @@ export async function api(authController: AuthController, method: Method, url: s
     if (tokenPair.accessExpired)
         await accessExpired()
 
-    return await tryFetch()
+    return await fetchApi()
 
-    async function tryFetchAsAnonym(): Promise<ApiResult> {
+    async function fetchApiAsAnonym(): Promise<ApiResult> {
         if (!authInfo.allowAnonymAccess)
             throw new Error("Anonymous access is forbidden")
 
-        const headers = new Headers()
-
-        if (body)
-            headers.set("Content-Type", "application/json")
-
-        const response = await fetch(url, { method, headers, body, cache: "no-store" })
+        const response = await fetchApiRaw()
 
         if (!response.ok)
             throw new Error(response.statusText)
@@ -187,9 +217,9 @@ export async function api(authController: AuthController, method: Method, url: s
         newerAuthInfo = await reauth(authController)
     }
 
-    async function tryFetch(): Promise<ApiResult> {
+    async function fetchApi(): Promise<ApiResult> {
         let effectiveAuthInfo = newerAuthInfo ?? authInfo
-        let response          = await fetch()
+        let response          = await fetchApiAuthorized()
 
         if (!response.ok)
             throw new Error(response.statusText)
@@ -201,7 +231,7 @@ export async function api(authController: AuthController, method: Method, url: s
                 throw new LogicError(String(json.error))
 
             effectiveAuthInfo = await reauth([effectiveAuthInfo, setAuthInfo])
-            response          = await fetch()
+            response          = await fetchApiAuthorized()
 
             if (!response.ok)
                 throw new Error(response.statusText)
@@ -214,13 +244,45 @@ export async function api(authController: AuthController, method: Method, url: s
 
         return [json, effectiveAuthInfo]
 
-        async function fetch() {
-            const headers = effectiveAuthInfo.toHeaders()
+        async function fetchApiAuthorized() {
+            effectiveAuthInfo.modifyHeaders(headers)
 
             if (body)
                 headers.set("Content-Type", "application/json")
 
-            return await window.fetch(url, { method, headers, body, cache: "no-store" })
+            return await fetchApiRaw()
         }
     }
+
+    function fetchApiRaw() {
+        return fetch(url, {
+            method: httpMethod,
+            headers,
+            body,
+            cache:  "no-store"
+        })
+    }
+}
+
+export function makeUrl(apiMethod: string, options: UrlOptions = {}): string {
+    const urlApiMethod = encodeURI(`${API_PREFIX}/${apiMethod}`)
+    const urlOptions   = Object
+        .entries(options)
+        .map(([key, value]) => {
+            if (!value)
+                return null
+
+            const urlKey = encodeURIComponent(key)
+
+            if (typeof value === "boolean")
+                return urlKey
+
+            const urlValue = encodeURIComponent(String(value))
+
+            return `${urlKey}=${urlValue}`
+        })
+        .filter(option => option)
+        .join("&")
+
+    return `${urlApiMethod}?${urlOptions}`
 }
