@@ -108,7 +108,9 @@ export default class Server {
 
             function setupCommon() {
                 if (config.read.http.proxied)
-                    app.set("trust proxy", true)
+                    app.enable("trust proxy")
+
+                app.disable("x-powered-by")
             }
 
             function setupLogger() {
