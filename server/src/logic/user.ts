@@ -1,4 +1,5 @@
 import assert                                                      from "assert"
+import bytes                                                       from "bytes"
 import Config                                                      from "Config"
 import LogicError                                                  from "./LogicError"
 
@@ -863,7 +864,7 @@ export function deepUserInfoToString(info: DeepUserInfo): string {
 }
 
 export function iconBufferToString(icon: Buffer): string {
-    return `<${icon.length} bytes>`
+    return `<${bytes(icon.length)} png file>`
 }
 
 export function userRowToUserInfo(row: UserRow): UserInfo {
