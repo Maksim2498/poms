@@ -334,6 +334,7 @@ export default class Server {
             initWorkingDirectory.call(this)
             await initStatic.call(this)
             await initDatabase.call(this)
+            await prepareSocketPaths.call(this)
             this.logger?.info("Server is successfully initialized")
 
             this._state = "initialized"
@@ -530,6 +531,24 @@ export default class Server {
                 }
             }
         }
+
+        async function prepareSocketPaths(this: Server) {
+            const httpSocketPath = this.config.read.http.socketPath
+
+            if (httpSocketPath != null) {
+                this.logger?.debug(`Preparing HTTP socket path (${httpSocketPath})...`)
+                await fsp.rm(httpSocketPath, { force: true })
+                this.logger?.debug("Prepared")
+            }
+
+            const mysqlSocketPath = this.config.read.mysql.socketPath
+
+            if (mysqlSocketPath != null) {
+                this.logger?.debug(`Removing MySQL socket path (${mysqlSocketPath})...`)
+                await fsp.rm(mysqlSocketPath, { force: true })
+                this.logger?.debug("Prepared")
+            }
+        }
     }
 
     get state(): State {
@@ -592,7 +611,6 @@ export default class Server {
                     }
 
                     if (socketPath != null) {
-                        await fsp.rm(socketPath, { force: true })
                         this.httpServer.listen(socketPath, listening)
                         return
                     }
@@ -661,7 +679,7 @@ export default class Server {
             const httpSocketPath = this.config.read.http.socketPath
 
             if (httpSocketPath != null) {
-                this.logger?.debug("Removing HTTP socket...")
+                this.logger?.debug(`Removing HTTP socket at ${httpSocketPath}...`)
                 await fsp.rm(httpSocketPath, { force: true })
                 this.logger?.debug("Removed")
             }
@@ -669,7 +687,7 @@ export default class Server {
             const mysqlSocketPath = this.config.read.mysql.socketPath
 
             if (mysqlSocketPath != null) {
-                this.logger?.debug("Removing MySQL socket...")
+                this.logger?.debug(`Removing MySQL socket at ${mysqlSocketPath}...`)
                 await fsp.rm(mysqlSocketPath, { force: true })
                 this.logger?.debug("Removed")
             }
