@@ -88,7 +88,7 @@ export async function checkPermission(this: Server, permission: Permission, req:
 
                 const userManager     = this.userManager
                 const reqUserId       = aTokenInfo!.userId
-                const reqUserInfo     = await userManager.forceGetUserInfo(connection, reqUserId)
+                const reqUserInfo     = (await userManager.getUserInfo(connection, reqUserId))!
                 const reqUserLogin    = reqUserInfo.login.toLowerCase()
                 const targetUserLogin = req.params.user.toLowerCase()
                 const isReqUserAdmin  = reqUserInfo.isAdmin
@@ -104,7 +104,7 @@ export async function checkPermission(this: Server, permission: Permission, req:
 
                 const userManager = this.userManager
                 const userId      = aTokenInfo!.userId
-                const userInfo    = await userManager.forceGetUserInfo(connection, userId)
+                const userInfo    = (await userManager.getUserInfo(connection, userId))!
 
                 if (!userInfo.isAdmin)
                     res.sendStatus(403)
