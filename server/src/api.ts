@@ -7,11 +7,11 @@ import { Request, Response                               } from "express"
 import { Connection                                      } from "mysql2/promise"
 import { parseTokenId, safeParseTokenId, tokenPairToJson } from "./logic/token"
 
-export type UnitCollection = {
-    [key: string]: Unit
+export type EndPointCollection = {
+    [key: string]: EndPoint
 }
 
-export interface Unit {
+export interface EndPoint {
     permission?: Permission
     method:      Method
     path:        string
@@ -160,7 +160,7 @@ const UPDATE_USER_PERMISSION_SCHEMA = z.object({
 
 const UPDATE_NICKNAMES_SCHEMA = z.string().array()
 
-export const units: UnitCollection = {
+export const endPoints: EndPointCollection = {
     isAnonymousAccessAllowed: {
         method: "get",
         path:   "/anonym-access-allowed",

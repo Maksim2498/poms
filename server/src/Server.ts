@@ -144,7 +144,7 @@ export default class Server {
                     router.use(api.disableGetCache)
                     router.use(jsonParser)
 
-                    registerUnits.call(this)
+                    registerEndPoints.call(this)
 
                     return router
 
@@ -154,14 +154,14 @@ export default class Server {
                         })
                     }
 
-                    function registerUnits(this: Server) {
-                        for (const unitName in api.units) {
-                            const unit = api.units[unitName]
+                    function registerEndPoints(this: Server) {
+                        for (const endPointName in api.endPoints) {
+                            const endPoint = api.endPoints[endPointName]
 
                             const checkPermission = async (req: Request, res: Response, next: (error?: any) => void) => {
                                 try {
-                                    if (unit.permission != null)
-                                        await api.checkPermission.call(this, unit.permission, req, res)
+                                    if (endPoint.permission != null)
+                                        await api.checkPermission.call(this, endPoint.permission, req, res)
 
                                     next()
                                 } catch (error) {
@@ -171,7 +171,7 @@ export default class Server {
 
                             const disconnectedHandler = async (req: Request, res: Response, next: (error?: any) => void) => {
                                 try {
-                                    const handler = unit.handler as api.DisconnectedHandler
+                                    const handler = endPoint.handler as api.DisconnectedHandler
                                     await handler.call(this, req, res)
                                 } catch (error) {
                                     next(error)
@@ -185,12 +185,14 @@ export default class Server {
                                     try {
                                         await connection.beginTransaction()
 
-                                        const handler = unit.handler as api.ConnectedHandler
+                                        const handler = endPoint.handler as api.ConnectedHandler
                                         await handler.call(this, connection, req, res)
 
                                         await connection.commit()
-                                    } finally {
+                                    } catch (error) {
                                         await connection.rollback()
+                                        throw error
+                                    } finally {
                                         connection.release()
                                     }
                                 } catch (error) {
@@ -200,11 +202,11 @@ export default class Server {
 
                             const handlers = [
                                 checkPermission,
-                                unit.handler.length === 2 ? disconnectedHandler
-                                                          : connectedHandler
+                                endPoint.handler.length === 2 ? disconnectedHandler
+                                                              : connectedHandler
                             ]
 
-                            router[unit.method](unit.path, handlers)
+                            router[endPoint.method](endPoint.path, handlers)
                         }
                     }
                 }
