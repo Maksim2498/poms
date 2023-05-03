@@ -48,8 +48,10 @@ export default function AuthFrom(props: AuthProps) {
         setLoading(true)
 
         try {
-            auth(authInfoRef, login, password)
+            await auth(authInfoRef, login, password)
+            
             contextUserRef.current = new User({ login })
+
             onAuth?.()
         } catch (error) {
             if (error instanceof LogicError) {
@@ -58,6 +60,7 @@ export default function AuthFrom(props: AuthProps) {
             }
 
             setCommonError("Internal error")
+
             console.error(error)
         } finally {
             setLoading(false)
