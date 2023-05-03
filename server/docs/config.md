@@ -29,7 +29,7 @@ is considered an error):
 |------------------------------|-------------------------|--------------------------------|----------|------------------------------------------------------------------------------------|
 | `http.proxied`               | `boolean`               | `false`                        | No       | Indicates that server is behind a proxy and that it should use X-proxy-headers     |
 | `http.apiPrefix`             | Path `string`           | `"/api"`                       | No       | HTTP path prefix of all API-requests                                               |
-| `http.maxBodySize`           | Size `string`           | `"22mb"`                       | No       | Maximim allowed sized of HTTP request's body                                       |
+| `http.maxBodySize`           | Size `string`           | `"5mb"`                        | No       | Maximim allowed sized of HTTP request's body                                       |
 | `http.host`                  | `string` or 'null'      | `null'                         | No       | HTTP server address                                                                |
 | `http.port`                  | Port `number`           | `8000`                         | No       | HTTP server port                                                                   |
 | `http.socketPath`            | Path `string` or `null` | `null`                         | No       | HTTP server Unix-socket path. When used `api.port` and `api.host` is ignored       |
@@ -64,6 +64,7 @@ is considered an error):
 | `logic.allowAnonymousAccess` | `boolean`               | `true`                         | No       | Allowes access to most API methods without authorization                           |
 | `logic.authDelay`            | Durcation `string`      | `"2s"`                         | No       | Synthetic delay of `/auth` API method to prevent brute force                       |
 | `logic.noAuthDelayInDev`     | `boolean`               | `true`                         | No       | Disables synthetic delay for `/auth` API method while not in `production` mode     |
+| `logic.maxIconSize`    `     | Size `string`           | `"4mb"`                        | No       | Maximum size of user icon. Must be less than 16MB                                  |
 | `rcon.enable`                | `boolean`               | `false`                        | No       | Enables RCON console                                                               |
 | `rcon.host`                  | `string`                | Value of `mc.host`             | No       | RCON server's address                                                              |
 | `rcon.port`                  | Port `number`           | `25575`                        | No       | RCON server's port                                                                 |

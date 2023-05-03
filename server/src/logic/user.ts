@@ -221,8 +221,6 @@ export class DefaultUserManager implements UserManager {
     }
 
     async setUserIcon(connection: Connection, user: User, icon: Buffer | null, options?: SetUserIconOptions): Promise<boolean> {
-        const MAX_SIZE = 2 ** 24 // Max MEDIUMBLOB size
-
         const numUser = typeof user === "number"
 
         if (this.logger) {
@@ -233,8 +231,10 @@ export class DefaultUserManager implements UserManager {
             this.logger?.debug(message)
         }
 
-        if (icon != null && icon.length > MAX_SIZE) {
-            const message = `Icon is too big`
+        const max = this.config.read.logic.maxIconSize
+
+        if (icon != null && icon.length > max) {
+            const message = `Icon is too big. Maximum size is ${bytes(max)}. Size of provided icon is ${bytes(icon.length)}`
 
             if (options?.throwOnTooBig)
                 throw new LogicError(message)

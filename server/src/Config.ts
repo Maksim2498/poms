@@ -18,7 +18,7 @@ const URI_PATH = z.string().transform(s => normalize("/" + s))
 const PATH     = z.string().transform(s => Config.placehold(normalize(s)))
 const NPATH    = PATH.nullable().default(null)
 const BOOLEAN  = z.boolean().default(false)
-const UINT      = z.number().int().nonnegative()
+const UINT     = z.number().int().nonnegative()
 
 const SAME_AS_MC_HOST = Symbol()
 
@@ -82,6 +82,19 @@ const SIZE = z.string().transform((value, ctx) => {
     return parsed
 })
 
+const ICON_SIZE = SIZE.superRefine((value, ctx) => {
+    const MAX = 2 ** 24
+
+    if (value >= MAX) {
+        ctx.addIssue({
+            code: "too_big",
+            type: "number",
+            maximum: MAX,
+            inclusive: false,
+        })
+    }
+})
+
 export type ConfigJson         = z.infer<typeof Config.JSON_SCHEMA>
 export type ReadonlyConfigJson = DeepReadonly<ConfigJson>
 
@@ -90,7 +103,7 @@ export default class Config {
         http: z.object({
             proxied:              BOOLEAN,
             apiPrefix:            URI_PATH.default("/api"),
-            maxBodySize:          SIZE.default("22mb"),
+            maxBodySize:          SIZE.default("5mb"),
             host:                 NHOST,
             port:                 PORT.default(8000),
             socketPath:           NPATH,
@@ -148,6 +161,7 @@ export default class Config {
             allowAnonymousAccess: BOOLEAN.default(true),
             authDelay:            DUR.default("2s"),
             noAuthDelayInDev:     BOOLEAN.default(true),
+            maxIconSize:          ICON_SIZE.default("4mb"),
         }).strict().default({}),
 
         rcon: z.object({
