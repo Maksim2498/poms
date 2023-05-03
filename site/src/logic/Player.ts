@@ -1,20 +1,21 @@
 import User               from "./User"
 
-import { AuthController } from "./api"
+import { AuthInfoRef } from "./api"
 
 export interface FetchOptions {
-    authController:    AuthController
+    authInfoRef:       AuthInfoRef
     login:             string
     nickname:          string
     deferIconLoading?: boolean
     fetchNicknames?:   boolean
     fetchIcon?:        boolean
+    signal?:           AbortSignal
 }
 
 export interface CreationOptions {
-    dontCheckNicknames?: boolean
-    nickname:            string
-    user?:               User
+    acceptInvalid?: boolean
+    nickname:       string
+    user?:          User
 }
 
 export default class Player {
@@ -25,58 +26,58 @@ export default class Player {
         return new Player({
             nickname,
             user,
-            dontCheckNicknames: true
+            acceptInvalid: true
         })
     }
 
     static sort(players: Player[]): Player[] {
-        return players.sort((lhs, rhs) => {
-            if (lhs.user?.isAdmin && !rhs.user?.isAdmin)
-                return 1
+        return players.sort(this.collate)
+    }
 
-            if (!lhs.user?.isAdmin && rhs.user?.isAdmin)
-                return -1
+    static collate(lhs: Player, rhs: Player): -1 | 0 | 1 {
+        if (lhs.user?.isAdmin && !rhs.user?.isAdmin)
+            return 1
 
-            return lhs.nickname >= rhs.nickname ? 1 : -1
-        })
+        if (!lhs.user?.isAdmin && rhs.user?.isAdmin)
+            return -1
+
+        if (lhs.nickname > rhs.nickname)
+            return 1
+
+        if (lhs.nickname < rhs.nickname)
+            return -1
+            
+        return 0
     }
 
     readonly user?:    User
     readonly nickname: string
 
     constructor(options: CreationOptions) {
-        const { dontCheckNicknames, nickname, user } = options
+        const {
+            acceptInvalid,
+            user,
+        } = options
 
-        const checkNicknames =  user?.nicknames != null
-                             && !dontCheckNicknames
+        const validate = !acceptInvalid
+        const nickname = User.normNickname(options.nickname)
 
-        if (checkNicknames && !userHasNickname())
-            throw new Error(`User "${user.login}" doesn't have nickname "${nickname}"`)
+        if (validate) {
+            User.checkNormedNickname(nickname)
+
+            if (user?.nicknames && !user.nicknames.includes(nickname))
+                throw new Error(`User "${user.login}" doesn't have nickname "${nickname}"`)
+        }
 
         this.user     = user
         this.nickname = nickname
-
-        function userHasNickname(): boolean {
-            const testNickname =  nickname.trim()
-                                          .toLowerCase()
-
-            for (const userNickname of user!.nicknames!) {
-                const testUserNickname = userNickname.trim()
-                                                     .toLowerCase()
-
-                if (testUserNickname === testNickname)
-                    return true
-            }
-
-            return false
-        }
     }
 
     withUser(user: User | undefined): Player {
         return new Player({
             ...this,
             user,
-            dontCheckNicknames: true,
+            acceptInvalid: true,
         })
     }
 
@@ -84,7 +85,11 @@ export default class Player {
         return new Player({
             ...this,
             nickname,
-            dontCheckNicknames: true,
+            acceptInvalid: true,
         })
+    }
+
+    collate(player: Player): -1 | 0 | 1 {
+        return Player.collate(this, player)
     }
 }

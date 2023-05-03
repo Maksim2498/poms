@@ -1,16 +1,16 @@
-import Logo            from "components/Logo/Component"
-import UserButton      from "components/UserButton/Component"
 import styles          from "./styles.module.css"
 
+import { Logo        } from "./Logo"
+import { UserButton  } from "./UserButton"
 import { HeaderProps } from "./types"
 
 export default function Header(props: HeaderProps) {
     return <header className={styles.header}>
         <Logo />
-        {show()}
+        {right()}
     </header>
 
-    function show() {
+    function right() {
         switch (props.show) {
             case undefined:
             case "none":

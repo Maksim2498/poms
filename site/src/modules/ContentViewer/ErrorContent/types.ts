@@ -1,3 +1,3 @@
-export interface ErrorContentProps {
-    children?: any
-}
+import { ErrorTextProps } from "ui/ErrorText"
+
+export interface ErrorContentProps extends ErrorTextProps {}

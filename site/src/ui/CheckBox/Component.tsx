@@ -1,7 +1,7 @@
 import styles            from "./styles.module.css"
 
 import { FormEvent     } from "react"
-import { CheckBoxProps } from "./type"
+import { CheckBoxProps } from "./types"
 
 export default function CheckBox(props: CheckBoxProps) {
     const {

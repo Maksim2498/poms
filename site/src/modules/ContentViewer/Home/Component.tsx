@@ -1,5 +1,6 @@
-import AppearingMessage from "ui/AppearingMessage/Component"
-import styles           from "./styles.module.css"
+import styles               from "./styles.module.css"
+
+import { AppearingMessage } from "ui/AppearingMessage"
 
 export default function Home() {
     return <div className={styles.home}>

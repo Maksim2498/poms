@@ -1,6 +1,6 @@
-import { MutableRefObject } from "react";
+import useStateRef          from "react-usestateref";
 
-import useStateRef from "react-usestateref";
+import { MutableRefObject } from "react";
 
 export default function useLiveRef<T>(initValue: T): MutableRefObject<T> {
     const [, setValue, valueRef] = useStateRef(initValue)

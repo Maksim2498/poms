@@ -1,6 +1,6 @@
 import z                       from "zod"
 
-import { AuthController, get } from "./api"
+import { AuthInfoRef, get } from "./api"
 
 export type CreationOptions = z.TypeOf<typeof Server.JSON_SCHEMA>
 
@@ -30,8 +30,8 @@ export default class Server {
         favicon: z.string().nullish()
     })
 
-    static async fetch(authController: AuthController): Promise<Server> {
-        const [json] = await get(authController, "server")
+    static async fetch(authController: AuthInfoRef, signal?: AbortSignal): Promise<Server> {
+        const json = await get(authController, "server", { signal })
         return this.fromJson(json)
     }
 
@@ -69,16 +69,21 @@ export default class Server {
             protocol: options.version.protocol
         }
 
-        this.players  = {
+        this.players = {
             online: options.players.online,
             max:    options.players.max,
-            sample: (options.players.sample ?? []).map(({ nickname, login }) => { return { nickname, login: login ?? undefined }})
+            sample: (options.players.sample ?? []).map(({ nickname, login }) => {
+                return {
+                    nickname,
+                    login: login ?? undefined
+                }
+            })
         }
 
-        this.motd    = {
-            raw:    options.motd.raw,
-            clean:  options.motd.clean,
-            html:   options.motd.html
+        this.motd = {
+            raw:   options.motd.raw,
+            clean: options.motd.clean,
+            html:  options.motd.html
         }
 
         this.address = options.address ?? undefined

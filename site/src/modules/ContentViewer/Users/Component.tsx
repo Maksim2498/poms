@@ -1,33 +1,36 @@
-import User                                                                      from "logic/User"
-import useAsync                                                                  from "hooks/useAsync"
-import useForceRerender                                                          from "hooks/useForceRerender"
-import AuthControllerContext                                                     from "App/AuthControllerContext"
-import UserContext                                                               from "App/UserContext"
-import LoadingContent                                                            from "modules/ContentViewer/LoadingContent/Component"
-import ErrorContent                                                              from "modules/ContentViewer/ErrorContent/Component"
-import UserCard                                                                  from "ui/UserCard/Component"
-import Button                                                                    from "ui/Button/Component"
-import Modal                                                                     from "ui/Modal/Component"
-import styles                                                                    from "./styles.module.css"
+import User                                                                             from "logic/User"
+import useAsync                                                                         from "hooks/useAsync"
+import useForceRerender                                                                 from "hooks/useForceRerender"
+import styles                                                                           from "./styles.module.css"
 
-import { useContext, useEffect, useState                                       } from "react"
-import { ButtonAnswerState, TextAnswerState, AnswerStates, CheckBoxAnswerState } from "ui/Modal/types"
-import { UsersProps                                                            } from "./types"
+import { useContext, useEffect, useState, useRef                                      } from "react"
+import { AuthInfoContext, UserContext                                                 } from "App"
+import { UserCard                                                                     } from "ui/UserCard"
+import { Button                                                                       } from "ui/Button"
+import { Modal, ButtonAnswerState, TextAnswerState, AnswerStates, CheckBoxAnswerState } from "ui/Modal"
+import { LoadingContent                                                               } from "../LoadingContent"
+import { ErrorContent                                                                 } from "../ErrorContent"
+import { UsersProps                                                                   } from "./types"
 
 export default function Users(props: UsersProps) {
-    const forceRerender                 = useForceRerender()
     const { onUserClick, editMode     } = props
-    const [contextUser, setContextUser] = useContext(UserContext)
-    const authController                = useContext(AuthControllerContext)
-    const [authInfo, setAuthInfo      ] = authController
-    const [users, loading, error      ] = useAsync(getUsers)
+
+    const forceRerender                 = useForceRerender()
+
+    const contextUserRef                = useContext(UserContext)
+    const authInfoRef                   = useContext(AuthInfoContext)
+
+    const [users, loading, error      ] = useAsync(fetchUsers, [], () => abortControllerRef.current?.abort())
+
     const [target,   setTarget        ] = useState(undefined as { user: User, index: number } | undefined)
     const [creating, setCreating      ] = useState(false)
+
+    const abortControllerRef            = useRef(undefined as AbortController | undefined)
 
     useEffect(clearTarget, [editMode])
 
     useEffect(() => {
-        if (error != null)
+        if (error != null && !abortControllerRef.current?.signal.aborted)
             console.error(error)
     }, [error])
 
@@ -124,10 +127,15 @@ export default function Users(props: UsersProps) {
         }
     </div>
 
-    async function getUsers(): Promise<(User | undefined)[]> {
+    async function fetchUsers(): Promise<(User | undefined)[]> {
+        abortControllerRef.current = new AbortController()
+
+        const { signal } = abortControllerRef.current
+
         const gotUsers = await User.fetchAll({
-            authController,
             deferIconLoading: true,
+            authInfoRef,
+            signal,
         })
 
         const sortedUsers = User.sort(gotUsers)
@@ -137,7 +145,11 @@ export default function Users(props: UsersProps) {
                 user.icon
                     .then(icon => userIconReady(user, icon))
                     .catch(error => {
+                        if (signal.aborted)
+                            return
+
                         console.error(error)
+
                         userIconReady(user, undefined)
                     })
 
@@ -158,12 +170,12 @@ export default function Users(props: UsersProps) {
         }
 
         function updateContextUserIfNeeded(user: User) {
-            const updateContextUser =  contextUser
-                                    && User.areLoginsEqual(user.login, contextUser.login)
-                                    && !contextUser.equalTo(user)
+            const updateContextUser =  contextUserRef.current
+                                    && User.areLoginsEqual(user.login, contextUserRef.current.login)
+                                    && !contextUserRef.current.equalTo(user)
 
             if (updateContextUser)
-                setContextUser(user)
+                contextUserRef.current = user
         }
 
         function indexOf(targetUser: User): number {
@@ -199,7 +211,7 @@ export default function Users(props: UsersProps) {
         const { value:   name     } = states.name     as TextAnswerState
         const { checked: isAdmin  } = states.isAdmin  as CheckBoxAnswerState
 
-        const newUser = await User.register({ authController, login, password, name, isAdmin })
+        const newUser = await User.register({ authInfoRef, login, password, name, isAdmin })
 
         users.push(newUser)
 
@@ -215,11 +227,12 @@ export default function Users(props: UsersProps) {
         if (!target || !users)
             return
 
-        await target.user.del(authController)
+        await target.user.del(authInfoRef)
 
-        if (User.areLoginsEqual(contextUser?.login, target.user.login)) {
-            setAuthInfo(authInfo.withoutTokenPair())
-            setContextUser(undefined)
+        if (User.areLoginsEqual(contextUserRef.current?.login, target.user.login)) {
+            authInfoRef.current    = authInfoRef.current.withoutTokenPair()
+            contextUserRef.current = undefined
+
             return
         }
 

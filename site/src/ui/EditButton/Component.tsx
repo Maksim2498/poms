@@ -1,6 +1,6 @@
-import IconButton           from "ui/IconButton/Component"
 import iconPath             from "./icon.svg"
 
+import { IconButton       } from "ui/IconButton"
 import { EditButtonProps  } from "./types"
 
 export default function EditButton(props: EditButtonProps) {

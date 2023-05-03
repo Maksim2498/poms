@@ -1,4 +1,4 @@
-import { OnPlayerCardClick } from "ui/PlayerCard/types"
+import { OnPlayerCardClick } from "ui/PlayerCard"
 
 export interface ServerViewerProps {
     onPlayerClick?: OnPlayerCardClick

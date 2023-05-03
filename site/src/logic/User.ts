@@ -1,43 +1,48 @@
-import z                                       from "zod"
-import Cookies                                 from "js-cookie"
+import z                                    from "zod"
+import Cookies                              from "js-cookie"
 
-import { hasWs                               } from "util/string"
-import { AuthController, del, get, post, put } from "./api"
+import { hasWs                            } from "util/string"
+import { AuthInfoRef, del, get, post, put } from "./api"
 
 export interface CreationOptions extends z.TypeOf<typeof User.USER_JSON_SCHEMA> {
+    authInfoRef?:      AuthInfoRef
     acceptInvalid?:    boolean
     deferIconLoading?: boolean
-    authController?:   AuthController
+    signal?:           AbortSignal
 }
 
 export interface FromJsonOptions {
+    authInfoRef?:      AuthInfoRef
     acceptInvalid?:    boolean
     deferIconLoading?: boolean
-    authController?:   AuthController
+    signal?:           AbortSignal
 }
 
 export interface FetchAllOptions {
-    authController:    AuthController
+    authInfoRef:       AuthInfoRef
     fetchNicknames?:   boolean
     fetchIcon?:        boolean
     deferIconLoading?: boolean
     acceptInvalid?:    boolean
+    signal?:           AbortSignal
 }
 
 export interface FetchOptions {
+    authInfoRef:       AuthInfoRef
     login:             string
-    authController:    AuthController
     fetchNicknames?:   boolean
     fetchIcon?:        boolean
     deferIconLoading?: boolean
     acceptInvalid?:    boolean
+    signal?:           AbortSignal
 }
 
 export interface UpdatedOptions {
+    authInfoRef:       AuthInfoRef
     updateNicknames?:  boolean
     updateIcon?:       boolean
     deferIconLoading?: boolean
-    authController:    AuthController
+    signal?:           AbortSignal
 }
 
 export interface MakeIconOptions {
@@ -47,53 +52,64 @@ export interface MakeIconOptions {
 }
 
 export interface RegisterUserOptions {
-    authController: AuthController
-    login:          string
-    password:       string
-    name?:          string | null
-    isAdmin?:       boolean
+    authInfoRef: AuthInfoRef
+    login:       string
+    password:    string
+    name?:       string | null
+    isAdmin?:    boolean
+    signal?:     AbortSignal
 }
 
 export interface SendPasswordOptions {
-    authController: AuthController
-    login:          string
-    password:       string
+    authInfoRef: AuthInfoRef
+    login:       string
+    password:    string
+    signal?:     AbortSignal
 }
 
 export interface SendNameOptions {
-    authController: AuthController
-    login:          string
-    name:           string | null
+    authInfoRef: AuthInfoRef
+    login:       string
+    name:        string | null
+    signal?:     AbortSignal
 }
 
 export interface SendIconOptions {
-    authController: AuthController
-    login:          string
-    icon:           string | null
+    authInfoRef: AuthInfoRef
+    login:       string
+    icon:        string | null
+    signal?:     AbortSignal
 }
 
 export interface SendIsAdminOptions {
-    authController: AuthController
-    login:          string
-    isAdmin:        boolean
+    authInfoRef: AuthInfoRef
+    login:       string
+    isAdmin:     boolean
+    signal?:     AbortSignal
 }
 
 export interface SendNicknamesOptions {
-    authController: AuthController
-    login:          string
-    nicknames:      string[]
+    authInfoRef: AuthInfoRef
+    login:       string
+    nicknames:   string[]
+    signal?:     AbortSignal
 }
 
 export interface SendOptions {
-    authController: AuthController
-    login:          string
-    name?:          string | null
-    icon?:          string | null
-    nicknames?:     string[]
-    isAdmin?:       boolean
+    authInfoRef: AuthInfoRef
+    login:       string
+    name?:       string | null
+    icon?:       string | null
+    nicknames?:  string[]
+    isAdmin?:    boolean
+    signal?:     AbortSignal
 }
 
 export type OnChange = (newUser: User, oldUser: User) => void
+
+export type OptionalUser = User | undefined
+export type NullableUser = User | null
+export type NullishUser  = User | undefined | null
 
 export default class User {
     static readonly USER_JSON_SCHEMA = z.object({
@@ -115,9 +131,9 @@ export default class User {
         icon: z.string().nullish()
     })
 
-    static async fetchIcon(authController: AuthController, login: string): Promise<string | undefined> {
+    static async fetchIcon(authInfoRef: AuthInfoRef, login: string, signal?: AbortSignal): Promise<string | undefined> {
         const method   = this.makeMethod(login, "icon")
-        const [json]   = await get(authController, method)
+        const json     = await get(authInfoRef, method, { signal })
         const { icon } = this.ICON_JSON_SCHEMA.parse(json)
 
         return icon ?? undefined
@@ -125,24 +141,28 @@ export default class User {
 
     static async fetchAll(options: FetchAllOptions): Promise<User[]> {
         const {
-            authController,
+            authInfoRef,
             fetchNicknames,
             fetchIcon,
             acceptInvalid,
             deferIconLoading,
+            signal,
         } = options
 
-        const [jsons] = await get(authController, "users", {
+        const jsons = await get(authInfoRef, "users", {
             urlOptions: {
                 nicknames: fetchNicknames,
                 icon:      fetchIcon,
             },
+
+            signal,
         })
 
         return this.fromJsons(jsons, {
-            authController,
+            authInfoRef,
             acceptInvalid,
             deferIconLoading,
+            signal,
         })
     }
 
@@ -157,25 +177,29 @@ export default class User {
 
     static async fetch(options: FetchOptions): Promise<User> {
         const {
-            authController,
+            authInfoRef,
             fetchNicknames,
             fetchIcon,
             login,
             acceptInvalid,
             deferIconLoading,
+            signal,
         } = options
 
-        const [json] = await get(authController, this.makeMethod(login), {
+        const json = await get(authInfoRef, this.makeMethod(login), {
             urlOptions: {
                 nicknames: fetchNicknames,
                 icon:      fetchIcon
             },
+
+            signal,
         })
 
         return User.fromJson(json, {
-            authController,
+            authInfoRef,
             acceptInvalid,
             deferIconLoading,
+            signal,
         })
     }
 
@@ -501,27 +525,30 @@ export default class User {
         }
     }
 
-    static async del(authController: AuthController, login: string) {
-        await del(authController, this.makeMethod(login))
+    static async del(authInfoRef: AuthInfoRef, login: string, signal?: AbortSignal) {
+        await del(authInfoRef, this.makeMethod(login), { signal })
     }
 
     static async register(options: RegisterUserOptions): Promise<User> {
         const {
-            authController,
+            authInfoRef,
             login,
             isAdmin,
+            signal,
         } = options
 
         const method   = this.makeMethod(login)
         const password = this.checkPassword(options.password)
         const name     = this.checkName(options.name)
     
-        await post(authController, method, {
+        await post(authInfoRef, method, {
             body: {
                 name,
                 password,
                 isAdmin,
             },
+
+            signal,
         })
 
         return new User({ login, name, isAdmin })
@@ -529,57 +556,65 @@ export default class User {
 
     static async sendPassword(options: SendPasswordOptions) {
         const {
-            authController,
+            authInfoRef,
             login,
+            signal,
         } = options
 
         const method   = this.makeMethod(login, "password")
         const password = this.checkPassword(options.password)
         
-        await put(authController, method, {
+        await put(authInfoRef, method, {
             body: { password },
+            signal,
         })
     }
 
     static async sendName(options: SendNameOptions) {
         const {
-            authController,
-            login
+            authInfoRef,
+            login,
+            signal,
         } = options
 
         const method = this.makeMethod(login, "name")
         const name   = this.checkName(options.name) ?? null
 
-        await put(authController, method, {
+        await put(authInfoRef, method, {
             body: { name },
+            signal,
         })
     }
 
     static async sendIcon(options: SendIconOptions) {
         const {
-            authController,
+            authInfoRef,
             login,
             icon,
+            signal,
         } = options
 
         const method = this.makeMethod(login, "icon")
 
-        await put(authController, method, {
+        await put(authInfoRef, method, {
             body: { icon },
+            signal,
         })
     }
 
     static async sendIsAdmin(options: SendIsAdminOptions) {
         const {
-            authController,
+            authInfoRef,
             login,
             isAdmin,
+            signal,
         } = options
 
         const method = this.makeMethod(login, "is-admin")
 
-        await put(authController, method, {
+        await put(authInfoRef, method, {
             body: { isAdmin },
+            signal,
         })
     }
 
@@ -587,8 +622,8 @@ export default class User {
         max: z.number()
     })
 
-    static async fetchMaxNicknames(authController: AuthController): Promise<number> {
-        const [json]  = await get(authController, "max-nicknames")
+    static async fetchMaxNicknames(authInfoRef: AuthInfoRef): Promise<number> {
+        const json    = await get(authInfoRef, "max-nicknames")
         const { max } = this.MAX_NICKNAMES_JSON_SCHMEA.parse(json)
 
         return max
@@ -596,24 +631,27 @@ export default class User {
 
     static async sendNicknames(options: SendNicknamesOptions) {
         const {
-            authController,
+            authInfoRef,
             login,
+            signal,
         } = options
 
         const method    = this.makeMethod(login, "nicknames")
         const nicknames = this.checkNicknames(options.nicknames)
 
-        await put(authController, method, {
-            body: nicknames
+        await put(authInfoRef, method, {
+            body: nicknames,
+            signal,
         })
     }
 
     static async send(options: SendOptions) {
         const {
-            authController,
+            authInfoRef,
             login,
             icon,
             isAdmin,
+            signal,
         } = options
 
         const method = this.makeMethod(login)
@@ -623,13 +661,15 @@ export default class User {
 
         const nicknames = this.checkNicknames(options.nicknames)
 
-        await put(authController, method, {
+        await put(authInfoRef, method, {
             body: {
                 isAdmin,
                 name,
                 icon,
                 nicknames,
             },
+
+            signal,
         })
     }
 
@@ -679,7 +719,8 @@ export default class User {
         const {
             acceptInvalid,
             deferIconLoading,
-            authController
+            authInfoRef,
+            signal,
         } = options
 
         const validate  = !acceptInvalid
@@ -704,8 +745,8 @@ export default class User {
                            :  options.icon
         const icon         =  deferIconLoading
                            && options.icon       == null
-                           && authController     != null
-                           ?  User.fetchIcon(authController, login)
+                           && authInfoRef        != null
+                           ?  User.fetchIcon(authInfoRef, login, signal)
                            :  options.icon       ?? undefined
                           
         this.login         =  login
@@ -731,18 +772,20 @@ export default class User {
 
     async updated(options: UpdatedOptions): Promise<User> {
         const {
-            authController,
+            authInfoRef,
             updateNicknames,
             updateIcon,
             deferIconLoading,
+            signal,
         } = options
 
         return await User.fetch({
-            authController,
-            deferIconLoading,
             login:          this.login,
             fetchIcon:      updateIcon,
             fetchNicknames: updateNicknames,
+            deferIconLoading,
+            authInfoRef,
+            signal,
         })
     }
 
@@ -753,8 +796,8 @@ export default class User {
         })
     }
 
-    async del(authController: AuthController) {
-        await User.del(authController, this.login)
+    async del(authInfoRef: AuthInfoRef) {
+        await User.del(authInfoRef, this.login)
     }
 
     withName(name: string | undefined): User {
@@ -805,7 +848,7 @@ export default class User {
         return User.collate(this, user)
     }
 
-    async saveDiff(authController: AuthController, user: User) {
+    async saveDiff(authInfoRef: AuthInfoRef, user: User, signal?: AbortSignal) {
         const { login } = this
         const name      = this.name        === user.name                         ? undefined : this.name        ?? null
         const icon      = this.displayIcon === user.displayIcon                  ? undefined : this.displayIcon ?? null
@@ -813,12 +856,13 @@ export default class User {
         const nicknames = User.areNicknamesEqual(this.nicknames, user.nicknames) ? undefined : this.nicknames
 
         await User.send({
-            authController,
+            authInfoRef,
             login,
             name,
             icon,
             isAdmin,
             nicknames,
+            signal,
         })
     }
 }

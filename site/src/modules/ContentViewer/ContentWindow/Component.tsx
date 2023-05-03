@@ -1,10 +1,10 @@
-import BackButton              from "ui/BackButton/Component"
-import EditButton              from "ui/EditButton/Component"
-import Button                  from "ui/Button/Component"
 import styles                  from "./styles.module.css"
 
-import { ContentWindowProps  } from "./types"
 import { useEffect, useState } from "react"
+import { Button              } from "ui/Button"
+import { BackButton          } from "ui/BackButton"
+import { EditButton          } from "ui/EditButton"
+import { ContentWindowProps  } from "./types"
 
 export default function ContentWindow(props: ContentWindowProps) {
     const {
@@ -24,14 +24,17 @@ export default function ContentWindow(props: ContentWindowProps) {
             <div className={styles.leftButton}>
                 {showBack && <BackButton onClick={onBack} />}
             </div>
-            <h2 className={styles.title}>{content.name}</h2>
+
+            {content && <h2 className={styles.title}>{content.name}</h2>}
+
             <div className={styles.rightButton}>
                 {editMode ? <Button onClick={exitEditMode}>Done</Button>
                           : showEdit && <EditButton onClick={innerOnEdit} />}
             </div>
         </div>
+
         <div className={styles.main}>
-            <content.component editMode={editMode}/>
+            {content && <content.component editMode={editMode}/>}
         </div>
     </div>
 

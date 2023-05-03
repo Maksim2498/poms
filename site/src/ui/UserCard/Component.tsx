@@ -1,9 +1,9 @@
-import TaggedUserName      from "ui/TaggedUserName/Component"
-import UserIcon            from "ui/UserIcon/Component"
-import UserOnlineIndicator from "ui/UserOnlineIndicator/Component"
-import styles              from "./styles.module.css"
+import styles                  from "./styles.module.css"
 
-import { UserCardProps   } from "./types"
+import { TaggedUserName      } from "ui/TaggedUserName"
+import { UserIcon            } from "ui/UserIcon"
+import { UserOnlineIndicator } from "ui/UserOnlineIndicator"
+import { UserCardProps       } from "./types"
 
 export default function UserCard(props: UserCardProps) {
     const { onClick, user } = props

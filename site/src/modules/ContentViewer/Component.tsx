@@ -1,24 +1,23 @@
-import AuthControllerContext                                             from "App/AuthControllerContext"
-import UserContext                                                       from "App/UserContext"
-import ContentStackContext                                               from "./Context"
-import ContentSelector                                                   from "./ContentSelector/Component"
-import ContentWindow                                                     from "./ContentWindow/Component"
-import styles                                                            from "./styles.module.css"
+import styles                                                                              from "./styles.module.css"
 
-import { useContext                                                    } from "react"
-import { CONSOLE_CONTENT, HOME_CONTENT                                 } from "./constants"
-import { Content                                                       } from "./types"
-import { createProfileContent, createServerContent, createUsersContent } from "./util"
+import { useContext                                                                      } from "react"
+import { AuthInfoContext, UserContext                                                    } from "App"
+import { ContentSelector                                                                 } from "./ContentSelector"
+import { ContentWindow                                                                   } from "./ContentWindow"
+import { Content,
+         ContentStackContext,
+         CONSOLE_CONTENT, HOME_CONTENT,
+         makeProfileContent, makeServerContent, makeUsersContent, popContent, setContent } from "./ContentStackContext"
 
 export default function ContentViewer() {
-    const [user                         ] = useContext(UserContext)
-    const [authInfo                     ] = useContext(AuthControllerContext)
-    const contentStackContext             = useContext(ContentStackContext)
-    const contentSelectionList            = makeContentSelectionList()
-    const [contentStack, setContentStack] = contentStackContext
-    const topContent                      = contentStack[contentStack.length - 1]
-    const showBack                        = contentStack.length > 1
-    const { editable                    } = topContent
+    const contentStackRef           = useContext(ContentStackContext)
+    const { current: contentStack } = contentStackRef
+    const { current: contextUser  } = useContext(UserContext)
+    const { current: authInfo     } = useContext(AuthInfoContext)
+    const contentSelectionList      = makeContentSelectionList()
+    const topContent                = contentStack[contentStack.length - 1] as Content | undefined
+    const showBack                  = contentStack.length > 1
+    const editable                  = topContent?.editable ?? false
 
     return <div className={styles.viewer}>
         <ContentSelector contentList={contentSelectionList} onSelect={onSelect}/>
@@ -33,38 +32,34 @@ export default function ContentViewer() {
     function makeContentSelectionList() {
         const contentList = [HOME_CONTENT]
 
-        addCommonContent()
-        addUserContent()
+        if (authInfo.allowAnonymAccess)
+            addCommonContent()
 
-        return contentList
-
-        function addCommonContent() {
-            if (authInfo.allowAnonymAccess)
-                contentList.push(
-                    createServerContent(contentStackContext, user),
-                    createUsersContent(contentStackContext, user)
-                )
-        }
-
-        function addUserContent() {
-            if (user == null)
-                return
-
-            contentList.push(createProfileContent(contentStackContext, user, user))
+        if (contextUser != null) {
+            contentList.push(makeProfileContent(contentStackRef, contextUser, contextUser))
 
             if (!authInfo.allowAnonymAccess)
                 addCommonContent()
 
-            if (user.isAdmin)
+            if (contextUser.isAdmin)
                 contentList.push(CONSOLE_CONTENT)
+        }
+
+        return contentList
+
+        function addCommonContent() {
+            contentList.push(
+                makeServerContent(contentStackRef, contextUser),
+                makeUsersContent(contentStackRef, contextUser)
+            )
         }
     }
 
     function onSelect(newContent: Content) {
-        setContentStack([newContent])
+        setContent(contentStackRef, newContent)
     }
 
     function onBack() {
-        setContentStack(contentStack.slice(0, contentStack.length - 1))
+        popContent(contentStackRef)
     }
 }

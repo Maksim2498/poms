@@ -1,32 +1,35 @@
-import * as motd                              from "minecraft-motd-util"
-import Autolinker                             from "autolinker"
-import useAsync                               from "hooks/useAsync"
-import useForceRerender                       from "hooks/useForceRerender"
-import AuthControllerContext                  from "App/AuthControllerContext"
-import LoadingContent                         from "modules/ContentViewer/LoadingContent/Component"
-import ErrorContent                           from "modules/ContentViewer/ErrorContent/Component"
-import Terminal                               from "components/Terminal/Component"
-import TerminalContext                        from "components/Terminal/Context"
-import ConsoleSocket                          from "./ConsoleSocket"
-import styles                                 from "./styles.module.css"
+import * as motd                                     from "minecraft-motd-util"
+import Autolinker                                    from "autolinker"
+import useAsync                                      from "hooks/useAsync"
+import useForceRerender                              from "hooks/useForceRerender"
+import ConsoleSocket                                 from "./ConsoleSocket"
+import styles                                        from "./styles.module.css"
 
-import { useContext, useEffect, useRef      } from "react"
-import { makeTerminalRecord                 } from "components/Terminal/util"
-import { TerminalRecord, TerminalRecordType } from "components/Terminal/types"
-import { isConsoleAvailable                 } from "./api"
-import { RECONNECT_INTERVAL                 } from "./constants"
+import { useContext, useEffect, useRef             } from "react"
+import { isConsoleAvailable                        } from "logic/api"
+import { AuthInfoContext                           } from "App"
+import { TerminalRecord,
+         Terminal, TerminalContext,
+         pushNewTerminalRecord, pushTerminalRecord } from "components/Terminal"
+import { LoadingContent                            } from "../LoadingContent"
+import { ErrorContent                              } from "../ErrorContent"
+import { RECONNECT_INTERVAL                        } from "./constants"
 
 export default function Console() {
-    const authController                      = useContext(AuthControllerContext)
-    const [,          setRecords, recordsRef] = useContext(TerminalContext)
-    const [available, loading,    error     ] = useAsync(async () => isConsoleAvailable(authController))
-    const forceRerender                       = useForceRerender()
-    const socket                              = useRef(undefined as ConsoleSocket | undefined)
-    const reconnectTimeout                    = useRef(undefined as number        | undefined)
-    const tryReconnect                        = useRef(true)
+    const authInfoRef                 = useContext(AuthInfoContext)
+    const recordsRef                  = useContext(TerminalContext)
+
+    const [available, loading, error] = useAsync(fetchIsConsoleAvailable, [], () => abortControllerRef.current?.abort())
+
+    const forceRerender               = useForceRerender()
+
+    const socket                      = useRef(undefined as ConsoleSocket   | undefined)
+    const reconnectTimeout            = useRef(undefined as number          | undefined)
+    const tryReconnect                = useRef(true)
+    const abortControllerRef          = useRef(undefined as AbortController | undefined)
 
     useEffect(() => {
-        if (error != null)
+        if (error != null && !abortControllerRef.current?.signal.aborted)
             console.error(error)
     }, [error])
 
@@ -39,11 +42,11 @@ export default function Console() {
 
             if (reconnectTimeout.current != null) {
                 clearTimeout(reconnectTimeout.current)
-                pushRecord("info", "Reconnection aborted")
+                pushNewTerminalRecord(recordsRef, "info", "Reconnection aborted")
             }
 
             if (socket.current?.state === "connecting")
-                pushRecord("info", "Connection aborted")
+                pushNewTerminalRecord(recordsRef, "info", "Connection aborted")
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
@@ -54,7 +57,6 @@ export default function Console() {
 
         if (socket.current == null)
             initSocket()
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [available])
 
@@ -73,47 +75,50 @@ export default function Console() {
         <Terminal onEnter={onEnter} disabled={disabled} htmlOutput={true} />
     </div>
 
+    async function fetchIsConsoleAvailable(): Promise<boolean> {
+        abortControllerRef.current = new AbortController()
+
+        const { signal } = abortControllerRef.current
+
+        return await isConsoleAvailable(authInfoRef, signal)
+    }
+
     function onEnter(newRecord: TerminalRecord) {
-        const willSend =  newRecord.type        === "input"
-                       && socket.current?.state === "authorized"
+        if (disabled || newRecord.type !== "input")
+            return
 
-        if (willSend) {
-            const { text } = newRecord
-            const toSend   = text.replace(/^\s*\/\s*/, "")
-            socket.current!.send(toSend)
-        }
+        const { text } = newRecord
+        const toSend   = text.replace(/^\s*\/\s*/, "")
 
-        const oldRecords = recordsRef.current ?? []
-        const newRecords = [...oldRecords, newRecord]
+        socket.current!.send(toSend)
 
-        setRecords(newRecords)
+        pushTerminalRecord(recordsRef, newRecord)
     }
 
     function initSocket() {
-        pushRecord("info", "Connecting...")
+        pushNewTerminalRecord(recordsRef, "info", "Connecting...")
 
         const newSocket = new ConsoleSocket()
 
         newSocket.on("disconnected", () => {
-            pushRecord("info", "Disconnected")
+            pushNewTerminalRecord(recordsRef, "info", "Disconnected")
             socket.current = undefined
             initReconnect()
             forceRerender()
         })
 
         newSocket.on("authorized", () => {
-            pushRecord("success", "Authorized")
+            pushNewTerminalRecord(recordsRef, "success", "Authorized")
             forceRerender()
         })
 
         newSocket.on("connected", () => {
-            pushRecord("success", "Connected")
+            pushNewTerminalRecord(recordsRef, "success", "Connected")
 
-            const [authInfo]    = authController
-            const { tokenPair } = authInfo
+            const { tokenPair } = authInfoRef.current
 
             if (tokenPair == null) {
-                pushRecord("error", "Cannot authorize")
+                pushNewTerminalRecord(recordsRef, "error", "Cannot authorize")
                 newSocket.disconnect()
                 return
             }
@@ -123,11 +128,11 @@ export default function Console() {
             newSocket.auth(accessTokenId)
         })
 
-        newSocket.on("connection-lost",      ()   => pushRecord("error", "Connection lost"))
-        newSocket.on("connection-failed",    ()   => pushRecord("error", "Connection failed"))
-        newSocket.on("authorization-failed", ()   => pushRecord("error", "Authorization failed"))
-        newSocket.on("authorizing",          ()   => pushRecord("info",  "Authorizing..."))
-        newSocket.on("messagae",             text => pushRecord("output", fmtMessage(text)))
+        newSocket.on("connection-lost",      ()   => pushNewTerminalRecord(recordsRef, "error", "Connection lost"))
+        newSocket.on("connection-failed",    ()   => pushNewTerminalRecord(recordsRef, "error", "Connection failed"))
+        newSocket.on("authorization-failed", ()   => pushNewTerminalRecord(recordsRef, "error", "Authorization failed"))
+        newSocket.on("authorizing",          ()   => pushNewTerminalRecord(recordsRef, "info",  "Authorizing..."))
+        newSocket.on("messagae",             text => pushNewTerminalRecord(recordsRef, "output", fmtMessage(text)))
 
         socket.current = newSocket
 
@@ -143,20 +148,12 @@ export default function Console() {
             if (!tryReconnect.current)
                 return
 
-            pushRecord("info", `Reconnecting in ${RECONNECT_INTERVAL} seconds...`)
+            pushNewTerminalRecord(recordsRef, "info", `Reconnecting in ${RECONNECT_INTERVAL} seconds...`)
 
             reconnectTimeout.current = window.setTimeout(() => {
                 reconnectTimeout.current = undefined
                 initSocket()
             }, 1000 * RECONNECT_INTERVAL)
         }
-    }
-
-    function pushRecord(type: TerminalRecordType, text: string) {
-        const newRecord  = makeTerminalRecord(type, text)
-        const oldRecords = recordsRef.current ?? []
-        const newRecords = [...oldRecords, newRecord]
-
-        setRecords(newRecords)
     }
 }

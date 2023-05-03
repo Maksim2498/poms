@@ -1,6 +1,6 @@
-import IconButton           from "ui/IconButton/Component"
 import iconPath             from "./icon.svg"
 
+import { IconButton       } from "ui/IconButton"
 import { BackButtonProps  } from "./types"
 
 export default function BackButton(props: BackButtonProps) {

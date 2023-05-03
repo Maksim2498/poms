@@ -1,6 +1,6 @@
-import Button                   from "ui/Button/Component"
 import styles                   from "./styles.module.css"
 
+import { Button               } from "ui/Button"
 import { ContentSelectorProps } from "./types"
 
 export default function ContentSelector(props: ContentSelectorProps) {

@@ -1,6 +1,5 @@
-import CheckBox                     from "ui/CheckBox/Component"
-
 import { useState                 } from "react"
+import { CheckBox                 } from "ui/CheckBox"
 import { UserIsAdminCheckBoxProps } from "./types"
 
 export default function UserIsAdminCheckBox(props: UserIsAdminCheckBoxProps) {

@@ -1,7 +1,7 @@
-import UserIcon            from "ui/UserIcon/Component"
-import TaggedUserName      from "ui/TaggedUserName/Component"
 import styles              from "./styles.module.css"
 
+import { UserIcon        } from "ui/UserIcon"
+import { TaggedUserName  } from "ui/TaggedUserName"
 import { PlayerCardProps } from "./types"
 
 export default function PlayerCard(props: PlayerCardProps) {

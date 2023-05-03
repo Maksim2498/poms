@@ -1,4 +1,4 @@
-import { Content } from "modules/ContentViewer/types"
+import { Content } from "../ContentStackContext"
 
 export interface ContentSelectorProps {
     contentList?: Content[]

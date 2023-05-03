@@ -1,5 +1,6 @@
-import IconButton from "ui/IconButton/Component"
-import iconPath   from "./icon.svg"
+import iconPath       from "./icon.svg"
+
+import { IconButton } from "ui/IconButton"
 
 export default function FullscreenButton() {
     return <IconButton src={iconPath} onClick={onClick}>Toggle fullscreen</IconButton>

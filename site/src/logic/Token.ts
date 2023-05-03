@@ -47,4 +47,8 @@ export default class Token {
         this.id  = Token.normId(id)
         this.exp = new Date(exp)
     }
+
+    get expired() {
+        return this.exp <= new Date()
+    }
 }

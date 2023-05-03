@@ -1,14 +1,13 @@
 import User                                     from "logic/User"
-import Button                                   from "ui/Button/Component"
-import Dim                                      from "ui/Dim/Component"
-import Loading                                  from "ui/Loading/Component"
-import Modal                                    from "ui/Modal/Component"
 import defaultIconSrc                           from "./default-icon.svg"
 import styles                                   from "./styles.module.css"
 
 import { useState, useEffect, useRef, useMemo } from "react"
+import { Button                               } from "ui/Button"
+import { Dim                                  } from "ui/Dim"
+import { Loading                              } from "ui/Loading"
+import { Modal, Answers                       } from "ui/Modal"
 import { UserIconProps                        } from "./types"
-import { Answers                              } from "ui/Modal/types"
 
 /*
 

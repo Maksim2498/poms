@@ -1,11 +1,11 @@
-import { Content } from "modules/ContentViewer/types"
+import { Content } from "../ContentStackContext"
 
 export interface ContentWindowProps {
     showBack?: boolean
     onBack?:   OnButtonClick
     showEdit?: boolean
     onEdit?:   OnButtonClick
-    content:   Content
+    content?:  Content
 }
 
 export type OnButtonClick = () => void

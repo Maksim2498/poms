@@ -1,27 +1,31 @@
-import User                      from "logic/User"
-import Player                    from "logic/Player"
-import useAsync                  from "hooks/useAsync"
-import useForceRerender          from "hooks/useForceRerender"
-import AuthControllerContext     from "App/AuthControllerContext"
-import UserContext               from "App/UserContext"
-import LoadingIndicator          from "ui/LoadingIndicator/Component"
-import PlayerCard                from "ui/PlayerCard/Component"
-import ErrorText                 from "ui/ErrorText/Component"
-import List                      from "ui/List/Component"
-import styles                    from "./styles.module.css"
+import User                              from "logic/User"
+import Player                            from "logic/Player"
+import useAsync                          from "hooks/useAsync"
+import useForceRerender                  from "hooks/useForceRerender"
+import styles                            from "./styles.module.css"
 
-import { useContext, useEffect } from "react"
-import { ServerPlayerListProps } from "./types"
+import { useContext, useEffect, useRef } from "react"
+import { AuthInfoContext, UserContext  } from "App"
+import { LoadingIndicator              } from "ui/LoadingIndicator"
+import { PlayerCard                    } from "ui/PlayerCard"
+import { ErrorText                     } from "ui/ErrorText"
+import { List                          } from "ui/List"
+import { ServerPlayerListProps         } from "./types"
 
 export default function ServerPlayerList(props: ServerPlayerListProps) {
-    const { server, onPlayerClick     } = props
-    const forceRerender                 = useForceRerender()
-    const authController                = useContext(AuthControllerContext)
-    const [contextUser, setContextUser] = useContext(UserContext)
-    const [players, loading, error    ] = useAsync(getPlayers)
+    const { server, onPlayerClick } = props
+
+    const forceRerender             = useForceRerender()
+
+    const authInfoRef               = useContext(AuthInfoContext)
+    const contextUserRef            = useContext(UserContext)
+
+    const [players, loading, error] = useAsync(fetchPlayers, [], () => abortControllerRef.current?.abort())
+
+    const abortControllerRef        = useRef(undefined as AbortController | undefined)
 
     useEffect(() => {
-        if (error != null)
+        if (error != null && !abortControllerRef.current?.signal.aborted)
             console.error(error)
     }, [error])
 
@@ -46,20 +50,28 @@ export default function ServerPlayerList(props: ServerPlayerListProps) {
         }
     </List>
 
-    async function getPlayers(): Promise<Player[]> {
+    async function fetchPlayers(): Promise<Player[]> {
+        abortControllerRef.current = new AbortController()
+
+        const { signal } = abortControllerRef.current
         const { sample } = server.players
 
-        const playerPromises = sample.map(({login, nickname}) => login == null ? new Player({ nickname })
-                                                                               : Player.fetch({
-                                                                                                  authController,
-                                                                                                  login,
-                                                                                                  nickname,
-                                                                                                  deferIconLoading: true
-                                                                                              }))
-                                     .filter(s => s != null) as Promise<Player>[]
+        const playerPromises = sample.map(({login, nickname}) => {
+            if (login == null)
+                return new Player({ nickname})
+
+            return Player.fetch({
+                deferIconLoading: true,
+                authInfoRef,
+                nickname,
+                signal,
+                login,
+            })
+        }) as Promise<Player>[]
 
         const players       = await Promise.all(playerPromises)
         const sortedPlayers = Player.sort(players)
+        const contextUser   = contextUserRef.current
 
         for (const [i, player] of sortedPlayers.entries()) {
             const icon = player.user?.icon
@@ -71,21 +83,24 @@ export default function ServerPlayerList(props: ServerPlayerListProps) {
 
                     sortedPlayers[i] = newPlayer
 
-                    if (newUser != null) {
-                        const updateContextUser =  contextUser
-                                                && User.areLoginsEqual(newUser?.login, contextUser.login)
-                                                && !contextUser.equalTo(newUser)
+                    const updateContextUser =  newUser != null
+                                            && contextUser
+                                            && User.areLoginsEqual(newUser?.login, contextUser.login)
+                                            && !contextUser.equalTo(newUser)
 
-                        if (updateContextUser)
-                            setContextUser(newUser)
-                    }
+                    if (updateContextUser)
+                        contextUserRef.current = newUser
 
                     forceRerender()
                 }
 
                 icon.then(updatePlayerIcon)
                     .catch(error => {
+                        if (signal.aborted)
+                            return
+
                         console.error(error)
+
                         updatePlayerIcon(undefined)
                     })
             }

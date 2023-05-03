@@ -1,17 +1,15 @@
-import Button                                                 from "ui/Button/Component"
-import Input                                                  from "ui/Input/Component"
-import styles                                                 from "./styles.module.css"
-import TerminalContext                                        from "./Context"
+import styles                                                  from "./styles.module.css"
 
-import { FormEvent, useState, useEffect, useRef, useContext } from "react"
-import { InputKeyEvent                                      } from "ui/Input/types"
-import { TerminalProps, TerminalRecord                      } from "./types"
-import { makeTerminalRecord                                 } from "./util"
+import { FormEvent, useState, useEffect, useRef, useContext  } from "react"
+import { Button                                              } from "ui/Button"
+import { Input, InputKeyEvent                                } from "ui/Input"
+import { TerminalContext, makeTerminalRecord, TerminalRecord } from "./TerminalContext"
+import { TerminalProps                                       } from "./types"
 
 export default function Terminal(props: TerminalProps) {
     const { onEnter, disabled, htmlOutput } = props
-    const [ input,   setInput             ] = useState("")
-    const [ records,                      ] = useContext(TerminalContext)
+    const [input, setInput                ] = useState("")
+    const { current: records              } = useContext(TerminalContext)
     const historyIndex                      = useRef(null as number           | null)
     const end                               = useRef(null as HTMLDivElement   | null)
     const inputElement                      = useRef(null as HTMLInputElement | null)

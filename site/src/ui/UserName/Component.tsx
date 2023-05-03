@@ -1,9 +1,9 @@
 import User                    from "logic/User"
-import FormErrorText           from "ui/FormErrorText/Component"
-import Input                   from "ui/Input/Component"
 import styles                  from "./styles.module.css"
 
 import { useState, useEffect } from "react"
+import { FormErrorText       } from "ui/FormErrorText"
+import { Input               } from "ui/Input"
 import { UserNameProps       } from "./types"
 
 export default function UserName(props: UserNameProps) {

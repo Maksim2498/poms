@@ -1,12 +1,12 @@
-import Dim                                                                                                   from "ui/Dim/Component"
-import Button                                                                                                from "ui/Button/Component"
-import Input                                                                                                 from "ui/Input/Component"
-import FormErrorText                                                                                         from "ui/FormErrorText/Component"
-import CheckBox                                                                                              from "ui/CheckBox/Component"
-import FileInput                                                                                             from "ui/FileInput/Component"
 import styles                                                                                                from "./styles.module.css"
 
 import { useState, useEffect, MouseEvent                                                                   } from "react"
+import { Dim                                                                                               } from "ui/Dim"
+import { Button                                                                                            } from "ui/Button"
+import { Input                                                                                             } from "ui/Input"
+import { FormErrorText                                                                                     } from "ui/FormErrorText"
+import { CheckBox                                                                                          } from "ui/CheckBox"
+import { FileInput                                                                                         } from "ui/FileInput"
 import { ModalProps, AnswerStates, TextAnswerState, CanvasAnswerState, AnswerState, BasicMouseEventHandler } from "./types"
 import { makeState, updateState                                                                            } from "./util"
 

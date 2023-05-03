@@ -1,7 +1,7 @@
-import Loading                                       from "ui/Loading/Component"
 import styles                                        from "./style.module.css"
 
 import { useEffect, useState                       } from "react"
+import { Loading                                   } from "ui/Loading"
 import { DEFAULT_BUTTON_COLOR, DEFAULT_BUTTON_TYPE } from "./constants"
 import { ButtonProps                               } from "./types"
 

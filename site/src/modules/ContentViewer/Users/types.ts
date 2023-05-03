@@ -1,4 +1,4 @@
-import { OnUserCardClick } from "ui/UserCard/types"
+import { OnUserCardClick } from "ui/UserCard"
 
 export interface UsersProps {
     onUserClick?: OnUserCardClick

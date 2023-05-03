@@ -1,29 +1,32 @@
 import useAsync                                              from "hooks/useAsync"
 import User                                                  from "logic/User"
-import AuthControllerContext                                 from "App/AuthControllerContext"
-import UserContext                                           from "App/UserContext"
-import LoadingContent                                        from "modules/ContentViewer/LoadingContent/Component"
-import ErrorContent                                          from "modules/ContentViewer/ErrorContent/Component"
-import UserNicknames                                         from "components/UserNicknames/Component"
-import Button                                                from "ui/Button/Component"
-import Modal                                                 from "ui/Modal/Component"
-import ErrorText                                             from "ui/ErrorText/Component"
-import UserTag                                               from "ui/UserTag/Component"
-import UserIsAdminCheckBox                                   from "ui/UserIsAdminCheckBox/Component"
-import UserName                                              from "ui/UserName/Component"
-import UserIcon                                              from "ui/UserIcon/Component"
-import UserOnlineIndicator                                   from "ui/UserOnlineIndicator/Component"
-import UserRegInfo                                           from "ui/UserRegInfo/Component"
 import styles                                                from "./styles.module.css"
 
 import { useContext, useEffect, useRef, useState           } from "react"
+import { AuthInfoContext, UserContext                      } from "App"
+import { UserNicknames                                     } from "components/UserNicknames"
+import { Button                                            } from "ui/Button"
+import { Modal                                             } from "ui/Modal"
+import { ErrorText                                         } from "ui/ErrorText"
+import { UserTag                                           } from "ui/UserTag"
+import { UserIsAdminCheckBox                               } from "ui/UserIsAdminCheckBox"
+import { UserName                                          } from "ui/UserName"
+import { UserIcon                                          } from "ui/UserIcon"
+import { UserOnlineIndicator                               } from "ui/UserOnlineIndicator"
+import { UserRegInfo                                       } from "ui/UserRegInfo"
 import { AnswerStates, ButtonAnswerState, TextAnswerState  } from "ui/Modal/types"
+import { LoadingContent                                    } from "../LoadingContent"
+import { ErrorContent                                      } from "../ErrorContent"
 import { ProfileProps                                      } from "./types"
 
 export default function Profile(props: ProfileProps) {
-    const authController                          = useContext(AuthControllerContext)
-    const [contextUser, setContextUser          ] = useContext(UserContext)
-    const [loadedUser, , error                  ] = useAsync(getUser)
+    const { onTagClick, editMode                } = props
+
+    const authInfoRef                             = useContext(AuthInfoContext)
+    const contextUserRef                          = useContext(UserContext)
+
+    const [loadedUser, , error                  ] = useAsync(fetchUser, [], () => abortControllerRef.current?.abort())
+
     const [initUser, setInitUser                ] = useState(undefined as User | undefined)
     const [user, setUser                        ] = useState(undefined as User | undefined)
     const [changed, setChanged                  ] = useState(false)
@@ -31,8 +34,9 @@ export default function Profile(props: ProfileProps) {
     const [resetingPassword, setResetingPassword] = useState(false)
     const [saving, setSaving                    ] = useState(false)
     const [saveError, setSaveError              ] = useState(undefined as any)
-    const savedUser                               = useRef(undefined as User | undefined)
-    const { onTagClick, editMode                } = props
+
+    const savedUserRef                            = useRef(undefined as User            | undefined)
+    const abortControllerRef                      = useRef(undefined as AbortController | undefined)
 
     useEffect(() => {
         if (loadedUser != null)
@@ -44,13 +48,13 @@ export default function Profile(props: ProfileProps) {
             return
 
         setUser(initUser)
-        savedUser.current = initUser
+        savedUserRef.current = initUser
 
-        const updateContextUser =  User.areLoginsEqual(initUser.login, contextUser?.login)
+        const updateContextUser =  User.areLoginsEqual(initUser.login, contextUserRef.current?.login)
                                 && !(initUser.icon instanceof Promise)
 
         if (updateContextUser)
-            setContextUser(initUser)
+            contextUserRef.current = initUser
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initUser])
 
@@ -60,12 +64,12 @@ export default function Profile(props: ProfileProps) {
 
         setSaveError(undefined)
         setChanged(false)
-        setUser(savedUser.current)
+        setUser(savedUserRef.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editMode])
 
     useEffect(() => {
-        if (error != null)
+        if (error != null && !abortControllerRef.current?.signal.aborted)
             console.error(error)
     }, [error])
 
@@ -84,7 +88,7 @@ export default function Profile(props: ProfileProps) {
 
         <div className={styles.sections}>
             <div className={styles.general}>
-                {editMode && contextUser?.isAdmin && <UserIsAdminCheckBox user={user!} onChange={onChange} />}
+                {editMode && contextUserRef.current?.isAdmin && <UserIsAdminCheckBox user={user!} onChange={onChange} />}
                 <UserName user={user!} editMode={editMode} onChange={onChange} />
                 <UserTag user={user!} />
                 <UserOnlineIndicator user={user!} />
@@ -145,23 +149,32 @@ export default function Profile(props: ProfileProps) {
         }
     </div>
 
-    async function getUser(): Promise<User> {
+    async function fetchUser(): Promise<User> {
         if ("user" in props)
             return props.user
+
+        abortControllerRef.current = new AbortController()
+
+        const { signal } = abortControllerRef.current
 
         const user = await User.fetch({
             login:            props.login,
             fetchNicknames:   true,
             acceptInvalid:    true,
             deferIconLoading: true,
-            authController,
+            authInfoRef,
+            signal,
         })
 
         if (user.icon instanceof Promise)
             user.icon
                 .then(icon => setInitUser(user.withIcon(icon)))
                 .catch(error => {
+                    if (signal.aborted)
+                        return
+
                     console.error(error)
+
                     setInitUser(user.withIcon(undefined))
                 })
 
@@ -169,25 +182,25 @@ export default function Profile(props: ProfileProps) {
     }
 
     function onChange(newUser: User) {
-        setChanged(!savedUser.current || !newUser.equalTo(savedUser.current))
+        setChanged(!savedUserRef.current || !newUser.equalTo(savedUserRef.current))
         setUser(newUser)
     }
 
     async function onSave() {
-        if (!user || !savedUser.current)
+        if (!user || !savedUserRef.current)
             return
 
         setSaving(true)
 
         try {
-            await user!.saveDiff(authController, savedUser.current)
+            await user.saveDiff(authInfoRef, savedUserRef.current)
 
             setChanged(false)
 
-            savedUser.current = user
+            savedUserRef.current = user
 
-            if (User.areLoginsEqual(savedUser.current.login, contextUser?.login))
-                setContextUser(savedUser.current)
+            if (User.areLoginsEqual(savedUserRef.current.login, contextUserRef.current?.login))
+                contextUserRef.current = savedUserRef.current
 
             setSaveError(undefined)
         } catch (error) {
@@ -216,7 +229,7 @@ export default function Profile(props: ProfileProps) {
         const password = (states.password as TextAnswerState).value
 
         await User.sendPassword({
-            authController,
+            authInfoRef,
             login,
             password
         })

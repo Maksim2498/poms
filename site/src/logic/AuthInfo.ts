@@ -77,8 +77,8 @@ export default class AuthInfo {
         })
     }
 
-    async withUpdatedAllowAnonymAccess(): Promise<AuthInfo> {
-        const allowed = await isAnonymAccessAllowed()
+    async withUpdatedAllowAnonymAccess(signal?: AbortSignal): Promise<AuthInfo> {
+        const allowed = await isAnonymAccessAllowed(signal)
         return this.withAllowAnonymAccess(allowed)
     }
 
@@ -102,22 +102,31 @@ export default class AuthInfo {
         }
     }
 
-    toHeaders(type: HeadersType = "access"): Headers {
-        return this.modifyHeaders(new Headers(), type)
+    toRefreshHeaders(): Headers {
+        return this.modifyRefreshHeaders(new Headers())
     }
 
-    modifyHeaders(headers: Headers, type: HeadersType = "access"): typeof headers {
-        if (type === "refresh") {
-            if (this.tokenPair == null)
-                throw new Error("Missing refresh token")
+    modifyRefreshHeaders(headers: Headers): typeof headers {
+        if (this.tokenPair == null)
+            throw new Error("Missing refresh token")
 
-            headers.set("Authorization", this.tokenPair.refresh.id)
-        } else {
-            if (this.tokenPair != null)
-                headers.set("Authorization", this.tokenPair.access.id)
-            else if (!this.allowAnonymAccess)
-                throw new Error("Missing access token")
+        headers.set("Authorization", this.tokenPair.refresh.id)
+
+        return headers
+    }
+
+    toAccessHeaders(forbidAnonymAccess: boolean = false): Headers {
+        return this.modifyAccessHeaders(new Headers(), forbidAnonymAccess)
+    }
+
+    modifyAccessHeaders(headers: Headers, forbidAnonymAccess: boolean = false): typeof headers {
+        if (this.tokenPair != null) {
+            headers.set("Authorization", this.tokenPair.access.id)
+            return headers
         }
+
+        if (forbidAnonymAccess || !this.allowAnonymAccess)
+            throw new Error("Anonymous access is forbidden")
 
         return headers
     }

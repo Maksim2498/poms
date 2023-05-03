@@ -1,62 +1,68 @@
-import useStateRef                     from "react-usestateref"
-import AuthInfo                        from "logic/AuthInfo"
-import User                            from "logic/User"
-import useAsync                        from "hooks/useAsync"
-import ContentStackContext             from "modules/ContentViewer/Context"
-import TerminalContext                 from "components/Terminal/Context"
-import MaxUserNicknamesContext         from "components/UserNicknames/Context"
-import Loading                         from "ui/Loading/Component"
-import Header                          from "./Header/Component"
-import Main                            from "./Main/Component"
-import Footer                          from "./Footer/Component"
-import AuthControllerContext           from "./AuthControllerContext"
-import UserContext                     from "./UserContext"
-import styles                          from "./styles.module.css"
+import AuthInfo                                          from "logic/AuthInfo"
+import User                                              from "logic/User"
+import useAsync                                          from "hooks/useAsync"
+import useLiveRef                                        from "hooks/useLiveRef"
+import styles                                            from "./styles.module.css"
 
-import { useEffect, useRef, useState } from "react"
-import { reauth                      } from "logic/api"
-import { TerminalRecord              } from "components/Terminal/types"
-import { HOME_CONTENT                } from "modules/ContentViewer/constants"
+import { useEffect, useRef, useState                   } from "react"
+import { reauth                                        } from "logic/api"
+import { OptionalUser                                  } from "logic/User"
+import { ContentStackContext, setContent, HOME_CONTENT } from "modules/ContentViewer"
+import { TerminalRecord, TerminalContext               } from "components/Terminal"
+import { MaxNicknamesContext                           } from "components/UserNicknames"
+import { Loading                                       } from "ui/Loading"
+import { AuthInfoContext                               } from "./AuthInfoContext"
+import { UserContext                                   } from "./UserContext"
+import { Header                                        } from "./Header"
+import { Main                                          } from "./Main"
+import { Footer                                        } from "./Footer"
 
 export default function App() {
-    const [contentStack, setContentStack, contentStackRef] = useStateRef([HOME_CONTENT])
-    const [records,      setRecords,      recordsRef     ] = useStateRef([] as TerminalRecord[])
-    const [authInfo,     setAuthInfo                     ] = useState(AuthInfo.loadOrDefault())
-    const [,             authInfoLoading                 ] = useAsync(updateAuthInfo)
-    const [user,         setUser                         ] = useState(authInfo.tokenPair != null ? User.safeLoad() : undefined)
-    const [showAuthForm, setShowAuthForm                 ] = useState(false)
-    const [,             userLoading                     ] = useAsync(updateUser,      [authInfo])
-    const [maxNicknames, maxNicknamesLoading             ] = useAsync(getMaxNicknames, [authInfo])
-    const oldUser                                          = useRef(undefined as User | undefined)
+    const authInfoRef                     = useLiveRef(AuthInfo.loadOrDefault())
+    const authInfo                        = authInfoRef.current
+    const userRef                         = useLiveRef(authInfo.tokenPair != null ? User.safeLoad() : undefined)
+    const user                            = userRef.current
+    const recordsRef                      = useLiveRef([] as TerminalRecord[])
+    const contentStackRef                 = useLiveRef([HOME_CONTENT])
+
+    const oldUserRef                      = useRef(undefined as OptionalUser)
+    const oldUser                         = oldUserRef.current
+
+    const [authInfoUpdated              ] = useAsync(updateAuthInfo               )
+    const [contextUserUpdated           ] = useAsync(updateContextUser, [authInfo])
+    const [maxNicknames                 ] = useAsync(getMaxNicknames,   [authInfo])
+    const maxNicknamesUpdated             = typeof maxNicknames === "number"
+
+    const [showAuthForm, setShowAuthForm] = useState(false)
 
     useEffect(() => authInfo.save(), [authInfo])
 
     useEffect(() => {
         User.save(user)
 
-        if (!User.areLoginsEqual(user?.login, oldUser.current?.login)) {
-            setContentStack([HOME_CONTENT])
-            setRecords([])
+        if (!User.areLoginsEqual(user?.login, oldUser?.login)) {
+            setContent(contentStackRef, HOME_CONTENT)
+            recordsRef.current = []
         }
 
-        oldUser.current = user
+        oldUserRef.current = user
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user])
 
-    const loading =  authInfoLoading
-                  || userLoading
-                  || maxNicknamesLoading
+    const loading =  !authInfoUpdated
+                  || !contextUserUpdated
+                  || !maxNicknamesUpdated
 
     if (loading)
         return <div className={styles.app}>
             <Loading />
         </div>
 
-    return <AuthControllerContext.Provider value={[authInfo, setAuthInfo]}>
-        <MaxUserNicknamesContext.Provider value={maxNicknames!}>
-            <UserContext.Provider value={[user, setUser]}>
-                <ContentStackContext.Provider value={[contentStack, setContentStack, contentStackRef]}>
-                    <TerminalContext.Provider value={[records, setRecords, recordsRef]}>
+    return <AuthInfoContext.Provider value={authInfoRef}>
+        <MaxNicknamesContext.Provider value={maxNicknames!}>
+            <UserContext.Provider value={userRef}>
+                <ContentStackContext.Provider value={contentStackRef}>
+                    <TerminalContext.Provider value={recordsRef}>
                         <div className={styles.app}>
                             {header()}
                             {main()}
@@ -65,70 +71,68 @@ export default function App() {
                     </TerminalContext.Provider>
                 </ContentStackContext.Provider>
             </UserContext.Provider>
-        </MaxUserNicknamesContext.Provider>
-    </AuthControllerContext.Provider>
+        </MaxNicknamesContext.Provider>
+    </AuthInfoContext.Provider>
 
-    async function updateAuthInfo() {
-        let newAuthInfo = authInfo
-
+    async function updateAuthInfo(): Promise<boolean> {
         try {
-            newAuthInfo = await newAuthInfo.withUpdatedAllowAnonymAccess()
+            authInfoRef.current = await authInfoRef.current.withUpdatedAllowAnonymAccess()
         } catch (error) {
             console.error(error)
         }
 
-        if (newAuthInfo.tokenPair != null)
-            try {
-                newAuthInfo = await reauth([newAuthInfo, setAuthInfo])
-            } catch (error) {
-                newAuthInfo = newAuthInfo.withoutTokenPair()
-                console.error(error)
-            }
-
-        setAuthInfo(newAuthInfo)
-    }
-
-    async function updateUser() {
-        if (authInfoLoading)
-            return
+        if (authInfoRef.current.tokenPair == null)
+            return true
 
         try {
-            if (authInfo.tokenPair == null) {
-                setUser(undefined)
-                return
-            }
+            await reauth(authInfoRef)
+        } catch (error) {
+            authInfoRef.current = authInfoRef.current.withoutTokenPair()
+            console.error(error)
+        }
 
-            const updatedUser = await user?.updated({
-                authController:   [authInfo, setAuthInfo],
+        return true
+    }
+
+    async function updateContextUser(): Promise<boolean> {
+        if (!authInfoUpdated)
+            return false
+
+        if (authInfoRef.current.tokenPair == null) {
+            userRef.current = undefined
+            return true
+        }
+
+        try {
+            userRef.current = await userRef.current?.updated({
                 deferIconLoading: true,
+                authInfoRef,
             })
-            
 
-            if (updatedUser?.icon instanceof Promise)
-                updatedUser?.icon
-                    .then(icon => setUser(updatedUser?.withIcon(icon)))
+            const icon = userRef.current?.icon
+            
+            if (icon instanceof Promise)
+                icon.then(icon => userRef.current = userRef.current?.withIcon(icon))
                     .catch(error => {
                         console.error(error)
-                        setUser(updatedUser.withIcon(undefined))
+                        userRef.current = userRef.current?.withIcon(undefined)
                     })
-
-            setUser(updatedUser)
         } catch (error) {
             console.error(error)
         }
+
+        return true
     }
 
-    async function getMaxNicknames(): Promise<number> {
-        const DEFAULT = 5
-
-        if (authInfoLoading)
-            return DEFAULT
+    async function getMaxNicknames(): Promise<number | boolean> {
+        if (!authInfoUpdated)
+            return false
 
         try {
-            return await User.fetchMaxNicknames([authInfo, setAuthInfo])
+            return await User.fetchMaxNicknames(authInfoRef)
         } catch (error) {
             console.error(error)
-            return DEFAULT
+            return 5
         }
     }
 

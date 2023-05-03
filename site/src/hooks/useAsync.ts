@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 export type UseAsyncArg<T> = () => Promise<T>
 
@@ -22,18 +22,42 @@ export type UseAsyncResult<T> = [
     null    // Error
 ]
 
-export default function useAsync<T>(asyncFunc: UseAsyncArg<T>, deps: React.DependencyList = []): UseAsyncResult<T> {
+export type UseAsyncDestructor = () => void
+
+export default function useAsync<T>(
+    asyncFunc:  UseAsyncArg<T>,
+    deps:       React.DependencyList = [],
+    destructor: UseAsyncDestructor   = () => {}
+): UseAsyncResult<T> {
     const [result,  setResult ] = useState(null as T      | null)
     const [loading, setLoading] = useState(true                 )
     const [error,   setError  ] = useState(null as string | null)
 
+    const destructedRef         = useRef(false)
+
     useEffect(() => {
+        setResult(null)
         setLoading(true)
+        setError(null)
 
         asyncFunc()
-            .then(result => setResult(result))
-            .catch(error => setError(error instanceof Error ? error.message : String(error)))
-            .finally(()  => setLoading(false))
+            .then(result => {
+                destructedRef.current = false
+                setResult(result)
+            })
+            .catch(error => {
+                if (!destructedRef.current)
+                    setError(error instanceof Error ? error.message : String(error))
+            })
+            .finally(()  => {
+                if (!destructedRef.current)
+                    setLoading(false)
+            })
+
+        return () => {
+            destructor();
+            destructedRef.current = true
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, deps)
 

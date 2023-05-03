@@ -1,6 +1,6 @@
 import Server                from "logic/Server"
 
-import { OnPlayerCardClick } from "ui/PlayerCard/types"
+import { OnPlayerCardClick } from "ui/PlayerCard"
 
 export interface ServerPlayerListProps {
     onPlayerClick?: OnPlayerCardClick

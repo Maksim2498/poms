@@ -1,5 +1,6 @@
-import Loading from "ui/Loading/Component";
-import styles  from "./styles.module.css"
+import styles      from "./styles.module.css"
+
+import { Loading } from "ui/Loading"
 
 export default function LoadingContent() {
     return <div className={styles.content}>

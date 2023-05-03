@@ -1,5 +1,5 @@
-import { ButtonColor } from "ui/Button/types"
-import { InputType   } from "ui/Input/types"
+import { ButtonColor } from "ui/Button"
+import { InputType   } from "ui/Input"
 
 export interface ModalProps {
     header?:    string

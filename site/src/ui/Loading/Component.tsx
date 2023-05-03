@@ -1,6 +1,7 @@
-import LoadingIndicator from "ui/LoadingIndicator/Component"
-import Dim              from "ui/Dim/Component"
-import styles           from  "./styles.module.css"
+import styles               from  "./styles.module.css"
+
+import { LoadingIndicator } from "ui/LoadingIndicator"
+import { Dim              } from "ui/Dim"
 
 export default function Loading() {
     return <div className={styles.loading}>

@@ -1,4 +1,4 @@
-import { OnSignIn    } from "components/UserButton/types"
+import { OnSignIn } from "App/Header/UserButton"
 
 export type HeaderProps = UserHeaderProps
                         | NoneHeaderProps

@@ -1,11 +1,11 @@
 import User                                from "logic/User"
-import Button                              from "ui/Button/Component"
-import Modal                               from "ui/Modal/Component"
-import MaxUserNicknamesContext             from "./Context"
 import styles                              from "./styles.module.css"
 
 import { useState, useContext, useEffect } from "react"
-import { TextAnswerState                } from "ui/Modal/types"
+import { Button                          } from "ui/Button"
+import { Modal                           } from "ui/Modal"
+import { TextAnswerState                 } from "ui/Modal"
+import { MaxNicknamesContext             } from "./MaxNicknamesContext"
 import { UserNicknamesProps              } from "./types"
 
 export default function UserNicknames(props: UserNicknamesProps) {
@@ -15,7 +15,7 @@ export default function UserNicknames(props: UserNicknamesProps) {
         onChange
     } = props
 
-    const maxNicknames              = useContext(MaxUserNicknamesContext)
+    const maxNicknames              = useContext(MaxNicknamesContext)
     const [nicknames, setNicknames] = useState(user.nicknames ?? [])
     const [adding,    setAdding   ] = useState(false)
 

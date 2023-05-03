@@ -1,6 +1,5 @@
-import Fields               from "ui/Fields/Component"
-import UserTag              from "ui/UserTag/Component"
-
+import { Fields           } from "ui/Fields"
+import { UserTag          } from "ui/UserTag"
 import { UserRegInfoProps } from "./types"
 
 export default function UserRegInfo(props: UserRegInfoProps) {

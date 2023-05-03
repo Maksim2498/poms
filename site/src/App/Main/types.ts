@@ -1,4 +1,4 @@
-import { AuthProps } from "modules/AuthForm/types"
+import { AuthProps } from "modules/AuthForm"
 
 export type MainProps = MainContentProps
                       | MainAuthProps

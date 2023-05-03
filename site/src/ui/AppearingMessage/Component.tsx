@@ -1,5 +1,5 @@
-import styles                    from "./styles.module.css"
 import * as constants            from "./constants"
+import styles                    from "./styles.module.css"
 
 import { useState, useEffect   } from "react"
 import { AppearingMessageProps } from "./types"

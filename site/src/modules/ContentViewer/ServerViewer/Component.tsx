@@ -1,26 +1,27 @@
-import useAsync                  from "hooks/useAsync"
-import Server                    from "logic/Server"
-import AuthControllerContext     from "App/AuthControllerContext"
-import LoadingContent            from "modules/ContentViewer/LoadingContent/Component"
-import ErrorContent              from "modules/ContentViewer/ErrorContent/Component"
-import ServerPlayerList          from "components/ServerPlayerList/Component"
-import ServerIcon                from "ui/ServerIcon/Component"
-import ServerMotd                from "ui/ServerMotd/Component"
-import ServerVersion             from "ui/ServerVersion/Component"
-import ServerAddress             from "ui/ServerAddress/Component"
-import styles                    from "./styles.module.css"
+import useAsync                          from "hooks/useAsync"
+import Server                            from "logic/Server"
+import styles                            from "./styles.module.css"
 
-import { useContext, useEffect } from "react"
-import { ServerViewerProps     } from "./types"
+import { useContext, useEffect, useRef } from "react"
+import { AuthInfoContext               } from "App"
+import { ServerPlayerList              } from "components/ServerPlayerList"
+import { ServerIcon                    } from "ui/ServerIcon"
+import { ServerMotd                    } from "ui/ServerMotd"
+import { ServerVersion                 } from "ui/ServerVersion"
+import { ServerAddress                 } from "ui/ServerAddress"
+import { LoadingContent                } from "../LoadingContent"
+import { ErrorContent                  } from "../ErrorContent"
+import { ServerViewerProps             } from "./types"
 
 export default function ServerViewer(props: ServerViewerProps) {
     const { onPlayerClick        } = props
-    const authController           = useContext(AuthControllerContext)
-    const [server, loading, error] = useAsync(async () => await Server.fetch(authController))
+    const authInfoRef              = useContext(AuthInfoContext)
+    const [server, loading, error] = useAsync(fetchServer, [], () => abortControllerRef.current?.abort())
+    const abortControllerRef       = useRef(undefined as AbortController | undefined)
 
     useEffect(() => {
-        if (error != null)
-            error != null && console.error(error)
+        if (error != null && !abortControllerRef.current?.signal.aborted)
+            console.error(error)
     }, [error])
 
     if (loading)
@@ -46,4 +47,12 @@ export default function ServerViewer(props: ServerViewerProps) {
 
         <ServerPlayerList server={server} onPlayerClick={onPlayerClick} />
     </div>
+
+    async function fetchServer(): Promise<Server> {
+        abortControllerRef.current = new AbortController()
+
+        const { signal } = abortControllerRef.current
+
+        return await Server.fetch(authInfoRef, signal)
+    }
 }

@@ -1,9 +1,9 @@
-import ErrorText from "ui/ErrorText/Component"
-import styles    from "./styles.module.css"
+import styles                 from "./styles.module.css"
 
-import { Props } from "./types"
+import { ErrorText          } from "ui/ErrorText"
+import { FormErrorTextProps } from "./types"
 
-export default function FormErrorText(props: Props) {
+export default function FormErrorText(props: FormErrorTextProps) {
     const { children: error } = props
 
     if (error == null)

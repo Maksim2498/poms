@@ -1,21 +1,20 @@
 import User                                from "logic/User"
 import LogicError                          from "logic/LogicError"
-import AuthControllerContext               from "App/AuthControllerContext"
-import UserContext                         from "App/UserContext"
-import Input                               from "ui/Input/Component"
-import Button                              from "ui/Button/Component"
-import FormErrorText                       from "ui/FormErrorText/Component"
 import styles                              from "./styles.module.css"
 
 import { FormEvent, useState, useContext } from "react"
 import { auth                            } from "logic/api"
+import { AuthInfoContext, UserContext    } from "App"
+import { Input                           } from "ui/Input"
+import { Button                          } from "ui/Button"
+import { FormErrorText                   } from "ui/FormErrorText"
 import { AuthProps                       } from "./types"
 
 export default function AuthFrom(props: AuthProps) {
     const { onAuth, onCancel } = props
 
-    const [,                setUser           ] = useContext(UserContext)
-    const authController                        = useContext(AuthControllerContext)
+    const contextUserRef                        = useContext(UserContext)
+    const authInfoRef                           = useContext(AuthInfoContext)
 
     const [login,           setLogin          ] = useState("")
     const [password,        setPassword       ] = useState("")
@@ -43,26 +42,26 @@ export default function AuthFrom(props: AuthProps) {
     const signInDisabled   = !bothChanged
                            || hasError
 
-    const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+    const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
 
         setLoading(true)
 
-        auth(authController, login, password)
-            .then(tokenPair => {
-                setUser(new User({ login }))
-                onAuth?.()
-            })
-            .catch(error => {
-                if (error instanceof LogicError) {
-                    setCommonError(error.message)
-                    return
-                }
+        try {
+            auth(authInfoRef, login, password)
+            contextUserRef.current = new User({ login })
+            onAuth?.()
+        } catch (error) {
+            if (error instanceof LogicError) {
+                setCommonError(error.message)
+                return
+            }
 
-                setCommonError("Internal error")
-                console.error(error)
-            })
-            .finally(() => setLoading(false))
+            setCommonError("Internal error")
+            console.error(error)
+        } finally {
+            setLoading(false)
+        }
     }
 
     const onLoginChange = (newLogin: string) => {
