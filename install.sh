@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")"
 
-node install
+node install.mjs

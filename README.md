@@ -76,7 +76,7 @@ This method is universal and isn't dependent on your operating system.
 Execute the following command in your terminal:
 
 ```sh
-node install.js
+node install.mjs
 ```
 
 ## Running
