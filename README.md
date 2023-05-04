@@ -1,12 +1,6 @@
-<h1 align="center">
-    <br>
-    <img src="./images/logo.png">
-    <br>
-    <b>POMS - Personal Offline-mode Minecraft Server administration system</b>
-    <br>
-    <b>(WIP)</b>
-    <br>
-</h1>
+# POMS - Personal Offline-mode Minecraft Server administration system (WIP)
+
+![Logo](/images/logo.png)
 
 ## Table of Contents
 
