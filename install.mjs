@@ -199,7 +199,6 @@ function promptPassword(message = "") {
                         process.exit(1)
                         return
                     
-                    case "\u007F":
                     case "\u007F": // Backspace
                         if (password.length) {
                             password = password.slice(0, -1)
