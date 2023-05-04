@@ -2,13 +2,6 @@
     <br>
     <img src="./images/logo.png">
     <br>
-    <img src="https://img.shields.io/github/package-json/v/Maksim2498/poms?filename=server%2Fpackage.json&label=server%20version">
-    <img src="https://img.shields.io/github/package-json/v/Maksim2498/poms?filename=site%2Fpackage.json&label=client%20version">
-    <img src="https://img.shields.io/github/v/release/Maksim2498/poms?label=plugin%20version">
-    <img src="https://img.shields.io/github/license/Maksim2498/poms">
-    <img src="https://img.shields.io/github/downloads/Maksim2498/poms/total">
-    <br>
-    <br>
     <b>POMS - Personal Offline-mode Minecraft Server administration system</b>
     <br>
     <b>(WIP)</b>
