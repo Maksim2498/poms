@@ -67,7 +67,7 @@ CREATE TABLE Nicknames (
 Holds all users' access tokens with their creation and expiration date and time.
 
 ```sql
-id = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))
+id = RANDOM_BYTES(64)
 ```
 
 __Definition__:
@@ -75,7 +75,7 @@ __Definition__:
 ```sql
 CREATE TABLE ATokens (
     id       BINARY(64) NOT NULL PRIMARY KEY,
-    user_id  BIGINT     NOT NULL,
+    user_id  BIGINT,
     cr_time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     exp_time TIMESTAMP  NOT NULL,
 
@@ -88,7 +88,7 @@ CREATE TABLE ATokens (
 Holds all users' refresh tokens with their creation and expiration date and time.
 
 ```sql
-id = CONCAT(RANDOM_BYTES(60), UNHEX(HEX(UNIX_TIMESTAMP())))
+id = RANDOM_BYTES(64)
 ```
 
 __Definition__:

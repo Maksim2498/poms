@@ -42,7 +42,7 @@ export class DefaultAuthManager implements AuthManager {
 
         await this.tokenManager.deleteUserExtraATokens(connection, info.id, maxTokens - 1)
 
-        const pair = (await this.tokenManager.createTokenPair(connection, info.id))!
+        const pair = (await this.tokenManager.createUserTokenPair(connection, info.id))!
 
         this.logger?.debug("Athenticated")
 

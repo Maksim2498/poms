@@ -131,76 +131,50 @@ export interface GetDeepUserInfoOptions extends ForceGetDeepUserInfoOptions {
 
 export interface UserManager {
     forceSetUserIcon(connection: Connection, user: User, icon: Buffer | null): Promise<void>
-
     setUserIcon(connection: Connection, user: User, icon: Buffer | null, options?: SetUserIconOptions): Promise<boolean>
 
-
     forceSetUserName(connection: Connection, user: User, name: string | null): Promise<void>
-
     setUserName(connection: Connection, user: User, name: string | null, options?: SetUserNameOptions): Promise<boolean>
 
-
     forceSetUserPassword(connection: Connection, user: User, password: string): Promise<void>
-
     setUserPassword(connection: Connection, user: User, password: string, options?: SetUserPasswordOptions): Promise<boolean>
 
-
     forceSetUserPermission(connection: Connection, user: User, isAdmin: boolean): Promise<void>
-
     setUserPermission(connection: Connection, user: User, isAdmin: boolean, throwOnFailure:  true):    Promise<true>
     setUserPermission(connection: Connection, user: User, isAdmin: boolean, throwOnFailure?: boolean): Promise<boolean>
 
-
     forceCreateAdmin(connection: Connection, options?: ForceCreateAdminOptions): Promise<void>
-
     createAdmin(connection: Connection, options?: CreateAdminOptions): Promise<boolean>
 
-
     forceCreateUser(connection: Connection, options: ForceCreateUserOptions): Promise<void>
-
     createUser(connection: Connection, options: CreateUserOptions): Promise<boolean>
-
 
     deleteAllUsers(connection: Connection): Promise<number>
 
-
     forceDeleteUser(connection: Connection, user: User): Promise<void>
-
     deleteUser(connection: Connection, user: User, throwOnFailure:  true):    Promise<true>
     deleteUser(connection: Connection, user: User, throwOnFailure?: boolean): Promise<boolean>
 
-
     forceGetUserInfoByCredentials(connection: Connection, login: string, password: string): Promise<UserInfo>
-
     getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure:  true):    Promise<UserInfo>
     getUserInfoByCredentials(connection: Connection, login: string, password: string, throwOnFailure?: boolean): Promise<UserInfo | undefined>
 
-
     getAllUsersDeepInfo(connection: Connection, options?: GetAllUsersDeepInfoOptions): Promise<DeepUserInfo[]>
 
-
     forceGetDeepUserInfo(connection: Connection, user: User, options?: ForceGetDeepUserInfoOptions): Promise<DeepUserInfo>
-
     getDeepUserInfo(connection: Connection, user: User, options?: GetDeepUserInfoOptions): Promise<DeepUserInfo | undefined>
-
 
     getAllUsersInfo(connection: Connection, options?: GetAllUsersInfoOptions): Promise<UserInfo[]>
 
-
     forceGetUserLogin(connection: Connection, user: User): Promise<string>
-
     getUserLogin(connection: Connection, user: User, throwOnFailure?: true):    Promise<string>
     getUserLogin(connection: Connection, user: User, throwOnFailure?: boolean): Promise<string | undefined>
 
-
     forceGetUserId(connection: Connection, user: User): Promise<number>
-
     getUserId(connection: Connection, user: User, throwOnFailure?: true):    Promise<number>
     getUserId(connection: Connection, user: User, throwOnFailure?: boolean): Promise<number | undefined>
 
-
     forceGetUserInfo(connection: Connection, user: User, options?: ForceGetUserInfoOptions): Promise<UserInfo>
-
     getUserInfo(connection: Connection, user: User, options?: GetUserInfoOptions): Promise<UserInfo | undefined>
 }
 

@@ -16,12 +16,15 @@ export interface CreationOptions {
 export interface RconProxyEvents {
     on(eventName: "authorized", listener: (login: string, id: number) => void): this
     on(eventName: "close",      listener: (                         ) => void): this
+
+    emit(eventName: "authorized", login: string, id: number): boolean
+    emit(eventName: "close"                                ): boolean
 }
 
 export class RconProxy extends    EventEmitter
                        implements RconProxyEvents {
     private readonly socket:  WebSocket
-    private          _ip:     string | undefined
+    private          _ip?:    string
     private          _id?:    number
     private          _login?: string
 
@@ -76,6 +79,12 @@ export class RconProxy extends    EventEmitter
                 }
 
                 const { userId } = aTokenInfo
+
+                if (userId == null) {
+                    failed()
+                    return
+                }
+
                 const userInfo   = await server.userManager.getUserInfo(connection, userId)
 
                 if (userInfo?.isAdmin !== true) {

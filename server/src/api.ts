@@ -76,40 +76,42 @@ export async function checkPermission(this: Server, permission: Permission, req:
         const tokenManager = this.tokenManager
         const aTokenInfo   = await tokenManager.getATokenInfo(connection, aTokenId);
 
-        switch (permission) {
-            case "user":
-                await tokenManager.checkATokenIsActive(connection, aTokenInfo)
-                break
+        // Server has full access
+        if (aTokenInfo?.userId != null)
+            switch (permission) {
+                case "user":
+                    await tokenManager.checkATokenIsActive(connection, aTokenInfo)
+                    break
 
-            // Check if not an admin trying to modify other's data
+                // Check if not an admin trying to modify other's data
 
-            case "mixed": {
-                await tokenManager.checkATokenIsActive(connection, aTokenInfo)
+                case "mixed": {
+                    await tokenManager.checkATokenIsActive(connection, aTokenInfo)
 
-                const userManager     = this.userManager
-                const reqUserId       = aTokenInfo!.userId
-                const reqUserInfo     = (await userManager.getUserInfo(connection, reqUserId))!
-                const reqUserLogin    = reqUserInfo.login.toLowerCase()
-                const targetUserLogin = req.params.user.toLowerCase()
-                const isReqUserAdmin  = reqUserInfo.isAdmin
+                    const userManager     = this.userManager
+                    const reqUserId       = aTokenInfo!.userId
+                    const reqUserInfo     = (await userManager.getUserInfo(connection, reqUserId))!
+                    const reqUserLogin    = reqUserInfo.login.toLowerCase()
+                    const targetUserLogin = req.params.user.toLowerCase()
+                    const isReqUserAdmin  = reqUserInfo.isAdmin
 
-                if (reqUserLogin !== targetUserLogin && !isReqUserAdmin)
-                    res.sendStatus(403)
+                    if (reqUserLogin !== targetUserLogin && !isReqUserAdmin)
+                        res.sendStatus(403)
 
-                break
+                    break
+                }
+
+                case "admin": {
+                    await tokenManager.checkATokenIsActive(connection, aTokenInfo)
+
+                    const userManager = this.userManager
+                    const userId      = aTokenInfo!.userId
+                    const userInfo    = (await userManager.getUserInfo(connection, userId))!
+
+                    if (!userInfo.isAdmin)
+                        res.sendStatus(403)
+                }
             }
-
-            case "admin": {
-                await tokenManager.checkATokenIsActive(connection, aTokenInfo)
-
-                const userManager = this.userManager
-                const userId      = aTokenInfo!.userId
-                const userInfo    = (await userManager.getUserInfo(connection, userId))!
-
-                if (!userInfo.isAdmin)
-                    res.sendStatus(403)
-            }
-        }
 
         await connection.commit()
     } finally {
@@ -785,10 +787,15 @@ export const endPoints: EndPointCollection = {
             if (isAdmin !== undefined && authorization !== undefined) {
                 const aTokenId   = parseTokenId(authorization)
                 const aTokenInfo = await this.tokenManager.forceGetATokenInfo(connection, aTokenId)
-                const userInfo   = await this.userManager.getUserInfo(connection, aTokenInfo.userId)
 
-                if (userInfo?.isAdmin)
+                if (aTokenInfo.userId == null)
                     await this.userManager.forceSetUserPermission(connection, user, isAdmin)
+                else {
+                    const userInfo = await this.userManager.getUserInfo(connection, aTokenInfo.userId)
+
+                    if (userInfo?.isAdmin)
+                        await this.userManager.forceSetUserPermission(connection, user, isAdmin)
+                }
             }
 
             if (icon !== undefined)

@@ -40,50 +40,32 @@ export interface DeleteUserNicknameOptions extends DeleteNicknameOptions {
 
 export interface NicknameManager {
     forceSetUserNicknames(connection: Connection, user: User, nicknames: string[]): Promise<number>
-
     setUserNicknames(connection: Connection, user: User, nicknames: string[], options?: SetUserNicknamesOptions): Promise<number>
 
-
     forceDeleteAllUserNicknames(connection: Connection, user: User): Promise<void>
-
     deleteAllUserNicknames(connection: Connection, user: User, throwOnFailure?: boolean): Promise<number>
-
 
     deleteAllNicknames(connection: Connection): Promise<number>
 
-
     forceDeleteUserNickname(connection: Connection, user: User, nickname: string): Promise<void>
-
     deleteUserNickname(connection: Connection, user: User, nickname: string, options?: DeleteUserNicknameOptions): Promise<boolean>
 
-
     forceDeleteNickname(connection: Connection, nickname: string): Promise<void>
-
     deleteNickname(connection: Connection, nickname: string, options?: DeleteNicknameOptions): Promise<boolean>
 
-
     forceGetNicknameOwnerInfo(connection: Connection, nickname: string): Promise<UserInfo>
-
     getNicknameOwnerInfo(connection: Connection, nickname: string, options?: GetNicknameOwnerInfoOptions): Promise<UserInfo | undefined>
 
-
     forceGetNicknameOwnerId(connection: Connection, nickname: string): Promise<number>
-
     getNicknameOwnerId(connection: Connection, nickname: string, options?: GetNicknameOwnerIdOptions): Promise<number | undefined>
 
-
     forceGetUserNicknameCount(connection: Connection, user: User): Promise<number>
-
     getUserNicknameCount(connection: Connection, user: User, throwOnFailure?: boolean): Promise<number>
 
-
     forceAddUserNickname(connection: Connection, user: User, nickname: string): Promise<void>
-
     addUserNickname(connection: Connection, user: User, nickname: string, options?: AddUserNicknameOptions): Promise<boolean>
 
-
     forceGetUserNicknames(connection: Connection, user: User): Promise<string[]>
-
     getUserNicknames(connection: Connection, user: User, throwOnFailure?: boolean): Promise<string[]>
 }
 

@@ -500,7 +500,7 @@ export default class Server {
                 async function createATokensTable(this: Server) {
                     const sql = "CREATE TABLE IF NOT EXISTS ATokens ("
                               +     "id       BINARY(64) NOT NULL PRIMARY KEY,"
-                              +     "user_id  BIGINT     NOT NULL,"
+                              +     "user_id  BIGINT,"
                               +     "cr_time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                               +     "exp_time TIMESTAMP  NOT NULL,"
                     
