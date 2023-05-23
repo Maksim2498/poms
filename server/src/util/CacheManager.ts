@@ -26,6 +26,10 @@ export default class CacheManager {
         return this._entries.values()
     }
 
+    has(name: string): boolean {
+        return this._entries.has(name)
+    }
+
     get(name: string): ReadonlyCacheEntry | undefined {
         const entry = this._entries.get(name)
 
