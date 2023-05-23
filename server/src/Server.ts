@@ -499,7 +499,7 @@ export default class Server {
 
                 async function createATokensTable(this: Server) {
                     const sql = "CREATE TABLE IF NOT EXISTS ATokens ("
-                              +     "id       BINARY(64) NOT NULL PRIMARY KEY,"
+                              +     "id       BINARY(64) NOT NULL DEFAULT (RANDOM_BYTES(64)) PRIMARY KEY,"
                               +     "user_id  BIGINT,"
                               +     "cr_time  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                               +     "exp_time TIMESTAMP  NOT NULL,"
@@ -514,7 +514,7 @@ export default class Server {
 
                 async function createRTokensTable(this: Server) {
                     const sql = "CREATE TABLE IF NOT EXISTS RTokens ("
-                              +     "id        BINARY(64) NOT NULL PRIMARY KEY,"
+                              +     "id       BINARY(64) NOT NULL DEFAULT (RANDOM_BYTES(64)) PRIMARY KEY,"
                               +     "atoken_id BINARY(64) NOT NULL,"
                               +     "cr_time   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                               +     "exp_time  TIMESTAMP  NOT NULL,"
