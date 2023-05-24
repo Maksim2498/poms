@@ -705,7 +705,7 @@ export class DefaultUserManager implements UserManager {
 }
 
 export function checkUserPassword(password: string, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
-    return handleInvalidReason(validateUserPassword(password))
+    return handleInvalidReason(validateUserPassword(password), throwOnFailure, logger)
 }
 
 export function validateUserPassword(password: string): string | undefined {
@@ -723,7 +723,7 @@ export function validateUserPassword(password: string): string | undefined {
 }
 
 export function checkUserLogin(login: string, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
-    return handleInvalidReason(validateUserLogin(login))
+    return handleInvalidReason(validateUserLogin(login), throwOnFailure, logger)
 }
 
 export function validateUserLogin(login: string): string | undefined {
@@ -748,7 +748,7 @@ export function normUserLogin(login: string): string {
 }
 
 export function checkUserName(name: string | null, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
-    return handleInvalidReason(validateUserName(name))
+    return handleInvalidReason(validateUserName(name), throwOnFailure, logger)
 }
 
 function handleInvalidReason(invalidReason: string | undefined, throwOnFailure: boolean = false, logger?: Logger): string | undefined {
