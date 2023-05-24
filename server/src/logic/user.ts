@@ -900,7 +900,6 @@ export function makePasswordHashString(login: string, password: string): string 
         char     name[nameSize];     113 + loginSize                113 + loginSize + nameSize
         char     icon[iconSize];     113 + loginSize + nameSize     113 + loginSize + nameSize + iconSize
     }
-
 */
 
 const EMPTY_BUFFER = Buffer.alloc(0)
