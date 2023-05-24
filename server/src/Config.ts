@@ -95,8 +95,8 @@ const ICON_SIZE = SIZE.superRefine((value, ctx) => {
     }
 })
 
-export type ConfigJson         = z.infer<typeof Config.JSON_SCHEMA>
-export type ReadonlyConfigJson = DeepReadonly<ConfigJson>
+export type ConfigJSON         = z.infer<typeof Config.JSON_SCHEMA>
+export type ReadonlyConfigJSON = DeepReadonly<ConfigJSON>
 
 export default class Config {
     static readonly JSON_SCHEMA = z.object({
@@ -202,7 +202,7 @@ export default class Config {
 
         logger?.info("Reading config...")
 
-        const json   = await this.readJson(path)
+        const json   = await this.readJSON(path)
         const config = new Config(json, path)
 
         logger?.info("Done")
@@ -237,7 +237,7 @@ export default class Config {
         }
     }
 
-    private static async readJson(path: string): Promise<any> {
+    private static async readJSON(path: string): Promise<any> {
         try {
             const string = await fsp.readFile(path, "utf-8")
 
@@ -263,7 +263,7 @@ export default class Config {
         }
     }
 
-    readonly read: ReadonlyConfigJson
+    readonly read: ReadonlyConfigJSON
     readonly path: string
 
     constructor(json: any, path?: string) {
@@ -336,7 +336,7 @@ export default class Config {
         return new ErrorList(error.issues.map(issue => new Error(issue.message)))
     }
 
-    private static validateParsedJsonMysqlCredentials(config: ReadonlyConfigJson) {
+    private static validateParsedJsonMysqlCredentials(config: ReadonlyConfigJSON) {
         const noLogin         = config.mysql.login          == null
         const noPassword      = config.mysql.password       == null
         const noInitLogin     = config.mysql.init.login     == null
