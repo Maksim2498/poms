@@ -1,6 +1,7 @@
 import assert                                                      from "assert"
 import bytes                                                       from "bytes"
 import Config                                                      from "Config"
+import CacheManager                                                from "util/CacheManager"
 import LogicError                                                  from "./LogicError"
 
 import { Connection, FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
@@ -8,8 +9,9 @@ import { Logger                                                  } from "winston
 import { hasWs                                                   } from "util/string"
 
 export interface CreationOptions {
-    readonly config:  Config
-    readonly logger?: Logger
+    readonly config:        Config
+    readonly logger?:       Logger
+    readonly cacheManager?: CacheManager
 }
 
 export type User = string | number
@@ -179,12 +181,14 @@ export interface UserManager {
 }
 
 export class DefaultUserManager implements UserManager {
-    readonly config:  Config
-    readonly logger?: Logger
+    readonly config:        Config
+    readonly logger?:       Logger
+    readonly cacheManager?: CacheManager
     
     constructor(options: CreationOptions) {
-        this.config = options.config
-        this.logger = options.logger
+        this.config       = options.config
+        this.logger       = options.logger
+        this.cacheManager = options.cacheManager
     }
 
     async forceSetUserIcon(connection: Connection, user: User, icon: Buffer | null) {
@@ -876,6 +880,139 @@ export function deepUserRowToDeepUserInfo(rows: DeepUserRow): DeepUserInfo {
 
 export function makePasswordHashString(login: string, password: string): string {
     return `${login.toLowerCase()}:${password}`
+}
+
+/*
+    struct {                         Offset                         Accumulated Size
+        uint64_t id;                 0                              8
+        uint64_t created;            8                              16
+        uint64_t creatorId;          16                             24
+        uint64_t loginSize;          24                             32
+        uint64_t nameSize;           32                             40
+        uint64_t iconSize;           40                             48
+        char     passwordHash[64];   48                             112
+        char     isAdmin:    1;      112                            113
+        char     isOnline:   1;      112                            113
+        char     hasCreator: 1;      112                            113
+        char     hasName:    1;      112                            113
+        char     hasIcon:    1;      112                            113
+        char     login[loginSize];   113                            113 + loginSize
+        char     name[nameSize];     113 + loginSize                113 + loginSize + nameSize
+        char     icon[iconSize];     113 + loginSize + nameSize     113 + loginSize + nameSize + iconSize
+    }
+
+*/
+
+const EMPTY_BUFFER = Buffer.alloc(0)
+
+export function userInfoToBuffer(info: UserInfo): Buffer {
+    const {
+        id,
+        login,
+        name,
+        passwordHash,
+        icon,
+        created,
+        creatorId,
+        isAdmin,
+        isOnline,
+    } = info
+
+    const hasCreator  = creatorId != null
+    const hasName     = name      != null
+    const hasIcon     = icon      != null
+
+    const loginBuffer = Buffer.from(login)
+    const nameBuffer  = hasName ? Buffer.from(name) : EMPTY_BUFFER
+    const iconBuffer  = hasIcon ? icon              : EMPTY_BUFFER
+
+    const loginSize   = loginBuffer.length
+    const nameSize    = nameBuffer.length
+    const iconSize    = iconBuffer.length
+
+    const size = 113
+               + loginSize
+               + nameSize
+               + iconSize
+
+    const buffer = Buffer.alloc(size)
+
+    buffer.writeBigUInt64LE(BigInt(id),                 0)
+    buffer.writeBigUInt64LE(BigInt(created.valueOf()),  8)
+    buffer.writeBigUInt64LE(BigInt(creatorId ?? 0),    16)
+    buffer.writeBigUInt64LE(BigInt(loginSize),         24)
+    buffer.writeBigUInt64LE(BigInt(nameSize),          32)
+    buffer.writeBigUInt64LE(BigInt(iconSize),          40)
+
+    passwordHash.copy(buffer, 48)
+
+    const flags =  Number(isAdmin)
+                | (Number(isOnline)   << 1)
+                | (Number(hasCreator) << 2)
+                | (Number(hasName)    << 3)
+                | (Number(hasIcon)    << 4)
+
+    buffer.writeUint8(flags, 112)
+
+    loginBuffer.copy(buffer, 113)
+    nameBuffer.copy(buffer, 113 + loginSize)
+    iconBuffer.copy(buffer, 113 + loginSize + nameSize)
+
+    return buffer
+}
+
+export function userInfoFromBuffer(buffer: Buffer): UserInfo {
+    const MIN_SIZE = 112
+
+    if (buffer.length < MIN_SIZE)
+        tooSmall(MIN_SIZE)
+
+    const flags        = buffer.readUint8(112)
+    const isAdmin      = Boolean(flags & 0x01)
+    const isOnline     = Boolean(flags & 0x02)
+    const hasCreator   = Boolean(flags & 0x04)
+    const hasName      = Boolean(flags & 0x08)
+    const hasIcon      = Boolean(flags & 0x10)
+
+    const id           = Number(buffer.readBigUInt64LE(0))
+    const created      = new Date(Number(buffer.readBigUInt64LE(8)))
+    const creatorId    = hasCreator ? Number(buffer.readBigUInt64LE(16)) : undefined
+    const loginSize    = Number(buffer.readBigUInt64LE(24))
+    const nameSize     = Number(buffer.readBigUInt64LE(32))
+    const iconSize     = Number(buffer.readBigUInt64LE(40))
+    const passwordHash = buffer.subarray(48, 112)
+
+    const expectedSize = MIN_SIZE
+                       + loginSize
+                       + nameSize
+                       + iconSize
+
+    if (buffer.length < expectedSize)
+        tooSmall(expectedSize)
+
+    const loginBuffer =           buffer.subarray(113,                        113 + loginSize)
+    const nameBuffer  = hasName ? buffer.subarray(113 + loginSize,            113 + loginSize + nameSize)            : undefined
+    const iconBuffer  = hasIcon ? buffer.subarray(113 + loginSize + nameSize, 113 + loginSize + nameSize + iconSize) : undefined
+
+    const login = loginBuffer.toString()
+    const name  = nameBuffer?.toString()
+    const icon  = iconBuffer
+
+    return {
+        id,
+        login,
+        name,
+        icon,
+        passwordHash,
+        isAdmin,
+        isOnline,
+        created,
+        creatorId,
+    }
+
+    function tooSmall(expected: number) {
+        throw new Error(`Buffer too small. At least ${expected} bytes expected`)
+    }
 }
 
 export class UserNotFoundError extends LogicError {
