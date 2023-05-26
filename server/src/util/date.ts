@@ -1,9 +1,8 @@
-export function dateMillisecondsAhead(milliseconds: number): Date {
-    const date            = new Date()
-    const oldMilliseconds = date.getMilliseconds()
-    const newMilliseconds = oldMilliseconds + milliseconds
+export function millisecondsAhead(milliseconds: number): Date {
+    return addMilliseconds(new Date(), milliseconds)
+}
 
-    date.setMilliseconds(newMilliseconds)
-
+export function addMilliseconds(date: Date, milliseconds: number): Date {
+    date.setMilliseconds(date.getMilliseconds() + milliseconds)
     return date
 }
