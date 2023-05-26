@@ -1,3 +1,7 @@
+import bytes      from "bytes"
+
+import { Logger } from "winston"
+
 export interface CacheEntry {
     name:         string
     rate:         number
@@ -13,9 +17,13 @@ export default class CacheManager {
     private  _used:        number                    = 0
 
     readonly max:          number
+    readonly logger?:      Logger
 
-    constructor(max: number) {
-        this.max = max
+    constructor(max: number, logger?: Logger) {
+        this.max    = max
+        this.logger = logger
+
+        logger?.debug(`Created ${bytes(max)} cache`)
     }
 
     get used(): number {
@@ -31,10 +39,14 @@ export default class CacheManager {
     }
 
     get(name: string): ReadonlyCacheEntry | undefined {
+        this.logger?.debug(`Getting cache entry "${name}"...`)
+
         const entry = this._entries.get(name)
 
-        if (entry == null)
+        if (entry == null) {
+            this.logger?.debug("Not found")
             return undefined
+        }
 
         let sameRateEntries = this.ratedEntries[entry.rate]
 
@@ -52,14 +64,20 @@ export default class CacheManager {
         
         sameRateEntries.set(name, entry)
 
+        this.logger?.debug(`Got. New rate is ${entry.rate}`)
+
         return entry
     }
 
     set(name: string, buffer: Buffer): CacheEntry | undefined {
+        this.logger?.debug(`Creating new cache entry "${name}" of size ${bytes(buffer.length)}...`)
+
         const newSize = buffer.length
 
-        if (newSize > this.max)
+        if (newSize > this.max) {
+            this.logger?.debug(`Too big. Cache size is ${bytes(this.max)}`)
             return undefined
+        }
 
         let entry = this._entries.get(name)
 
@@ -96,14 +114,20 @@ export default class CacheManager {
 
         this._used = newUsed
 
+        this.logger?.debug(`Created. Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`)
+
         return entry
     }
 
     delete(name: string): boolean {
+        this.logger?.debug(`Deleting cache entry "${name}"...`)
+
         const entry = this._entries.get(name)
 
-        if (entry == null)
+        if (entry == null) {
+            this.logger?.debug("Not found")
             return false
+        }
 
         const sameRateEntries = this.ratedEntries[entry.rate]
 
@@ -121,10 +145,14 @@ export default class CacheManager {
 
         this._used -= entry.buffer.length
 
+        this.logger?.debug(`Deleted. Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`)
+
         return true
     }
 
     freeSpace(toFree: number): number {
+        this.logger?.debug(`Freeing at least ${bytes(toFree)} of cache space...`)
+
         const toDelete = [] as string[]
         let   freed    = 0
 
@@ -145,6 +173,8 @@ export default class CacheManager {
 
         for (const name of toDelete)
             this.delete(name)
+
+        this.logger?.debug(`Freed ${bytes(freed)}. Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`)
 
         return freed
     }
