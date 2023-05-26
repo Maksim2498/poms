@@ -9,6 +9,8 @@ export default class ThrottlingManager {
     constructor(delay: number, logger?: Logger) {
         this.delay  = delay
         this.logger = logger
+
+        logger?.debug(`Created throttling manager with ${delay} milliseconds deley`)
     }
 
     async throttle(id: string) {
