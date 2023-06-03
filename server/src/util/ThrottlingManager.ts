@@ -3,14 +3,14 @@ import { Logger } from "winston"
 export default class ThrottlingManager {
     private table: Map<string, Promise<void>> = new Map()
 
-    readonly delay:   number
-    readonly logger?: Logger
+    readonly delay:  number
+    readonly logger: Logger | null
 
-    constructor(delay: number, logger?: Logger) {
+    constructor(delay: number, logger: Logger | null = null) {
         this.delay  = delay
         this.logger = logger
 
-        logger?.debug(`Created throttling manager with ${delay} milliseconds deley`)
+        logger?.debug(`Throttling manager with ${delay} milliseconds deley created`)
     }
 
     async throttle(id: string) {

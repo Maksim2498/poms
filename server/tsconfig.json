@@ -3,14 +3,19 @@
         "target":                           "ESNext",
         "module":                           "commonjs",
         "baseUrl":                          "./src",
+        "skipLibCheck":                     true,
         "esModuleInterop":                  true,
         "forceConsistentCasingInFileNames": true,
         "strict":                           true,
-        "noImplicitAny":                    true,
         "strictNullChecks":                 true,
+        "strictBindCallApply":              true,
         "alwaysStrict":                     true,
         "noImplicitReturns":                true,
         "noImplicitOverride":               true,
-        "skipLibCheck":                     true
+        "noImplicitAny":                    true,
+        "noUncheckedIndexedAccess":         true,
+        "noEmit":                           true,
+        "allowUnusedLabels":                false,
+        "allowUnreachableCode":             false,
     }
 }

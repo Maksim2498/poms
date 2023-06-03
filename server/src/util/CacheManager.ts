@@ -1,29 +1,38 @@
-import bytes      from "bytes"
+import bytes        from "bytes"
+import DeepReadonly from "./DeepReadonly"
 
-import { Logger } from "winston"
+import { Logger   } from "winston"
 
 export interface CacheEntry {
-    name:         string
+    key:          CacheEntryKey
     rate:         number
     buffer:       Buffer
     lastModified: Date
 }
 
-export type ReadonlyCacheEntry = Readonly<CacheEntry>
+export type ReadonlyCacheEntry = DeepReadonly<CacheEntry>
+
+export type CacheEntryKey = string
+                          | symbol
+                          | number
+
+export interface CacheEntryBufferSet {
+    [key: CacheEntryKey]: Buffer | undefined
+}
 
 export default class CacheManager {
-    private  _entries:     Map<string, CacheEntry>   = new Map()
-    private  ratedEntries: Map<string, CacheEntry>[] = []
-    private  _used:        number                    = 0
+    private  _entries:     Map<CacheEntryKey, CacheEntry>   = new Map()
+    private  ratedEntries: Map<CacheEntryKey, CacheEntry>[] = []
+    private  _used:        number                           = 0
 
     readonly max:          number
-    readonly logger?:      Logger
+    readonly logger:       Logger | null
 
-    constructor(max: number, logger?: Logger) {
+    constructor(max: number, logger: Logger | null = null) {
         this.max    = max
-        this.logger = logger
+        this.logger = logger ?? null
 
-        logger?.debug(`Created ${bytes(max)} cache`)
+        logger?.debug(`${bytes(max)} cache created`)
     }
 
     get used(): number {
@@ -34,61 +43,61 @@ export default class CacheManager {
         return this._entries.values()
     }
 
-    has(name: string): boolean {
-        return this._entries.has(name)
+    has(key: CacheEntryKey): boolean {
+        return this._entries.has(key)
     }
 
-    get(name: string): ReadonlyCacheEntry | undefined {
-        this.logger?.debug(`Getting cache entry "${name}"...`)
+    get(key: CacheEntryKey): ReadonlyCacheEntry | undefined {
+        this.logger?.debug(`Getting cache entry ${cacheEntryKeyToString(key)}...`)
 
-        const entry = this._entries.get(name)
+        const entry = this._entries.get(key)
 
         if (entry == null) {
             this.logger?.debug("Not found")
             return undefined
         }
 
-        let sameRateEntries = this.ratedEntries[entry.rate]
+        let sameRateEntries = this.ratedEntries[entry.rate]!
 
-        sameRateEntries.delete(name)
+        sameRateEntries.delete(key)
 
         if (sameRateEntries.size === 0)
             delete this.ratedEntries[entry.rate]
 
         ++entry.rate
 
-        sameRateEntries = this.ratedEntries[entry.rate]
+        sameRateEntries = this.ratedEntries[entry.rate]!
 
         if (sameRateEntries == null)
             this.ratedEntries[entry.rate] = sameRateEntries = new Map()
         
-        sameRateEntries.set(name, entry)
+        sameRateEntries.set(key, entry)
 
         this.logger?.debug(`Got. New rate is ${entry.rate}`)
 
         return entry
     }
 
-    set(name: string, buffer: Buffer): CacheEntry | undefined {
-        this.logger?.debug(`Creating new cache entry "${name}" of size ${bytes(buffer.length)}...`)
+    set(key: CacheEntryKey, buffer: Buffer): CacheEntry | undefined {
+        this.logger?.debug(`Creating new cache entry ${cacheEntryKeyToString(key)} of size ${bytes(buffer.length)}...`)
 
-        const newSize = buffer.length
+        const size = buffer.length
 
-        if (newSize > this.max) {
+        if (size > this.max) {
             this.logger?.debug(`Too big. Cache size is ${bytes(this.max)}`)
             return undefined
         }
 
-        let entry = this._entries.get(name)
+        let entry = this._entries.get(key)
 
-        this.delete(name)
+        this.delete(key)
 
         if (entry == null)
             entry = {
                 lastModified: new Date(),
                 rate:         0,
+                key,
                 buffer,
-                name,
             }
         else {
             entry.lastModified = new Date()
@@ -97,11 +106,11 @@ export default class CacheManager {
             ++entry.rate
         }
 
-        let newUsed = this.used + entry.buffer.length
+        let newUsed = this.used + size
 
         if (newUsed > this.max) {
             this.freeSpace(newUsed - this.max)
-            newUsed = this.used + entry.buffer.length
+            newUsed = this.used + size
         }
 
         let sameRateEntries = this.ratedEntries[entry.rate]
@@ -109,29 +118,29 @@ export default class CacheManager {
         if (sameRateEntries == null)
             this.ratedEntries[entry.rate] = sameRateEntries = new Map()
 
-        sameRateEntries.set(name, entry)
-        this._entries.set(name, entry)
+        sameRateEntries.set(key, entry)
+        this._entries.set(key, entry)
 
         this._used = newUsed
 
-        this.logger?.debug(`Created. Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`)
+        this.logger?.debug(`Created. ${this.makeCacheUsageString()}`)
 
         return entry
     }
 
-    delete(name: string): boolean {
-        this.logger?.debug(`Deleting cache entry "${name}"...`)
+    delete(key: CacheEntryKey): boolean {
+        this.logger?.debug(`Deleting cache entry ${cacheEntryKeyToString(key)}...`)
 
-        const entry = this._entries.get(name)
+        const entry = this._entries.get(key)
 
         if (entry == null) {
             this.logger?.debug("Not found")
             return false
         }
 
-        const sameRateEntries = this.ratedEntries[entry.rate]
+        const sameRateEntries = this.ratedEntries[entry.rate]!
 
-        sameRateEntries.delete(name)
+        sameRateEntries.delete(key)
 
         if (sameRateEntries.size === 0) {
             delete this.ratedEntries[entry.rate]
@@ -141,11 +150,11 @@ export default class CacheManager {
             this.ratedEntries.length = newLength
         }
         
-        this._entries.delete(name)
+        this._entries.delete(key)
 
         this._used -= entry.buffer.length
 
-        this.logger?.debug(`Deleted. Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`)
+        this.logger?.debug(`Deleted. ${this.makeCacheUsageString()}`)
 
         return true
     }
@@ -153,16 +162,16 @@ export default class CacheManager {
     freeSpace(toFree: number): number {
         this.logger?.debug(`Freeing at least ${bytes(toFree)} of cache space...`)
 
-        const toDelete = [] as string[]
+        const toDelete = [] as CacheEntryKey[]
         let   freed    = 0
 
         if (toFree > 0)
             outer:
             for (const i in this.ratedEntries) {
-                const sameRateEntries = this.ratedEntries[i]
+                const sameRateEntries = this.ratedEntries[i]!
 
                 for (const entry of sameRateEntries.values()) {
-                    toDelete.push(entry.name)
+                    toDelete.push(entry.key)
 
                     freed += entry.buffer.length
 
@@ -174,8 +183,24 @@ export default class CacheManager {
         for (const name of toDelete)
             this.delete(name)
 
-        this.logger?.debug(`Freed ${bytes(freed)}. Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`)
+        this.logger?.debug(`Freed ${bytes(freed)}. ${this.makeCacheUsageString()}`)
 
         return freed
+    }
+
+    private makeCacheUsageString(): string {
+        return `Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`
+    }
+}
+
+export function cacheEntryKeyToString(key: CacheEntryKey): string {
+    switch (typeof key) {
+        case "string":
+            return `"${key}"`
+
+        case "bigint":
+        case "symbol":
+        case "number":
+            return key.toString()
     }
 }
