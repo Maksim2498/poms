@@ -55,6 +55,8 @@ export default class UserManager {
     }
 
     async create(connection: MysqlConnection, options: UserCreationOptions): Promise<User> {
+        // TODO
+
         const login = User.normLogin(options.login)
 
         User.checkNormedLogin(login)
