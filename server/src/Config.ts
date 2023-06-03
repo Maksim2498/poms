@@ -2,6 +2,8 @@ import bytes                        from "bytes"
 import z                            from "zod"
 import parseDuration                from "parse-duration"
 import template                     from "string-placeholder"
+import User                         from "logic/user/User"
+import UserNicknameSet              from "logic/user/UserNicknameSet"
 import DeepReadonly                 from "util/DeepReadonly"
 import ErrorList                    from "util/ErrorList"
 
@@ -9,29 +11,27 @@ import { promises as fsp          } from "fs"
 import { normalize, join, dirname } from "path"
 import { Logger                   } from "winston"
 
-const PORT     = z.number().int().nonnegative().max(65535)
+const UINT     = z.number().int().nonnegative()
+const PORT     = UINT.max(65535)
 const STRING   = z.string()
 const NSTRING  = STRING.nullable().default(null)
-const HOST     = z.string().transform(s => s.trim())
+const HOST     = z.string().transform(s => s.trim()).default("localhost")
 const NHOST    = HOST.nullable().default(null)
 const URI_PATH = z.string().transform(s => normalize("/" + s))
 const PATH     = z.string().transform(s => Config.placehold(normalize(s)))
 const NPATH    = PATH.nullable().default(null)
 const BOOLEAN  = z.boolean().default(false)
-const UINT     = z.number().int().nonnegative()
 
 const SAME_AS_MC_HOST = Symbol()
 
-const RCON_HOST = z.custom<string>(value => {
-    if (typeof value === "string")
-        return value.trim()
-
-    return value
-}).superRefine((value, ctx) => {
-    if (value as any === SAME_AS_MC_HOST)
+const RCON_HOST = z.custom<string>(host => {
+    return typeof host === "string" ? host.trim()
+                                    : host
+}).superRefine((host, ctx) => {
+    if (host as any === SAME_AS_MC_HOST)
         return
 
-    const type = typeof value
+    const type = typeof host
 
     if (type === "string")
         return
@@ -43,57 +43,122 @@ const RCON_HOST = z.custom<string>(value => {
     })
 }).default(SAME_AS_MC_HOST as any)
 
-const DB_NAME = z.string().superRefine((value, ctx) => {
-    if (value.match(/^[0-9,a-z,A-Z$_]+$/) == null) {
-        const path    = ctx.path.join(".")
-        const message = `Configuration option "${path}" is an invalid database identifier`
+const DB_NAME = z.string().transform((name, ctx) => {
+    if (name.match(/^[\u0001-\uFFFF]{1,64}$/) != null)
+        return name
 
-        ctx.addIssue({ code: "custom", message })
-    }
+    const path    = ctx.path.join(".")
+    const message = `Configuration option "${path}" is an invalid database identifier`
+
+    ctx.addIssue({ code: "custom", message })
+
+    return z.NEVER
 })
 
-const DUR = z.string().transform((value, ctx) => {
-    const parsed = parseDuration(value)
+const DUR = UINT.or(z.string().transform((durString, ctx) => {
+    const dur = parseDuration(durString)
 
-    if (parsed == null) {
-        const path    = ctx.path.join(".")
-        const message = `Configuration option "${path}" is an invalid duration`
+    if (dur != null)
+        return dur
 
-        ctx.addIssue({ code: "custom", message })
+    const path    = ctx.path.join(".")
+    const message = `Configuration option "${path}" is an invalid duration`
 
-        return z.NEVER
-    }
+    ctx.addIssue({ code: "custom", message })
 
-    return parsed
+    return z.NEVER
+}))
+
+const SIZE = UINT.or(z.string().transform((sizeString, ctx) => {
+    const size = bytes(sizeString)
+
+    if (size != null)
+        return size
+
+    const path    = ctx.path.join(".")
+    const message = `Configuration option "${path}" is an invalid size`
+
+    ctx.addIssue({ code: "custom", message })
+
+    return z.NEVER
+}))
+
+const USER_LOGIN = STRING.transform((login, ctx) => {
+    const normedLogin   = User.normLogin(login)
+    const invalidReason = User.validateNormedLogin(normedLogin)
+
+    if (invalidReason == null)
+        return normedLogin
+
+    const path    = ctx.path.join(".")
+    const message = `Configuration option "${path}" is an invalid user login (${invalidReason})`
+
+    ctx.addIssue({ code: "custom", message })
+
+    return z.NEVER
 })
 
-const SIZE = z.string().transform((value, ctx) => {
-    const parsed = bytes(value)
+const USER_PASSWORD = STRING.transform((password, ctx) => {
+    const invalidReason = User.validatePassword(password)
 
-    if (parsed == null) {
-        const path    = ctx.path.join(".")
-        const message = `Configuration option "${path}" is an invalid size`
+    if (invalidReason == null)
+        return password
 
-        ctx.addIssue({ code: "custom", message })
+    const path    = ctx.path.join(".")
+    const message = `Configuration option "${path}" is an invalid user password (${invalidReason})`
 
-        return z.NEVER
-    }
+    ctx.addIssue({ code: "custom", message })
 
-    return parsed
+    return z.NEVER
 })
 
-const ICON_SIZE = SIZE.superRefine((value, ctx) => {
-    const MAX = 2 ** 24
+const USER_NAME = NSTRING.transform((name, ctx) => {
+    const normedName    = User.normName(name)
+    const invalidReason = User.validateNormedName(normedName)
 
-    if (value >= MAX) {
-        ctx.addIssue({
-            code: "too_big",
-            type: "number",
-            maximum: MAX,
-            inclusive: false,
-        })
-    }
+    if (invalidReason == null)
+        return normedName
+
+    const path    = ctx.path.join(".")
+    const message = `Configuration option "${path}" is an invalid user name (${invalidReason})`
+
+    ctx.addIssue({ code: "custom", message })
+
+    return z.NEVER
+}).default(null)
+
+const USER_ICON_SIZE = SIZE.transform((size, ctx) => {
+    if (size < User.MAX_BYTE_LENGTH_OF_ICON)
+        return size
+
+    ctx.addIssue({
+        code:      "too_big",
+        type:      "number",
+        maximum:   User.MAX_BYTE_LENGTH_OF_ICON,
+        inclusive: false,
+    })
+
+    return z.NEVER
 })
+
+const USER_NICKNAME_ARRAY = STRING.array().max(UserNicknameSet.MAX_MAX).transform((nicknames, ctx) => {
+    const normedNicknames = nicknames.map(nickname => UserNicknameSet.normNickname(nickname))
+
+    for (const [i, normedNickname] of normedNicknames.entries()) {
+        const invalidReason = UserNicknameSet.validateNormedNickname(normedNickname)
+
+        if (invalidReason != null) {
+            const path    = `${ctx.path.join(".")}[${i}]`
+            const message = `Configuration option "${path}" is an invalid user nickname (${invalidReason})`
+
+            ctx.addIssue({ code: "custom", message })
+
+            return z.NEVER
+        }
+    }
+
+    return normedNicknames
+}).default([])
 
 export type ConfigJSON         = z.infer<typeof Config.JSON_SCHEMA>
 export type ReadonlyConfigJSON = DeepReadonly<ConfigJSON>
@@ -109,9 +174,9 @@ export default class Config {
             socketPath:           NPATH,
             serveStatic:          BOOLEAN.default(true),
             staticPath:           PATH.default("<SITE_PATH>/build"),
-            error:                z.object({
-                "404Path":        PATH.default("<SITE_PATH>/build/404.html"),
-                "500Path":        PATH.default("<SITE_PATH>/build/500.html"),
+            errorPath:            z.object({
+                [404]:            PATH.default("<SITE_PATH>/build/404.html"),
+                [500]:            PATH.default("<SITE_PATH>/build/500.html"),
             }).strict().default({}),
         }).strict().default({}),
 
@@ -120,15 +185,15 @@ export default class Config {
         }).strict().default({}),
 
         mysql: z.object({
-            database:             DB_NAME.default("poms"),
-            host:                 HOST.default("localhost"),
+            database:             DB_NAME.default("Poms"),
+            host:                 HOST,
             port:                 PORT.default(3306),
             socketPath:           NPATH,
             login:                NSTRING,
             password:             NSTRING,
             connectionLimit:      UINT.default(10),
 
-            init: z.object({
+            initialize: z.object({
                 login:            NSTRING,
                 password:         NSTRING,
             }).strict().default({}),
@@ -137,14 +202,17 @@ export default class Config {
                 login:            NSTRING,
                 password:         NSTRING,
             }).strict().default({}),
+
+            cacheSize:            SIZE.default("100mb"),
         }).strict().default({}),
 
         logic: z.object({
-            admin: z.object({
+            owner: z.object({
                 create:           BOOLEAN.default(true),
-                login:            STRING.default("admin"),
-                password:         STRING.default("admin"),
-                name:             NSTRING.default("Administrator"),
+                login:            USER_LOGIN.default("owner"),
+                password:         USER_PASSWORD.default("owner"),
+                name:             USER_NAME.default("Owner"),
+                nicknames:        USER_NICKNAME_ARRAY,
             }).strict().default({}),
 
             static: z.object({
@@ -161,7 +229,7 @@ export default class Config {
             allowAnonymousAccess: BOOLEAN.default(true),
             authDelay:            DUR.default("2s"),
             noAuthDelayInDev:     BOOLEAN.default(true),
-            maxIconSize:          ICON_SIZE.default("4mb"),
+            maxIconSize:          USER_ICON_SIZE.default("4mb"),
         }).strict().default({}),
 
         rcon: z.object({
@@ -173,7 +241,7 @@ export default class Config {
 
         mc: z.object({
             publicAddress:        NHOST,
-            host:                 HOST.default("localhost"),
+            host:                 HOST,
             port:                 PORT.default(25565),
             statusLifetime:       DUR.default("10s"),
         }).strict().default({}),
@@ -200,12 +268,12 @@ export default class Config {
         if (path == null)
             path = await this.findConfig(logger)
 
-        logger?.info("Reading config...")
+        logger?.verbose("Reading config...")
 
         const json   = await this.readJSON(path)
         const config = new Config(json, path)
 
-        logger?.info("Done")
+        logger?.verbose("Read")
 
         return config
     }
@@ -213,7 +281,7 @@ export default class Config {
     static readonly FILE_NAME = "poms-config.json"
 
     static async findConfig(logger?: Logger): Promise<string> {
-        logger?.info("Searching for configuration file...")
+        logger?.verbose("Searching for configuration file...")
 
         let dir = process.cwd()
 
@@ -223,7 +291,7 @@ export default class Config {
 
                 if (files.includes(this.FILE_NAME)) {
                     const path = join(dir, this.FILE_NAME)
-                    logger?.info(`Configuration file found at ${path}`)
+                    logger?.verbose(`Found at ${path}`)
                     return path
                 }
             } catch {}
@@ -263,8 +331,8 @@ export default class Config {
         }
     }
 
-    readonly read: ReadonlyConfigJSON
-    readonly path: string
+    readonly read:  ReadonlyConfigJSON
+    readonly path?: string
 
     constructor(json: any, path?: string) {
         const parsedJson = Config.JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
@@ -278,7 +346,7 @@ export default class Config {
             parsedJson.data.rcon.host = parsedJson.data.mc.host
         
         this.read = parsedJson.data
-        this.path = path ?? Config.FILE_NAME
+        this.path = path
     }
 
     private static zodErrorMap(issue: z.ZodIssueOptionalMessage, ctx: { defaultError: string, data: any }): { message: string } {
@@ -337,12 +405,12 @@ export default class Config {
     }
 
     private static validateParsedJsonMysqlCredentials(config: ReadonlyConfigJSON) {
-        const noLogin         = config.mysql.login          == null
-        const noPassword      = config.mysql.password       == null
-        const noInitLogin     = config.mysql.init.login     == null
-        const noInitPassword  = config.mysql.init.password  == null
-        const noServeLogin    = config.mysql.serve.login    == null
-        const noServePassword = config.mysql.serve.password == null
+        const noLogin         = config.mysql.login                == null
+        const noPassword      = config.mysql.password             == null
+        const noInitLogin     = config.mysql.initialize.login     == null
+        const noInitPassword  = config.mysql.initialize.password  == null
+        const noServeLogin    = config.mysql.serve.login          == null
+        const noServePassword = config.mysql.serve.password       == null
         const noGeneral       = noLogin      || noPassword
         const noInit          = noInitLogin  || noInitPassword
         const noServe         = noServeLogin || noServePassword
@@ -390,9 +458,9 @@ export default class Config {
         return `${host}:${port}`
     }
 
-    get useMysqlInitUser(): boolean {
-        return this.read.mysql.init.login    != null
-            && this.read.mysql.init.password != null
+    get useMysqlInitializeUser(): boolean {
+        return this.read.mysql.initialize.login    != null
+            && this.read.mysql.initialize.password != null
     }
 
     get useMysqlServeUser(): boolean {
@@ -422,6 +490,10 @@ export default class Config {
         const port = this.read.mc.port
 
         return `${host}:${port}`
+    }
+
+    toJSON(): ConfigJSON {
+        return structuredClone(this.read) as ConfigJSON
     }
 
     toString(): string {

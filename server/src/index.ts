@@ -1,7 +1,7 @@
 import winston   from "winston"
-import ErrorList from "./util/ErrorList"
-import Config    from "./Config"
-import Server    from "./Server"
+import Server    from "server/Server"
+import ErrorList from "util/ErrorList"
+import Config    from "Config"
 
 const logger = createLogger()
 
@@ -13,8 +13,8 @@ async function main() {
 
     setupSigInt()
 
-    await server.init()
-    await server.start()
+    await server.initialize()
+    await server.listen()
 
     function setupSigInt() {
         let stopping = false
@@ -25,7 +25,7 @@ async function main() {
 
             stopping = true
             console.log()
-            await server.stop()
+            await server.close()
             process.exit()
         })
     }
@@ -66,8 +66,6 @@ function processError(error: any) {
             logger.error(subError)
     else
         logger.error(error)
-
-    logger.info("Aborting...")
 
     process.exit(1)
 }
