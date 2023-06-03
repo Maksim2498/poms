@@ -15,7 +15,7 @@ import { checkBufferSize,
 import { collapseWs, escape                                          } from "util/string"
 import { isUInt                                                      } from "util/number"
 import { TokenSetJSON                                                } from "logic/token/TokenSet"
-import { UserNicknameSetJSON                                             } from "logic/user/UserNicknameSet"
+import { UserNicknameSetJSON                                         } from "logic/user/UserNicknameSet"
 
 export interface BaseUserOptions {
     readonly config:        Config
