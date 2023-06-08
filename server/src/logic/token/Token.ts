@@ -1,4 +1,6 @@
 import crypto                                                        from "crypto"
+import z                                                             from "zod"
+import parseDuration                                                 from "parse-duration"
 import LogicError                                                    from "logic/LogicError"
 import BufferWritable                                                from "util/BufferWritable"
 import ReadonlyDate                                                  from "util/ReadonlyDate"
@@ -7,21 +9,15 @@ import { checkBufferSize, readDate, writeDate, BYTE_LENGTH_OF_DATE } from "util/
 import { isHex                                                     } from "util/string"
 
 export interface TokenOptions {
-    readonly accessId?:      string | Buffer
-    readonly refreshId?:     string | Buffer
-    readonly created?:       Date
-    readonly accessExpires:  Date
-    readonly refreshExpires: Date
-    readonly dontCheck?:     boolean
+    readonly accessId?:       string | Buffer
+    readonly refreshId?:      string | Buffer
+    readonly created?:        Date
+    readonly accessExpires?:  Date
+    readonly refreshExpires?: Date
+    readonly dontCheck?:      boolean
 }
 
-export interface TokenJSON {
-    accessId:       string
-    refreshId:      string
-    created:        string
-    accessExpires:  string
-    refreshExpires: string
-}
+export type TokenJSON = z.infer<typeof Token.JSON_SCHEMA>
 
 /*
     Buffer structure:
@@ -38,11 +34,43 @@ export interface TokenJSON {
 */
 
 export default class Token implements BufferWritable {
+    static readonly DEFAULT_ACCESS_LIFETIME  = parseDuration("30m")
+    static readonly DEFAULT_REFRESH_LIFETIME = parseDuration("1w")
+
+    static readonly JSON_SCHEMA = z.object({
+        accessId:       z.string(),
+        refreshId:      z.string(),
+        created:        z.string().datetime(),
+        accessExpires:  z.string().datetime(),
+        refreshExpires: z.string().datetime(),
+    })
+
     static readonly BYTE_LENGTH_OF_ID = 64
     static readonly BYTE_LENGTH       = 2 * this.BYTE_LENGTH_OF_ID
                                       + 3 * BYTE_LENGTH_OF_DATE
 
     static readonly ID_LENGTH = 128
+
+    static fromJSON(json: unknown): Token {
+        const parsed = Token.JSON_SCHEMA.parse(json)
+
+        const {
+            accessId,
+            refreshId
+        } = parsed
+
+        const created        = new Date(parsed.created)
+        const accessExpires  = new Date(parsed.accessExpires)
+        const refreshExpires = new Date(parsed.refreshExpires)
+        
+        return new Token({
+            accessId,
+            refreshId,
+            created,
+            accessExpires,
+            refreshExpires,
+        })
+    }
 
     static fromBuffer(buffer: Buffer, offset: number = 0, dontCheck: boolean = false): Token {
         checkBufferSize(buffer, Token.BYTE_LENGTH + offset)
@@ -98,12 +126,12 @@ export default class Token implements BufferWritable {
     readonly accessExpires:  ReadonlyDate
     readonly refreshExpires: ReadonlyDate
 
-    constructor(options: TokenOptions) {
+    constructor(options: TokenOptions = {}) {
         const accessId       = prepareId(options.accessId)
         const refreshId      = prepareId(options.refreshId)
         const created        = options.created != null ? new Date(options.created) : new Date()
-        const accessExpires  = new Date(options.accessExpires)
-        const refreshExpires = new Date(options.refreshExpires)
+        const accessExpires  = new Date(options.accessExpires  ?? Token.DEFAULT_ACCESS_LIFETIME )
+        const refreshExpires = new Date(options.refreshExpires ?? Token.DEFAULT_REFRESH_LIFETIME)
         const dontCheck      = options.dontCheck
 
         if (!dontCheck && (accessExpires < created || refreshExpires < created))
