@@ -334,7 +334,7 @@ export default class Config {
     readonly read:  ReadonlyConfigJSON
     readonly path?: string
 
-    constructor(json: any, path?: string) {
+    constructor(json: unknown, path?: string) {
         const parsedJson = Config.JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
 
         if (!parsedJson.success)
