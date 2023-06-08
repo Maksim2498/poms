@@ -1,9 +1,10 @@
+import z                   from "zod"
 import BufferWritable      from "util/BufferWritable"
+import DeepReadonly        from "util/DeepReadonly"
 import Token               from "./Token"
 
 import { isUInt          } from "util/number"
 import { checkBufferSize } from "util/buffer"
-import { TokenJSON       } from "./Token"
 
 export interface TokenSetOptions {
     tokens?:    Iterable<Token>
@@ -11,10 +12,8 @@ export interface TokenSetOptions {
     dontCheck?: boolean
 }
 
-export interface TokenSetJSON {
-    max:    number
-    tokens: TokenJSON[]
-}
+export type TokenSetJSON         = z.infer<typeof TokenSet.JSON_SCHEMA>
+export type ReadonlyTokenSetJSON = DeepReadonly<TokenSetJSON>
 
 /*
     Buffer structure:
@@ -29,6 +28,11 @@ export interface TokenSetJSON {
 */
 
 export default class TokenSet implements Iterable<Token>, BufferWritable {
+    static readonly JSON_SCHEMA = z.object({
+        max:    z.number().int().nonnegative(),
+        tokens: Token.JSON_SCHEMA.array(),
+    })
+
     static readonly DEFAULT_MAX         = 5
     static readonly MAX_MAX             = 255
 
@@ -36,6 +40,22 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
     static readonly BYTE_LENGTH_OF_MAX  = 1 // uint8_t
     static readonly MIN_BYTE_LEGNTH     = this.BYTE_LENGTH_OF_SIZE
                                         + this.BYTE_LENGTH_OF_MAX
+
+    static fromJSON(json: unknown, dontCheck: boolean = false): TokenSet {
+        const parsed = TokenSet.JSON_SCHEMA.parse(json)
+        return TokenSet.fromParsedJSON(parsed, dontCheck)
+    }
+
+    static fromParsedJSON(json: ReadonlyTokenSetJSON, dontCheck: boolean = false): TokenSet {
+        const max    = json.max
+        const tokens = json.tokens.map(json => Token.fromParsedJSON(json, dontCheck))
+
+        return new TokenSet({
+            max,
+            tokens,
+            dontCheck,
+        })
+    }
 
     static fromBuffer(buffer: Buffer, offset: number = 0, dontCheck: boolean = false): TokenSet {
         checkBufferSize(buffer, offset + TokenSet.MIN_BYTE_LEGNTH)
@@ -63,7 +83,7 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
     private readonly tokens: Token[] = []
             readonly max:    number 
 
-    constructor(options: TokenSetOptions) {
+    constructor(options: TokenSetOptions = {}) {
         const tokens    = options.tokens ?? []
         const max       = options.max    ?? TokenSet.DEFAULT_MAX
         const dontCheck = options.dontCheck
