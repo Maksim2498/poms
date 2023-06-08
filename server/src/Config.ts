@@ -27,10 +27,10 @@ const DB_NAME = z.string().transform((name, ctx) => {
     if (name.match(/^[\u0001-\uFFFF]{1,64}$/) != null)
         return name
 
-    const path    = ctx.path.join(".")
-    const message = `Configuration option "${path}" is an invalid database identifier`
-
-    ctx.addIssue({ code: "custom", message })
+    ctx.addIssue({
+        code:    "custom",
+        message: `Configuration option "${ctx.path.join(".")}" is an invalid database identifier`,
+    })
 
     return z.NEVER
 })
@@ -41,10 +41,10 @@ const DUR = UINT.or(z.string().transform((durString, ctx) => {
     if (dur != null)
         return dur
 
-    const path    = ctx.path.join(".")
-    const message = `Configuration option "${path}" is an invalid duration`
-
-    ctx.addIssue({ code: "custom", message })
+    ctx.addIssue({
+        code:    "custom",
+        message: `Configuration option "${ctx.path.join(".")}" is an invalid duration`,
+    })
 
     return z.NEVER
 }))
@@ -55,10 +55,10 @@ const SIZE = UINT.or(z.string().transform((sizeString, ctx) => {
     if (size != null)
         return size
 
-    const path    = ctx.path.join(".")
-    const message = `Configuration option "${path}" is an invalid size`
-
-    ctx.addIssue({ code: "custom", message })
+    ctx.addIssue({
+        code:    "custom",
+        message: `Configuration option "${ctx.path.join(".")}" is an invalid size`,
+    })
 
     return z.NEVER
 }))
@@ -70,10 +70,10 @@ const USER_LOGIN = STRING.transform((login, ctx) => {
     if (invalidReason == null)
         return normedLogin
 
-    const path    = ctx.path.join(".")
-    const message = `Configuration option "${path}" is an invalid user login (${invalidReason})`
-
-    ctx.addIssue({ code: "custom", message })
+    ctx.addIssue({
+        code:    "custom",
+        message: `Configuration option "${ctx.path.join(".")}" is an invalid user login (${invalidReason})`,
+    })
 
     return z.NEVER
 })
@@ -84,10 +84,10 @@ const USER_PASSWORD = STRING.transform((password, ctx) => {
     if (invalidReason == null)
         return password
 
-    const path    = ctx.path.join(".")
-    const message = `Configuration option "${path}" is an invalid user password (${invalidReason})`
-
-    ctx.addIssue({ code: "custom", message })
+    ctx.addIssue({
+        code:    "custom",
+        message: `Configuration option "${ctx.path.join(".")}" is an invalid user password (${invalidReason})`,
+    })
 
     return z.NEVER
 })
@@ -99,10 +99,10 @@ const USER_NAME = NSTRING.transform((name, ctx) => {
     if (invalidReason == null)
         return normedName
 
-    const path    = ctx.path.join(".")
-    const message = `Configuration option "${path}" is an invalid user name (${invalidReason})`
-
-    ctx.addIssue({ code: "custom", message })
+    ctx.addIssue({
+        code:    "custom",
+        message: `Configuration option "${ctx.path.join(".")}" is an invalid user name (${invalidReason})`,
+    })
 
     return z.NEVER
 }).default(null)
@@ -132,10 +132,11 @@ const USER_NICKNAME_ARRAY = STRING.array().max(UserNicknameSet.MAX_MAX).transfor
         if (invalidReason == null)
             continue
 
-        const path    = `${ctx.path.join(".")}[${i}]`
-        const message = `Configuration option "${path}" is an invalid user nickname (${invalidReason})`
-
-        ctx.addIssue({ code: "custom", message })
+        ctx.addIssue({
+            code:    "custom",
+            path:    [...ctx.path, i],
+            message: `Configuration option "${ctx.path.join(".")}[${i}]" is an invalid user nickname (${invalidReason})`,
+        })
 
         valid = false
     }

@@ -47,7 +47,6 @@ export default class Token implements BufferWritable {
 
         ctx.addIssue({
             code:    "custom",
-            path:    ctx.path,
             message: "Invalid token id",
         })
 
