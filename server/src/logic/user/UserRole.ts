@@ -1,3 +1,4 @@
+import z                   from "zod"
 import BufferWritable      from "util/BufferWritable"
 
 import { checkBufferSize } from "util/buffer"
@@ -12,6 +13,8 @@ export type UserRoleId   = 0
                          | 2
                          | 3
 
+export type UserRoleJSON = z.infer<typeof UserRole.JSON_SCHEMA>
+
 /*
     Buffer structure:
 
@@ -21,12 +24,26 @@ export type UserRoleId   = 0
 */
 
 export default class UserRole implements BufferWritable {
+    static readonly JSON_SCHEMA = z.literal("user")
+                              .or(z.literal("moderator")) 
+                              .or(z.literal("admin"))
+                              .or(z.literal("owner"))
+
     static readonly BYTE_LENGTH = 1 // uint8_t
 
     static readonly USER        = new UserRole("user",      0)
     static readonly MODERATOR   = new UserRole("moderator", 1)
     static readonly ADMIN       = new UserRole("admin",     2)
     static readonly OWNER       = new UserRole("owner",     3)
+
+    static fromJSON(json: unknown): UserRole {
+        const parsed = UserRole.JSON_SCHEMA.parse(json)
+        return UserRole.fromParsedJSON(parsed)
+    }
+
+    static fromParsedJSON(json: UserRoleJSON): UserRole {
+        return UserRole.fromName(json)
+    }
 
     static fromBuffer(buffer: Buffer, offset: number = 0): UserRole {
         checkBufferSize(buffer, offset + UserRole.BYTE_LENGTH)
@@ -116,7 +133,7 @@ export default class UserRole implements BufferWritable {
         return UserRole.BYTE_LENGTH
     }
 
-    toJSON(): string {
+    toJSON(): UserRoleJSON {
         return this.name
     }
 
