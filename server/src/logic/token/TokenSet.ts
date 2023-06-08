@@ -28,32 +28,43 @@ export type ReadonlyTokenSetJSON = DeepReadonly<TokenSetJSON>
 */
 
 export default class TokenSet implements Iterable<Token>, BufferWritable {
-    static readonly JSON_SCHEMA = z.object({
-        max:    z.number().int().nonnegative(),
-        tokens: Token.JSON_SCHEMA.array(),
-    })
-
     static readonly DEFAULT_MAX         = 5
     static readonly MAX_MAX             = 255
+
+    static readonly JSON_SCHEMA         = z.object({
+        max:    z.number().int().nonnegative().max(TokenSet.MAX_MAX),
+        tokens: Token.JSON_SCHEMA.array(),
+    }).superRefine((json, ctx) => {
+        const { max, tokens } = json
+
+        if (tokens.length > max)
+            ctx.addIssue({
+                code:      "too_big",
+                path:      ["tokens"],
+                type:      "array",
+                inclusive: true,
+                maximum:   max,
+            })
+    })
 
     static readonly BYTE_LENGTH_OF_SIZE = 1 // uint8_t
     static readonly BYTE_LENGTH_OF_MAX  = 1 // uint8_t
     static readonly MIN_BYTE_LEGNTH     = this.BYTE_LENGTH_OF_SIZE
                                         + this.BYTE_LENGTH_OF_MAX
 
-    static fromJSON(json: unknown, dontCheck: boolean = false): TokenSet {
+    static fromJSON(json: unknown): TokenSet {
         const parsed = TokenSet.JSON_SCHEMA.parse(json)
-        return TokenSet.fromParsedJSON(parsed, dontCheck)
+        return TokenSet.fromParsedJSON(parsed)
     }
 
-    static fromParsedJSON(json: ReadonlyTokenSetJSON, dontCheck: boolean = false): TokenSet {
+    static fromParsedJSON(json: ReadonlyTokenSetJSON): TokenSet {
         const max    = json.max
-        const tokens = json.tokens.map(json => Token.fromParsedJSON(json, dontCheck))
+        const tokens = json.tokens.map(json => Token.fromParsedJSON(json))
 
         return new TokenSet({
-            max,
+            dontCheck: true,
             tokens,
-            dontCheck,
+            max,
         })
     }
 
