@@ -39,9 +39,24 @@ export default class Token implements BufferWritable {
     static readonly DEFAULT_ACCESS_LIFETIME  = parseDuration("30m")
     static readonly DEFAULT_REFRESH_LIFETIME = parseDuration("1w")
 
+    static readonly ID_JSON_SCHEMA = z.string().transform((id, ctx) => {
+        const invalidReason = Token.validateId(id)
+
+        if (invalidReason == null)
+            return id
+
+        ctx.addIssue({
+            code:    "custom",
+            path:    ctx.path,
+            message: "Invalid token id",
+        })
+
+        return z.NEVER
+    })
+
     static readonly JSON_SCHEMA = z.object({
-        accessId:       z.string(),
-        refreshId:      z.string(),
+        accessId:       Token.ID_JSON_SCHEMA,
+        refreshId:      Token.ID_JSON_SCHEMA,
         created:        z.string().datetime(),
         accessExpires:  z.string().datetime(),
         refreshExpires: z.string().datetime(),
