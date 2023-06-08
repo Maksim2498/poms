@@ -1,5 +1,6 @@
 import z                                                                                from "zod"
 import LogicError                                                                       from "logic/LogicError"
+import DeepReadonly                                                                     from "util/type/DeepReadonly"
 import BufferWritable                                                                   from "util/buffer/BufferWritable"
 
 import { checkBufferSize, writeTinyString, readTinyString, BYTE_LENGTH_OF_TINY_STRING } from "util/buffer/buffer"
@@ -12,10 +13,8 @@ export interface UserNicknameSetOptions {
     dontCheck?: boolean
 }
 
-export interface UserNicknameSetJSON {
-    max:       number
-    nicknames: string[]
-}
+export type UserNicknameSetJSON          = z.infer<typeof UserNicknameSet.JSON_SCHEMA>
+export type ReadonlyUserNicknamesSetJSON = DeepReadonly<UserNicknameSetJSON>
 
 /*
     Buffer structure:
