@@ -6,6 +6,7 @@ import BufferWritable                                                from "util/
 import ReadonlyDate                                                  from "util/ReadonlyDate"
 
 import { checkBufferSize, readDate, writeDate, BYTE_LENGTH_OF_DATE } from "util/buffer"
+import { isInvalid                                                 } from "util/date"
 import { isHex                                                     } from "util/string"
 
 export interface TokenOptions {
@@ -54,15 +55,18 @@ export default class Token implements BufferWritable {
 
     static fromJSON(json: unknown, dontCheck: boolean = false): Token {
         const parsed = Token.JSON_SCHEMA.parse(json)
+        return Token.fromParsedJSON(parsed, dontCheck)
+    }
 
+    static fromParsedJSON(json: ReadonlyTokenJSON, dontCheck: boolean = false): Token {
         const {
             accessId,
             refreshId
-        } = parsed
+        } = json
 
-        const created        = new Date(parsed.created)
-        const accessExpires  = new Date(parsed.accessExpires)
-        const refreshExpires = new Date(parsed.refreshExpires)
+        const created        = new Date(json.created)
+        const accessExpires  = new Date(json.accessExpires)
+        const refreshExpires = new Date(json.refreshExpires)
         
         return new Token({
             accessId,
@@ -136,8 +140,19 @@ export default class Token implements BufferWritable {
         const refreshExpires = new Date(options.refreshExpires ?? Token.DEFAULT_REFRESH_LIFETIME)
         const dontCheck      = options.dontCheck
 
-        if (!dontCheck && (accessExpires < created || refreshExpires < created))
-            throw new Error("Token cannot expire before it's creation")
+        if (!dontCheck) {
+            if (accessExpires < created || refreshExpires < created)
+                throw new Error("Token cannot expire before it's creation")
+
+            if (isInvalid(created))
+                throw new Error("Creation date is invalid")
+
+            if (isInvalid(accessExpires))
+                throw new Error("Access expiration date is invalid")
+
+            if (isInvalid(refreshExpires))
+                throw new Error("Refresh expiration date is invalid")
+        }
 
         this.accessId       = accessId
         this.refreshId      = refreshId
