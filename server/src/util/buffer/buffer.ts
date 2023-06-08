@@ -1,4 +1,4 @@
-import ReadonlyDate from "./ReadonlyDate"
+import ReadonlyDate from "../date/ReadonlyDate"
 
 export const BYTE_LENGTH_OF_BOOLEAN = 1
 

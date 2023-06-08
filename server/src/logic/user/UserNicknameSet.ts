@@ -1,7 +1,8 @@
+import z                                                                                from "zod"
 import LogicError                                                                       from "logic/LogicError"
-import BufferWritable                                                                   from "util/BufferWritable"
+import BufferWritable                                                                   from "util/buffer/BufferWritable"
 
-import { checkBufferSize, writeTinyString, readTinyString, BYTE_LENGTH_OF_TINY_STRING } from "util/buffer"
+import { checkBufferSize, writeTinyString, readTinyString, BYTE_LENGTH_OF_TINY_STRING } from "util/buffer/buffer"
 import { hasWs, escape                                                                } from "util/string"
 import { isUInt                                                                       } from "util/number"
 
@@ -29,6 +30,11 @@ export interface UserNicknameSetJSON {
 */
 
 export default class UserNicknameSet implements Iterable<string>, BufferWritable {
+    static readonly JSON_SCHEMA = z.object({
+        max:       z.number().int().nonnegative(),
+        nicknames: z.string().array(),
+    })
+
     static readonly DEFAULT_MAX                 = 5
     static readonly MAX_MAX                     = 255
 

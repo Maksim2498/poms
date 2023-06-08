@@ -1,5 +1,5 @@
 import bytes        from "bytes"
-import DeepReadonly from "./DeepReadonly"
+import DeepReadonly from "util/type/DeepReadonly"
 
 import { Logger   } from "winston"
 

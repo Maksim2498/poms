@@ -2,11 +2,11 @@ import crypto                                                        from "crypt
 import z                                                             from "zod"
 import parseDuration                                                 from "parse-duration"
 import LogicError                                                    from "logic/LogicError"
-import BufferWritable                                                from "util/BufferWritable"
-import ReadonlyDate                                                  from "util/ReadonlyDate"
+import BufferWritable                                                from "util/buffer/BufferWritable"
+import ReadonlyDate                                                  from "util/date/ReadonlyDate"
 
-import { checkBufferSize, readDate, writeDate, BYTE_LENGTH_OF_DATE } from "util/buffer"
-import { isInvalid                                                 } from "util/date"
+import { checkBufferSize, readDate, writeDate, BYTE_LENGTH_OF_DATE } from "util/buffer/buffer"
+import { isInvalid                                                 } from "util/date/date"
 import { isHex                                                     } from "util/string"
 
 export interface TokenOptions {
