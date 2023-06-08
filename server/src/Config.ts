@@ -5,6 +5,7 @@ import template                     from "string-placeholder"
 import User                         from "logic/user/User"
 import UserNicknameSet              from "logic/user/UserNicknameSet"
 import DeepReadonly                 from "util/DeepReadonly"
+import DeepModify                   from "util/DeepModify"
 import ErrorList                    from "util/ErrorList"
 
 import { promises as fsp          } from "fs"
@@ -21,27 +22,6 @@ const URI_PATH = z.string().transform(s => normalize("/" + s))
 const PATH     = z.string().transform(s => Config.placehold(normalize(s)))
 const NPATH    = PATH.nullable().default(null)
 const BOOLEAN  = z.boolean().default(false)
-
-const SAME_AS_MC_HOST = Symbol()
-
-const RCON_HOST = z.custom<string>(host => {
-    return typeof host === "string" ? host.trim()
-                                    : host
-}).superRefine((host, ctx) => {
-    if (host as any === SAME_AS_MC_HOST)
-        return
-
-    const type = typeof host
-
-    if (type === "string")
-        return
-
-    ctx.addIssue({
-        code:     "invalid_type",
-        expected: "string",
-        received: type
-    })
-}).default(SAME_AS_MC_HOST as any)
 
 const DB_NAME = z.string().transform((name, ctx) => {
     if (name.match(/^[\u0001-\uFFFF]{1,64}$/) != null)
@@ -234,7 +214,7 @@ export default class Config {
 
         rcon: z.object({
             enable:               BOOLEAN,
-            host:                 RCON_HOST,
+            host:                 NHOST,
             port:                 PORT.default(25575),
             password:             NSTRING,
         }).strict().default({}),
@@ -245,6 +225,14 @@ export default class Config {
             port:                 PORT.default(25565),
             statusLifetime:       DUR.default("10s"),
         }).strict().default({}),
+    }).transform(json => {
+        json.rcon.host ??= json.mc.host
+
+        return json as DeepModify<typeof json, {
+            rcon: {
+                host: string
+            }
+        }>
     })
 
     static readonly POMS_PATH   = dirname(dirname(__dirname)) // this file is in /server/src/
@@ -279,7 +267,6 @@ export default class Config {
 
         return config
     }
-
 
     static async findConfig(logger?: Logger): Promise<string> {
         logger?.verbose("Searching for configuration file...")
@@ -336,17 +323,14 @@ export default class Config {
     readonly path?: string
 
     constructor(json: unknown, path?: string) {
-        const parsedJson = Config.JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
+        const parsed = Config.JSON_SCHEMA.safeParse(json, { errorMap: Config.zodErrorMap })
 
-        if (!parsedJson.success)
-            throw Config.zodErrorToErrorList(parsedJson.error)
+        if (!parsed.success)
+            throw Config.zodErrorToErrorList(parsed.error)
 
-        Config.validateParsedJsonMysqlCredentials(parsedJson.data)
+        Config.validateParsedJsonMysqlCredentials(parsed.data)
 
-        if (parsedJson.data.rcon.host as any === SAME_AS_MC_HOST)
-            parsedJson.data.rcon.host = parsedJson.data.mc.host
-        
-        this.read = parsedJson.data
+        this.read = parsed.data
         this.path = path
     }
 
