@@ -1,4 +1,5 @@
 import crypto                                                          from "crypto"
+import z                                                               from "zod"
 import Config                                                          from "Config"
 import LogicError                                                      from "logic/LogicError"
 import UserNicknameSet                                                 from "logic/user/UserNicknameSet"
@@ -6,16 +7,15 @@ import Token                                                           from "log
 import TokenSet                                                        from "logic/token/TokenSet"
 import ReadonlyDate                                                    from "util/date/ReadonlyDate"
 import BufferWritable                                                  from "util/buffer/BufferWritable"
+import DeepReadonly                                                    from "util/type/DeepReadonly"
 import UserRole                                                        from "./UserRole"
 
 import { checkBufferSize,
          BYTE_LENGTH_OF_DATE,        readDate,       writeDate,
          BYTE_LENGTH_OF_BOOLEAN,     readBoolean,    writeBoolean,
          BYTE_LENGTH_OF_TINY_STRING, readTinyString, writeTinyString } from "util/buffer/buffer"
-import { collapseWs, escape                                          } from "util/string"
+import { collapseWs, escape, isHex                                   } from "util/string"
 import { isUInt                                                      } from "util/number"
-import { TokenSetJSON                                                } from "logic/token/TokenSet"
-import { UserNicknameSetJSON                                         } from "logic/user/UserNicknameSet"
 
 export interface BaseUserOptions {
     readonly config:        Config
@@ -45,19 +45,8 @@ export interface PasswordHashUserOptions extends BaseUserOptions {
 export type UserOptions = PasswordUserOptions
                         | PasswordHashUserOptions
 
-export interface UserJSON {
-    id:           number
-    login:        string
-    name:         string | null,
-    icon:         string | null,
-    passwordHash: string,
-    role:         string,
-    isOnline:     boolean,
-    created:      string,
-    creatorId:    number | null,
-    nicknames:    UserNicknameSetJSON,
-    tokens:       TokenSetJSON,
-}
+export type UserJSON         = z.infer<typeof User.JSON_SCHEMA>
+export type ReadonlyUserJSON = DeepReadonly<UserJSON>
 
 /*
     Buffer structure:
@@ -107,6 +96,94 @@ export default class User implements BufferWritable {
                                                     +     BYTE_LENGTH_OF_DATE
                                                     +     UserRole.BYTE_LENGTH
                                                     +     this.BYTE_LENGTH_OF_ICON_BYTE_LENGTH
+
+    static readonly ID_JSON_SCHEMA = z.number().int().nonnegative()
+
+    static readonly LOGIN_JSON_SCHEMA = z.string().transform((login, ctx) => {
+        login = User.normLogin(login)
+
+        const invalidReason = User.validateNormedLogin(login)
+
+        if (invalidReason != null) {
+            ctx.addIssue({
+                code:    "custom",
+                message: invalidReason,
+            })
+
+            return z.NEVER
+        }
+
+        return login
+    })
+
+    static readonly NAME_JSON_SCHEMA = z.string().nullable().transform((name, ctx) => {
+        name = User.normName(name)
+
+        const invalidReason = User.validateNormedName(name)
+
+        if (invalidReason != null) {
+            ctx.addIssue({
+                code:    "custom",
+                message: invalidReason,
+            })
+
+            return z.NEVER
+        }
+
+        return name
+    })
+
+    static readonly JSON_SCHEMA = z.object({
+        id:           User.ID_JSON_SCHEMA,
+        login:        User.LOGIN_JSON_SCHEMA,
+        name:         User.NAME_JSON_SCHEMA,
+        icon:         z.string().refine(isHex).nullable(),
+        passwordHash: z.string().length(2 * User.BYTE_LENGTH_OF_PASSWORD_HASH).refine(isHex),
+        role:         UserRole.JSON_SCHEMA,
+        isOnline:     z.boolean(),
+        created:      z.string().datetime(),
+        creatorId:    User.ID_JSON_SCHEMA.nullable(),
+        nicknames:    UserNicknameSet.JSON_SCHEMA,
+        tokens:       TokenSet.JSON_SCHEMA,
+    })
+
+    static fromJSON(config: Config, json: unknown): User {
+        const parsed = User.JSON_SCHEMA.parse(json)
+        return User.fromParsedJSON(config, parsed)
+    }
+
+    static fromParsedJSON(config: Config, json: UserJSON): User {
+        const {
+            id,
+            login,
+            name,
+            creatorId,
+            isOnline,
+        } = json
+
+        const icon         = json.icon != null ? Buffer.from(json.icon) : null
+        const passwordHash = Buffer.from(json.passwordHash)
+        const role         = UserRole.fromParsedJSON(json.role)
+        const created      = new Date(json.created)
+        const nicknames    = UserNicknameSet.fromParsedJSON(json.nicknames)
+        const tokens       = TokenSet.fromParsedJSON(json.tokens)
+        
+        return new User({
+            dontCheck: true,
+            config,
+            id,
+            login,
+            name,
+            creatorId,
+            isOnline,
+            icon,
+            passwordHash,
+            role,
+            created,
+            nicknames,
+            tokens,
+        })
+    }
 
     static fromBuffer(config: Config, buffer: Buffer, offset: number = 0, dontCheck: boolean = false): User {
         checkBufferSize(buffer, offset + User.MIN_BYTE_LENGTH)
