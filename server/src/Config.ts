@@ -124,20 +124,24 @@ const USER_ICON_SIZE = SIZE.transform((size, ctx) => {
 const USER_NICKNAME_ARRAY = STRING.array().max(UserNicknameSet.MAX_MAX).transform((nicknames, ctx) => {
     const normedNicknames = nicknames.map(nickname => UserNicknameSet.normNickname(nickname))
 
+    let valid = true
+
     for (const [i, normedNickname] of normedNicknames.entries()) {
         const invalidReason = UserNicknameSet.validateNormedNickname(normedNickname)
 
-        if (invalidReason != null) {
-            const path    = `${ctx.path.join(".")}[${i}]`
-            const message = `Configuration option "${path}" is an invalid user nickname (${invalidReason})`
+        if (invalidReason == null)
+            continue
 
-            ctx.addIssue({ code: "custom", message })
+        const path    = `${ctx.path.join(".")}[${i}]`
+        const message = `Configuration option "${path}" is an invalid user nickname (${invalidReason})`
 
-            return z.NEVER
-        }
+        ctx.addIssue({ code: "custom", message })
+
+        valid = false
     }
 
-    return normedNicknames
+    return valid ? normedNicknames
+                 : z.NEVER
 }).default([])
 
 export type ConfigJSON         = z.infer<typeof Config.JSON_SCHEMA>
@@ -233,6 +237,40 @@ export default class Config {
                 host: string
             }
         }>
+    }).transform((json, ctx) => {
+        const noLogin              = json.mysql.login               == null
+        const noPassword           = json.mysql.password            == null
+        const noInitializeLogin    = json.mysql.initialize.login    == null
+        const noInitializePassword = json.mysql.initialize.password == null
+        const noServeLogin         = json.mysql.serve.login         == null
+        const noServePassword      = json.mysql.serve.password      == null
+
+        const noGeneral            = noLogin           || noPassword
+        const noInitialize         = noInitializeLogin || noInitializePassword
+        const noServe              = noServeLogin      || noServePassword
+        const noSpecial            = noInitialize      || noServe
+
+        if (noGeneral && noSpecial) {
+            if (noLogin)
+                ctx.addIssue({
+                    code:     "invalid_type",
+                    path:     ["mysql", "login"],
+                    expected: "string",
+                    received: "undefined",
+                })
+
+            if (noPassword)
+                ctx.addIssue({
+                    code:     "invalid_type",
+                    path:     ["mysql", "password"],
+                    expected: "string",
+                    received: "undefined",
+                })
+
+            return z.NEVER
+        }
+        
+        return json
     })
 
     static readonly POMS_PATH   = dirname(dirname(__dirname)) // this file is in /server/src/
@@ -328,8 +366,6 @@ export default class Config {
         if (!parsed.success)
             throw Config.zodErrorToErrorList(parsed.error)
 
-        Config.validateParsedJsonMysqlCredentials(parsed.data)
-
         this.read = parsed.data
         this.path = path
     }
@@ -387,29 +423,6 @@ export default class Config {
 
     private static zodErrorToErrorList(error: z.ZodError): ErrorList {
         return new ErrorList(error.issues.map(issue => new Error(issue.message)))
-    }
-
-    private static validateParsedJsonMysqlCredentials(config: ReadonlyConfigJSON) {
-        const noLogin         = config.mysql.login                == null
-        const noPassword      = config.mysql.password             == null
-        const noInitLogin     = config.mysql.initialize.login     == null
-        const noInitPassword  = config.mysql.initialize.password  == null
-        const noServeLogin    = config.mysql.serve.login          == null
-        const noServePassword = config.mysql.serve.password       == null
-        const noGeneral       = noLogin      || noPassword
-        const noInit          = noInitLogin  || noInitPassword
-        const noServe         = noServeLogin || noServePassword
-        const noSpecial       = noInit       || noServe
-
-        if (noGeneral && noSpecial) {
-            if (noLogin && noPassword)
-                throw new Error('Missing "mysql.login" and "mysql.password" configuration options')
-
-            if (noLogin)
-                throw new Error('Missing "mysql.login" configuration option')
-
-            throw new Error('Missing "mysql.password" configuration option')
-        }
     }
 
     get httpApiAddress(): string {
