@@ -51,7 +51,7 @@ export default class Token implements BufferWritable {
 
     static readonly ID_LENGTH = 128
 
-    static fromJSON(json: unknown): Token {
+    static fromJSON(json: unknown, dontCheck: boolean = false): Token {
         const parsed = Token.JSON_SCHEMA.parse(json)
 
         const {
@@ -69,6 +69,7 @@ export default class Token implements BufferWritable {
             created,
             accessExpires,
             refreshExpires,
+            dontCheck,
         })
     }
 
