@@ -29,8 +29,11 @@ export type ReadonlyUserNicknamesSetJSON = DeepReadonly<UserNicknameSetJSON>
 */
 
 export default class UserNicknameSet implements Iterable<string>, BufferWritable {
-    static readonly JSON_SCHEMA = z.object({
-        max:       z.number().int().nonnegative(),
+    static readonly DEFAULT_MAX                 = 5
+    static readonly MAX_MAX                     = 255
+
+    static readonly JSON_SCHEMA                 = z.object({
+        max:       z.number().int().nonnegative().max(UserNicknameSet.MAX_MAX),
         nicknames: z.string().array().transform((nicknames, ctx) => {
             const normedNicknames = nicknames.map(UserNicknameSet.normNickname)
 
@@ -54,10 +57,18 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
             return valid ? normedNicknames
                          : z.NEVER
         }),
-    })
+    }).superRefine((json, ctx) => {
+        const { max, nicknames } = json
 
-    static readonly DEFAULT_MAX                 = 5
-    static readonly MAX_MAX                     = 255
+        if (nicknames.length > max)
+            ctx.addIssue({
+                code:      "too_big",
+                path:      ["nicknames"],
+                type:      "array",
+                inclusive: true,
+                maximum:   max,
+            })
+    })
 
     static readonly MIN_BYTE_LENGTH_OF_NICKNAME = 4
     static readonly MAX_BYTE_LENGTH_OF_NICKNAME = 255
@@ -68,21 +79,21 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
     static readonly MIN_BYTE_LENGTH             = this.BYTE_LENGTH_OF_SIZE
                                                 + this.BYTE_LENGTH_OF_MAX
 
-    static fromJSON(json: unknown, dontCheck: boolean = false): UserNicknameSet {
+    static fromJSON(json: unknown): UserNicknameSet {
         const parsed = UserNicknameSet.JSON_SCHEMA.parse(json)
-        return UserNicknameSet.fromParsedJSON(parsed, dontCheck)
+        return UserNicknameSet.fromParsedJSON(parsed)
     }
 
-    static fromParsedJSON(json: ReadonlyUserNicknamesSetJSON, dontCheck: boolean = false): UserNicknameSet {
+    static fromParsedJSON(json: ReadonlyUserNicknamesSetJSON): UserNicknameSet {
         const {
             max,
             nicknames,
         } = json
 
         return new UserNicknameSet({
-            max,
+            dontCheck: true,
             nicknames,
-            dontCheck,
+            max,
         })
     }
 
