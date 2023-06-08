@@ -46,6 +46,24 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
     static readonly MIN_BYTE_LENGTH             = this.BYTE_LENGTH_OF_SIZE
                                                 + this.BYTE_LENGTH_OF_MAX
 
+    static fromJSON(json: unknown, dontCheck: boolean = false): UserNicknameSet {
+        const parsed = UserNicknameSet.JSON_SCHEMA.parse(json)
+        return UserNicknameSet.fromParsedJSON(parsed, dontCheck)
+    }
+
+    static fromParsedJSON(json: ReadonlyUserNicknamesSetJSON, dontCheck: boolean = false): UserNicknameSet {
+        const {
+            max,
+            nicknames,
+        } = json
+
+        return new UserNicknameSet({
+            max,
+            nicknames,
+            dontCheck,
+        })
+    }
+
     static fromBuffer(buffer: Buffer, offset: number = 0, dontCheck: boolean = false): UserNicknameSet {
         checkBufferSize(buffer, offset + UserNicknameSet.MIN_BYTE_LENGTH)
 
