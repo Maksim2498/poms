@@ -1,7 +1,7 @@
 import z                   from "zod"
-import BufferWritable      from "util/BufferWritable"
+import BufferWritable      from "util/buffer/BufferWritable"
 
-import { checkBufferSize } from "util/buffer"
+import { checkBufferSize } from "util/buffer/buffer"
 
 export type UserRoleName = "user"
                          | "moderator"

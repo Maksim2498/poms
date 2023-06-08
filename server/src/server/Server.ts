@@ -4,7 +4,7 @@ import mysql                                                           from "mys
 import Config                                                          from "Config"
 import UserRole                                                        from "logic/user/UserRole"
 import UserManager                                                     from "logic/user/UserManager"
-import CacheManager                                                    from "util/CacheManager"
+import CacheManager                                                    from "util/buffer/CacheManager"
 import ServerState                                                     from "./ServerState"
 
 import { promises   as fsp                                           } from "fs"

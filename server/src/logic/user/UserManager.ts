@@ -1,6 +1,6 @@
 import Config                                                          from "Config"
 import LogicError                                                      from "logic/LogicError"
-import CacheManager                                                    from "util/CacheManager"
+import CacheManager                                                    from "util/buffer/CacheManager"
 import User                                                            from "./User"
 import UserRole                                                        from "./UserRole"
 

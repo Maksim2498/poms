@@ -1,10 +1,10 @@
 import z                   from "zod"
-import BufferWritable      from "util/BufferWritable"
-import DeepReadonly        from "util/DeepReadonly"
+import BufferWritable      from "util/buffer/BufferWritable"
+import DeepReadonly        from "util/type/DeepReadonly"
 import Token               from "./Token"
 
 import { isUInt          } from "util/number"
-import { checkBufferSize } from "util/buffer"
+import { checkBufferSize } from "util/buffer/buffer"
 
 export interface TokenSetOptions {
     tokens?:    Iterable<Token>

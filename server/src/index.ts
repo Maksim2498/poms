@@ -1,7 +1,7 @@
-import winston   from "winston"
-import Server    from "server/Server"
-import ErrorList from "util/ErrorList"
-import Config    from "Config"
+import Server       from "server/Server"
+import ErrorList    from "util/ErrorList"
+import createLogger from "util/createLogger"
+import Config       from "Config"
 
 const logger = createLogger()
 
@@ -29,35 +29,6 @@ async function main() {
             process.exit()
         })
     }
-}
-
-function createLogger() {
-    const { Console } = winston.transports
-
-    const handlers = [new Console()]
-
-    const {
-        combine,
-        errors,
-        colorize,
-        timestamp,
-        align,
-        printf
-    } = winston.format
-
-    return winston.createLogger({
-        level:             process.env.NODE_ENV === "production" ? "http" : "debug",
-        transports:        handlers,
-        exceptionHandlers: handlers,
-        rejectionHandlers: handlers,
-        format:            combine(
-            errors(),
-            colorize({ all: true }),
-            timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-            align(),
-            printf(entry => `[${entry.timestamp}] ${entry.level}: ${entry.message}`)
-        )
-    })
 }
 
 function processError(error: any) {

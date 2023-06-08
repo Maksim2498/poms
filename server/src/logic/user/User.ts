@@ -4,14 +4,14 @@ import LogicError                                                      from "log
 import UserNicknameSet                                                 from "logic/user/UserNicknameSet"
 import Token                                                           from "logic/token/Token"
 import TokenSet                                                        from "logic/token/TokenSet"
-import ReadonlyDate                                                    from "util/ReadonlyDate"
-import BufferWritable                                                  from "util/BufferWritable"
+import ReadonlyDate                                                    from "util/date/ReadonlyDate"
+import BufferWritable                                                  from "util/buffer/BufferWritable"
 import UserRole                                                        from "./UserRole"
 
 import { checkBufferSize,
          BYTE_LENGTH_OF_DATE,        readDate,       writeDate,
          BYTE_LENGTH_OF_BOOLEAN,     readBoolean,    writeBoolean,
-         BYTE_LENGTH_OF_TINY_STRING, readTinyString, writeTinyString } from "util/buffer"
+         BYTE_LENGTH_OF_TINY_STRING, readTinyString, writeTinyString } from "util/buffer/buffer"
 import { collapseWs, escape                                          } from "util/string"
 import { isUInt                                                      } from "util/number"
 import { TokenSetJSON                                                } from "logic/token/TokenSet"
