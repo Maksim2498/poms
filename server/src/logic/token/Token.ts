@@ -17,7 +17,8 @@ export interface TokenOptions {
     readonly dontCheck?:      boolean
 }
 
-export type TokenJSON = z.infer<typeof Token.JSON_SCHEMA>
+export type TokenJSON         = z.infer<typeof Token.JSON_SCHEMA>
+export type ReadonlyTokenJSON = Readonly<TokenJSON>
 
 /*
     Buffer structure:
