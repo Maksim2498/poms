@@ -31,7 +31,29 @@ export type ReadonlyUserNicknamesSetJSON = DeepReadonly<UserNicknameSetJSON>
 export default class UserNicknameSet implements Iterable<string>, BufferWritable {
     static readonly JSON_SCHEMA = z.object({
         max:       z.number().int().nonnegative(),
-        nicknames: z.string().array(),
+        nicknames: z.string().array().transform((nicknames, ctx) => {
+            const normedNicknames = nicknames.map(UserNicknameSet.normNickname)
+
+            let valid = true
+
+            for (const [i, nickname] of normedNicknames.entries()) {
+                const invalidReason = UserNicknameSet.validateNormedNickname(nickname)
+
+                if (invalidReason == null)
+                    continue
+
+                ctx.addIssue({
+                    code:    "custom",
+                    path:    [...ctx.path, i],
+                    message: "Inalid nicknames",
+                })
+
+                valid = false
+            }
+
+            return valid ? normedNicknames
+                         : z.NEVER
+        }),
     })
 
     static readonly DEFAULT_MAX                 = 5
