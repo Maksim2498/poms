@@ -81,7 +81,7 @@ export default class Token implements BufferWritable {
         const created        = new Date(json.created)
         const accessExpires  = new Date(json.accessExpires)
         const refreshExpires = new Date(json.refreshExpires)
-        
+
         return new Token({
             accessId,
             refreshId,
