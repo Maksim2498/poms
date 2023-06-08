@@ -251,6 +251,8 @@ export default class Config {
     static readonly PLUGIN_PATH = join(this.POMS_PATH, "plugin")
     static readonly SERVER_PATH = join(this.POMS_PATH, "server")
     static readonly SITE_PATH   = join(this.POMS_PATH, "site")
+    
+    static readonly FILE_NAME   = "poms-config.json"
 
     static placehold(path: string): string {
         return template(path, {
@@ -278,7 +280,6 @@ export default class Config {
         return config
     }
 
-    static readonly FILE_NAME = "poms-config.json"
 
     static async findConfig(logger?: Logger): Promise<string> {
         logger?.verbose("Searching for configuration file...")
