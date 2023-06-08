@@ -59,6 +59,16 @@ export default class Token implements BufferWritable {
         created:        z.string().datetime(),
         accessExpires:  z.string().datetime(),
         refreshExpires: z.string().datetime(),
+    }).superRefine((json, ctx) => {
+        const created        = new Date(json.created)
+        const accessExpires  = new Date(json.accessExpires)
+        const refreshExpires = new Date(json.refreshExpires)
+
+        if (accessExpires < created || refreshExpires < created)
+            ctx.addIssue({
+                code:    "custom",
+                message: "Token cannot expire before it's creation",
+            })
     })
 
     static readonly BYTE_LENGTH_OF_ID = 64
@@ -67,15 +77,15 @@ export default class Token implements BufferWritable {
 
     static readonly ID_LENGTH = 128
 
-    static fromJSON(json: unknown, dontCheck: boolean = false): Token {
+    static fromJSON(json: unknown): Token {
         const parsed = Token.JSON_SCHEMA.parse(json)
-        return Token.fromParsedJSON(parsed, dontCheck)
+        return Token.fromParsedJSON(parsed)
     }
 
-    static fromParsedJSON(json: ReadonlyTokenJSON, dontCheck: boolean = false): Token {
+    static fromParsedJSON(json: ReadonlyTokenJSON): Token {
         const {
             accessId,
-            refreshId
+            refreshId,
         } = json
 
         const created        = new Date(json.created)
@@ -83,12 +93,12 @@ export default class Token implements BufferWritable {
         const refreshExpires = new Date(json.refreshExpires)
 
         return new Token({
+            dontCheck: true,
             accessId,
             refreshId,
             created,
             accessExpires,
             refreshExpires,
-            dontCheck,
         })
     }
 
