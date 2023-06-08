@@ -1,3 +1,7 @@
+export function isInvalid(date: Date): boolean {
+    return Number.isNaN(date.valueOf())
+}
+
 export function daysAhead(days: number): Date {
     return addDays(new Date, days)
 }
