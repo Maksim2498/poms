@@ -90,10 +90,10 @@ export default class Token implements BufferWritable {
 
     static fromJSON(json: unknown): Token {
         const parsed = Token.JSON_SCHEMA.parse(json)
-        return Token.fromParsedJSON(parsed)
+        return Token.fromParsedJSON(parsed, true)
     }
 
-    static fromParsedJSON(json: ReadonlyTokenJSON): Token {
+    static fromParsedJSON(json: ReadonlyTokenJSON, dontCheck: boolean = false): Token {
         const {
             accessId,
             refreshId,
@@ -104,7 +104,7 @@ export default class Token implements BufferWritable {
         const refreshExpires = new Date(json.refreshExpires)
 
         return new Token({
-            dontCheck: true,
+            dontCheck,
             accessId,
             refreshId,
             created,

@@ -81,17 +81,17 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
 
     static fromJSON(json: unknown): UserNicknameSet {
         const parsed = UserNicknameSet.JSON_SCHEMA.parse(json)
-        return UserNicknameSet.fromParsedJSON(parsed)
+        return UserNicknameSet.fromParsedJSON(parsed, true)
     }
 
-    static fromParsedJSON(json: ReadonlyUserNicknamesSetJSON): UserNicknameSet {
+    static fromParsedJSON(json: ReadonlyUserNicknamesSetJSON, dontCheck: boolean = false): UserNicknameSet {
         const {
             max,
             nicknames,
         } = json
 
         return new UserNicknameSet({
-            dontCheck: true,
+            dontCheck,
             nicknames,
             max,
         })

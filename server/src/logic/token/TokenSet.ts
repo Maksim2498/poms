@@ -54,15 +54,15 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
 
     static fromJSON(json: unknown): TokenSet {
         const parsed = TokenSet.JSON_SCHEMA.parse(json)
-        return TokenSet.fromParsedJSON(parsed)
+        return TokenSet.fromParsedJSON(parsed, true)
     }
 
-    static fromParsedJSON(json: ReadonlyTokenSetJSON): TokenSet {
+    static fromParsedJSON(json: ReadonlyTokenSetJSON, dontCheck: boolean = false): TokenSet {
         const max    = json.max
-        const tokens = json.tokens.map(json => Token.fromParsedJSON(json))
+        const tokens = json.tokens.map(json => Token.fromParsedJSON(json, dontCheck))
 
         return new TokenSet({
-            dontCheck: true,
+            dontCheck,
             tokens,
             max,
         })

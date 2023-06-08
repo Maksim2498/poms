@@ -149,10 +149,10 @@ export default class User implements BufferWritable {
 
     static fromJSON(config: Config, json: unknown): User {
         const parsed = User.JSON_SCHEMA.parse(json)
-        return User.fromParsedJSON(config, parsed)
+        return User.fromParsedJSON(config, parsed, true)
     }
 
-    static fromParsedJSON(config: Config, json: UserJSON): User {
+    static fromParsedJSON(config: Config, json: UserJSON, dontCheck: boolean = false): User {
         const {
             id,
             login,
@@ -161,15 +161,14 @@ export default class User implements BufferWritable {
             isOnline,
         } = json
 
-        const icon         = json.icon != null ? Buffer.from(json.icon) : null
-        const passwordHash = Buffer.from(json.passwordHash)
+        const icon         = json.icon != null ? Buffer.from(json.icon, "hex") : null
+        const passwordHash = Buffer.from(json.passwordHash, "hex")
         const role         = UserRole.fromParsedJSON(json.role)
         const created      = new Date(json.created)
-        const nicknames    = UserNicknameSet.fromParsedJSON(json.nicknames)
-        const tokens       = TokenSet.fromParsedJSON(json.tokens)
+        const nicknames    = UserNicknameSet.fromParsedJSON(json.nicknames, dontCheck)
+        const tokens       = TokenSet.fromParsedJSON(json.tokens, dontCheck)
         
         return new User({
-            dontCheck: true,
             config,
             id,
             login,
@@ -182,6 +181,7 @@ export default class User implements BufferWritable {
             created,
             nicknames,
             tokens,
+            dontCheck,
         })
     }
 
