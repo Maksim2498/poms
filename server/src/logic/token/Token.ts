@@ -9,6 +9,12 @@ import { checkBufferSize, readDate, writeDate, BYTE_LENGTH_OF_DATE } from "util/
 import { isInvalid                                                 } from "util/date/date"
 import { isHex                                                     } from "util/string"
 
+export interface TokenDates {
+    readonly created:        Date
+    readonly accessExpires:  Date
+    readonly refreshExpires: Date
+}
+
 export interface TokenOptions {
     readonly accessId?:       string | Buffer
     readonly refreshId?:      string | Buffer
@@ -47,7 +53,7 @@ export default class Token implements BufferWritable {
 
         ctx.addIssue({
             code:    "custom",
-            message: "Invalid token id",
+            message: invalidReason,
         })
 
         return z.NEVER
@@ -63,11 +69,16 @@ export default class Token implements BufferWritable {
         const created        = new Date(json.created)
         const accessExpires  = new Date(json.accessExpires)
         const refreshExpires = new Date(json.refreshExpires)
+        const invalidReason  = Token.validateDates({
+            created,
+            accessExpires,
+            refreshExpires,
+        })
 
-        if (accessExpires < created || refreshExpires < created)
+        if (invalidReason != null)
             ctx.addIssue({
                 code:    "custom",
-                message: "Token cannot expire before it's creation",
+                message: invalidReason,
             })
     })
 
@@ -150,6 +161,26 @@ export default class Token implements BufferWritable {
         return undefined
     }
 
+    static checkDates(dates: TokenDates) {
+        const invalidReason = Token.validateDates(dates)
+
+        if (invalidReason != null)
+            throw new LogicError(invalidReason)
+    }
+
+    static validateDates(dates: TokenDates): string | undefined {
+        const {
+            created,
+            accessExpires,
+            refreshExpires,
+        } = dates
+
+        if (accessExpires < created || refreshExpires < created)
+            return "Token cannot expire before it's creation"
+
+        return undefined
+    }
+
     readonly accessId:       string
     readonly refreshId:      string
     readonly created:        ReadonlyDate
@@ -165,8 +196,11 @@ export default class Token implements BufferWritable {
         const dontCheck      = options.dontCheck
 
         if (!dontCheck) {
-            if (accessExpires < created || refreshExpires < created)
-                throw new Error("Token cannot expire before it's creation")
+            Token.checkDates({
+                created,
+                accessExpires,
+                refreshExpires,
+            })
 
             if (isInvalid(created))
                 throw new Error("Creation date is invalid")
