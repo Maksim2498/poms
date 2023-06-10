@@ -24,14 +24,14 @@ export interface CacheEntryBufferSet {
 }
 
 export default class CacheManager {
-    private  _keyToId:     Map<CacheEntryKey, number> = new Map() // Maps keys to IDs
-    private  _idToEntry:   Map<number, CacheEntry>    = new Map() // Maps IDs to entries
-    private  _rateToIds:   Set<number>[]              = []        // Maps rates to ID-sets
-    private  _lastId:      number                     = 0
-    private  _used:        number                     = 0
+    private  _keyToId:   Map<CacheEntryKey, number> = new Map() // Maps keys to IDs
+    private  _idToEntry: Map<number, CacheEntry>    = new Map() // Maps IDs to entries
+    private  _rateToIds: Set<number>[]              = []        // Maps rates to ID-sets
+    private  _lastId:    number                     = 0
+    private  _used:      number                     = 0
 
-    readonly max:          number
-    readonly logger:       Logger | null
+    readonly max:        number
+    readonly logger:     Logger | null
 
     constructor(max: number, logger: Logger | null = null) {
         if (max < 0)
