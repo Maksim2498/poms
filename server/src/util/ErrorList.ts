@@ -3,6 +3,6 @@ export default class ErrorList extends Error {
 
     constructor(errors: Error[]) {
         super()
-        this.errors = errors
+        this.errors = [...errors]
     }
 }
