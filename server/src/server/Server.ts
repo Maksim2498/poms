@@ -42,7 +42,7 @@ export default class Server {
     }
 
     async initialize() {
-        this.stepState(ServerState.CREATED, ServerState.INITIALIZING, "be initialized")
+        this._stepState(ServerState.CREATED, ServerState.INITIALIZING, "be initialized")
 
         try {
             this.logger?.verbose("Initializing server...")
@@ -300,7 +300,7 @@ export default class Server {
     }
 
     async listen() {
-        this.stepState(ServerState.INITIALIZED, ServerState.OPENING, "start listening")
+        this._stepState(ServerState.INITIALIZED, ServerState.OPENING, "start listening")
 
         try {
             // TODO
@@ -313,7 +313,7 @@ export default class Server {
     }
 
     async close() {
-        this.stepState(ServerState.LISTENING, ServerState.CLOSING, "be closed")
+        this._stepState(ServerState.LISTENING, ServerState.CLOSING, "be closed")
 
         try {
             // TODO
@@ -324,12 +324,12 @@ export default class Server {
         this._state = ServerState.INITIALIZED
     }
 
-    private stepState(from: ServerState, to: ServerState, forAction?: string) {
-        this.checkState(from, forAction)
+    private _stepState(from: ServerState, to: ServerState, forAction?: string) {
+        this._checkState(from, forAction)
         this._state = to
     }
 
-    private checkState(required: ServerState, forAction: string = "do this") {
+    private _checkState(required: ServerState, forAction: string = "do this") {
         if (this.state !== required)
             throw new Error(`Server cannot ${forAction} while it's in "${this.state}" state. It must be in "${required}" state`)
     }
