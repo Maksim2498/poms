@@ -240,7 +240,9 @@ export default class Server {
                 }
 
                 async function createOwner(this: Server) {
-                    if (!this.config.read.logic.owner.create)
+                    const { owner } = this.config.read.logic
+
+                    if (!owner.create)
                         return
 
                     const {
@@ -248,7 +250,7 @@ export default class Server {
                         password,
                         name,
                         nicknames,
-                    } = this.config.read.logic.owner
+                    } = owner
 
                     this.logger?.verbose(`Creating owner user ${login}...`)
 
