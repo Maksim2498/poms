@@ -109,7 +109,7 @@ export default class CacheManager {
         return entry
     }
 
-    set(key: CacheEntryMultikey, buffer: Buffer): CacheEntry | undefined {
+    create(key: CacheEntryMultikey, buffer: Buffer): ReadonlyCacheEntry | undefined {
         this.logger?.debug(`Creating new cache entry ${cacheEntryMultikeyToString(key)} of size ${bytes(buffer.length)}...`)
 
         const keys = cacheEntryMultikeyToCacheEntryKeyArray(key)
@@ -205,10 +205,7 @@ export default class CacheManager {
 
         if (sameRateIds.size === 0) {
             delete this._rateToIds[entry.rate]
-
-            const newLength = this._rateToIds.findLastIndex(e => e !== undefined) + 1
-
-            this._rateToIds.length = newLength
+            this._fixRateToIdsLength()
         }
 
         this._idToEntry.delete(id)
@@ -222,6 +219,90 @@ export default class CacheManager {
             this._lastId = 0
 
         this.logger?.debug(`Deleted. ${this._makeCacheUsageString()}`)
+
+        return true
+    }
+
+    deleteKey(key: CacheEntryKey): boolean {
+        this.logger?.debug(`Deleting cache entry key ${cacheEntryKeyToString(key)}...`)
+
+        const id = this._keyToId.get(key)
+
+        if (id == null) {
+            this.logger?.debug("Not found")
+            return false
+        }
+
+        const entry = this._idToEntry.get(id)
+
+        if (entry == null)
+            this._integrityError()
+
+        const { keys } = entry
+        const keyIndex = keys.indexOf(key)
+
+        if (keyIndex === -1)
+            this._integrityError()
+
+        keys.splice(keyIndex, 1)
+        this._keyToId.delete(key)
+
+        if (keys.length !== 0) {
+            this.logger?.debug(`Deleted. Remaining keys for this entry: ${cacheEntryKeysToString(keys)}`)
+            return true
+        }
+
+        this.logger?.debug("Deleted. No more keys remaining for this entry. Deleting entry...")
+
+        const { rate }    = entry
+        const sameRateIds = this._rateToIds[rate]
+
+        if (sameRateIds == null)
+            this._integrityError()
+
+        sameRateIds.delete(id)
+
+        if (sameRateIds.size === 0) {
+            delete this._rateToIds[rate]
+            this._fixRateToIdsLength()
+        }
+
+        this._idToEntry.delete(id)
+
+        this._used -= entry.buffer.length
+
+        if (this._keyToId.size === 0)
+            this._lastId = 0
+
+        this.logger?.debug(`Deleted. ${this._makeCacheUsageString()}`)
+
+        return true
+    }
+
+    addKey(oldKey: CacheEntryKey, newKey: CacheEntryKey): boolean {
+        this.logger?.debug(`Adding new key ${cacheEntryKeyToString(newKey)} to cache entry ${cacheEntryKeyToString(oldKey)}...`)
+
+        if (this._keyToId.has(newKey)) {
+            this.logger?.debug("Already exists")
+            return false
+        }
+
+        const id = this._keyToId.get(oldKey)
+
+        if (id == null) {
+            this.logger?.debug("Not found")
+            return false
+        }
+
+        const entry = this._idToEntry.get(id)
+
+        if (entry == null)
+            this._integrityError()
+
+        this._keyToId.set(newKey, id)
+        entry.keys.push(newKey)
+
+        this.logger?.debug(`Added. New keys: ${cacheEntryKeysToString(entry.keys)}`)
 
         return true
     }
@@ -264,6 +345,10 @@ export default class CacheManager {
         this.logger?.debug(`Freed ${bytes(freed)}. ${this._makeCacheUsageString()}`)
 
         return freed
+    }
+
+    private _fixRateToIdsLength() {
+        this._rateToIds.length = this._rateToIds.findLastIndex(e => e != null) + 1
     }
 
     private _integrityError(): never {
