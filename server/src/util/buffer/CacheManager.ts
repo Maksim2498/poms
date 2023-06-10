@@ -4,13 +4,16 @@ import DeepReadonly from "util/type/DeepReadonly"
 import { Logger   } from "winston"
 
 export interface CacheEntry {
-    key:          CacheEntryKey
+    keys:         CacheEntryKey[]
     rate:         number
     buffer:       Buffer
     lastModified: Date
 }
 
 export type ReadonlyCacheEntry = DeepReadonly<CacheEntry>
+
+export type CacheEntryMultikey = CacheEntryKey[]
+                               | CacheEntryKey
 
 export type CacheEntryKey = string
                           | symbol
@@ -21,14 +24,22 @@ export interface CacheEntryBufferSet {
 }
 
 export default class CacheManager {
-    private  _entries:     Map<CacheEntryKey, CacheEntry>   = new Map()
-    private  ratedEntries: Map<CacheEntryKey, CacheEntry>[] = []
-    private  _used:        number                           = 0
+    private  _keyToId:     Map<CacheEntryKey, number> = new Map() // Maps keys to IDs
+    private  _idToEntry:   Map<number, CacheEntry>    = new Map() // Maps IDs to entries
+    private  _rateToIds:   Set<number>[]              = []        // Maps rates to ID-sets
+    private  _lastId:      number                     = 0
+    private  _used:        number                     = 0
 
     readonly max:          number
     readonly logger:       Logger | null
 
     constructor(max: number, logger: Logger | null = null) {
+        if (max < 0)
+            throw new Error("Maximum size is negative")
+
+        if (Number.isNaN(max))
+            throw new Error("Maximum size is NaN")
+
         this.max    = max
         this.logger = logger ?? null
 
@@ -40,70 +51,85 @@ export default class CacheManager {
     }
 
     entries(): IterableIterator<ReadonlyCacheEntry> {
-        return this._entries.values()
+        return this._idToEntry.values()
     }
 
     has(key: CacheEntryKey): boolean {
-        return this._entries.has(key)
+        return this._keyToId.has(key)
+    }
+
+    peek(key: CacheEntryKey): ReadonlyCacheEntry | undefined {
+        const id = this._keyToId.get(key)
+
+        if (id == null)
+            return undefined
+
+        const entry = this._idToEntry.get(id)
+
+        if (entry == null)
+            this._integrityError()
+
+        return entry
     }
 
     get(key: CacheEntryKey): ReadonlyCacheEntry | undefined {
         this.logger?.debug(`Getting cache entry ${cacheEntryKeyToString(key)}...`)
 
-        const entry = this._entries.get(key)
+        const id = this._keyToId.get(key)
 
-        if (entry == null) {
+        if (id == null) {
             this.logger?.debug("Not found")
             return undefined
         }
 
-        let sameRateEntries = this.ratedEntries[entry.rate]!
+        const entry = this._idToEntry.get(id)
 
-        sameRateEntries.delete(key)
+        if (entry == null)
+            this._integrityError()
 
-        if (sameRateEntries.size === 0)
-            delete this.ratedEntries[entry.rate]
+        let sameRateIds = this._rateToIds[entry.rate]
 
-        ++entry.rate
+        if (sameRateIds == null)
+            this._integrityError()
 
-        sameRateEntries = this.ratedEntries[entry.rate]!
+        sameRateIds.delete(id)
 
-        if (sameRateEntries == null)
-            this.ratedEntries[entry.rate] = sameRateEntries = new Map()
-        
-        sameRateEntries.set(key, entry)
+        if (sameRateIds.size === 0)
+            delete this._rateToIds[entry.rate]
+
+        sameRateIds = this._rateToIds[++entry.rate]
+
+        if (sameRateIds == null)
+            this._rateToIds[entry.rate] = sameRateIds = new Set()
+
+        sameRateIds.add(id)
 
         this.logger?.debug(`Got. New rate is ${entry.rate}`)
 
         return entry
     }
 
-    set(key: CacheEntryKey, buffer: Buffer): CacheEntry | undefined {
-        this.logger?.debug(`Creating new cache entry ${cacheEntryKeyToString(key)} of size ${bytes(buffer.length)}...`)
+    set(key: CacheEntryMultikey, buffer: Buffer): CacheEntry | undefined {
+        this.logger?.debug(`Creating new cache entry ${cacheEntryMultikeyToString(key)} of size ${bytes(buffer.length)}...`)
+
+        const keys = cacheEntryMultikeyToCacheEntryKeyArray(key)
+
+        if (keys.length === 0) {
+            this.logger?.debug("Cache entries with zero keys aren't allowed")
+            return undefined
+        }
+
+        for (const key of keys)
+            if (this._keyToId.has(key)) {
+                this.logger?.debug(`Cache entry ${cacheEntryKeyToString(key)} alredy exists`)
+                return undefined
+            }
 
         const size = buffer.length
 
         if (size > this.max) {
             this.logger?.debug(`Too big. Cache size is ${bytes(this.max)}`)
             return undefined
-        }
-
-        let entry = this._entries.get(key)
-
-        this.delete(key)
-
-        if (entry == null)
-            entry = {
-                lastModified: new Date(),
-                rate:         0,
-                key,
-                buffer,
-            }
-        else {
-            entry.lastModified = new Date()
-            entry.buffer       = buffer
-
-            ++entry.rate
         }
 
         let newUsed = this.used + size
@@ -113,48 +139,89 @@ export default class CacheManager {
             newUsed = this.used + size
         }
 
-        let sameRateEntries = this.ratedEntries[entry.rate]
+        const rate = 0
 
-        if (sameRateEntries == null)
-            this.ratedEntries[entry.rate] = sameRateEntries = new Map()
+        let sameRateIds = this._rateToIds[rate]
 
-        sameRateEntries.set(key, entry)
-        this._entries.set(key, entry)
+        if (sameRateIds == null)
+            this._rateToIds[rate] = sameRateIds = new Set()
+
+        const id = this._lastId++
+
+        sameRateIds.add(id)
+
+        const entry = {
+            lastModified: new Date,
+            buffer,
+            keys,
+            rate,
+        }
+
+        this._idToEntry.set(id, entry)
+
+        for (const key of keys)
+            this._keyToId.set(key, id)
 
         this._used = newUsed
 
-        this.logger?.debug(`Created. ${this.makeCacheUsageString()}`)
+        this.logger?.debug(`Created. ${this._makeCacheUsageString()}`)
 
         return entry
+    }
+
+    clear() {
+        this._keyToId.clear()
+        this._idToEntry.clear()
+
+        this._rateToIds.length = 0
+        this._lastId           = 0
+        this._used             = 0
     }
 
     delete(key: CacheEntryKey): boolean {
         this.logger?.debug(`Deleting cache entry ${cacheEntryKeyToString(key)}...`)
 
-        const entry = this._entries.get(key)
+        const id = this._keyToId.get(key)
 
-        if (entry == null) {
+        if (id == null) {
             this.logger?.debug("Not found")
             return false
         }
 
-        const sameRateEntries = this.ratedEntries[entry.rate]!
+        const entry = this._idToEntry.get(id)
 
-        sameRateEntries.delete(key)
+        if (entry == null)
+            this._integrityError()
 
-        if (sameRateEntries.size === 0) {
-            delete this.ratedEntries[entry.rate]
+        if (entry.keys.length > 1)
+            this.logger?.debug(`Found other names: ${cacheEntryKeysToString(entry.keys.slice(1))}`)
 
-            const newLength = this.ratedEntries.findLastIndex(e => e !== undefined) + 1
+        const sameRateIds = this._rateToIds[entry.rate]
 
-            this.ratedEntries.length = newLength
+        if (sameRateIds == null)
+            this._integrityError()
+
+        sameRateIds.delete(id)
+
+        if (sameRateIds.size === 0) {
+            delete this._rateToIds[entry.rate]
+
+            const newLength = this._rateToIds.findLastIndex(e => e !== undefined) + 1
+
+            this._rateToIds.length = newLength
         }
-        
-        this._entries.delete(key)
+
+        this._idToEntry.delete(id)
+
+        for (const key of entry.keys)
+            this._keyToId.delete(key)
 
         this._used -= entry.buffer.length
 
-        this.logger?.debug(`Deleted. ${this.makeCacheUsageString()}`)
+        if (this._keyToId.size === 0)
+            this._lastId = 0
+
+        this.logger?.debug(`Deleted. ${this._makeCacheUsageString()}`)
 
         return true
     }
@@ -162,16 +229,27 @@ export default class CacheManager {
     freeSpace(toFree: number): number {
         this.logger?.debug(`Freeing at least ${bytes(toFree)} of cache space...`)
 
-        const toDelete = [] as CacheEntryKey[]
-        let   freed    = 0
+        const toDelete = new Array<CacheEntryKey>()
+
+        let freed = 0
 
         if (toFree > 0)
             outer:
-            for (const i in this.ratedEntries) {
-                const sameRateEntries = this.ratedEntries[i]!
+            for (const i in this._rateToIds) {
+                const sameRateIds = this._rateToIds[i]!
 
-                for (const entry of sameRateEntries.values()) {
-                    toDelete.push(entry.key)
+                for (const id of sameRateIds) {
+                    const entry = this._idToEntry.get(id)
+
+                    if (entry == null)
+                        this._integrityError()
+
+                    const key = entry.keys[0]
+
+                    if (key == null)
+                        this._integrityError()
+
+                    toDelete.push(key)
 
                     freed += entry.buffer.length
 
@@ -183,14 +261,33 @@ export default class CacheManager {
         for (const name of toDelete)
             this.delete(name)
 
-        this.logger?.debug(`Freed ${bytes(freed)}. ${this.makeCacheUsageString()}`)
+        this.logger?.debug(`Freed ${bytes(freed)}. ${this._makeCacheUsageString()}`)
 
         return freed
     }
 
-    private makeCacheUsageString(): string {
+    private _integrityError(): never {
+        throw new Error("Cache manager integrity is broken")
+    }
+
+    private _makeCacheUsageString(): string {
         return `Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`
     }
+}
+
+export function cacheEntryMultikeyToCacheEntryKeyArray(key: CacheEntryMultikey): CacheEntryKey[] {
+    return Array.isArray(key) ? [...key]
+                              : [key]
+}
+
+export function cacheEntryMultikeyToString(key: CacheEntryMultikey): string {
+    return Array.isArray(key) ? cacheEntryKeysToString(key)
+                              : cacheEntryKeyToString(key)
+}
+
+export function cacheEntryKeysToString(keys: CacheEntryKey[]): string {
+    return keys.map(cacheEntryKeyToString)
+               .join(", ")
 }
 
 export function cacheEntryKeyToString(key: CacheEntryKey): string {
