@@ -255,7 +255,7 @@ export default class Server {
 
                     this.logger?.verbose(`Creating owner user ${login}...`)
 
-                    if (await this.userManager.existsWithLogin(connection, login)) {
+                    if (await this.userManager.hasWithLogin(connection, login)) {
                         this.logger?.verbose("Such user already exists")
                         return
                     }
