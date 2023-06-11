@@ -185,6 +185,7 @@ export default class Server {
                               +     "icon          MEDIUMBLOB,"
                               +     "cr_id         BIGINT,"
                               +     "cr_time       TIMESTAMP                                NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                              +     "mod_time      TIMESTAMP                                NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
                               +     "password_hash BINARY(64)                               NOT NULL,"
                               +     "role          ENUM('user','moderator','admin','owner') NOT NULL DEFAULT 'user',"
                               +     "is_online     BOOLEAN                                  NOT NULL DEFAULT FALSE,"
