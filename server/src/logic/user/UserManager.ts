@@ -106,7 +106,17 @@ export default class UserManager {
         throw new Error("Not implemented")
     }
 
-    async deleteAll(connection: MysqlConnection) {
+    async clear(connection: MysqlConnection) {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async deleteByTokenRefreshId(connection: MysqlConnection, id: string) {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async deleteByTokenAccessId(connection: MysqlConnection, id: string) {
         // TODO
         throw new Error("Not implemented")
     }
@@ -126,27 +136,37 @@ export default class UserManager {
         throw new Error("Not implemented")
     }
 
-    async loadAll(connection: MysqlConnection): Promise<User[]> {
+    async getAll(connection: MysqlConnection): Promise<User[]> {
         // TODO
         throw new Error("Not implemented")
     }
 
-    async loadByCredentials(connection: MysqlConnection, login: string, password: string): Promise<User> {
+    async getByCredentials(connection: MysqlConnection, login: string, password: string): Promise<User> {
         // TODO
         throw new Error("Not implemented")
     }
 
-    async loadByLogin(connection: MysqlConnection, login: string): Promise<User> {
+    async getByLogin(connection: MysqlConnection, login: string): Promise<User> {
         // TODO
         throw new Error("Not implemented")
     }
 
-    async loadById(connection: MysqlConnection, id: number): Promise<User> {
+    async getById(connection: MysqlConnection, id: number): Promise<User> {
         // TODO
         throw new Error("Not implemented")
     }
 
-    async store(connection: MysqlConnection, user: User) {
+    async set(connection: MysqlConnection, user: User) {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async existsWithTokenRefreshId(connection: MysqlConnection, id: string): Promise<boolean> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async existsWithTokenAccessId(connection: MysqlConnection, id: string): Promise<boolean> {
         // TODO
         throw new Error("Not implemented")
     }
@@ -166,12 +186,42 @@ export default class UserManager {
         throw new Error("Not implemented")
     }
 
-    private async getIdByCredentials(connection: MysqlConnection, login: string): Promise<number> {
+    async getLastModifiedByTokenRefreshId(connection: MysqlConnection, id: string): Promise<Date> {
         // TODO
         throw new Error("Not implemented")
     }
 
-    private async getIdByLogin(connection: MysqlConnection, login: string): Promise<number> {
+    async getLastModifiedByTokenAccessId(connection: MysqlConnection, id: string): Promise<Date> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getLastModifiedByCredentials(connection: MysqlConnection, login: string): Promise<Date> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getLastModifiedByLogin(connection: MysqlConnection, login: string): Promise<Date> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getIdByTokenRefreshId(connection: MysqlConnection, id: string): Promise<number> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getIdByTokenAccessId(connection: MysqlConnection, id: string): Promise<number> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getIdByCredentials(connection: MysqlConnection, login: string): Promise<number> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getIdByLogin(connection: MysqlConnection, login: string): Promise<number> {
         // TODO
         throw new Error("Not implemented")
     }
