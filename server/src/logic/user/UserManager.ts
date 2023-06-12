@@ -328,6 +328,26 @@ export default class UserManager {
 
     // ======== getLastModified ========
 
+    async getLastModifiedByTokenRefreshId(connection: MysqlConnection, refreshId: string): Promise<Date> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getLastModifiedByTokenAccessId(connection: MysqlConnection, accessId: string): Promise<Date> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getLastModifiedByNickname(connection: MysqlConnection, nickname: string): Promise<Date> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
+    async getLastModifiedByCredentials(connection: MysqlConnection, login: string, password: string): Promise<Date> {
+        // TODO
+        throw new Error("Not implemented")
+    }
+
     async getLastModifiedById(connection: MysqlConnection, id: number): Promise<Date> {
         // TODO
         throw new Error("Not implemented")
