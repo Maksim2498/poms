@@ -1,16 +1,16 @@
-import Config                                                          from "Config"
-import LogicError                                                      from "logic/LogicError"
-import TokenSet                                                        from "logic/token/TokenSet"
-import Token                                                           from "logic/token/Token"
-import CacheManager                                                    from "util/buffer/CacheManager"
-import UserNicknameSet                                                 from "./UserNicknameSet"
-import User                                                            from "./User"
-import UserRole                                                        from "./UserRole"
+import Config                                          from "Config"
+import LogicError                                      from "logic/LogicError"
+import TokenSet                                        from "logic/token/TokenSet"
+import Token                                           from "logic/token/Token"
+import CacheManager                                    from "util/buffer/CacheManager"
+import UserNicknameSet                                 from "./UserNicknameSet"
+import User                                            from "./User"
+import UserRole                                        from "./UserRole"
 
-import { Connection as MysqlConnection, FieldPacket, ResultSetHeader } from "mysql2/promise"
-import { Logger                                                      } from "winston"
-import { CacheEntryKey                                               } from "util/buffer/CacheManager"
-import { escape                                                      } from "util/string"
+import { Connection as MysqlConnection,
+         FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
+import { Logger                                      } from "winston"
+import { CacheEntryKey                               } from "util/buffer/CacheManager"
 
 export interface UserManagerOptions {
     readonly config:        Config
@@ -197,33 +197,133 @@ export default class UserManager {
     // ======== has ========
 
     async hasWithTokenRefreshId(connection: MysqlConnection, refreshId: string): Promise<boolean> {
-        // TODO
-        throw new Error("Not implemented")
+        return this.hasWithTokenId(connection, refreshId, "refresh")
     }
 
     async hasWithTokenAccessId(connection: MysqlConnection, accessId: string): Promise<boolean> {
-        // TODO
-        throw new Error("Not implemented")
+        return this.hasWithTokenId(connection, accessId, "access")
+    }
+
+    private async hasWithTokenId(connection: MysqlConnection, id: string, type: "access" | "refresh"): Promise<boolean> {
+        id = Token.normId(id)
+
+        this.logger?.debug(`Checking for presence of user with ${type} token ID ${id}...`)
+
+        Token.checkNormedId(id)
+
+        if (this.hasInCache(id, type === "access" ? UserManager._makeTokenAccessIdCacheEntryKey : UserManager._makeTokenRefreshIdCacheEntryKey))
+            return true
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute(
+            `SELECT access_id FROM Tokens WHERE ${type}_id = ?`,
+            [Buffer.from(id, "hex")]
+        ) as [RowDataPacket[], FieldPacket[]]
+
+        const has = rows.length !== 0
+
+        this.logger?.debug(has ? "Found" : "Not found")
+    
+        return has
     }
 
     async hasWithNickname(connection: MysqlConnection, nickname: string): Promise<boolean> {
-        // TODO
-        throw new Error("Not implemented")
+        nickname = UserNicknameSet.normNickname(nickname)
+    
+        this.logger?.debug(`Checking for presence of user with nickname ${nickname}...`)
+
+        UserNicknameSet.checkNormedNickname(nickname)
+
+        if (this.hasInCache(nickname, UserManager._makeNicknameCacheEntryKey))
+            return true
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute("SELECT user_id FROM Nicknames WHERE nickname = ?", [nickname]) as [RowDataPacket[], FieldPacket[]]
+        const has    = rows.length !== 0
+
+        this.logger?.debug(has ? "Found" : "Not found")
+
+        return has
     }
 
     async hasWithCredentials(connection: MysqlConnection, login: string, password: string): Promise<boolean> {
-        // TODO
-        throw new Error("Not implemented")
+        login = User.normLogin(login)
+
+        this.logger?.debug(`Checking for presence of user ${login} by his/her credentials...`)
+
+        User.checkNormedLogin(login)
+        User.checkPassword(password)
+
+        const passwordHash = User.evalPasswordHashNotChecking(login, password)
+
+        const [rows] = await connection.execute(
+            "SELECT id FROM Users WHERE login = ? and password_hash = ?",
+            [login, passwordHash]
+        ) as [RowDataPacket[], FieldPacket[]]
+
+        const has = rows.length !== 0
+
+        this.logger?.debug(has ? "Found" : "Not found")
+
+        return has
     }
 
     async hasWithLogin(connection: MysqlConnection, login: string): Promise<boolean> {
-        // TODO
-        throw new Error("Not implemented")
+        login = User.normLogin(login)
+
+        this.logger?.debug(`Checking for presence of user ${login}...`)
+
+        User.checkNormedLogin(login)
+
+        if (this.hasInCache(login, UserManager._makeLoginCacheEntryKey))
+            return true
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute("SELECT id FROM Users WHERE login = ?", [login]) as [RowDataPacket[], FieldPacket[]]
+        const has    = rows.length !== 0
+
+        this.logger?.debug(has ? "Found" : "Not found")
+
+        return has
     }
 
     async hasWithId(connection: MysqlConnection, id: number): Promise<boolean> {
-        // TODO
-        throw new Error("Not implemented")
+        this.logger?.debug(`Checking for presence of user with id ${id}...`)
+
+        User.checkId(id)
+
+        if (this.hasInCache(id, UserManager._makeIdCacheEntryKey))
+            return true
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute("SELECT id FROM Users WHERE id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+        const has    = rows.length !== 0
+
+        this.logger?.debug(has ? "Found" : "Not found")
+
+        return has
+    }
+
+    private hasInCache<T>(value: T, makeKey: (value: T) => CacheEntryKey) {
+        if (this.cacheManager == null)
+            return false
+
+        this.logger?.debug("Checking cache...")
+
+        const key = makeKey(value)
+
+        if (this.cacheManager.has(key)) {
+            this.logger?.debug("Found")
+            return true
+        }
+
+        this.logger?.debug("Not found")
+
+        return false
     }
 
     // ======== getLastModified ========
