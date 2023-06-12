@@ -46,7 +46,7 @@ export default class Token implements BufferWritable {
     static readonly DEFAULT_REFRESH_LIFETIME = parseDuration("1w")
 
     static readonly ID_JSON_SCHEMA = z.string().transform((id, ctx) => {
-        const invalidReason = Token.validateId(id)
+        const invalidReason = Token.validateNormedId(id)
 
         if (invalidReason == null)
             return id
@@ -151,14 +151,30 @@ export default class Token implements BufferWritable {
             throw new LogicError(invalidReason)
     }
 
-    static validateId(id: string): string | undefined {
-        if (id.length !== Token.ID_LENGTH)
-            return `Invalid token id length. Expected: ${Token.ID_LENGTH}. Got: ${id.length}`
+    static checkNormedId(normedId: string) {
+        const invalidReason = Token.validateNormedId(normedId)
 
-        if (!isHex(id))
+        if (invalidReason != null)
+            throw new LogicError(invalidReason)
+    }
+
+    static validateId(id: string): string | undefined {
+        return Token.validateNormedId(Token.normId(id))
+    }
+
+    static validateNormedId(normedId: string): string | undefined {
+        if (normedId.length !== Token.ID_LENGTH)
+            return `Invalid token id length. Expected: ${Token.ID_LENGTH}. Got: ${normedId.length}`
+
+        if (!isHex(normedId))
             return `Token id must be a hex string`
 
         return undefined
+    }
+
+    static normId(id: string): string {
+        return id.trim()
+                 .toLowerCase()
     }
 
     static checkDates(dates: TokenDates) {
@@ -221,7 +237,7 @@ export default class Token implements BufferWritable {
         function prepareId(id: string | Buffer | undefined): string {
             switch (typeof id) {
                 case "string":
-                    id = id.toLowerCase()
+                    id = Token.normId(id)
                     break
 
                 case "object":
@@ -233,7 +249,7 @@ export default class Token implements BufferWritable {
                                .toString("hex")
             }
 
-            Token.checkId(id)
+            Token.checkNormedId(id)
 
             return id
         }
