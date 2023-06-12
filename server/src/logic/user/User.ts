@@ -414,9 +414,9 @@ export default class User implements BufferWritable {
         return User.evalPasswordHashNotChecking(login, password)
     }
 
-    static evalPasswordHashNotChecking(normedLogin: string, normedPassword: string): Buffer {
+    static evalPasswordHashNotChecking(normedLogin: string, password: string): Buffer {
         return crypto.createHash("sha512")
-                     .update(`${normedLogin.toLowerCase()}:${normedPassword}`)
+                     .update(`${normedLogin.toLowerCase()}:${password}`)
                      .digest()
     }
 
