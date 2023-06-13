@@ -14,6 +14,7 @@ import { checkBufferSize,
          BYTE_LENGTH_OF_DATE,        readDate,       writeDate,
          BYTE_LENGTH_OF_BOOLEAN,     readBoolean,    writeBoolean,
          BYTE_LENGTH_OF_TINY_STRING, readTinyString, writeTinyString } from "util/buffer/buffer"
+import { isInvalid as isDateInvaild                                  } from "util/date/date"
 import { collapseWs, escape, isHex                                   } from "util/string"
 import { isUInt                                                      } from "util/number"
 
@@ -44,6 +45,22 @@ export interface PasswordHashUserOptions extends BaseUserOptions {
 
 export type UserOptions = PasswordUserOptions
                         | PasswordHashUserOptions
+
+export interface PreparedUserOptions {
+    config:       Config
+    id:           number
+    login:        string
+    name:         string | null
+    icon:         Buffer | null
+    passwordHash: Buffer
+    role:         UserRole
+    isOnline:     boolean
+    created:      Date
+    creatorId:    number | null
+    nicknames:    UserNicknameSet
+    tokens:       TokenSet
+    dontCheck:    boolean
+}
 
 export type UserJSON         = z.infer<typeof User.JSON_SCHEMA>
 export type ReadonlyUserJSON = DeepReadonly<UserJSON>
@@ -439,22 +456,7 @@ export default class User implements BufferWritable {
         return undefined
     }
 
-    private  _name:         string | null
-    private  _passwordHash: Buffer
-    private  _icon:         Buffer | null
-
-    readonly config:        Config
-    readonly id:            number
-    readonly login:         string
-    readonly created:       ReadonlyDate
-    readonly creatorId:     number | null
-    readonly nicknames:     UserNicknameSet
-    readonly tokens:        TokenSet
-
-             role:          UserRole
-             isOnline:      boolean
-
-    constructor(options: UserOptions) {
+    static prepareOptions(options: UserOptions): PreparedUserOptions {
         const config       = options.config
         const id           = options.id
         let   login        = options.login
@@ -466,9 +468,21 @@ export default class User implements BufferWritable {
         const isOnline     = options.isOnline  ?? false
         const created      = options.created   ?? new Date()
         const creatorId    = options.creatorId ?? null
-        const nicknames    = options.nicknames
-        const tokens       = options.tokens
-        const dontCheck    = options.dontCheck
+        const dontCheck    = options.dontCheck ?? false
+        const nicknames    = options.nicknames instanceof UserNicknameSet
+            ? options.nicknames
+            : new UserNicknameSet({
+                max:       config.read.logic.maxNicknames,
+                nicknames: options.nicknames,
+                dontCheck,
+            })
+        const tokens       = options.tokens instanceof TokenSet
+            ? options.tokens
+            : new TokenSet({
+                max:       config.read.logic.maxTokens,
+                tokens:    options.tokens,
+                dontCheck,
+            })
 
         if (dontCheck)
             passwordHash ??= User.evalPasswordHashNotChecking(login, password!)
@@ -489,37 +503,59 @@ export default class User implements BufferWritable {
             } else
                 User.checkPasswordHash(passwordHash)
 
+            if (isDateInvaild(created))
+                throw new LogicError("Creation date is invalid")
+
             User.checkCreatorId(creatorId)
         }
 
-        this.config        = config
-        this.id            = id
-        this.login         = login
-        this._name         = name
-        this._icon         = icon
-        this._passwordHash = passwordHash
-        this.role          = role
-        this.isOnline      = isOnline
-        this.created       = created
-        this.creatorId     = creatorId
+        return {
+            config,
+            id,
+            login,
+            name,
+            icon,
+            passwordHash,
+            role,
+            isOnline,
+            created,
+            creatorId,
+            nicknames,
+            tokens,
+            dontCheck,
+        }
+    }
 
-        if (nicknames instanceof UserNicknameSet)
-            this.nicknames = nicknames
-        else
-            this.nicknames = new UserNicknameSet({
-                max: config.read.logic.maxNicknames,
-                nicknames,
-                dontCheck,
-            })
+    private  _name:         string | null
+    private  _passwordHash: Buffer
+    private  _icon:         Buffer | null
 
-        if (tokens instanceof TokenSet)
-            this.tokens = tokens
-        else
-            this.tokens = new TokenSet({
-                max: config.read.logic.maxTokens,
-                tokens,
-                dontCheck,
-            })
+    readonly config:        Config
+    readonly id:            number
+    readonly login:         string
+    readonly created:       ReadonlyDate
+    readonly creatorId:     number | null
+    readonly nicknames:     UserNicknameSet
+    readonly tokens:        TokenSet
+
+             role:          UserRole
+             isOnline:      boolean
+
+    constructor(options: UserOptions) {
+        const p = User.prepareOptions(options)
+
+        this.config        = p.config
+        this.id            = p.id
+        this.login         = p.login
+        this._name         = p.name
+        this._icon         = p.icon
+        this._passwordHash = p.passwordHash
+        this.role          = p.role
+        this.isOnline      = p.isOnline
+        this.created       = p.created
+        this.creatorId     = p.creatorId
+        this.nicknames     = p.nicknames
+        this.tokens        = p.tokens
     }
 
     get byteLength(): number {
