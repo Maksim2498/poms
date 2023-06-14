@@ -287,8 +287,17 @@ export default class UserManager {
     // ======== clear ========
 
     async clear(connection: MysqlConnection) {
-        // TODO
-        throw new Error("Not implemented")
+        this.logger?.warn("Deleting all users...")
+
+        this.logger?.debug("Clearing users cache...")
+        this.cacheManager?.clear()
+        this.logger?.debug("Cleared")
+
+        this.logger?.debug("Deleting from the database...")
+        await connection.execute("DELETE FROM Users")
+        this.logger?.debug("Deleted")
+
+        this.logger?.debug("All users deleted")
     }
 
     // ======== delete ========
