@@ -112,8 +112,8 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
         return buffer.readUInt8(offset + TokenSet.OFFSET_OF_MAX)
     }
 
-    private readonly tokens: Token[] = []
-            readonly max:    number 
+    private  tokens: Token[] = []
+    readonly max:    number 
 
     constructor(options: TokenSetOptions = {}) {
         let   tokens         = options.tokens ?? []
@@ -159,6 +159,16 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
         this.tokens.push(token)
 
         return this
+    }
+
+    deleteOutdated(): number {
+        const oldSize = this.size
+
+        this.tokens = this.tokens.filter(token => !token.expired)
+
+        const newSize = this.size
+
+        return oldSize - newSize
     }
 
     deleteOldest(): boolean {
