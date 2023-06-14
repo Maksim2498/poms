@@ -52,6 +52,9 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
     static readonly MIN_BYTE_LEGNTH     = this.BYTE_LENGTH_OF_SIZE
                                         + this.BYTE_LENGTH_OF_MAX
 
+    static readonly OFFSET_OF_SIZE      = 0
+    static readonly OFFSET_OF_MAX       = this.OFFSET_OF_SIZE
+
     static fromJSON(json: unknown): TokenSet {
         const parsed = TokenSet.JSON_SCHEMA.parse(json)
         return TokenSet.fromParsedJSON(parsed, true)
@@ -66,6 +69,10 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
             tokens,
             max,
         })
+    }
+
+    static evalByteLength(max: number): number {
+        return TokenSet.MIN_BYTE_LEGNTH + max * Token.BYTE_LENGTH
     }
 
     static fromBuffer(buffer: Buffer, offset: number = 0, dontCheck: boolean = false): TokenSet {
@@ -91,6 +98,27 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
         })
     }
 
+    static byteLengthFromBuffer(buffer: Buffer, offset: number = 0): number {
+        const max = TokenSet.maxFromBuffer(buffer, offset)
+        return TokenSet.evalByteLength(max)
+    }
+
+    static sizeFromBuffer(buffer: Buffer, offset: number = 0): number {
+        offset = offset + TokenSet.OFFSET_OF_SIZE
+        
+        checkBufferSize(buffer, offset + TokenSet.BYTE_LENGTH_OF_SIZE)
+
+        return buffer.readUInt8(offset)
+    }
+
+    static maxFromBuffer(buffer: Buffer, offset: number = 0): number {
+        offset = offset + TokenSet.OFFSET_OF_MAX
+        
+        checkBufferSize(buffer, offset + TokenSet.BYTE_LENGTH_OF_MAX)
+
+        return buffer.readUInt8(offset)
+    }
+
     private readonly tokens: Token[] = []
             readonly max:    number 
 
@@ -114,7 +142,7 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
     }
 
     get byteLength(): number {
-        return TokenSet.MIN_BYTE_LEGNTH + this.max * Token.BYTE_LENGTH
+        return TokenSet.evalByteLength(this.max)
     }
 
     get size(): number {
