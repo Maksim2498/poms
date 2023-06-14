@@ -182,6 +182,23 @@ export default class CacheManager {
         this.logger?.debug("Cleared")
     }
 
+    touch(key: CacheEntryKey): boolean {
+        this.logger?.debug(`Touching cache entry ${cacheEntryKeyToString(key)}...`)
+
+        const entry = this.peek(key) as CacheEntry
+
+        if (entry == null) {
+            this.logger?.debug("Not found")
+            return false
+        }
+
+        entry.lastModified = new Date()
+
+        this.logger?.debug(`Touched: ${entry.lastModified}`)
+
+        return true
+    }
+
     delete(key: CacheEntryKey): boolean {
         this.logger?.debug(`Deleting cache entry ${cacheEntryKeyToString(key)}...`)
 
