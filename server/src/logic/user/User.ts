@@ -437,6 +437,21 @@ export default class User implements BufferWritable {
                      .digest()
     }
 
+    static isPasswordMatches(login: string, password: string, hash: Buffer): boolean {
+        login = User.normLogin(login)
+
+        User.checkNormedLogin(login)
+        User.checkPassword(password)
+        User.checkPasswordHash(hash)
+
+        return User.isPasswordMatchesUnsafe(login, password, hash)
+    }
+
+    static isPasswordMatchesUnsafe(normedLogin: string, password: string, hash: Buffer): boolean {
+        const evaledHash = User.evalPasswordHashUnsafe(normedLogin, password)
+        return hash.equals(evaledHash)
+    }
+
     static checkIcon(config: Config, icon: Buffer | null) {
         const invalidReason = User.validateIcon(config, icon)
 
@@ -607,6 +622,14 @@ export default class User implements BufferWritable {
     set icon(icon: Buffer | null) {
         User.checkIcon(this.config, icon)
         this._icon = icon
+    }
+
+    isPasswordMatches(password: string): boolean {
+        return User.isPasswordMatches(this.login, password, this.passwordHash)
+    }
+
+    isPasswordMatchesUnsafe(password: string): boolean {
+        return User.isPasswordMatchesUnsafe(this.login, password, this.passwordHash)
     }
 
     toString(): string {
