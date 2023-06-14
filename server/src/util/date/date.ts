@@ -1,4 +1,6 @@
-export function isInvalid(date: Date): boolean {
+import ReadonlyDate from "./ReadonlyDate"
+
+export function isInvalid(date: ReadonlyDate): boolean {
     return Number.isNaN(date.valueOf())
 }
 
