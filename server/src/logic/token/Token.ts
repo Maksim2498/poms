@@ -8,6 +8,7 @@ import ReadonlyDate                                                  from "util/
 import { checkBufferSize, readDate, writeDate, BYTE_LENGTH_OF_DATE } from "util/buffer/buffer"
 import { isInvalid                                                 } from "util/date/date"
 import { isHex                                                     } from "util/string"
+import { max                                                       } from "util/math"
 
 export interface TokenDates {
     readonly created:        Date
@@ -253,6 +254,14 @@ export default class Token implements BufferWritable {
 
             return id
         }
+    }
+
+    get expired(): boolean {
+        return this.expires < new Date()
+    }
+
+    get expires(): ReadonlyDate {
+        return max(this.accessExpires, this.refreshExpires)
     }
 
     get byteLength(): number {
