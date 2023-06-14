@@ -1,16 +1,16 @@
-import Config                                          from "Config"
-import LogicError                                      from "logic/LogicError"
-import Token                                           from "logic/token/Token"
-import CacheManager                                    from "util/buffer/CacheManager"
-import UserNicknameSet                                 from "./UserNicknameSet"
-import User                                            from "./User"
-import UserRole                                        from "./UserRole"
+import Config                                                          from "Config"
+import LogicError                                                      from "logic/LogicError"
+import Token                                                           from "logic/token/Token"
+import CacheManager                                                    from "util/buffer/CacheManager"
+import UserNicknameSet                                                 from "./UserNicknameSet"
+import User                                                            from "./User"
+import UserRole                                                        from "./UserRole"
 
-import { Connection as MysqlConnection,
-         FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
-import { Logger                                      } from "winston"
-import { CacheEntryKey                               } from "util/buffer/CacheManager"
-import { getStringCode                               } from "util/error/error"
+import { Connection as MysqlConnection, FieldPacket, ResultSetHeader } from "mysql2/promise"
+import { Logger                                                      } from "winston"
+import { CacheEntryKey                                               } from "util/buffer/CacheManager"
+import { getStringCode                                               } from "util/error/error"
+import { UserRoleName                                                } from "./UserRole"
 
 export interface UserManagerOptions {
     readonly config:        Config
@@ -374,7 +374,7 @@ export default class UserManager {
     private async hasWithTokenId(connection: MysqlConnection, id: string, type: "access" | "refresh"): Promise<boolean> {
         id = Token.normId(id)
 
-        this.logger?.debug(`Checking for presence of user with ${type} token ID ${id}...`)
+        this.logger?.debug(`Checking for presence of user with token ${type} ID ${id}...`)
 
         Token.checkNormedId(id)
 
@@ -386,7 +386,7 @@ export default class UserManager {
         const [rows] = await connection.execute(
             `SELECT access_id FROM Tokens WHERE ${type}_id = ?`,
             [Buffer.from(id, "hex")]
-        ) as [RowDataPacket[], FieldPacket[]]
+        ) as [UsersRow[], FieldPacket[]]
 
         const has = rows.length !== 0
 
@@ -407,7 +407,7 @@ export default class UserManager {
 
         this.logger?.debug("Checking database...")
 
-        const [rows] = await connection.execute("SELECT user_id FROM Nicknames WHERE nickname = ?", [nickname]) as [RowDataPacket[], FieldPacket[]]
+        const [rows] = await connection.execute("SELECT user_id FROM Nicknames WHERE nickname = ?", [nickname]) as [UsersRow[], FieldPacket[]]
         const has    = rows.length !== 0
 
         this.logger?.debug(has ? "Found" : "Not found")
@@ -427,7 +427,7 @@ export default class UserManager {
 
         this.logger?.debug("Checking database...")
 
-        const [rows] = await connection.execute("SELECT id FROM Users WHERE login = ?", [login]) as [RowDataPacket[], FieldPacket[]]
+        const [rows] = await connection.execute("SELECT id FROM Users WHERE login = ?", [login]) as [UsersRow[], FieldPacket[]]
         const has    = rows.length !== 0
 
         this.logger?.debug(has ? "Found" : "Not found")
@@ -445,7 +445,7 @@ export default class UserManager {
 
         this.logger?.debug("Checking database...")
 
-        const [rows] = await connection.execute("SELECT id FROM Users WHERE id = ?", [id]) as [RowDataPacket[], FieldPacket[]]
+        const [rows] = await connection.execute("SELECT id FROM Users WHERE id = ?", [id]) as [UsersRow[], FieldPacket[]]
         const has    = rows.length !== 0
 
         this.logger?.debug(has ? "Found" : "Not found")
@@ -453,7 +453,7 @@ export default class UserManager {
         return has
     }
 
-    private hasInCache<T>(value: T, makeKey: (value: T) => CacheEntryKey) {
+    private hasInCache<T>(value: T, makeKey: (value: T) => CacheEntryKey): boolean {
         if (this.cacheManager == null)
             return false
 
@@ -473,23 +473,158 @@ export default class UserManager {
 
     // ======== getLastModified ========
 
-    async getLastModifiedByTokenRefreshId(connection: MysqlConnection, refreshId: string): Promise<Date> {
-        // TODO
-        throw new Error("Not implemented")
+    async getLastModifiedByTokenRefreshId(connection: MysqlConnection, refreshId: string): Promise<Date | undefined> {
+        return this.getLastModifiedByTokenId(connection, refreshId, "refresh")
     }
 
-    async getLastModifiedByTokenAccessId(connection: MysqlConnection, accessId: string): Promise<Date> {
-        // TODO
-        throw new Error("Not implemented")
+    async getLastModifiedByTokenAccessId(connection: MysqlConnection, accessId: string): Promise<Date | undefined> {
+        return this.getLastModifiedByTokenId(connection, accessId, "access")
     }
 
-    async getLastModifiedByNickname(connection: MysqlConnection, nickname: string): Promise<Date> {
-        // TODO
-        throw new Error("Not implemented")
+    private async getLastModifiedByTokenId(connection: MysqlConnection, id: string, type: "access" | "refresh"): Promise<Date | undefined> {
+        id = Token.normId(id)
+
+        this.logger?.debug(`Getting last modified date of user with ${type} ID ${id}...`)
+
+        Token.checkNormedId(id)
+
+        let lastModified = this.getLastModifiedFromCache(id, type === "access" ? UserManager.makeTokenAccessIdCacheEntryKey : UserManager.makeTokenRefreshIdCacheEntryKey)
+
+        if (lastModified != null)
+            return lastModified
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute(
+            `SELECT mod_time FROM Tokens t LEFT JOIN Users u ON t.user_id = u.id WHERE t.${type}_id = ?`,
+            [Buffer.from(id, "hex")]
+        ) as [Pick<UsersRow, "mod_time">[], FieldPacket[]]
+
+        lastModified = rows[0]?.mod_time
+
+        this.logger?.debug(lastModified == null ? "Not found"
+                                                : `Found: ${lastModified}`)
+
+        return lastModified
     }
 
-    async getLastModifiedById(connection: MysqlConnection, id: number): Promise<Date> {
-        // TODO
-        throw new Error("Not implemented")
+    async getLastModifiedByNickname(connection: MysqlConnection, nickname: string): Promise<Date | undefined> {
+        nickname = UserNicknameSet.normNickname(nickname)
+
+        this.logger?.debug(`Getting last modified date of user with nickname ${nickname}...`)
+
+        UserNicknameSet.checkNickname(nickname)
+
+        let lastModified = this.getLastModifiedFromCache(nickname, UserManager.makeNicknameCacheEntryKey)
+
+        if (lastModified != null)
+            return lastModified
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute(
+            "SELECT mod_time FROM Nicknames n LEFT JOIN Users u ON n.user_id = u.id WHERE n.nickname = ?",
+            [nickname]
+        ) as [Pick<UsersRow, "mod_time">[], FieldPacket[]]
+
+        lastModified = rows[0]?.mod_time
+
+        this.logger?.debug(lastModified == null ? "Not found"
+                                                : `Found: ${lastModified}`)
+
+        return lastModified
     }
+
+    async getLastModifiedByLogin(connection: MysqlConnection, login: string): Promise<Date | undefined> {
+        login = User.normLogin(login)
+
+        this.logger?.debug(`Getting last modified date of user ${login}...`)
+
+        User.checkNormedLogin(login)
+
+        let lastModified = this.getLastModifiedFromCache(login, UserManager.makeLoginCacheEntryKey)
+
+        if (lastModified != null)
+            return lastModified
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute("SELECT mod_time FROM Users WHERE login = ?", [login]) as [Pick<UsersRow, "mod_time">[], FieldPacket[]]
+
+        lastModified = rows[0]?.mod_time
+
+        this.logger?.debug(lastModified == null ? "Not found"
+                                                : `Found: ${lastModified}`)
+
+        return lastModified
+    }
+
+    async getLastModifiedById(connection: MysqlConnection, id: number): Promise<Date | undefined> {
+        this.logger?.debug(`Getting last modified date of user with id ${id}...`)
+
+        let lastModified = this.getLastModifiedFromCache(id, UserManager.makeIdCacheEntryKey)
+
+        if (lastModified != null)
+            return lastModified
+
+        this.logger?.debug("Checking database...")
+
+        const [rows] = await connection.execute("SELECT mod_time FROM Users WHERE id = ?", [id]) as [Pick<UsersRow, "mod_time">[], FieldPacket[]]
+
+        lastModified = rows[0]?.mod_time
+
+        this.logger?.debug(lastModified == null ? "Not found"
+                                                : `Found: ${lastModified}`)
+
+        return lastModified
+    }
+
+    private getLastModifiedFromCache<T>(value: T, makeKey: (value: T) => CacheEntryKey): Date | undefined {
+        if (this.cacheManager == null)
+            return undefined
+
+        this.logger?.debug("Checking cache...")
+
+        const key   = makeKey(value)
+        const entry = this.cacheManager.get(key)
+
+        if (entry != null) {
+            const { lastModified } = entry
+
+            this.logger?.debug(`Found: ${lastModified}`)
+
+            return lastModified
+        }
+
+        this.logger?.debug("Not found")
+
+        return undefined
+    }
+}
+
+interface UsersRow {
+    id:            number
+    login:         string
+    name:          string | null
+    icon:          Buffer | null
+    cr_id:         number | null
+    cr_time:       Date
+    mod_time:      Date
+    password_hash: Buffer
+    role:          UserRoleName
+    is_online:     boolean
+}
+
+interface NicknamesRow {
+    user_id:  number
+    nickname: string
+}
+
+interface TokensRow {
+    access_id:        Buffer
+    refresh_id:       Buffer
+    user_id:          number
+    cr_time:          Date
+    access_exp_time:  Date
+    refresh_exp_time: Date
 }
