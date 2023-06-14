@@ -19,16 +19,17 @@ export interface UserManagerOptions {
 }
 
 export interface BaseUserCreationOptions {
-    readonly login:         string
-    readonly name?:         string | null
-    readonly icon?:         Buffer | null
-    readonly password?:     string
-    readonly passwordHash?: Buffer
-    readonly role?:         UserRole
-    readonly creatorId?:    number | null
-    readonly nicknames?:    Iterable<string>
-    readonly tokens?:       Iterable<Token>
-    readonly dontCheck?:    boolean
+    readonly login:                 string
+    readonly name?:                 string | null
+    readonly icon?:                 Buffer | null
+    readonly password?:             string
+    readonly passwordHash?:         Buffer
+    readonly role?:                 UserRole
+    readonly creatorId?:            number | null
+    readonly nicknames?:            Iterable<string>
+    readonly tokens?:               Iterable<Token>
+    readonly dontCheck?:            boolean
+    readonly filterOutdatedTokens?: boolean
 }
 
 export interface PasswordUserCreationOptions extends BaseUserCreationOptions {
