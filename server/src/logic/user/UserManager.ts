@@ -128,6 +128,7 @@ export default class UserManager {
         } = User.prepareOptions({ ...options, config: this.config })
 
         checkIfExistsInCache.call(this)
+        await checkCreatorId.call(this)
         const user = await addToDatabase.call(this)
         addToCache.call(this, user)
 
@@ -155,15 +156,27 @@ export default class UserManager {
                 const tokenAccessIdKey = UserManager.makeTokenAccessIdCacheEntryKey(token.accessId)
 
                 if (this.cacheManager.has(tokenAccessIdKey))
-                    throw new LogicError(`User with token access id ${token.accessId} already exists`)
+                    throw new LogicError(`User with token access ID ${token.accessId} already exists`)
 
                 const tokenRefreshIdKey = UserManager.makeTokenRefreshIdCacheEntryKey(token.refreshId)
             
                 if (this.cacheManager.has(tokenRefreshIdKey))
-                    throw new LogicError(`User with token refresh id ${token.refreshId} already exists`)
+                    throw new LogicError(`User with token refresh ID ${token.refreshId} already exists`)
             }
 
             this.logger?.debug("Not found")
+        }
+
+        async function checkCreatorId(this: UserManager) {
+            if (creatorId == null)
+                return
+
+            this.logger?.debug("Checking creator ID...")
+
+            if (!await this.hasWithId(connection, creatorId))
+                throw new LogicError(`User with ID ${creatorId} not found`)
+
+            this.logger?.debug("Valid")
         }
 
         async function addToDatabase(this: UserManager): Promise<User> {
@@ -192,7 +205,7 @@ export default class UserManager {
                 this.logger?.debug(`User id is ${id}`)
 
                 if (this.cacheManager != null) {
-                    this.logger?.debug("Checking cache for users with the same id...")
+                    this.logger?.debug("Checking cache for users with the same ID...")
 
                     const idKey = UserManager.makeIdCacheEntryKey(id)
 
@@ -238,7 +251,7 @@ export default class UserManager {
                             if (getStringCode(error) !== "ER_DUP_ENTRY")
                                 throw error
 
-                            throw new LogicError(`Token access/refresh id ${token.accessId}/${token.refreshId} already exists`)
+                            throw new LogicError(`Token access/refresh ID ${token.accessId}/${token.refreshId} already exists`)
                         }
 
                     this.logger?.debug("Inserted")
@@ -436,7 +449,7 @@ export default class UserManager {
     }
 
     async hasWithId(connection: MysqlConnection, id: number): Promise<boolean> {
-        this.logger?.debug(`Checking for presence of user with id ${id}...`)
+        this.logger?.debug(`Checking for presence of user with ID ${id}...`)
 
         User.checkId(id)
 
@@ -560,7 +573,7 @@ export default class UserManager {
     }
 
     async getLastModifiedById(connection: MysqlConnection, id: number): Promise<Date | undefined> {
-        this.logger?.debug(`Getting last modified date of user with id ${id}...`)
+        this.logger?.debug(`Getting last modified date of user with ID ${id}...`)
 
         let lastModified = this.getLastModifiedFromCache(id, UserManager.makeIdCacheEntryKey)
 
