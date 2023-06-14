@@ -258,6 +258,33 @@ export default class UserManager {
 
         const passwordHash = User.evalPasswordHashUnsafe(login, password)
 
+        if (this.cacheManager != null) {
+            this.logger?.debug("Checking cache...")
+
+            const key  = UserManager._makeLoginCacheEntryKey(login)
+            const user = this.cacheManager.get(key)
+
+            if (user != null) {
+                this.logger?.debug("Found entry with same login")
+                this.logger?.debug("Checking password...")
+
+                const userPasswordHash = User.passwordHashFromBuffer(user.buffer)
+
+                if (passwordHash.equals(userPasswordHash)) {
+                    this.logger?.debug("Matches")
+                    return true
+                }
+
+                this.logger?.debug("Not matches")
+
+                return false
+            }
+
+            this.logger?.debug("Not found")
+        }
+
+        this.logger?.debug("Checking database...")
+
         const [rows] = await connection.execute(
             "SELECT id FROM Users WHERE login = ? and password_hash = ?",
             [login, passwordHash]
