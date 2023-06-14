@@ -6,7 +6,7 @@ import User                         from "logic/user/User"
 import UserNicknameSet              from "logic/user/UserNicknameSet"
 import DeepReadonly                 from "util/type/DeepReadonly"
 import DeepModify                   from "util/type/DeepModify"
-import ErrorList                    from "util/ErrorList"
+import ErrorList                    from "util/error/ErrorList"
 
 import { promises as fsp          } from "fs"
 import { normalize, join, dirname } from "path"
