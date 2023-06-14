@@ -79,6 +79,9 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
     static readonly MIN_BYTE_LENGTH             = this.BYTE_LENGTH_OF_SIZE
                                                 + this.BYTE_LENGTH_OF_MAX
 
+    static readonly OFFSET_OF_SIZE              = 0
+    static readonly OFFSET_OF_MAX               = this.OFFSET_OF_SIZE
+
     static fromJSON(json: unknown): UserNicknameSet {
         const parsed = UserNicknameSet.JSON_SCHEMA.parse(json)
         return UserNicknameSet.fromParsedJSON(parsed, true)
@@ -95,6 +98,10 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
             nicknames,
             max,
         })
+    }
+
+    static evalByteLength(max: number): number {
+        return UserNicknameSet.MIN_BYTE_LENGTH + max * BYTE_LENGTH_OF_TINY_STRING
     }
 
     static fromBuffer(buffer: Buffer, offset: number = 0, dontCheck: boolean = false): UserNicknameSet {
@@ -118,6 +125,27 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
             max,
             dontCheck,
         })
+    }
+
+    static byteLengthFromBuffer(buffer: Buffer, offset: number = 0): number {
+        const max = UserNicknameSet.maxFromBuffer(buffer, offset)
+        return UserNicknameSet.evalByteLength(max)
+    }
+
+    static sizeFromBuffer(buffer: Buffer, offset: number = 0): number {
+        offset = offset + UserNicknameSet.OFFSET_OF_SIZE
+        
+        checkBufferSize(buffer, offset + UserNicknameSet.BYTE_LENGTH_OF_SIZE)
+
+        return buffer.readUInt8(offset)
+    }
+
+    static maxFromBuffer(buffer: Buffer, offset: number = 0): number {
+        offset = offset + UserNicknameSet.OFFSET_OF_MAX
+        
+        checkBufferSize(buffer, offset + UserNicknameSet.BYTE_LENGTH_OF_MAX)
+
+        return buffer.readUInt8(offset)
     }
 
     static checkNickname(nickname: string) {
@@ -189,7 +217,7 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
     }
 
     get byteLength(): number {
-        return UserNicknameSet.MIN_BYTE_LENGTH + this.max * BYTE_LENGTH_OF_TINY_STRING
+        return UserNicknameSet.evalByteLength(this.max)
     }
     
     get size(): number {
