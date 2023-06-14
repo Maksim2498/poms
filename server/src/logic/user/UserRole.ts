@@ -15,6 +15,8 @@ export type UserRoleId   = 0
 
 export type UserRoleJSON = z.infer<typeof UserRole.JSON_SCHEMA>
 
+export type UserRoleLike = UserRole | UserRoleId | UserRoleName | null | undefined
+
 /*
     Buffer structure:
 
@@ -35,6 +37,26 @@ export default class UserRole implements BufferWritable {
     static readonly MODERATOR   = new UserRole("moderator", 1)
     static readonly ADMIN       = new UserRole("admin",     2)
     static readonly OWNER       = new UserRole("owner",     3)
+
+    static norm(role: UserRoleLike): UserRole {
+        switch (typeof role) {
+            case "number":
+                return UserRole.fromId(role)
+
+            case "string":
+                UserRole.fromName(role)
+
+            case "undefined":
+                return UserRole.USER
+
+            case "object":
+                return role ?? UserRole.USER
+
+            default:
+                const check: never = role
+                return check
+        }
+    }
 
     static fromJSON(json: unknown): UserRole {
         const parsed = UserRole.JSON_SCHEMA.parse(json)
