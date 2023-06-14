@@ -35,6 +35,13 @@ export interface BaseUserOptions {
     readonly dontCheck?:    boolean
 }
 
+export interface EvalUserByteLengthOptions {
+    config?:         Config
+    maxNicknames?:   number
+    maxTokens?:      number
+    iconByteLength?: number
+}
+
 export interface PasswordUserOptions extends BaseUserOptions {
     readonly password: string
 }
@@ -84,11 +91,11 @@ export type ReadonlyUserJSON = DeepReadonly<UserJSON>
         uint64_t               creatorId;            // 594                                        602
         bool                   isOnline;             // 602                                        603
         struct UserRole        role;                 // 603                                        604
-        struct UserNicknameSet nicknames;            // 604                                        604 + sizeof(nicknames)
-        struct TokenSet        tokens;               // 604 + sizeof(nicknames)                    604 + sizeof(nicknames) + sizeof(tokens)
-        bool                   hasIcon;              // 604 + sizeof(nicknames) + sizeof(tokens)   605 + sizeof(nicknames) + sizeof(tokens)
-        uint32_t               iconByteLength;       // 605 + sizeof(nicknames) + sizeof(tokens)   609 + sizoef(nicknames) + sizeof(tokens)
-        char                   icon[this.icon_size]; // 609 + sizeof(nicknames) + sizeof(tokens)   609 + sizoef(nicknames) + sizeof(tokens) + icon_size
+        bool                   hasIcon;              // 604                                        605
+        uint32_t               iconByteLength;       // 605                                        609
+        struct UserNicknameSet nicknames;            // 609                                        609 + sizeof(nicknames)
+        struct TokenSet        tokens;               // 609 + sizeof(nicknames)                    609 + sizeof(nicknames) + sizeof(tokens)
+        char                   icon[this.icon_size]; // 609 + sizeof(nicknames) + sizeof(tokens)   609 + sizoef(nicknames) + sizeof(tokens) + iconByteLength
     };
 */
 
@@ -114,17 +121,19 @@ export default class User implements BufferWritable {
                                                     +     UserRole.BYTE_LENGTH
                                                     +     this.BYTE_LENGTH_OF_ICON_BYTE_LENGTH
 
-    static readonly ID_OFFSET                       = 0
-    static readonly LOGIN_OFFSET                    = User.BYTE_LENGTH_OF_ID
-    static readonly HAS_NAME_OFFSET                 = User.LOGIN_OFFSET         + BYTE_LENGTH_OF_TINY_STRING
-    static readonly NAME_OFFSET                     = User.HAS_NAME_OFFSET      + BYTE_LENGTH_OF_BOOLEAN
-    static readonly PASSWORD_HASH_OFFSET            = User.NAME_OFFSET          +  BYTE_LENGTH_OF_TINY_STRING
-    static readonly CREATED_OFFSET                  = User.PASSWORD_HASH_OFFSET + User.BYTE_LENGTH_OF_PASSWORD_HASH
-    static readonly HAS_CREATOR_OFFSET              = User.CREATED_OFFSET       + BYTE_LENGTH_OF_DATE
-    static readonly CREATOR_ID_OFFSET               = User.HAS_CREATOR_OFFSET   + BYTE_LENGTH_OF_BOOLEAN
-    static readonly IS_ONLINE_OFFSET                = User.CREATOR_ID_OFFSET    + User.BYTE_LENGTH_OF_ID
-    static readonly ROLE_OFFSET                     = User.IS_ONLINE_OFFSET     + BYTE_LENGTH_OF_BOOLEAN
-    static readonly NICKNAMES_OFFSET                = User.ROLE_OFFSET          + UserRole.BYTE_LENGTH
+    static readonly OFFSET_OF_ID                    = 0
+    static readonly OFFSET_OF_LOGIN                 = this.BYTE_LENGTH_OF_ID
+    static readonly OFFSET_OF_HAS_NAME              = this.OFFSET_OF_LOGIN            + BYTE_LENGTH_OF_TINY_STRING
+    static readonly OFFSET_OF_NAME                  = this.OFFSET_OF_HAS_NAME         + BYTE_LENGTH_OF_BOOLEAN
+    static readonly OFFSET_OF_PASSWORD_HASH         = this.OFFSET_OF_NAME             +  BYTE_LENGTH_OF_TINY_STRING
+    static readonly OFFSET_OF_CREATED               = this.OFFSET_OF_PASSWORD_HASH    + this.BYTE_LENGTH_OF_PASSWORD_HASH
+    static readonly OFFSET_OF_HAS_CREATOR           = this.OFFSET_OF_CREATED          + BYTE_LENGTH_OF_DATE
+    static readonly OFFSET_OF_CREATOR_ID            = this.OFFSET_OF_HAS_CREATOR      + BYTE_LENGTH_OF_BOOLEAN
+    static readonly OFFSET_OF_IS_ONLINE             = this.OFFSET_OF_CREATOR_ID       + this.BYTE_LENGTH_OF_ID
+    static readonly OFFSET_OF_ROLE                  = this.OFFSET_OF_IS_ONLINE        + BYTE_LENGTH_OF_BOOLEAN
+    static readonly OFFSET_OF_HAS_ICON              = this.OFFSET_OF_ROLE             + UserRole.BYTE_LENGTH
+    static readonly OFFSET_OF_ICON_BYTE_LENGTH      = this.OFFSET_OF_HAS_ICON         + BYTE_LENGTH_OF_BOOLEAN
+    static readonly OFFSET_OF_NICKNAMES             = this.OFFSET_OF_ICON_BYTE_LENGTH + this.BYTE_LENGTH_OF_ICON_BYTE_LENGTH
 
     static readonly ID_JSON_SCHEMA = z.number().int().nonnegative()
 
@@ -214,10 +223,33 @@ export default class User implements BufferWritable {
         })
     }
 
+    static evalByteLength(options: EvalUserByteLengthOptions = {}): number {
+        const config         = options.config
+        const maxNicknames   = options.maxNicknames   ?? config?.read.logic.maxNicknames ?? UserNicknameSet.DEFAULT_MAX
+        const maxTokens      = options.maxTokens      ?? config?.read.logic.maxTokens    ?? TokenSet.DEFAULT_MAX
+        const iconByteLength = options.iconByteLength ?? 0
+
+        return User.MIN_BYTE_LENGTH
+             + UserNicknameSet.evalByteLength(maxNicknames)
+             + TokenSet.evalByteLength(maxTokens)
+             + iconByteLength
+    }
+
+    static byteLengthFromBuffer(buffer: Buffer, offset: number = 0): number {
+        const nicknamesByteLength = UserNicknameSet.byteLengthFromBuffer(buffer, offset + User.OFFSET_OF_NICKNAMES)
+        const tokensByteLength    = TokenSet.byteLengthFromBuffer(buffer, offset + User.tokensOffsetFromBuffer(buffer, offset))
+        const iconByteLength      = User.iconByteLengthFromBuffer(buffer, offset)
+
+        return User.MIN_BYTE_LENGTH
+            + nicknamesByteLength
+            + tokensByteLength
+            + iconByteLength
+    }
+
     static fromBuffer(config: Config, buffer: Buffer, offset: number = 0, dontCheck: boolean = false): User {
         checkBufferSize(buffer, offset + User.MIN_BYTE_LENGTH)
 
-        const id = User.readId(buffer, offset)
+        const id = User.readIdFromBuffer(buffer, offset)
         offset += User.BYTE_LENGTH_OF_ID
 
         const login = readTinyString(buffer, offset)
@@ -239,7 +271,7 @@ export default class User implements BufferWritable {
         const hasCreator = readBoolean(buffer, offset)
         offset += BYTE_LENGTH_OF_BOOLEAN
 
-        const creatorId = hasCreator ? User.readId(buffer, offset) : null
+        const creatorId = hasCreator ? User.readIdFromBuffer(buffer, offset) : null
         offset += User.BYTE_LENGTH_OF_ID
 
         const isOnline = readBoolean(buffer, offset)
@@ -248,17 +280,17 @@ export default class User implements BufferWritable {
         const role = UserRole.fromBuffer(buffer, offset)
         offset += role.byteLength
 
-        const nicknames = UserNicknameSet.fromBuffer(buffer, offset, dontCheck)
-        offset += nicknames.byteLength
-
-        const tokens = TokenSet.fromBuffer(buffer, offset, dontCheck)
-        offset += tokens.byteLength
-
         const hasIcon = readBoolean(buffer, offset)
         offset += BYTE_LENGTH_OF_BOOLEAN
 
         const iconByteLength = buffer.readUInt32LE(offset)
         offset += User.BYTE_LENGTH_OF_ICON_BYTE_LENGTH
+
+        const nicknames = UserNicknameSet.fromBuffer(buffer, offset, dontCheck)
+        offset += nicknames.byteLength
+
+        const tokens = TokenSet.fromBuffer(buffer, offset, dontCheck)
+        offset += tokens.byteLength
 
         const icon = hasIcon ? buffer.subarray(offset, offset + iconByteLength) : null
 
@@ -279,11 +311,95 @@ export default class User implements BufferWritable {
         })
     }
 
-    static readId(buffer: Buffer, offset: number = 0): number {
+    static idFromBuffer(buffer: Buffer, offset: number = 0): number {
+        return User.readIdFromBuffer(buffer, offset + User.OFFSET_OF_ID)
+    }
+
+    static loginFromBuffer(buffer: Buffer, offset: number = 0): string {
+        return readTinyString(buffer, offset + User.OFFSET_OF_LOGIN)
+    }
+    
+    static hasNameFromBuffer(buffer: Buffer, offset: number = 0): boolean {
+        return readBoolean(buffer, offset + User.OFFSET_OF_HAS_NAME)
+    }
+
+    static nameFromBuffer(buffer: Buffer, offset: number = 0): string | null {
+        return User.hasNameFromBuffer(buffer, offset) ? readTinyString(buffer, offset + User.OFFSET_OF_HAS_NAME)
+                                                      : null
+    }
+
+    static passwordHashFromBuffer(buffer: Buffer, offset: number = 0): Buffer {
+        offset += User.OFFSET_OF_PASSWORD_HASH
+        return buffer.subarray(offset, offset + User.BYTE_LENGTH_OF_PASSWORD_HASH)
+    }
+
+    static createdFromBuffer(buffer: Buffer, offset: number = 0): Date {
+        return readDate(buffer, offset + User.OFFSET_OF_CREATED)
+    }
+
+    static hasCreatorFromBuffer(buffer: Buffer, offset: number = 0): boolean {
+        return readBoolean(buffer, offset + User.OFFSET_OF_HAS_CREATOR)
+    }
+
+    static creatorIdFromBuffer(buffer: Buffer, offset: number = 0): number | null {
+        return User.hasCreatorFromBuffer(buffer, offset) ? User.readIdFromBuffer(buffer, offset + User.OFFSET_OF_CREATOR_ID)
+                                                         : null
+    }
+
+    static isOnlineFromBuffer(buffer: Buffer, offset: number = 0): boolean {
+        return readBoolean(buffer, offset + User.OFFSET_OF_IS_ONLINE)
+    }
+
+    static roleFromBuffer(buffer: Buffer, offset: number = 0): UserRole {
+        return UserRole.fromBuffer(buffer, offset + User.OFFSET_OF_ROLE)
+    }
+
+    static hasIconFromBuffer(buffer: Buffer, offset: number = 0): boolean {
+        return readBoolean(buffer, offset + User.OFFSET_OF_HAS_ICON)
+    }
+
+    static iconByteLengthFromBuffer(buffer: Buffer, offset: number = 0): number {
+        return buffer.readUInt32LE(offset + User.OFFSET_OF_ICON_BYTE_LENGTH)
+    }
+
+    static nicknamesFromBuffer(buffer: Buffer, offset: number = 0): UserNicknameSet {
+        return UserNicknameSet.fromBuffer(buffer, offset + User.OFFSET_OF_NICKNAMES)
+    }
+
+    static tokensFromBuffer(buffer: Buffer, offset: number = 0): TokenSet {
+        return TokenSet.fromBuffer(buffer, offset + User.tokensOffsetFromBuffer(buffer, offset))
+    }
+
+    static iconFromBuffer(buffer: Buffer, offset: number = 0): Buffer | null {
+        if (!User.hasIconFromBuffer(buffer, offset))
+            return null
+
+        const iconOffset     = User.iconOffsetFromBuffer(buffer, offset)
+        const iconByteLength = User.iconByteLengthFromBuffer(buffer, offset)
+
+        return buffer.subarray(iconOffset, iconOffset + iconByteLength)
+    }
+
+    static tokensOffsetFromBuffer(buffer: Buffer, offset: number = 0): number {
+        const nicknamesByteLength = UserNicknameSet.byteLengthFromBuffer(buffer, offset + User.OFFSET_OF_NICKNAMES)
+
+        return offset
+             + nicknamesByteLength
+             + User.OFFSET_OF_NICKNAMES
+    }
+
+    static iconOffsetFromBuffer(buffer: Buffer, offset: number = 0): number {
+        const tokensOffset     = User.tokensOffsetFromBuffer(buffer, offset)
+        const tokensByteLength = TokenSet.byteLengthFromBuffer(buffer, tokensOffset)
+
+        return tokensOffset + tokensByteLength
+    }
+
+    static readIdFromBuffer(buffer: Buffer, offset: number = 0): number {
         return Number(buffer.readBigUInt64LE(offset))
     }
 
-    static writeId(buffer: Buffer, id: number, offset: number = 0): number {
+    static writeIdToBuffer(buffer: Buffer, id: number, offset: number = 0): number {
         return buffer.writeBigUInt64LE(BigInt(id), offset)
     }
 
@@ -674,7 +790,7 @@ export default class User implements BufferWritable {
     writeToBuffer(buffer: Buffer, offset: number = 0): number {
         checkBufferSize(buffer, offset + this.byteLength)
 
-        offset = User.writeId(buffer, this.id, offset)
+        offset = User.writeIdToBuffer(buffer, this.id, offset)
         offset = writeTinyString(buffer, this.login, offset)
         offset = writeBoolean(buffer, this.hasName, offset)
 
@@ -688,16 +804,16 @@ export default class User implements BufferWritable {
         offset  = writeBoolean(buffer, this.hasCreator, offset)
 
         if (this.hasCreator)
-            offset = User.writeId(buffer, this.creatorId!, offset)
+            offset = User.writeIdToBuffer(buffer, this.creatorId!, offset)
         else
             offset += User.BYTE_LENGTH_OF_ID
 
         offset = writeBoolean(buffer, this.isOnline, offset)
         offset = this.role.writeToBuffer(buffer, offset)
-        offset = this.nicknames.writeToBuffer(buffer, offset)
-        offset = this.tokens.writeToBuffer(buffer, offset)
         offset = writeBoolean(buffer, this.hasIcon, offset)
         offset = buffer.writeUInt32LE(this.iconByteLength, offset)
+        offset = this.nicknames.writeToBuffer(buffer, offset)
+        offset = this.tokens.writeToBuffer(buffer, offset)
 
         if (this.hasIcon)
             offset += this.icon!.copy(buffer, offset)
