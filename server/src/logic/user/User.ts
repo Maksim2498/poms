@@ -428,10 +428,10 @@ export default class User implements BufferWritable {
         User.checkNormedLogin(login)
         User.checkPassword(password)
 
-        return User.evalPasswordHashNotChecking(login, password)
+        return User.evalPasswordHashUnsafe(login, password)
     }
 
-    static evalPasswordHashNotChecking(normedLogin: string, password: string): Buffer {
+    static evalPasswordHashUnsafe(normedLogin: string, password: string): Buffer {
         return crypto.createHash("sha512")
                      .update(`${normedLogin.toLowerCase()}:${password}`)
                      .digest()
@@ -485,7 +485,7 @@ export default class User implements BufferWritable {
             })
 
         if (dontCheck)
-            passwordHash ??= User.evalPasswordHashNotChecking(login, password!)
+            passwordHash ??= User.evalPasswordHashUnsafe(login, password!)
         else {
             User.checkId(id)
             

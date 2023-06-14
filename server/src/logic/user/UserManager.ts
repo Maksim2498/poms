@@ -256,7 +256,7 @@ export default class UserManager {
         User.checkNormedLogin(login)
         User.checkPassword(password)
 
-        const passwordHash = User.evalPasswordHashNotChecking(login, password)
+        const passwordHash = User.evalPasswordHashUnsafe(login, password)
 
         const [rows] = await connection.execute(
             "SELECT id FROM Users WHERE login = ? and password_hash = ?",
