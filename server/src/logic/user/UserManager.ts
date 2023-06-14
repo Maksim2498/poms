@@ -317,11 +317,6 @@ export default class UserManager {
         throw new Error("Not implemented")
     }
 
-    async deleteByCredentials(connection: MysqlConnection, login: string, password: string) {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
     async deleteByLogin(connection: MysqlConnection, login: string) {
         // TODO
         throw new Error("Not implemented")
@@ -345,11 +340,6 @@ export default class UserManager {
     }
 
     async getByNickname(connection: MysqlConnection, nickname: string): Promise<User> {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
-    async getByCredentials(connection: MysqlConnection, login: string, password: string): Promise<User> {
         // TODO
         throw new Error("Not implemented")
     }
@@ -419,55 +409,6 @@ export default class UserManager {
 
         const [rows] = await connection.execute("SELECT user_id FROM Nicknames WHERE nickname = ?", [nickname]) as [RowDataPacket[], FieldPacket[]]
         const has    = rows.length !== 0
-
-        this.logger?.debug(has ? "Found" : "Not found")
-
-        return has
-    }
-
-    async hasWithCredentials(connection: MysqlConnection, login: string, password: string): Promise<boolean> {
-        login = User.normLogin(login)
-
-        this.logger?.debug(`Checking for presence of user ${login} by his/her credentials...`)
-
-        User.checkNormedLogin(login)
-        User.checkPassword(password)
-
-        const passwordHash = User.evalPasswordHashUnsafe(login, password)
-
-        if (this.cacheManager != null) {
-            this.logger?.debug("Checking cache...")
-
-            const key  = UserManager.makeLoginCacheEntryKey(login)
-            const user = this.cacheManager.get(key)
-
-            if (user != null) {
-                this.logger?.debug("Found entry with same login")
-                this.logger?.debug("Checking password...")
-
-                const userPasswordHash = User.passwordHashFromBuffer(user.buffer)
-
-                if (passwordHash.equals(userPasswordHash)) {
-                    this.logger?.debug("Matches")
-                    return true
-                }
-
-                this.logger?.debug("Not matches")
-
-                return false
-            }
-
-            this.logger?.debug("Not found")
-        }
-
-        this.logger?.debug("Checking database...")
-
-        const [rows] = await connection.execute(
-            "SELECT id FROM Users WHERE login = ? and password_hash = ?",
-            [login, passwordHash]
-        ) as [RowDataPacket[], FieldPacket[]]
-
-        const has = rows.length !== 0
 
         this.logger?.debug(has ? "Found" : "Not found")
 
@@ -547,39 +488,7 @@ export default class UserManager {
         throw new Error("Not implemented")
     }
 
-    async getLastModifiedByCredentials(connection: MysqlConnection, login: string, password: string): Promise<Date> {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
     async getLastModifiedById(connection: MysqlConnection, id: number): Promise<Date> {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
-    // ======== getId ========
-
-    async getIdByTokenRefreshId(connection: MysqlConnection, refreshId: string): Promise<number> {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
-    async getIdByTokenAccessId(connection: MysqlConnection, accessId: string): Promise<number> {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
-    async getIdByNickname(connection: MysqlConnection, nickname: string): Promise<number> {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
-    async getIdByCredentials(connection: MysqlConnection, login: string, password: string): Promise<number> {
-        // TODO
-        throw new Error("Not implemented")
-    }
-
-    async getIdByLogin(connection: MysqlConnection, login: string): Promise<number> {
         // TODO
         throw new Error("Not implemented")
     }
