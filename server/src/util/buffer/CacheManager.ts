@@ -170,12 +170,16 @@ export default class CacheManager {
     }
 
     clear() {
+        this.logger?.debug("Clearing cache...")
+
         this._keyToId.clear()
         this._idToEntry.clear()
 
         this._rateToIds.length = 0
         this._lastId           = 0
         this._used             = 0
+
+        this.logger?.debug("Cleared")
     }
 
     delete(key: CacheEntryKey): boolean {
