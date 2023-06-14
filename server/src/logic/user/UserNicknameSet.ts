@@ -160,7 +160,7 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
     private  nicknames: Set<string> = new Set()
     readonly max:       number
 
-    constructor(options: UserNicknameSetOptions) {
+    constructor(options: UserNicknameSetOptions = {}) {
         let   nicknames = options.nicknames != null ? [...options.nicknames] : []
         const max       = options.max ?? UserNicknameSet.DEFAULT_MAX
         const dontCheck = options.dontCheck
