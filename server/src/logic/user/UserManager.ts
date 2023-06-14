@@ -1,6 +1,5 @@
 import Config                                          from "Config"
 import LogicError                                      from "logic/LogicError"
-import TokenSet                                        from "logic/token/TokenSet"
 import Token                                           from "logic/token/Token"
 import CacheManager                                    from "util/buffer/CacheManager"
 import UserNicknameSet                                 from "./UserNicknameSet"
@@ -11,6 +10,7 @@ import { Connection as MysqlConnection,
          FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2/promise"
 import { Logger                                      } from "winston"
 import { CacheEntryKey                               } from "util/buffer/CacheManager"
+import { getStringCode                               } from "util/error/error"
 
 export interface UserManagerOptions {
     readonly config:        Config
@@ -43,57 +43,57 @@ export type UserCreationOptions = PasswordUserCreationOptions
                                 | PasswordHashUserCreationOptions
 
 export default class UserManager {
-    private static _makeUserCacheEntryKeys(user: User): CacheEntryKey[] {
+    static makeUserCacheEntryKeys(user: User): CacheEntryKey[] {
         return [
-            UserManager._makeTokensCacheEntryKeys(user.tokens),
-            UserManager._makeNicknamesCacheEntryKeys(user.nicknames),
-            UserManager._makeLoginCacheEntryKey(user.login),
-            UserManager._makeIdCacheEntryKey(user.id)
+            UserManager.makeTokensCacheEntryKeys(user.tokens),
+            UserManager.makeNicknamesCacheEntryKeys(user.nicknames),
+            UserManager.makeLoginCacheEntryKey(user.login),
+            UserManager.makeIdCacheEntryKey(user.id)
         ].flat()
     }
 
-    private static _makeTokensCacheEntryKeys(tokens: Iterable<Token>): CacheEntryKey[] {
+    static makeTokensCacheEntryKeys(tokens: Iterable<Token>): CacheEntryKey[] {
         const keys = new Array<CacheEntryKey>()
 
         for (const token of tokens)
-            keys.push(...UserManager._makeTokenCacheEntryKeys(token))
+            keys.push(...UserManager.makeTokenCacheEntryKeys(token))
 
         return keys
     }
 
-    private static _makeTokenCacheEntryKeys(token: Token): CacheEntryKey[] {
+    static makeTokenCacheEntryKeys(token: Token): CacheEntryKey[] {
         return [
-            UserManager._makeTokenAccessIdCacheEntryKey(token.accessId),
-            UserManager._makeTokenRefreshIdCacheEntryKey(token.refreshId),
+            UserManager.makeTokenAccessIdCacheEntryKey(token.accessId),
+            UserManager.makeTokenRefreshIdCacheEntryKey(token.refreshId),
         ]
     }
 
-    private static _makeTokenAccessIdCacheEntryKey(accessId: string): CacheEntryKey {
+    static makeTokenAccessIdCacheEntryKey(accessId: string): CacheEntryKey {
         return `user-token-access-${accessId}`
     }
 
-    private static _makeTokenRefreshIdCacheEntryKey(refresh: string): CacheEntryKey {
+    static makeTokenRefreshIdCacheEntryKey(refresh: string): CacheEntryKey {
         return `user-token-refresh-${refresh}`
     }
 
-    private static _makeNicknamesCacheEntryKeys(nicknames: Iterable<string>): CacheEntryKey[] {
+    static makeNicknamesCacheEntryKeys(nicknames: Iterable<string>): CacheEntryKey[] {
         const keys = new Array<CacheEntryKey>()
 
         for (const nickname of nicknames)
-            keys.push(UserManager._makeNicknameCacheEntryKey(nickname))
+            keys.push(UserManager.makeNicknameCacheEntryKey(nickname))
 
         return keys
     }
 
-    private static _makeNicknameCacheEntryKey(nickname: string): CacheEntryKey {
+    static makeNicknameCacheEntryKey(nickname: string): CacheEntryKey {
         return `user-nickname-${nickname}`
     }
 
-    private static _makeLoginCacheEntryKey(login: string): CacheEntryKey {
+    static makeLoginCacheEntryKey(login: string): CacheEntryKey {
         return `user-login-${login.toLowerCase()}`
     }
 
-    private static _makeIdCacheEntryKey(id: number): CacheEntryKey {
+    static makeIdCacheEntryKey(id: number): CacheEntryKey {
         return `user-id-${id}`
     }
 
@@ -112,8 +112,176 @@ export default class UserManager {
     // ======== create ========
 
     async create(connection: MysqlConnection, options: UserCreationOptions): Promise<User> {
-        // TODO
-        throw new Error("Not implemented")
+        this.logger?.debug(`Creating user ${User.normLogin(options.login)}...`)
+
+        const {
+            login,
+            name,
+            icon,
+            passwordHash,
+            role,
+            isOnline,
+            created,
+            creatorId,
+            nicknames,
+            tokens,
+        } = User.prepareOptions({ ...options, config: this.config })
+
+        checkIfExistsInCache.call(this)
+        const user = await addToDatabase.call(this)
+        addToCache.call(this, user)
+
+        return user
+
+        function checkIfExistsInCache(this: UserManager) {
+            if (this.cacheManager == null)
+                return
+
+            this.logger?.debug("Checking cache for duplicates...")
+                
+            const loginKey = UserManager.makeLoginCacheEntryKey(login)
+
+            if (this.cacheManager.has(loginKey))
+                throw new LogicError(`User ${login} already exists`)
+
+            for (const nickname of nicknames) {
+                const nicknameKey = UserManager.makeNicknameCacheEntryKey(nickname)
+
+                if (this.cacheManager.has(nicknameKey))
+                    throw new LogicError(`User with nickname ${nickname} already exists`)
+            }
+
+            for (const token of tokens) {
+                const tokenAccessIdKey = UserManager.makeTokenAccessIdCacheEntryKey(token.accessId)
+
+                if (this.cacheManager.has(tokenAccessIdKey))
+                    throw new LogicError(`User with token access id ${token.accessId} already exists`)
+
+                const tokenRefreshIdKey = UserManager.makeTokenRefreshIdCacheEntryKey(token.refreshId)
+            
+                if (this.cacheManager.has(tokenRefreshIdKey))
+                    throw new LogicError(`User with token refresh id ${token.refreshId} already exists`)
+            }
+
+            this.logger?.debug("Not found")
+        }
+
+        async function addToDatabase(this: UserManager): Promise<User> {
+            try {
+                this.logger?.debug("Adding to the database...")
+                this.logger?.debug("Inserting to the Users table...")
+
+                const [result] = await connection.execute(
+                    "INSERT INTO Users (login, name, icon, cr_id, cr_time, password_hash, role, is_online) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    [
+                        login,
+                        name,
+                        icon,
+                        creatorId,
+                        created,
+                        passwordHash,
+                        role.name,
+                        isOnline,
+                    ]
+                ) as [ResultSetHeader, FieldPacket[]]
+
+                this.logger?.debug("Inserted")
+                
+                const id = result.insertId
+
+                this.logger?.debug(`User id is ${id}`)
+
+                if (this.cacheManager != null) {
+                    this.logger?.debug("Checking cache for users with the same id...")
+
+                    const idKey = UserManager.makeIdCacheEntryKey(id)
+
+                    if (this.cacheManager.has(idKey))
+                        throw new Error(`Database created user with id already presented in the cache (${id})`)
+
+                    this.logger?.debug("Not found")
+                }
+
+                if (nicknames.size !== 0) {
+                    this.logger?.debug("Inserting into the Nicknames table...")
+
+                    for (const nickname of nicknames)
+                        try {
+                            await connection.execute(`INSERT INTO Nicknames (user_id, nickname) VALUES (?, ?)`, [id, nickname])
+                        } catch (error) {
+                            if (getStringCode(error) !== "ER_DUP_ENTRY")
+                                throw error
+
+                            throw new LogicError(`User with nickname ${nickname} already exists`)
+                        }
+
+                    this.logger?.debug("Inserted")
+                }
+
+                if (tokens.size !== 0) {
+                    this.logger?.debug("Inserting into the Tokens table...")
+
+                    for (const token of tokens)
+                        try {
+                            await connection.execute(
+                                "INSERT INTO Tokens (access_id, refresh_id, user_id, cr_time, access_exp_time, refresh_exp_time) VALUES (?, ?, ?, ?, ?, ?)",
+                                [
+                                    Buffer.from(token.accessId,  "hex"),
+                                    Buffer.from(token.refreshId, "hex"),
+                                    id,
+                                    token.created,
+                                    token.accessExpires,
+                                    token.refreshExpires,
+                                ]
+                            )
+                        } catch (error) {
+                            if (getStringCode(error) !== "ER_DUP_ENTRY")
+                                throw error
+
+                            throw new LogicError(`Token access/refresh id ${token.accessId}/${token.refreshId} already exists`)
+                        }
+
+                    this.logger?.debug("Inserted")
+                }
+
+                this.logger?.debug("Added")
+
+                return new User({
+                    dontCheck: true,
+                    config:    this.config,
+                    id,
+                    login,
+                    name,
+                    icon,
+                    passwordHash,
+                    role,
+                    isOnline,
+                    created,
+                    creatorId,
+                    nicknames,
+                    tokens,
+                })
+            } catch (error) {
+                if (getStringCode(error) !== "ER_DUP_ENTRY")
+                    throw error
+
+                throw new LogicError(`User ${login} already exists`)
+            }
+        }
+
+        function addToCache(this: UserManager, user: User) {
+            if (this.cacheManager == null)
+                return
+
+            this.logger?.debug("Adding to the cache...")
+
+            const keys   = UserManager.makeUserCacheEntryKeys(user)
+            const buffer = user.toBuffer()
+
+            this.cacheManager.create(keys, buffer)
+
+            this.logger?.debug("Added")
+        }
     }
 
     // ======== clear ========
@@ -211,7 +379,7 @@ export default class UserManager {
 
         Token.checkNormedId(id)
 
-        if (this.hasInCache(id, type === "access" ? UserManager._makeTokenAccessIdCacheEntryKey : UserManager._makeTokenRefreshIdCacheEntryKey))
+        if (this.hasInCache(id, type === "access" ? UserManager.makeTokenAccessIdCacheEntryKey : UserManager.makeTokenRefreshIdCacheEntryKey))
             return true
 
         this.logger?.debug("Checking database...")
@@ -235,7 +403,7 @@ export default class UserManager {
 
         UserNicknameSet.checkNormedNickname(nickname)
 
-        if (this.hasInCache(nickname, UserManager._makeNicknameCacheEntryKey))
+        if (this.hasInCache(nickname, UserManager.makeNicknameCacheEntryKey))
             return true
 
         this.logger?.debug("Checking database...")
@@ -261,7 +429,7 @@ export default class UserManager {
         if (this.cacheManager != null) {
             this.logger?.debug("Checking cache...")
 
-            const key  = UserManager._makeLoginCacheEntryKey(login)
+            const key  = UserManager.makeLoginCacheEntryKey(login)
             const user = this.cacheManager.get(key)
 
             if (user != null) {
@@ -304,7 +472,7 @@ export default class UserManager {
 
         User.checkNormedLogin(login)
 
-        if (this.hasInCache(login, UserManager._makeLoginCacheEntryKey))
+        if (this.hasInCache(login, UserManager.makeLoginCacheEntryKey))
             return true
 
         this.logger?.debug("Checking database...")
@@ -322,7 +490,7 @@ export default class UserManager {
 
         User.checkId(id)
 
-        if (this.hasInCache(id, UserManager._makeIdCacheEntryKey))
+        if (this.hasInCache(id, UserManager.makeIdCacheEntryKey))
             return true
 
         this.logger?.debug("Checking database...")
