@@ -17,6 +17,7 @@ import { checkBufferSize,
 import { isInvalid as isDateInvaild                                  } from "util/date/date"
 import { collapseWs, escape, isHex                                   } from "util/string"
 import { isUInt                                                      } from "util/number"
+import { UserRoleLike                                                } from "./UserRole"
 
 export interface BaseUserOptions {
     readonly config:                Config
@@ -26,7 +27,7 @@ export interface BaseUserOptions {
     readonly icon?:                 Buffer | null
     readonly password?:             string
     readonly passwordHash?:         Buffer
-    readonly role?:                 UserRole
+    readonly role?:                 UserRoleLike
     readonly isOnline?:             boolean
     readonly created?:              Date
     readonly creatorId?:            number | null
@@ -636,7 +637,7 @@ export default class User implements BufferWritable {
         const icon                 = options.icon                 ?? null
         const password             = options.password
         let   passwordHash         = options.passwordHash
-        const role                 = options.role                 ?? UserRole.USER
+        const role                 = UserRole.norm(options.role)
         const isOnline             = options.isOnline             ?? false
         const created              = options.created              ?? new Date()
         const creatorId            = options.creatorId            ?? null

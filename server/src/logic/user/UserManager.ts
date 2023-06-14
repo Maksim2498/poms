@@ -4,13 +4,12 @@ import Token                                                           from "log
 import CacheManager                                                    from "util/buffer/CacheManager"
 import UserNicknameSet                                                 from "./UserNicknameSet"
 import User                                                            from "./User"
-import UserRole                                                        from "./UserRole"
 
 import { Connection as MysqlConnection, FieldPacket, ResultSetHeader } from "mysql2/promise"
 import { Logger                                                      } from "winston"
 import { CacheEntryKey                                               } from "util/buffer/CacheManager"
 import { getStringCode                                               } from "util/error/error"
-import { UserRoleName                                                } from "./UserRole"
+import { UserRoleName, UserRoleLike                                  } from "./UserRole"
 
 export interface UserManagerOptions {
     readonly config:        Config
@@ -24,7 +23,7 @@ export interface BaseUserCreationOptions {
     readonly icon?:                 Buffer | null
     readonly password?:             string
     readonly passwordHash?:         Buffer
-    readonly role?:                 UserRole
+    readonly role?:                 UserRoleLike
     readonly creatorId?:            number | null
     readonly nicknames?:            Iterable<string>
     readonly tokens?:               Iterable<Token>
