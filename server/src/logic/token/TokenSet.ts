@@ -176,6 +176,37 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
         return true
     }
 
+    deleteByAccessId(id: string): boolean {
+        return this.deleteById(id, "access")
+    }
+
+    deleteByRefreshId(id: string): boolean {
+        return this.deleteById(id, "refresh")
+    }
+
+    private deleteById(id: string, type: "access" | "refresh"): boolean {
+        id = Token.normId(id)
+
+        Token.checkNormedId(id)
+
+        let index = -1
+
+        const key = `${type}Id` as "accessId" | "refreshId"
+
+        for (const [i, token] of this.tokens.entries())
+            if (token[key] === id) {
+                index = i
+                break
+            }
+
+        if (index === -1)
+            return false
+
+        this.tokens.splice(index, 1)
+
+        return true
+    }
+
     clear(): void {
         this.tokens.length = 0
     }
