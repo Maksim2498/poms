@@ -19,27 +19,28 @@ import { collapseWs, escape, isHex                                   } from "uti
 import { isUInt                                                      } from "util/number"
 
 export interface BaseUserOptions {
-    readonly config:        Config
-    readonly id?:           number
-    readonly login:         string
-    readonly name?:         string | null
-    readonly icon?:         Buffer | null
-    readonly password?:     string
-    readonly passwordHash?: Buffer
-    readonly role?:         UserRole
-    readonly isOnline?:     boolean
-    readonly created?:      Date
-    readonly creatorId?:    number | null
-    readonly nicknames?:    Iterable<string>
-    readonly tokens?:       Iterable<Token>
-    readonly dontCheck?:    boolean
+    readonly config:                Config
+    readonly id?:                   number
+    readonly login:                 string
+    readonly name?:                 string | null
+    readonly icon?:                 Buffer | null
+    readonly password?:             string
+    readonly passwordHash?:         Buffer
+    readonly role?:                 UserRole
+    readonly isOnline?:             boolean
+    readonly created?:              Date
+    readonly creatorId?:            number | null
+    readonly nicknames?:            Iterable<string>
+    readonly tokens?:               Iterable<Token>
+    readonly dontCheck?:            boolean
+    readonly filterOutdatedTokens?: boolean
 }
 
 export interface EvalUserByteLengthOptions {
-    config?:         Config
-    maxNicknames?:   number
-    maxTokens?:      number
-    iconByteLength?: number
+    readonly config?:         Config
+    readonly maxNicknames?:   number
+    readonly maxTokens?:      number
+    readonly iconByteLength?: number
 }
 
 export interface PasswordUserOptions extends BaseUserOptions {
@@ -54,19 +55,25 @@ export type UserOptions = PasswordUserOptions
                         | PasswordHashUserOptions
 
 export interface PreparedUserOptions {
-    config:       Config
-    id:           number
-    login:        string
-    name:         string | null
-    icon:         Buffer | null
-    passwordHash: Buffer
-    role:         UserRole
-    isOnline:     boolean
-    created:      Date
-    creatorId:    number | null
-    nicknames:    UserNicknameSet
-    tokens:       TokenSet
-    dontCheck:    boolean
+    config:               Config
+    id:                   number
+    login:                string
+    name:                 string | null
+    icon:                 Buffer | null
+    passwordHash:         Buffer
+    role:                 UserRole
+    isOnline:             boolean
+    created:              Date
+    creatorId:            number | null
+    nicknames:            UserNicknameSet
+    tokens:               TokenSet
+    dontCheck:            boolean
+    filterOutdatedTokens: boolean
+}
+
+export interface UserFromOptions {
+    readonly dontCheck?:            boolean
+    readonly filterOutdatedTokens?: boolean
 }
 
 export type UserJSON         = z.infer<typeof User.JSON_SCHEMA>
@@ -185,12 +192,16 @@ export default class User implements BufferWritable {
         tokens:       TokenSet.JSON_SCHEMA,
     })
 
-    static fromJSON(config: Config, json: unknown): User {
+    static fromJSON(config: Config, json: unknown, filterOutdatedTokens: boolean = false): User {
         const parsed = User.JSON_SCHEMA.parse(json)
-        return User.fromParsedJSON(config, parsed, true)
+
+        return User.fromParsedJSON(config, parsed, {
+            filterOutdatedTokens,
+            dontCheck: true,
+        })
     }
 
-    static fromParsedJSON(config: Config, json: UserJSON, dontCheck: boolean = false): User {
+    static fromParsedJSON(config: Config, json: UserJSON, options: UserFromOptions = {}): User {
         const {
             id,
             login,
@@ -199,12 +210,20 @@ export default class User implements BufferWritable {
             isOnline,
         } = json
 
+        const {
+            dontCheck,
+            filterOutdatedTokens,
+        } = options
+
         const icon         = json.icon != null ? Buffer.from(json.icon, "hex") : null
         const passwordHash = Buffer.from(json.passwordHash, "hex")
         const role         = UserRole.fromParsedJSON(json.role)
         const created      = new Date(json.created)
-        const nicknames    = UserNicknameSet.fromParsedJSON(json.nicknames, dontCheck)
-        const tokens       = TokenSet.fromParsedJSON(json.tokens, dontCheck)
+        const nicknames    = UserNicknameSet.fromParsedJSON(json.nicknames, )
+        const tokens       = TokenSet.fromParsedJSON(json.tokens, {
+            filterOutdated: filterOutdatedTokens,
+            dontCheck,
+        })
         
         return new User({
             config,
@@ -220,6 +239,7 @@ export default class User implements BufferWritable {
             nicknames,
             tokens,
             dontCheck,
+            filterOutdatedTokens,
         })
     }
 
@@ -246,8 +266,13 @@ export default class User implements BufferWritable {
             + iconByteLength
     }
 
-    static fromBuffer(config: Config, buffer: Buffer, offset: number = 0, dontCheck: boolean = false): User {
+    static fromBuffer(config: Config, buffer: Buffer, offset: number = 0, options: UserFromOptions = {}): User {
         checkBufferSize(buffer, offset + User.MIN_BYTE_LENGTH)
+
+        const {
+            dontCheck,
+            filterOutdatedTokens,
+        } = options
 
         const id = User.readIdFromBuffer(buffer, offset)
         offset += User.BYTE_LENGTH_OF_ID
@@ -289,7 +314,10 @@ export default class User implements BufferWritable {
         const nicknames = UserNicknameSet.fromBuffer(buffer, offset, dontCheck)
         offset += nicknames.byteLength
 
-        const tokens = TokenSet.fromBuffer(buffer, offset, dontCheck)
+        const tokens = TokenSet.fromBuffer(buffer, offset, {
+            filterOutdated: filterOutdatedTokens,
+            dontCheck,
+        })
         offset += tokens.byteLength
 
         const icon = hasIcon ? buffer.subarray(offset, offset + iconByteLength) : null
@@ -308,6 +336,7 @@ export default class User implements BufferWritable {
             tokens,
             icon,
             dontCheck,
+            filterOutdatedTokens,
         })
     }
 
@@ -600,30 +629,32 @@ export default class User implements BufferWritable {
     }
 
     static prepareOptions(options: UserOptions): PreparedUserOptions {
-        const config       = options.config
-        const id           = options.id        ?? 0
-        let   login        = options.login
-        let   name         = options.name      ?? null
-        const icon         = options.icon      ?? null
-        const password     = options.password
-        let   passwordHash = options.passwordHash
-        const role         = options.role      ?? UserRole.USER
-        const isOnline     = options.isOnline  ?? false
-        const created      = options.created   ?? new Date()
-        const creatorId    = options.creatorId ?? null
-        const dontCheck    = options.dontCheck ?? false
-        const nicknames    = options.nicknames instanceof UserNicknameSet
+        const config               = options.config
+        const id                   = options.id                   ?? 0
+        let   login                = options.login
+        let   name                 = options.name                 ?? null
+        const icon                 = options.icon                 ?? null
+        const password             = options.password
+        let   passwordHash         = options.passwordHash
+        const role                 = options.role                 ?? UserRole.USER
+        const isOnline             = options.isOnline             ?? false
+        const created              = options.created              ?? new Date()
+        const creatorId            = options.creatorId            ?? null
+        const dontCheck            = options.dontCheck            ?? false
+        const filterOutdatedTokens = options.filterOutdatedTokens ?? false
+        const nicknames            = options.nicknames instanceof UserNicknameSet
             ? options.nicknames
             : new UserNicknameSet({
-                max:       config.read.logic.maxNicknames,
                 nicknames: options.nicknames,
+                max:       config.read.logic.maxNicknames,
                 dontCheck,
             })
-        const tokens       = options.tokens instanceof TokenSet
+        const tokens               = options.tokens instanceof TokenSet
             ? options.tokens
             : new TokenSet({
-                max:       config.read.logic.maxTokens,
-                tokens:    options.tokens,
+                filterOutdated: filterOutdatedTokens,
+                tokens:         options.tokens,
+                max:            config.read.logic.maxTokens,
                 dontCheck,
             })
 
@@ -666,6 +697,7 @@ export default class User implements BufferWritable {
             nicknames,
             tokens,
             dontCheck,
+            filterOutdatedTokens,
         }
     }
 
