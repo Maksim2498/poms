@@ -114,6 +114,18 @@ export default class User implements BufferWritable {
                                                     +     UserRole.BYTE_LENGTH
                                                     +     this.BYTE_LENGTH_OF_ICON_BYTE_LENGTH
 
+    static readonly ID_OFFSET                       = 0
+    static readonly LOGIN_OFFSET                    = User.BYTE_LENGTH_OF_ID
+    static readonly HAS_NAME_OFFSET                 = User.LOGIN_OFFSET         + BYTE_LENGTH_OF_TINY_STRING
+    static readonly NAME_OFFSET                     = User.HAS_NAME_OFFSET      + BYTE_LENGTH_OF_BOOLEAN
+    static readonly PASSWORD_HASH_OFFSET            = User.NAME_OFFSET          +  BYTE_LENGTH_OF_TINY_STRING
+    static readonly CREATED_OFFSET                  = User.PASSWORD_HASH_OFFSET + User.BYTE_LENGTH_OF_PASSWORD_HASH
+    static readonly HAS_CREATOR_OFFSET              = User.CREATED_OFFSET       + BYTE_LENGTH_OF_DATE
+    static readonly CREATOR_ID_OFFSET               = User.HAS_CREATOR_OFFSET   + BYTE_LENGTH_OF_BOOLEAN
+    static readonly IS_ONLINE_OFFSET                = User.CREATOR_ID_OFFSET    + User.BYTE_LENGTH_OF_ID
+    static readonly ROLE_OFFSET                     = User.IS_ONLINE_OFFSET     + BYTE_LENGTH_OF_BOOLEAN
+    static readonly NICKNAMES_OFFSET                = User.ROLE_OFFSET          + UserRole.BYTE_LENGTH
+
     static readonly ID_JSON_SCHEMA = z.number().int().nonnegative()
 
     static readonly LOGIN_JSON_SCHEMA = z.string().transform((login, ctx) => {
