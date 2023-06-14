@@ -1,5 +1,5 @@
 import Server       from "server/Server"
-import ErrorList    from "util/ErrorList"
+import ErrorList    from "util/error/ErrorList"
 import createLogger from "util/createLogger"
 import Config       from "Config"
 
