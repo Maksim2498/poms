@@ -7,9 +7,10 @@ import { isUInt          } from "util/number"
 import { checkBufferSize } from "util/buffer/buffer"
 
 export interface TokenSetOptions {
-    tokens?:    Iterable<Token>
-    max?:       number
-    dontCheck?: boolean
+    tokens?:         Iterable<Token>
+    max?:            number
+    dontCheck?:      boolean
+    filterOutdated?: boolean
 }
 
 export type TokenSetJSON         = z.infer<typeof TokenSet.JSON_SCHEMA>
@@ -115,9 +116,10 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
             readonly max:    number 
 
     constructor(options: TokenSetOptions = {}) {
-        const tokens    = options.tokens ?? []
-        const max       = options.max    ?? TokenSet.DEFAULT_MAX
-        const dontCheck = options.dontCheck
+        let   tokens         = options.tokens ?? []
+        const max            = options.max    ?? TokenSet.DEFAULT_MAX
+        const dontCheck      = options.dontCheck
+        const filterOutdated = options.filterOutdated
 
         if (!dontCheck) {
             if (!isUInt(max))
@@ -129,8 +131,12 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
 
         this.max = max
 
-        for (const token of tokens)
+        for (const token of tokens) {
+            if (filterOutdated && token.expired)
+                continue
+
             this.add(token)
+        }
     }
 
     get byteLength(): number {
