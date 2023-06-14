@@ -20,7 +20,7 @@ import { isUInt                                                      } from "uti
 
 export interface BaseUserOptions {
     readonly config:        Config
-    readonly id:            number
+    readonly id?:           number
     readonly login:         string
     readonly name?:         string | null
     readonly icon?:         Buffer | null
@@ -601,7 +601,7 @@ export default class User implements BufferWritable {
 
     static prepareOptions(options: UserOptions): PreparedUserOptions {
         const config       = options.config
-        const id           = options.id
+        const id           = options.id        ?? 0
         let   login        = options.login
         let   name         = options.name      ?? null
         const icon         = options.icon      ?? null
