@@ -7,14 +7,19 @@ import { isUInt          } from "util/number"
 import { checkBufferSize } from "util/buffer/buffer"
 
 export interface TokenSetOptions {
-    tokens?:         Iterable<Token>
-    max?:            number
-    dontCheck?:      boolean
-    filterOutdated?: boolean
+    readonly tokens?:         Iterable<Token>
+    readonly max?:            number
+    readonly dontCheck?:      boolean
+    readonly filterOutdated?: boolean
 }
 
 export type TokenSetJSON         = z.infer<typeof TokenSet.JSON_SCHEMA>
 export type ReadonlyTokenSetJSON = DeepReadonly<TokenSetJSON>
+
+export interface TokenFromOptions {
+    readonly dontCheck?:      boolean
+    readonly filterOutdated?: boolean
+}
 
 /*
     Buffer structure:
@@ -56,17 +61,21 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
     static readonly OFFSET_OF_SIZE      = 0
     static readonly OFFSET_OF_MAX       = this.OFFSET_OF_SIZE
 
-    static fromJSON(json: unknown): TokenSet {
+    static fromJSON(json: unknown, filterOutdated: boolean = false): TokenSet {
         const parsed = TokenSet.JSON_SCHEMA.parse(json)
-        return TokenSet.fromParsedJSON(parsed, true)
+
+        return TokenSet.fromParsedJSON(parsed, {
+            filterOutdated,
+            dontCheck: true,
+        })
     }
 
-    static fromParsedJSON(json: ReadonlyTokenSetJSON, dontCheck: boolean = false): TokenSet {
+    static fromParsedJSON(json: ReadonlyTokenSetJSON, options: TokenFromOptions = {}): TokenSet {
         const max    = json.max
-        const tokens = json.tokens.map(json => Token.fromParsedJSON(json, dontCheck))
+        const tokens = json.tokens.map(json => Token.fromParsedJSON(json, options.dontCheck))
 
         return new TokenSet({
-            dontCheck,
+            ...options,
             tokens,
             max,
         })
@@ -76,7 +85,7 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
         return TokenSet.MIN_BYTE_LEGNTH + max * Token.BYTE_LENGTH
     }
 
-    static fromBuffer(buffer: Buffer, offset: number = 0, dontCheck: boolean = false): TokenSet {
+    static fromBuffer(buffer: Buffer, offset: number = 0, options: TokenFromOptions = {}): TokenSet {
         checkBufferSize(buffer, offset + TokenSet.MIN_BYTE_LEGNTH)
 
         const size = buffer.readUInt8(offset++)
@@ -87,15 +96,15 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
         const tokens = Array<Token>()
 
         for (let i = 0; i < size; ++i) {
-            const token = Token.fromBuffer(buffer, offset, dontCheck)
+            const token = Token.fromBuffer(buffer, offset, options.dontCheck)
             tokens.push(token)
             offset += Token.BYTE_LENGTH
         }
 
         return new TokenSet({
+            ...options,
             tokens,
             max,
-            dontCheck
         })
     }
 
