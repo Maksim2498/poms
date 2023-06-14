@@ -104,19 +104,11 @@ export default class TokenSet implements Iterable<Token>, BufferWritable {
     }
 
     static sizeFromBuffer(buffer: Buffer, offset: number = 0): number {
-        offset = offset + TokenSet.OFFSET_OF_SIZE
-        
-        checkBufferSize(buffer, offset + TokenSet.BYTE_LENGTH_OF_SIZE)
-
-        return buffer.readUInt8(offset)
+        return buffer.readUInt8(offset + TokenSet.OFFSET_OF_SIZE)
     }
 
     static maxFromBuffer(buffer: Buffer, offset: number = 0): number {
-        offset = offset + TokenSet.OFFSET_OF_MAX
-        
-        checkBufferSize(buffer, offset + TokenSet.BYTE_LENGTH_OF_MAX)
-
-        return buffer.readUInt8(offset)
+        return buffer.readUInt8(offset + TokenSet.OFFSET_OF_MAX)
     }
 
     private readonly tokens: Token[] = []
