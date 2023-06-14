@@ -260,13 +260,22 @@ export default class Server {
                         return
                     }
 
-                    await this.userManager.create(connection, {
-                        role: UserRole.OWNER,
-                        login,
-                        password,
-                        name,
-                        nicknames,
-                    })
+                    connection.beginTransaction()
+
+                    try {
+                        await this.userManager.create(connection, {
+                            role: UserRole.OWNER,
+                            login,
+                            password,
+                            name,
+                            nicknames,
+                        })
+
+                        connection.commit()
+                    } catch (error) {
+                        connection.rollback()
+                        throw error
+                    }
                 
                     this.logger?.verbose("Craeted")
                 }
