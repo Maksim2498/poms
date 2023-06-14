@@ -133,19 +133,11 @@ export default class UserNicknameSet implements Iterable<string>, BufferWritable
     }
 
     static sizeFromBuffer(buffer: Buffer, offset: number = 0): number {
-        offset = offset + UserNicknameSet.OFFSET_OF_SIZE
-        
-        checkBufferSize(buffer, offset + UserNicknameSet.BYTE_LENGTH_OF_SIZE)
-
-        return buffer.readUInt8(offset)
+        return buffer.readUInt8(offset + UserNicknameSet.OFFSET_OF_SIZE)
     }
 
     static maxFromBuffer(buffer: Buffer, offset: number = 0): number {
-        offset = offset + UserNicknameSet.OFFSET_OF_MAX
-        
-        checkBufferSize(buffer, offset + UserNicknameSet.BYTE_LENGTH_OF_MAX)
-
-        return buffer.readUInt8(offset)
+        return buffer.readUInt8(offset + UserNicknameSet.OFFSET_OF_MAX)
     }
 
     static checkNickname(nickname: string) {
