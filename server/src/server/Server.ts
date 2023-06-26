@@ -12,7 +12,7 @@ import { Connection as MysqlConnection, ResultSetHeader, FieldPacket } from "mys
 import { Logger                                                      } from "winston"
 
 export default class Server {
-    private  _state:  ServerState = ServerState.CREATED
+    private  _state:       ServerState = ServerState.CREATED
 
     readonly config:       Config
     readonly cacheManager: CacheManager
