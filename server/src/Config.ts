@@ -348,7 +348,8 @@ export default class Config {
             const string = await fsp.readFile(path, "utf-8")
 
             try {
-                const json5 = path.endsWith("json5")
+                const json5 = path.toLowerCase()
+                                  .endsWith("json5")
 
                 return json5 ? JSON5.parse(string)
                              : JSON.parse(string)
