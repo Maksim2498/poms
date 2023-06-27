@@ -146,13 +146,28 @@ export default class Server {
                 const user       = useInit ? this.config.read.mysql.initialize.login!    : this.config.read.mysql.login!
                 const password   = useInit ? this.config.read.mysql.initialize.password! : this.config.read.mysql.password!
 
-                return await mysql.createConnection({
-                    host,
-                    port,
-                    socketPath,
-                    user,
-                    password
-                })
+                try  {
+                    this.logger?.verbose(`Connecting to the database at ${this.config.mysqlAddress}...`)
+
+                    const connection = await mysql.createConnection({
+                        host,
+                        port,
+                        socketPath,
+                        user,
+                        password
+                    })
+
+                    this.logger?.verbose("Connected")
+
+                    return connection
+                } catch (error) {
+                    let message = "Connection failed"
+
+                    if (typeof error === "object" && error != null && "code" in error)
+                        message += `: ${error.code}`
+
+                    throw new Error(message)
+                }
             }
 
             async function createObjects(this: Server) {
