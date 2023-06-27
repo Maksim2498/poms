@@ -8,7 +8,7 @@ const logger = createLogger()
 main().catch(processError)
 
 async function main() {
-    const config = await Config.readFromFile(undefined, logger);
+    const config = await Config.fromFile(undefined, logger);
     const server = new Server(config, logger)
 
     setupSigInt()
