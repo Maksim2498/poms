@@ -319,12 +319,19 @@ export default class Config {
             try {
                 const dirFiles = await fsp.readdir(dir)
 
-                for (const file of Config.FILE_FULL_NAMES)
-                    if (dirFiles.includes(file)) {
-                        const path = join(dir, file)
-                        logger?.verbose(`Found at ${path}`)
-                        return path
+                for (const file of Config.FILE_FULL_NAMES) {
+                    const lowerFile = file.toLowerCase()
+
+                    for (const dirFile of dirFiles) {
+                        const lowerDirFile = dirFile.toLowerCase()
+
+                        if (lowerFile === lowerDirFile) {
+                            const path = join(dir, dirFile)
+                            logger?.verbose(`Found at ${path}`)
+                            return path
+                        }
                     }
+                }
             } catch {}
 
             const newDir = dirname(dir)
