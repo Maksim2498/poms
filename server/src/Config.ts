@@ -2,6 +2,7 @@ import bytes                        from "bytes"
 import z                            from "zod"
 import parseDuration                from "parse-duration"
 import template                     from "string-placeholder"
+import JSON5                        from "json5"
 import User                         from "logic/user/User"
 import UserNicknameSet              from "logic/user/UserNicknameSet"
 import DeepReadonly                 from "util/type/DeepReadonly"
@@ -274,12 +275,14 @@ export default class Config {
         return json
     })
 
-    static readonly POMS_PATH   = dirname(dirname(__dirname)) // this file is in /server/src/
-    static readonly PLUGIN_PATH = join(this.POMS_PATH, "plugin")
-    static readonly SERVER_PATH = join(this.POMS_PATH, "server")
-    static readonly SITE_PATH   = join(this.POMS_PATH, "site")
+    static readonly POMS_PATH       = dirname(dirname(__dirname)) // this file is in /server/src/
+    static readonly PLUGIN_PATH     = join(this.POMS_PATH, "plugin")
+    static readonly SERVER_PATH     = join(this.POMS_PATH, "server")
+    static readonly SITE_PATH       = join(this.POMS_PATH, "site")
     
-    static readonly FILE_NAME   = "poms-config.json"
+    static readonly FILE_NAME       = "poms-config"
+    static readonly FILE_EXTS       = ["json", "json5"]
+    static readonly FILE_FULL_NAMES = this.FILE_EXTS.map(ext => `${this.FILE_NAME}.${ext}`)
 
     static placehold(path: string): string {
         return template(path, {
@@ -293,13 +296,13 @@ export default class Config {
         })
     }
 
-    static async readFromFile(path?: string, logger?: Logger): Promise<Config> {
+    static async fromFile(path?: string, logger?: Logger): Promise<Config> {
         if (path == null)
-            path = await this.findConfig(logger)
+            path = await this.find(logger)
 
         logger?.verbose("Reading config...")
 
-        const json   = await this.readJSON(path)
+        const json   = await this.readJSONFile(path)
         const config = new Config(json, path)
 
         logger?.verbose("Read")
@@ -307,20 +310,21 @@ export default class Config {
         return config
     }
 
-    static async findConfig(logger?: Logger): Promise<string> {
+    static async find(logger?: Logger): Promise<string> {
         logger?.verbose("Searching for configuration file...")
 
         let dir = process.cwd()
 
         while (true) {
             try {
-                const files = await fsp.readdir(dir)
+                const dirFiles = await fsp.readdir(dir)
 
-                if (files.includes(this.FILE_NAME)) {
-                    const path = join(dir, this.FILE_NAME)
-                    logger?.verbose(`Found at ${path}`)
-                    return path
-                }
+                for (const file of Config.FILE_FULL_NAMES)
+                    if (dirFiles.includes(file)) {
+                        const path = join(dir, file)
+                        logger?.verbose(`Found at ${path}`)
+                        return path
+                    }
             } catch {}
 
             const newDir = dirname(dir)
@@ -332,12 +336,15 @@ export default class Config {
         }
     }
 
-    private static async readJSON(path: string): Promise<any> {
+    private static async readJSONFile(path: string): Promise<any> {
         try {
             const string = await fsp.readFile(path, "utf-8")
 
             try {
-                return JSON.parse(string)
+                const json5 = path.endsWith("json5")
+
+                return json5 ? JSON5.parse(string)
+                             : JSON.parse(string)
             } catch (error) {
                 throw new Error(`Configuration file ${path} is a malformed json`, { cause: error })
             }
