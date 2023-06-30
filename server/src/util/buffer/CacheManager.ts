@@ -24,6 +24,13 @@ export interface CacheEntryBufferSet {
 }
 
 export default class CacheManager {
+    private static _bytes(size: number): string {
+        if (size === Infinity)
+            return "infinite"
+
+        return bytes(size)
+    }
+
     private  _keyToId:   Map<CacheEntryKey, number> = new Map() // Maps keys to IDs
     private  _idToEntry: Map<number, CacheEntry>    = new Map() // Maps IDs to entries
     private  _rateToIds: Set<number>[]              = []        // Maps rates to ID-sets
@@ -33,7 +40,7 @@ export default class CacheManager {
     readonly max:        number
     readonly logger:     Logger | null
 
-    constructor(max: number, logger: Logger | null = null) {
+    constructor(max: number = Infinity, logger: Logger | null = null) {
         if (max < 0)
             throw new Error("Maximum size is negative")
 
@@ -43,7 +50,7 @@ export default class CacheManager {
         this.max    = max
         this.logger = logger ?? null
 
-        logger?.debug(`${bytes(max)} cache created`)
+        logger?.debug(`${CacheManager._bytes(max)} cache created`)
     }
 
     get used(): number {
@@ -110,7 +117,7 @@ export default class CacheManager {
     }
 
     create(key: CacheEntryMultikey, buffer: Buffer): ReadonlyCacheEntry | undefined {
-        this.logger?.debug(`Creating new cache entry ${cacheEntryMultikeyToString(key)} of size ${bytes(buffer.length)}...`)
+        this.logger?.debug(`Creating new cache entry ${cacheEntryMultikeyToString(key)} of size ${CacheManager._bytes(buffer.length)}...`)
 
         const keys = cacheEntryMultikeyToCacheEntryKeyArray(key)
 
@@ -128,7 +135,7 @@ export default class CacheManager {
         const size = buffer.length
 
         if (size > this.max) {
-            this.logger?.debug(`Too big. Cache size is ${bytes(this.max)}`)
+            this.logger?.debug(`Too big. Cache size is ${CacheManager._bytes(this.max)}`)
             return undefined
         }
 
@@ -329,41 +336,49 @@ export default class CacheManager {
     }
 
     freeSpace(toFree: number): number {
-        this.logger?.debug(`Freeing at least ${bytes(toFree)} of cache space...`)
+        if (Number.isNaN(toFree))
+            throw new Error("Number of bytes to free is NaN")
+
+        if (toFree < 0)
+            throw new Error("Number of bytes to free is negative")
+
+        if (toFree === 0)
+            return 0
+
+        this.logger?.debug(`Freeing at least ${CacheManager._bytes(toFree)} of cache space...`)
 
         const toDelete = new Array<CacheEntryKey>()
 
         let freed = 0
 
-        if (toFree > 0)
-            outer:
-            for (const i in this._rateToIds) {
-                const sameRateIds = this._rateToIds[i]!
+        outer:
+        for (const i in this._rateToIds) {
+            const sameRateIds = this._rateToIds[i]!
 
-                for (const id of sameRateIds) {
-                    const entry = this._idToEntry.get(id)
+            for (const id of sameRateIds) {
+                const entry = this._idToEntry.get(id)
 
-                    if (entry == null)
-                        this._integrityError()
+                if (entry == null)
+                    this._integrityError()
 
-                    const key = entry.keys[0]
+                const key = entry.keys[0]
 
-                    if (key == null)
-                        this._integrityError()
+                if (key == null)
+                    this._integrityError()
 
-                    toDelete.push(key)
+                toDelete.push(key)
 
-                    freed += entry.buffer.length
+                freed += entry.buffer.length
 
-                    if (freed >= toFree)
-                        break outer
-                }
+                if (freed >= toFree)
+                    break outer
             }
+        }
 
         for (const name of toDelete)
             this.delete(name)
 
-        this.logger?.debug(`Freed ${bytes(freed)}. ${this._makeCacheUsageString()}`)
+        this.logger?.debug(`Freed ${CacheManager._bytes(freed)}. ${this._makeCacheUsageString()}`)
 
         return freed
     }
@@ -377,7 +392,7 @@ export default class CacheManager {
     }
 
     private _makeCacheUsageString(): string {
-        return `Cache usage: ${bytes(this.used)} / ${bytes(this.max)}`
+        return `Cache usage: ${CacheManager._bytes(this.used)} / ${CacheManager._bytes(this.max)}`
     }
 }
 
