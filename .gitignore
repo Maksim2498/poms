@@ -1,17 +1,15 @@
 # VSCode
-.vscode
+.vscode/
 
 # Mac OS
 .DS_Store
 
-# Gradle
-.gradle
+# Build
 **/build/
 !src/**/build/
+
+# Gradle
+.gradle/
 !gradle-wrapper.jar
 !gradle-wrapper.properties
 .gradletasknamecache
-
-# Eclipse
-.project
-.classpath
