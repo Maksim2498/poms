@@ -3,13 +3,3 @@
 
 # Mac OS
 .DS_Store
-
-# Build
-**/build/
-!src/**/build/
-
-# Gradle
-.gradle/
-!gradle-wrapper.jar
-!gradle-wrapper.properties
-.gradletasknamecache
