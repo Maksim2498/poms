@@ -3,3 +3,15 @@
 
 # Mac OS
 .DS_Store
+
+# Gradle
+.gradle
+**/build/
+!src/**/build/
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+.gradletasknamecache
+
+# Eclipse
+.project
+.classpath
