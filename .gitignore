@@ -1,8 +1,5 @@
-**/build/
-**/target/
-**/node_modules/
-
-.DS_Store
+# VSCode
 .vscode
 
-poms-config.json*
+# Mac OS
+.DS_Store
