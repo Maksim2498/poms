@@ -1,7 +1,1 @@
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
-}
-
-rootProject.name = "poms-server"
-
-include("app")
+rootProject.name = "server"
