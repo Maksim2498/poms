@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.util.io.stream
+package ru.fominmv.poms.server.util.io
 
 import java.io.OutputStream
 
