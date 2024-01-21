@@ -1,13 +1,13 @@
 package ru.fominmv.poms.server.mc.protocol.nbt.io.stream
 
 import ru.fominmv.poms.server.mc.protocol.nbt.tag.*
+import ru.fominmv.poms.server.util.io.stream.InputStreamWrapper
 
 import java.io.DataInputStream
 import java.io.InputStream
 
-class TagInputStream(stream: InputStream) : InputStream() {
-    private val stream = DataInputStream(stream)
-
+class TagInputStream(stream: InputStream)
+    : InputStreamWrapper<DataInputStream>(DataInputStream(stream)) {
     fun readTag(): Tag =
          when (val tagId = stream.readByte()) {
             END_TAG_ID        -> readEndTag()
@@ -113,31 +113,4 @@ class TagInputStream(stream: InputStream) : InputStream() {
 
     private fun unknownTagId(tagId: Byte): Nothing =
         throw TagFormatException("Unknown tag id: $tagId")
-
-    override fun available(): Int =
-        stream.available()
-
-    override fun close() =
-        stream.close()
-
-    override fun mark(readlimit: Int) =
-        stream.mark(readlimit)
-
-    override fun markSupported(): Boolean =
-        stream.markSupported()
-
-    override fun read(): Int =
-        stream.read()
-
-    override fun read(b: ByteArray): Int =
-        stream.read(b)
-
-    override fun read(b: ByteArray, off: Int, len: Int): Int =
-        stream.read(b, off, len)
-
-    override fun reset() =
-        stream.reset()
-
-    override fun skip(n: Long): Long =
-        stream.skip(n)
 }

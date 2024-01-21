@@ -1,13 +1,13 @@
 package ru.fominmv.poms.server.mc.protocol.nbt.io.stream
 
 import ru.fominmv.poms.server.mc.protocol.nbt.tag.*
+import ru.fominmv.poms.server.util.io.stream.OutputStreamWrapper
 
 import java.io.DataOutputStream
 import java.io.OutputStream
 
-class TagOutputStream(stream: OutputStream) : OutputStream() {
-    private val stream = DataOutputStream(stream)
-
+class TagOutputStream(stream: OutputStream)
+    : OutputStreamWrapper<DataOutputStream>(DataOutputStream(stream)) {
     fun writeTag(tag: Tag) =
         when (tag) {
             is EndTag       -> writeTag(tag)
@@ -165,19 +165,4 @@ class TagOutputStream(stream: OutputStream) : OutputStream() {
             writeByte(id.toInt())
             writeUTF(name)
         }
-
-    override fun close() =
-        stream.close()
-
-    override fun flush() =
-        stream.flush()
-
-    override fun write(b: Int) =
-        stream.write(b)
-
-    override fun write(b: ByteArray) =
-        stream.write(b)
-
-    override fun write(b: ByteArray, off: Int, len: Int) =
-        stream.write(b, off, len)
 }
