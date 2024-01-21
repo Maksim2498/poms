@@ -3,7 +3,7 @@ package ru.fominmv.poms.server.mc.protocol.nbt.tag
 import ru.fominmv.poms.server.util.declaration
 
 sealed class ContainerTag<out T> : Tag {
-    abstract val values: List<T>
+    abstract val values: Collection<T>
 
     override fun toString(): String {
         val tagName    = javaClass.simpleName

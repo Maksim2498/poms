@@ -5,9 +5,14 @@ import java.util.*
 @Suppress("RedundantModalityModifier")
 final class CompoundTag(
     override val name:   String,
-                 values: List<Tag>,
+                 values: Collection<Tag>,
 ) : ContainerTag<Tag>() {
-    override val values: List<Tag> = values.toList()
+    val valuesMap: Map<String, Tag> = buildMap {
+        values.forEach { put(it.name, it) }
+    }
+
+    override val values: Collection<Tag>
+        get() = valuesMap.values
 
     init {
         if (this.values.any { it === EndTag })
@@ -17,12 +22,12 @@ final class CompoundTag(
     fun component1(): String =
         name
 
-    fun component2(): List<Tag> =
+    fun component2(): Collection<Tag> =
         values
 
     fun copy(
-        name:   String    = this.name,
-        values: List<Tag> = this.values,
+        name:   String          = this.name,
+        values: Collection<Tag> = this.values,
     ): CompoundTag =
         CompoundTag(name, values)
 
