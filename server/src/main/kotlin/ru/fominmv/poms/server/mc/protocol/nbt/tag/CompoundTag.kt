@@ -2,6 +2,7 @@ package ru.fominmv.poms.server.mc.protocol.nbt.tag
 
 import java.util.*
 
+@Suppress("RedundantModalityModifier")
 final class CompoundTag(
     override val name:   String,
                  values: List<Tag>,
