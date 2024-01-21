@@ -1,14 +1,14 @@
-package ru.fominmv.poms.server.mc.protocol.nbt.io.stream
+package ru.fominmv.poms.server.mc.protocol.nbt.io
 
 import ru.fominmv.poms.server.mc.protocol.nbt.tag.*
-import ru.fominmv.poms.server.util.io.stream.InputStreamWrapper
+import ru.fominmv.poms.server.util.io.InputStreamWrapper
 
 import java.io.DataInputStream
 import java.io.InputStream
 
-class TagInputStream(stream: InputStream)
-    : InputStreamWrapper<DataInputStream>(DataInputStream(stream)) {
-    fun readTag(): Tag =
+open class TagInputStream(stream: InputStream)
+    : InputStreamWrapper<DataInputStream>(DataInputStream(stream)), TagInput {
+    override fun readTag(): Tag =
          when (val tagId = stream.readByte()) {
             END_TAG_ID        -> readEndTag()
             BYTE_TAG_ID       -> readByteTag()

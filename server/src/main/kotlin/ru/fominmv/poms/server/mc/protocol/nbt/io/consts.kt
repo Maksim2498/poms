@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.mc.protocol.nbt.io.stream
+package ru.fominmv.poms.server.mc.protocol.nbt.io
 
 const val END_TAG_ID:        Byte = 0
 const val BYTE_TAG_ID:       Byte = 1

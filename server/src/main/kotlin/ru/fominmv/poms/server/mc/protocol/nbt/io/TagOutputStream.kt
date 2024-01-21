@@ -1,14 +1,14 @@
-package ru.fominmv.poms.server.mc.protocol.nbt.io.stream
+package ru.fominmv.poms.server.mc.protocol.nbt.io
 
 import ru.fominmv.poms.server.mc.protocol.nbt.tag.*
-import ru.fominmv.poms.server.util.io.stream.OutputStreamWrapper
+import ru.fominmv.poms.server.util.io.OutputStreamWrapper
 
 import java.io.DataOutputStream
 import java.io.OutputStream
 
-class TagOutputStream(stream: OutputStream)
-    : OutputStreamWrapper<DataOutputStream>(DataOutputStream(stream)) {
-    fun writeTag(tag: Tag) =
+open class TagOutputStream(stream: OutputStream)
+    : OutputStreamWrapper<DataOutputStream>(DataOutputStream(stream)), TagOutput {
+    override fun writeTag(tag: Tag) =
         when (tag) {
             is EndTag       -> writeTag(tag)
             is ByteTag      -> writeTag(tag)
