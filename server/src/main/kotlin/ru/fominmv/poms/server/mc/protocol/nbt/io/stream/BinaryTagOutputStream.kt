@@ -28,6 +28,7 @@ class BinaryTagOutputStream(stream: OutputStream) : TagOutputStream() {
     private fun writeTag(tag: EndTag) =
         writeTagPayload(tag)
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeTagPayload(tag: EndTag) =
         stream.writeByte(0)
 
