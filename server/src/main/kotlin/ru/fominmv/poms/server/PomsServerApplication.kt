@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class PomsServerApplication
 
 fun main(args: Array<String>) {
-	runApplication<PomsServerApplication>(*args)
+    runApplication<PomsServerApplication>(*args)
 }
