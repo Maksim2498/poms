@@ -12,7 +12,7 @@ fun String.escapeSpecial(): String =
             '\r' -> "\\r"
             '\'' -> "\\'"
             '\"' -> "\\\""
-            '\\' -> "\\"
+            '\\' -> "\\\\"
             '\$' -> "\\$"
             else -> it.toString()
         }
