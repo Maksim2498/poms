@@ -1,8 +1,21 @@
 package ru.fominmv.poms.server.util.io
 
-fun readResourceAsByteArray(path: String, clazz: Class<*> = Any::class.java): ByteArray {
-    val stream = clazz.getResourceAsStream(path)
+import java.util.zip.GZIPInputStream
+
+fun readResourceAsByteArray(
+    path:       String,
+    clazz:      Class<*> = Any::class.java,
+    decompress: Boolean = false,
+): ByteArray {
+    var stream = clazz.getResourceAsStream(path)
               ?: throw IllegalArgumentException("Resource $path not found")
 
-    return stream.readAllBytes()
+    if (decompress)
+        stream = GZIPInputStream(stream)
+
+    val array = stream.readAllBytes()
+
+    stream.close()
+
+    return array
 }
