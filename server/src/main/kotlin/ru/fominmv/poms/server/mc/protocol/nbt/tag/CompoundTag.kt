@@ -40,10 +40,10 @@ final class CompoundTag(
 
         other as CompoundTag
 
-        return name   == other.name
-            && values == other.values
+        return name      == other.name
+            && valuesMap == other.valuesMap
     }
 
     override fun hashCode(): Int =
-        Objects.hash(name, values)
+        Objects.hash(name, valuesMap)
 }
