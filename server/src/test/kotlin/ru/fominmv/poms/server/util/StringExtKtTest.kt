@@ -1,7 +1,7 @@
 package ru.fominmv.poms.server.util
 
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class StringExtKtTest {
     @Test
