@@ -1,7 +1,7 @@
 package ru.fominmv.poms.server.mc.protocol.nbt.io
 
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 import ru.fominmv.poms.server.util.io.readResourceAsByteArray
 
