@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.mc.protocol.io.stream
+package ru.fominmv.poms.server.mc.protocol.io
 
 const val VAR_INT_SEGMENT_BIT_COUNT = 7
 const val VAR_INT_SEGMENT_BITS      = 0x7F
