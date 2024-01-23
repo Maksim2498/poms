@@ -57,6 +57,7 @@ class McDataInputStream(stream: InputStream)
     override fun readDouble(): Double =
         stream.readDouble()
 
+    @Suppress("DEPRECATION")
     override fun readLine(): String =
         stream.readLine()
 
