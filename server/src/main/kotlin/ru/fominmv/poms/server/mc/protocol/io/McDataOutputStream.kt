@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.mc.protocol.io.stream
+package ru.fominmv.poms.server.mc.protocol.io
 
 import ru.fominmv.poms.server.mc.protocol.nbt.io.TagOutputStream
 
