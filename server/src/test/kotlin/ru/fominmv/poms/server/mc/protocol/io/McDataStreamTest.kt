@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.mc.protocol.io;
+package ru.fominmv.poms.server.mc.protocol.io
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
