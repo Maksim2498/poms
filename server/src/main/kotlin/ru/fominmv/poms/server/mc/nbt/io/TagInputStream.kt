@@ -1,28 +1,28 @@
 package ru.fominmv.poms.server.mc.nbt.io
 
-import ru.fominmv.poms.server.mc.protocol.nbt.tag.*
+import ru.fominmv.poms.server.mc.nbt.tag.*
 import ru.fominmv.poms.server.util.io.InputStreamWrapper
 
 import java.io.DataInputStream
 import java.io.InputStream
 
 open class TagInputStream(stream: InputStream)
-    : InputStreamWrapper<DataInputStream>(DataInputStream(stream)), ru.fominmv.poms.server.mc.nbt.io.TagInput {
+    : InputStreamWrapper<DataInputStream>(DataInputStream(stream)), TagInput {
     override fun readTag(): Tag =
          when (val tagId = stream.readByte()) {
-            ru.fominmv.poms.server.mc.nbt.io.END_TAG_ID -> readEndTag()
-            ru.fominmv.poms.server.mc.nbt.io.BYTE_TAG_ID -> readByteTag()
-            ru.fominmv.poms.server.mc.nbt.io.SHORT_TAG_ID -> readShortTag()
-            ru.fominmv.poms.server.mc.nbt.io.INT_TAG_ID -> readIntTag()
-            ru.fominmv.poms.server.mc.nbt.io.LONG_TAG_ID -> readLongTag()
-            ru.fominmv.poms.server.mc.nbt.io.FLOAT_TAG_ID -> readFloatTag()
-            ru.fominmv.poms.server.mc.nbt.io.DOUBLE_TAG_ID -> readDoubleTag()
-            ru.fominmv.poms.server.mc.nbt.io.BYTE_ARRAY_TAG_ID -> readByteArrayTag()
-            ru.fominmv.poms.server.mc.nbt.io.STRING_TAG_ID -> readStringTag()
-            ru.fominmv.poms.server.mc.nbt.io.LIST_TAG_ID -> readListTag()
-            ru.fominmv.poms.server.mc.nbt.io.COMPOUND_TAG_ID -> readCompoundTag()
-            ru.fominmv.poms.server.mc.nbt.io.INT_ARRAY_TAG_ID -> readIntArrayTag()
-            ru.fominmv.poms.server.mc.nbt.io.LONG_ARRAY_TAG_ID -> readLongArrayTag()
+            END_TAG_ID        -> readEndTag()
+            BYTE_TAG_ID       -> readByteTag()
+            SHORT_TAG_ID      -> readShortTag()
+            INT_TAG_ID        -> readIntTag()
+            LONG_TAG_ID       -> readLongTag()
+            FLOAT_TAG_ID      -> readFloatTag()
+            DOUBLE_TAG_ID     -> readDoubleTag()
+            BYTE_ARRAY_TAG_ID -> readByteArrayTag()
+            STRING_TAG_ID     -> readStringTag()
+            LIST_TAG_ID       -> readListTag()
+            COMPOUND_TAG_ID   -> readCompoundTag()
+            INT_ARRAY_TAG_ID  -> readIntArrayTag()
+            LONG_ARRAY_TAG_ID -> readLongArrayTag()
             else              -> unknownTagId(tagId)
         }
 
@@ -59,19 +59,19 @@ open class TagInputStream(stream: InputStream)
 
     private fun readListTag(name: String = stream.readUTF()): ListTag<*> {
         val readNamelessTag: () -> Tag = when (val tagId = stream.readByte()) {
-            ru.fominmv.poms.server.mc.nbt.io.END_TAG_ID -> this::readEndTag
-            ru.fominmv.poms.server.mc.nbt.io.BYTE_TAG_ID -> { { readByteTag("")      } }
-            ru.fominmv.poms.server.mc.nbt.io.SHORT_TAG_ID -> { { readShortTag("")     } }
-            ru.fominmv.poms.server.mc.nbt.io.INT_TAG_ID -> { { readIntTag("")       } }
-            ru.fominmv.poms.server.mc.nbt.io.LONG_TAG_ID -> { { readLongTag("")      } }
-            ru.fominmv.poms.server.mc.nbt.io.FLOAT_TAG_ID -> { { readFloatTag("")     } }
-            ru.fominmv.poms.server.mc.nbt.io.DOUBLE_TAG_ID -> { { readDoubleTag("")    } }
-            ru.fominmv.poms.server.mc.nbt.io.BYTE_ARRAY_TAG_ID -> { { readByteArrayTag("") } }
-            ru.fominmv.poms.server.mc.nbt.io.STRING_TAG_ID -> { { readStringTag("")    } }
-            ru.fominmv.poms.server.mc.nbt.io.LIST_TAG_ID -> { { readListTag("")      } }
-            ru.fominmv.poms.server.mc.nbt.io.COMPOUND_TAG_ID -> { { readCompoundTag("")  } }
-            ru.fominmv.poms.server.mc.nbt.io.INT_ARRAY_TAG_ID -> { { readIntArrayTag("")  } }
-            ru.fominmv.poms.server.mc.nbt.io.LONG_ARRAY_TAG_ID -> { { readLongArrayTag("") } }
+            END_TAG_ID        -> this::readEndTag
+            BYTE_TAG_ID       -> { { readByteTag("")      } }
+            SHORT_TAG_ID      -> { { readShortTag("")     } }
+            INT_TAG_ID        -> { { readIntTag("")       } }
+            LONG_TAG_ID       -> { { readLongTag("")      } }
+            FLOAT_TAG_ID      -> { { readFloatTag("")     } }
+            DOUBLE_TAG_ID     -> { { readDoubleTag("")    } }
+            BYTE_ARRAY_TAG_ID -> { { readByteArrayTag("") } }
+            STRING_TAG_ID     -> { { readStringTag("")    } }
+            LIST_TAG_ID       -> { { readListTag("")      } }
+            COMPOUND_TAG_ID   -> { { readCompoundTag("")  } }
+            INT_ARRAY_TAG_ID  -> { { readIntArrayTag("")  } }
+            LONG_ARRAY_TAG_ID -> { { readLongArrayTag("") } }
             else              -> unknownTagId(tagId)
         }
 
@@ -112,5 +112,5 @@ open class TagInputStream(stream: InputStream)
     }
 
     private fun unknownTagId(tagId: Byte): Nothing =
-        throw ru.fominmv.poms.server.mc.nbt.io.TagFormatException("Unknown tag id: $tagId")
+        throw TagFormatException("Unknown tag id: $tagId")
 }

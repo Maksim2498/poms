@@ -2,7 +2,6 @@ package ru.fominmv.poms.server.mc.nbt.tag
 
 import java.util.*
 
-
 @Suppress("RedundantModalityModifier")
 final class ListTag<out T : Tag>(
     override val name:   String,

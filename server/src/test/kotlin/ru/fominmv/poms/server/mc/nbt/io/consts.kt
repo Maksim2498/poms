@@ -1,6 +1,6 @@
 package ru.fominmv.poms.server.mc.nbt.io
 
-import ru.fominmv.poms.server.mc.protocol.nbt.tag.*
+import ru.fominmv.poms.server.mc.nbt.tag.*
 
 val HELLO_WORLD_TAG = CompoundTag(
     "hello world",
