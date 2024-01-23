@@ -9,11 +9,11 @@ import java.util.zip.GZIPInputStream
 class TagInputStreamTest {
     @Test
     fun readTag() {
-        val stream = ru.fominmv.poms.server.mc.nbt.io.TagInputStream(
+        val stream = TagInputStream(
             GZIPInputStream(
                 Objects.requireNonNull(
                     TagInputStreamTest::class.java.getResourceAsStream(
-                        "/mc/protocol/nbt/io/big_test.nbt.gz"
+                        "/mc/nbt/io/big_test.nbt.gz"
                     )
                 )
             )

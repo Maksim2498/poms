@@ -11,7 +11,7 @@ class TagOutputStreamTest {
     companion object {
         var helloWorldBytes: ByteArray =
             readResourceAsByteArray(
-                "/mc/protocol/nbt/io/hello_world.nbt",
+                "/mc/nbt/io/hello_world.nbt",
                 TagOutputStreamTest::class.java,
             )
     }
@@ -19,7 +19,7 @@ class TagOutputStreamTest {
     @Test
     fun writeTag() {
         val byteArrayStream = ByteArrayOutputStream(helloWorldBytes.size)
-        val tagStream       = ru.fominmv.poms.server.mc.nbt.io.TagOutputStream(byteArrayStream)
+        val tagStream       = TagOutputStream(byteArrayStream)
 
         tagStream.writeTag(HELLO_WORLD_TAG)
 

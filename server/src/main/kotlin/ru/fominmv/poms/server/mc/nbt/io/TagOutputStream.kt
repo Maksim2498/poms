@@ -1,13 +1,13 @@
 package ru.fominmv.poms.server.mc.nbt.io
 
-import ru.fominmv.poms.server.mc.protocol.nbt.tag.*
+import ru.fominmv.poms.server.mc.nbt.tag.*
 import ru.fominmv.poms.server.util.io.OutputStreamWrapper
 
 import java.io.DataOutputStream
 import java.io.OutputStream
 
 open class TagOutputStream(stream: OutputStream)
-    : OutputStreamWrapper<DataOutputStream>(DataOutputStream(stream)), ru.fominmv.poms.server.mc.nbt.io.TagOutput {
+    : OutputStreamWrapper<DataOutputStream>(DataOutputStream(stream)), TagOutput {
     override fun writeTag(tag: Tag) =
         when (tag) {
             is EndTag       -> writeTag(tag)
@@ -105,19 +105,19 @@ open class TagOutputStream(stream: OutputStream)
 
     private fun writeTagPayload(tag: ListTag<*>) {
         val tagIdAndWriteTagPayload: Pair<Byte, (Tag) -> Unit> = when (tag.valuesClass) {
-            EndTag::class.java       -> Pair(ru.fominmv.poms.server.mc.nbt.io.END_TAG_ID)        { writeTagPayload(it as EndTag)       }
-            ByteTag::class.java      -> Pair(ru.fominmv.poms.server.mc.nbt.io.BYTE_TAG_ID)       { writeTagPayload(it as ByteTag)      }
-            ShortTag::class.java     -> Pair(ru.fominmv.poms.server.mc.nbt.io.SHORT_TAG_ID)      { writeTagPayload(it as ShortTag)     }
-            IntTag::class.java       -> Pair(ru.fominmv.poms.server.mc.nbt.io.INT_TAG_ID)        { writeTagPayload(it as IntTag)       }
-            LongTag::class.java      -> Pair(ru.fominmv.poms.server.mc.nbt.io.LONG_TAG_ID)       { writeTagPayload(it as LongTag)      }
-            FloatTag::class.java     -> Pair(ru.fominmv.poms.server.mc.nbt.io.FLOAT_TAG_ID)      { writeTagPayload(it as FloatTag)     }
-            DoubleTag::class.java    -> Pair(ru.fominmv.poms.server.mc.nbt.io.DOUBLE_TAG_ID)     { writeTagPayload(it as DoubleTag)    }
-            ByteArrayTag::class.java -> Pair(ru.fominmv.poms.server.mc.nbt.io.BYTE_ARRAY_TAG_ID) { writeTagPayload(it as ByteArrayTag) }
-            StringTag::class.java    -> Pair(ru.fominmv.poms.server.mc.nbt.io.STRING_TAG_ID)     { writeTagPayload(it as StringTag)    }
-            ListTag::class.java      -> Pair(ru.fominmv.poms.server.mc.nbt.io.LIST_TAG_ID)       { writeTagPayload(it as ListTag<*>)   }
-            CompoundTag::class.java  -> Pair(ru.fominmv.poms.server.mc.nbt.io.COMPOUND_TAG_ID)   { writeTagPayload(it as CompoundTag)  }
-            IntArrayTag::class.java  -> Pair(ru.fominmv.poms.server.mc.nbt.io.INT_ARRAY_TAG_ID)  { writeTagPayload(it as IntArrayTag)  }
-            LongArrayTag::class.java -> Pair(ru.fominmv.poms.server.mc.nbt.io.LONG_ARRAY_TAG_ID) { writeTagPayload(it as LongArrayTag) }
+            EndTag::class.java       -> Pair(END_TAG_ID)        { writeTagPayload(it as EndTag)       }
+            ByteTag::class.java      -> Pair(BYTE_TAG_ID)       { writeTagPayload(it as ByteTag)      }
+            ShortTag::class.java     -> Pair(SHORT_TAG_ID)      { writeTagPayload(it as ShortTag)     }
+            IntTag::class.java       -> Pair(INT_TAG_ID)        { writeTagPayload(it as IntTag)       }
+            LongTag::class.java      -> Pair(LONG_TAG_ID)       { writeTagPayload(it as LongTag)      }
+            FloatTag::class.java     -> Pair(FLOAT_TAG_ID)      { writeTagPayload(it as FloatTag)     }
+            DoubleTag::class.java    -> Pair(DOUBLE_TAG_ID)     { writeTagPayload(it as DoubleTag)    }
+            ByteArrayTag::class.java -> Pair(BYTE_ARRAY_TAG_ID) { writeTagPayload(it as ByteArrayTag) }
+            StringTag::class.java    -> Pair(STRING_TAG_ID)     { writeTagPayload(it as StringTag)    }
+            ListTag::class.java      -> Pair(LIST_TAG_ID)       { writeTagPayload(it as ListTag<*>)   }
+            CompoundTag::class.java  -> Pair(COMPOUND_TAG_ID)   { writeTagPayload(it as CompoundTag)  }
+            IntArrayTag::class.java  -> Pair(INT_ARRAY_TAG_ID)  { writeTagPayload(it as IntArrayTag)  }
+            LongArrayTag::class.java -> Pair(LONG_ARRAY_TAG_ID) { writeTagPayload(it as LongArrayTag) }
             else                     -> throw IllegalArgumentException("Not a tag class")
         }
 
@@ -151,7 +151,7 @@ open class TagOutputStream(stream: OutputStream)
     }
 
     private fun writeTag(tag: LongArrayTag) {
-        writeTagHeader(ru.fominmv.poms.server.mc.nbt.io.LONG_ARRAY_TAG_ID, tag.name)
+        writeTagHeader(LONG_ARRAY_TAG_ID, tag.name)
         writeTagPayload(tag)
     }
 
