@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.mc.protocol.io.stream
+package ru.fominmv.poms.server.mc.protocol.io
 
 import ru.fominmv.poms.server.mc.protocol.nbt.io.TagOutput
 import ru.fominmv.poms.server.util.io.UDataOutput
@@ -17,7 +17,7 @@ interface McDataOutput : UDataOutput, TagOutput {
 
             writeByte((curValue and VAR_INT_SEGMENT_BITS) or VAR_INT_CONTINUE_BIT)
 
-            curValue = curValue shr VAR_INT_SEGMENT_BIT_COUNT
+            curValue = curValue ushr VAR_INT_SEGMENT_BIT_COUNT
         }
     }
 
@@ -32,7 +32,7 @@ interface McDataOutput : UDataOutput, TagOutput {
 
             writeByte((curValue.toInt() and VAR_INT_SEGMENT_BITS) or VAR_INT_CONTINUE_BIT)
 
-            curValue = curValue shr VAR_INT_SEGMENT_BIT_COUNT
+            curValue = curValue ushr VAR_INT_SEGMENT_BIT_COUNT
         }
     }
 
