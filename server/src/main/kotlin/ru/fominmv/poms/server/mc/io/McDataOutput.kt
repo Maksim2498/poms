@@ -4,6 +4,7 @@ import ru.fominmv.poms.server.mc.nbt.io.TagOutput
 import ru.fominmv.poms.server.util.io.UDataOutput
 import ru.fominmv.poms.server.util.utf8Length
 
+import java.io.ByteArrayOutputStream
 import java.util.UUID
 
 interface McDataOutput : UDataOutput, TagOutput {
@@ -69,6 +70,17 @@ interface McDataOutput : UDataOutput, TagOutput {
 
         fun evalVarStringSize(value: String): Int =
             evalVarIntSize(value.length) + value.utf8Length
+    }
+
+    fun writePacket(id: Int, createPacket: McDataOutput.() -> Unit) {
+        val byteArrayStream = ByteArrayOutputStream()
+        val mcDataStream    = McDataOutputStream(byteArrayStream)
+
+        mcDataStream.createPacket()
+
+        val data = byteArrayStream.toByteArray()
+
+        writePacket(id, data)
     }
 
     fun writePacket(id: Int, data: ByteArray) {
