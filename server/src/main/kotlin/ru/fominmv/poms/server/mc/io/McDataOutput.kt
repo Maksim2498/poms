@@ -83,7 +83,7 @@ interface McDataOutput : UDataOutput, TagOutput {
         writePacket(id, data)
     }
 
-    fun writePacket(id: Int, data: ByteArray) {
+    fun writePacket(id: Int, data: ByteArray = byteArrayOf()) {
         val size = evalVarIntSize(id) + data.size
 
         writeVarInt(size)
