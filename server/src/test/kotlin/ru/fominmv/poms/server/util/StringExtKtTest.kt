@@ -17,4 +17,18 @@ class StringExtKtTest {
         assertEquals("Hello, World!",                 "Hello, World!".escapeSpecial()      )
         assertEquals("abc\\t\\b\\n\\r\\'\\\"\\\\\\$", "abc\t\b\n\r\'\"\\\$".escapeSpecial())
     }
+
+    @Test
+    fun utf8Length() {
+        val tests = listOf(
+            Pair("Hello, World!", 13),
+            Pair("こんにちは、世界!", 25),
+            Pair("Привет, Мир!", 21),
+            Pair("😂😎🥸🤓", 16),
+        )
+
+        tests.forEach { (string, utf8Length) ->
+            assertEquals(string.utf8Length, utf8Length)
+        }
+    }
 }
