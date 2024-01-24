@@ -5,7 +5,7 @@ import ru.fominmv.poms.server.util.io.UDataOutput
 
 import java.util.UUID
 
-interface McDataOutput : UDataOutput, ru.fominmv.poms.server.mc.nbt.io.TagOutput {
+interface McDataOutput : UDataOutput, TagOutput {
     fun writeVarInt(value: Int) {
         var curValue = value
 
