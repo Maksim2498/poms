@@ -8,6 +8,17 @@ import java.io.InputStream
 import java.util.UUID
 
 interface McDataInput : UDataInput, TagInput {
+    fun readPacket(): Packet {
+        val size     = readVarInt()
+        val id       = readVarInt()
+        val dataSize = McDataOutput.evalVarIntSize(id)
+        val data     = ByteArray(dataSize)
+
+        readFully(data)
+
+        return Packet(id, data)
+    }
+
     fun readVarInt(): Int {
         var value    = 0
         var position = 0
