@@ -2,10 +2,75 @@ package ru.fominmv.poms.server.mc.io
 
 import ru.fominmv.poms.server.mc.nbt.io.TagOutput
 import ru.fominmv.poms.server.util.io.UDataOutput
+import ru.fominmv.poms.server.util.utf8Length
 
 import java.util.UUID
 
 interface McDataOutput : UDataOutput, TagOutput {
+    companion object {
+        fun evalVarIntSize(value: Int): Int {
+            if (value < 0)
+                return 5
+
+            // Number of bytes required to encode an int
+            // increases by one for every 7 used bits
+
+            if (value < 0b1__000_0000)
+                return 1
+
+            if (value < 0b1__000_0000__000_0000)
+                return 2
+
+            if (value < 0b1__000_0000__000_0000__000_0000)
+                return 3
+
+            if (value < 0b1__000_0000__000_0000__000_0000__000_0000)
+                return 4
+
+            return 5
+        }
+
+        fun evalVarLongSize(value: Long): Int {
+            if (value < 0)
+                return 10
+
+            // Number of bytes required to encode a long
+            // increases by one for every 7 used bits
+
+            if (value < 0b1__000_0000)
+                return 1
+
+            if (value < 0b1__000_0000__000_0000)
+                return 2
+
+            if (value < 0b1__000_0000__000_0000__000_0000)
+                return 3
+
+            if (value < 0b1__000_0000__000_0000__000_0000__000_0000)
+                return 4
+
+            if (value < 0b1__000_0000__000_0000__000_0000__000_0000__000_0000)
+                return 5
+
+            if (value < 0b1__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000)
+                return 6
+
+            if (value < 0b1__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000)
+                return 7
+
+            if (value < 0b1__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000)
+                return 8
+
+            if (value.toULong() < 0b1__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000__000_0000u)
+                return 9
+
+            return 10
+        }
+
+        fun evalVarStringSize(value: String): Int =
+            evalVarIntSize(value.length) + value.utf8Length
+    }
+
     fun writeVarInt(value: Int) {
         var curValue = value
 
