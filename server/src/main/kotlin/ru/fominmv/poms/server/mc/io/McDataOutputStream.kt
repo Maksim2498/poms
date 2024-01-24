@@ -5,7 +5,7 @@ import ru.fominmv.poms.server.mc.nbt.io.TagOutputStream
 import java.io.OutputStream
 
 class McDataOutputStream(stream: OutputStream)
-    : ru.fominmv.poms.server.mc.nbt.io.TagOutputStream(stream), McDataOutput {
+    : TagOutputStream(stream), McDataOutput {
     override fun writeBoolean(value: Boolean) =
         stream.writeBoolean(value)
 

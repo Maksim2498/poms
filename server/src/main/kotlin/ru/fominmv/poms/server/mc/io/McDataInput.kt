@@ -7,7 +7,7 @@ import ru.fominmv.poms.server.util.io.UTF8InputStream
 import java.io.InputStream
 import java.util.UUID
 
-interface McDataInput : UDataInput, ru.fominmv.poms.server.mc.nbt.io.TagInput {
+interface McDataInput : UDataInput, TagInput {
     fun readVarInt(): Int {
         var value    = 0
         var position = 0
