@@ -72,15 +72,16 @@ interface McDataOutput : UDataOutput, TagOutput {
             evalVarIntSize(value.length) + value.utf8Length
     }
 
-    fun writePacket(id: Int, createPacket: McDataOutput.() -> Unit) {
+    fun <T> writePacket(id: Int, createPacket: McDataOutput.() -> T): T {
         val byteArrayStream = ByteArrayOutputStream()
         val mcDataStream    = McDataOutputStream(byteArrayStream)
 
-        mcDataStream.createPacket()
-
-        val data = byteArrayStream.toByteArray()
+        val result = mcDataStream.createPacket()
+        val data   = byteArrayStream.toByteArray()
 
         writePacket(id, data)
+
+        return result
     }
 
     fun writePacket(id: Int, data: ByteArray = byteArrayOf()) =
