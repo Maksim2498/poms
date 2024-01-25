@@ -8,11 +8,11 @@ import java.io.InputStream
 import java.util.UUID
 
 interface McDataInput : UDataInput, TagInput {
-    fun readPacket(read: McDataInput.(id: Int) -> Unit) {
+    fun <T> readPacket(read: McDataInput.(id: Int) -> T): T {
         val packet = readPacket()
         val stream = packet.toDataStream()
 
-        stream.read(packet.id)
+        return stream.read(packet.id)
     }
 
     fun readPacket(): Packet {
