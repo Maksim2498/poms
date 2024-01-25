@@ -4,7 +4,7 @@ import java.awt.Image
 
 import kotlin.time.Duration
 
-class ServerStatus (
+data class ServerStatus (
     val version:     Version      = Version(),
     val players:     List<Player> = emptyList(),
     val maxPlayers:  UInt         = 10u,
