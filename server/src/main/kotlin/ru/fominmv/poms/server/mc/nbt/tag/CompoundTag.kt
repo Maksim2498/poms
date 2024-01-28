@@ -19,10 +19,10 @@ final class CompoundTag(
             throw IllegalArgumentException("End tag is not allowed")
     }
 
-    fun component1(): String =
+    operator fun component1(): String =
         name
 
-    fun component2(): Collection<Tag> =
+    operator fun component2(): Collection<Tag> =
         values
 
     fun copy(
