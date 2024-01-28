@@ -18,10 +18,10 @@ final class ListTag<out T : Tag>(
             throw IllegalArgumentException("All tags must be of the same type")
     }
 
-    fun component1(): String =
+    operator fun component1(): String =
         name
 
-    fun component2(): List<T> =
+    operator fun component2(): List<T> =
         values
 
     fun copy(
