@@ -2,10 +2,13 @@ package ru.fominmv.poms.server.mc.io
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
 
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
+import java.util.UUID
+
+import kotlin.random.Random
 
 class McDataOutputStreamTest {
     @Test
@@ -83,6 +86,20 @@ class McDataOutputStreamTest {
 
     @Test
     fun writeUUID() {
-        // TODO
+        val tests = List(10) { UUID(Random.nextLong(), Random.nextLong()) }
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        val mcDataOutputStream    = McDataOutputStream(byteArrayOutputStream)
+
+        tests.forEach(mcDataOutputStream::writeUUID)
+
+        val wroteBytes           = byteArrayOutputStream.toByteArray()
+        val byteArrayInputStream = ByteArrayInputStream(wroteBytes)
+        val dataInputStream      = DataInputStream(byteArrayInputStream)
+
+        for (test in tests) {
+            assertEquals(dataInputStream.readLong(), test.mostSignificantBits)
+            assertEquals(dataInputStream.readLong(), test.leastSignificantBits)
+        }
     }
 }
