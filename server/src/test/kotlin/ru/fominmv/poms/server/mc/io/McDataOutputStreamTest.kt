@@ -40,7 +40,7 @@ class McDataOutputStreamTest {
             pair.second.forEach { expectedByte ->
                 val actualByte = dataInputStream.readByte().toUByte()
 
-                assertEquals(actualByte, expectedByte)
+                assertEquals(expectedByte, actualByte)
             }
         }
     }
@@ -81,7 +81,45 @@ class McDataOutputStreamTest {
 
     @Test
     fun writeVarString() {
-        // TODO
+        val tests = listOf(
+            "Hello, World!",
+            "こんにちは、世界!",
+            "Привет, Мир!",
+            "😂😎🥸🤓",
+            """
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Nam pulvinar facilisis eros non imperdiet. Sed eu ullamcorper
+                nulla. Maecenas fermentum, turpis nec euismod malesuada,
+                odio sapien gravida nisl, nec luctus est purus id turpis.
+                Ut in lorem non orci venenatis lobortis ac id ipsum. Sed at
+                mperdiet nunc. Praesent viverra quis leo ac viverra. Ut
+                at est enim. Fusce malesuada nulla nec leo finibus bibendum.
+                Donec malesuada finibus dolor. Donec sed condimentum nisl,
+                vel porta tellus. Duis viverra, nisi et ultricies tincidunt,
+                purus sem varius augue, ut iaculis leo libero non lacus.
+                Vestibulum ultricies augue eget posuere rutrum. 
+            """.trimIndent(),
+        )
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        val mcDataOutputStream    = McDataOutputStream(byteArrayOutputStream)
+
+        tests.forEach(mcDataOutputStream::writeVarString)
+
+        val wroteBytes           = byteArrayOutputStream.toByteArray()
+        val byteArrayInputStream = ByteArrayInputStream(wroteBytes)
+        val mcDataInputStream    = McDataInputStream(byteArrayInputStream)
+
+        for (test in tests) {
+            assertEquals(test.length, mcDataInputStream.readVarInt())
+
+            val expectedBytes = test.toByteArray()
+            val actualBytes   = ByteArray(expectedBytes.size)
+
+            mcDataInputStream.readFully(actualBytes)
+
+            assertArrayEquals(expectedBytes, actualBytes)
+        }
     }
 
     @Test
@@ -98,8 +136,8 @@ class McDataOutputStreamTest {
         val dataInputStream      = DataInputStream(byteArrayInputStream)
 
         for (test in tests) {
-            assertEquals(dataInputStream.readLong(), test.mostSignificantBits)
-            assertEquals(dataInputStream.readLong(), test.leastSignificantBits)
+            assertEquals(test.mostSignificantBits,  dataInputStream.readLong())
+            assertEquals(test.leastSignificantBits, dataInputStream.readLong())
         }
     }
 }
