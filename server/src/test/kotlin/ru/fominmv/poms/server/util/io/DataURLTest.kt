@@ -10,6 +10,7 @@ import ru.fominmv.poms.server.util.declaration
 import java.nio.charset.StandardCharsets
 
 class DataURLTest {
+    private val SEP   = "-".repeat(64)
     private val TESTS = listOf(
         Pair(
             "data:,A%20brief%20note",
@@ -40,7 +41,7 @@ class DataURLTest {
         ),
         Pair(
             "data:test",
-            DataURL(mimeType = MimeType("test", "*", StandardCharsets.US_ASCII)),
+            DataURL(),
         ),
         Pair(
             "data:,;test",
@@ -90,15 +91,13 @@ class DataURLTest {
         ),
         Pair(
             "data:text/plain;charset=thing;base64;test",
-            DataURL(mimeType = MimeType("test", "*", StandardCharsets.US_ASCII)),
+            DataURL(mimeType = MimeType("text", "plain", StandardCharsets.US_ASCII)),
         ),
     )
 
     @Test
     fun decode() {
-        val sep = "-".repeat(32)
-
-        println(sep)
+        println(SEP)
 
         for ((encodedURL, expectedURL) in TESTS) {
             println("Testing: ${encodedURL.declaration()} == $expectedURL")
@@ -108,13 +107,18 @@ class DataURLTest {
             assertEquals(expectedURL, actualURL)
         }
 
-        println(sep)
+        println(SEP)
     }
 
     @Test
     fun `should decode the same that encodes`() {
-        TESTS.forEach {  (_, url) ->
+        println(SEP)
+
+        for ((_, url) in TESTS) {
+            println("Testing: $url")
             assertEquals(url, DataURL.decode(url.encode()))
         }
+
+        println(SEP)
     }
 }

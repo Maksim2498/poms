@@ -11,16 +11,19 @@ import java.util.Objects
 
 class DataURL(
     val data:     ByteArray = byteArrayOf(),
-    val mimeType: MimeType  = MimeType(
-        "text",
-        "plain",
-        StandardCharsets.US_ASCII,
-    ),
+    val mimeType: MimeType  = DEFAULT_MIME_TYPE,
 ) {
     companion object {
-        private const val PREFIX         = "data:"
-        private const val CHARSET_PREFIX = "charset="
-        private       val WS_REGEX       = Regex("\\s+")
+        val DEFAULT_MIME_TYPE = MimeType(
+            "text",
+            "plain",
+            StandardCharsets.US_ASCII,
+        )
+
+        private const val PREFIX                   = "data:"
+        private const val BASE64_SUFFIX            = ";base64"
+        private const val CHARSET_PARAMETER_PREFIX = "charset="
+        private       val WS_REGEX                 = Regex("\\s+")
 
         fun decode(url: String): DataURL {
             try {
@@ -48,42 +51,43 @@ class DataURL(
             val normedHeader = header.replace(WS_REGEX, "").lowercase()
 
             if (!normedHeader.startsWith(PREFIX))
-                throw IllegalArgumentException()
+                throw IllegalArgumentException("Missing \"data:\" prefix")
 
             val unprefixedHeader = normedHeader.substring(PREFIX.length)
-            val parameters       = unprefixedHeader.split(";")
-                                                   .filter(String::isNotBlank)
+            val useBase64        = unprefixedHeader.endsWith(BASE64_SUFFIX)
+            val mimeType         = decodeMimeType(
+                if (useBase64)
+                    unprefixedHeader.substring(0, unprefixedHeader.length - BASE64_SUFFIX.length)
+                else
+                    unprefixedHeader
+            )
 
-            var charset   = StandardCharsets.US_ASCII
-            var type      = "text"
-            var subtype   = "plain"
-            var useBase64 = false
+            return Header(mimeType, useBase64)
+        }
 
-            for (parameter in parameters) {
-                if (parameter.startsWith(CHARSET_PREFIX)) {
-                    val charsetName = parameter.substring(CHARSET_PREFIX.length)
-                    charset = Charset.forName(charsetName, charset)
+        private fun decodeMimeType(mimeType: String): MimeType {
+            val parameters      = mimeType.split(";")
+            val typeAndSubtype  = parameters[0].split("/")
+            val (type, subtype) = if (typeAndSubtype.size != 2)
+                Pair(DEFAULT_MIME_TYPE.type, DEFAULT_MIME_TYPE.subtype)
+            else
+                Pair(typeAndSubtype[0], typeAndSubtype[1])
+            var charset         = DEFAULT_MIME_TYPE.charset!!
+
+            for (i in 1..<parameters.size) {
+                val parameter = parameters[i]
+
+                if (!parameter.startsWith(CHARSET_PARAMETER_PREFIX))
                     continue
-                }
 
-                if (parameter == "base64") {
-                    useBase64 = true
-                    continue
-                }
+                val charsetName = parameter.substring(CHARSET_PARAMETER_PREFIX.length)
 
-                val typeParts = parameter.split("/")
-
-                if (typeParts.size > 2)
-                    throw IllegalArgumentException("Bad MIME-type")
-
-                type    = typeParts[0]
-                subtype = typeParts.getOrElse(1) { "*" }
+                try {
+                    charset = Charset.forName(charsetName)
+                } catch (_: Exception) {}
             }
 
-            return Header(
-                MimeType(type, subtype, charset),
-                useBase64,
-            )
+            return MimeType(type, subtype, charset)
         }
 
         private class Header(
@@ -93,7 +97,7 @@ class DataURL(
 
         private fun decodeBase64Body(body: String): ByteArray =
             try {
-                Base64.getUrlDecoder().decode(body)
+                Base64.getDecoder().decode(body)
             } catch (_: Exception) {
                 byteArrayOf()
             }
@@ -108,23 +112,23 @@ class DataURL(
     }
 
     fun encode(): String {
-        val parts = buildList {
-            if (!mimeType.type.equals("text", ignoreCase = true) ||
-                !mimeType.subtype.equals("plain", ignoreCase = true))
-                addLast("${mimeType.type}/${mimeType.subtype}")
+        var result = "data:"
 
-            if (mimeType.charset != StandardCharsets.US_ASCII)
-                addLast("charset=${mimeType.charset}")
+        if (!mimeType.type.equals("text", ignoreCase = true) ||
+            !mimeType.subtype.equals("plain", ignoreCase = true))
+            result += "${mimeType.type}/${mimeType.subtype}"
 
-            if (data.isNotEmpty()) {
-                val encoder     = Base64.getUrlEncoder()
-                val encodedData = encoder.encodeToString(data)
+        if (mimeType.charset != StandardCharsets.US_ASCII)
+            result += ";charset=${mimeType.charset}"
 
-                addLast("base64,$encodedData")
-            }
+        if (data.isNotEmpty()) {
+            val encoder     = Base64.getEncoder()
+            val encodedData = encoder.encodeToString(data)
+
+            result += ";base64,$encodedData"
         }
 
-        return "data:${parts.joinToString(";")}"
+        return result
     }
 
     fun copy(data: ByteArray = this.data, mimeType: MimeType = this.mimeType): DataURL =
