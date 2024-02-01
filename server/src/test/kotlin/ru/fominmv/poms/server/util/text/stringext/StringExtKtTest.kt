@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.util
+package ru.fominmv.poms.server.util.text.stringext
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

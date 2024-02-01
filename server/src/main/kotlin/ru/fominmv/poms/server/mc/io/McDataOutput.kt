@@ -2,7 +2,7 @@ package ru.fominmv.poms.server.mc.io
 
 import ru.fominmv.poms.server.mc.nbt.io.TagOutput
 import ru.fominmv.poms.server.util.io.UDataOutput
-import ru.fominmv.poms.server.util.utf8Length
+import ru.fominmv.poms.server.util.text.stringext.utf8Length
 
 import java.io.ByteArrayOutputStream
 import java.util.UUID

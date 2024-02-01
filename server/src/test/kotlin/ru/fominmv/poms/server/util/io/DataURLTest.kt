@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 import org.springframework.util.MimeType
 
-import ru.fominmv.poms.server.util.declaration
+import ru.fominmv.poms.server.util.text.stringext.declaration
 
 import java.nio.charset.StandardCharsets
 
