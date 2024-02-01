@@ -31,4 +31,37 @@ class StringExtKtTest {
             assertEquals(string.utf8Length, utf8Length)
         }
     }
+
+    @Test
+    fun isInet4Address() {
+        val tests = listOf(
+            Pair("0.0.0.0",                   true ),
+            Pair("  0.  0. 0  .0  ",          true ),
+            Pair("  10.  0. 255  .8  : 655 ", true ),
+            Pair("0.0.0.0:",                  false),
+            Pair("0.0.0.0:abcdef",            false),
+            Pair("255.255.255.255:65535",     true ),
+            Pair("255.255.255.255:65536",     false),
+            Pair("256.255.255.255:65535",     false),
+            Pair("-1.255.255.255",            false),
+            Pair("0.0.0",                     false),
+            Pair("0.0.0:255",                 false),
+            Pair("1.2.5.10:255",              true ),
+            Pair("a.b.c.10:255",              false),
+            Pair("not and address",           false),
+            Pair("hey 10.20.30.40 bye",       false),
+            Pair("",                          false),
+        )
+
+        val sep = "*".repeat(64)
+
+        println(sep)
+
+        for ((string, isAddress) in tests) {
+            println("Testing: ${string.declaration()}")
+            assertEquals(isAddress, string.isInet4Address)
+        }
+
+        println(sep)
+    }
 }
