@@ -1,6 +1,6 @@
 package ru.fominmv.poms.server.mc.nbt.tag
 
-import ru.fominmv.poms.server.util.declaration
+import ru.fominmv.poms.server.util.text.stringext.declaration
 
 sealed class ValueTag<out T> : Tag {
     abstract val value: T
