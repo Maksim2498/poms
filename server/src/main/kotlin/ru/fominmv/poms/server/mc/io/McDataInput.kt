@@ -26,6 +26,9 @@ interface McDataInput : UDataInput, TagInput {
         return Packet(id, data)
     }
 
+    fun readVarUInt(): UInt =
+        readVarInt().toUInt()
+
     fun readVarInt(): Int {
         var value    = 0
         var position = 0
@@ -46,6 +49,9 @@ interface McDataInput : UDataInput, TagInput {
 
         return value
     }
+
+    fun readVarULong(): ULong =
+        readVarLong().toULong()
 
     fun readVarLong(): Long {
         var value    = 0L
