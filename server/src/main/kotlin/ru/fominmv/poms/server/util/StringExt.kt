@@ -48,13 +48,31 @@ val String.utf8Length: Int
         return length
     }
 
-private val INET_4_REGEX = Regex(
-    "${List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")}(:\\s*(\\d+)\\s*)?"
+private val INET_4_ADDRESS_REGEX = Regex(
+    List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")
 )
 
 val String.isInet4Address: Boolean
     get() {
-        val match = INET_4_REGEX.matchEntire(this) ?: return false
+        val match = INET_4_ADDRESS_REGEX.matchEntire(this) ?: return false
+
+        for (i in 1..4) {
+            val byte = match.groupValues[i].toIntOrNull() ?: return false
+
+            if (byte !in 0..UByte.MAX_VALUE.toInt())
+                return false
+        }
+
+        return true
+    }
+
+private val INET_4_SOCKET_ADDRESS_REGEX = Regex(
+    "${INET_4_ADDRESS_REGEX.pattern}(:\\s*(\\d+)\\s*)?"
+)
+
+val String.isInet4SocketAddress: Boolean
+    get() {
+        val match = INET_4_SOCKET_ADDRESS_REGEX.matchEntire(this) ?: return false
 
         for (i in 1..4) {
             val byte = match.groupValues[i].toIntOrNull() ?: return false
