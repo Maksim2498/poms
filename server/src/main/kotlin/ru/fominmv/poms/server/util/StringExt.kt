@@ -47,3 +47,28 @@ val String.utf8Length: Int
 
         return length
     }
+
+private val WS_REGEX = Regex("\\s+")
+
+private val INET_4_REGEX = Regex("\\s*(\\d+)\\s*\\.\\s*(\\d+)\\s*\\.\\s*(\\d+)\\s*\\.\\s*(\\d+)\\s*(:\\s*(\\d+)\\s*)?")
+
+val String.isInet4Address: Boolean
+    get() {
+        val match = INET_4_REGEX.matchEntire(this) ?: return false
+
+        for (i in 1..4) {
+            val byte = match.groupValues[i].toIntOrNull() ?: return false
+
+            if (byte !in 0..UByte.MAX_VALUE.toInt())
+                return false
+        }
+
+        val portString = match.groupValues[6]
+
+        if (portString.isEmpty())
+            return true
+
+        val port = portString.toIntOrNull() ?: return false
+
+        return port in 0..UShort.MAX_VALUE.toInt()
+    }
