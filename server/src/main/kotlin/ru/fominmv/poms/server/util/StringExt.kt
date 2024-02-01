@@ -48,9 +48,9 @@ val String.utf8Length: Int
         return length
     }
 
-private val WS_REGEX = Regex("\\s+")
-
-private val INET_4_REGEX = Regex("\\s*(\\d+)\\s*\\.\\s*(\\d+)\\s*\\.\\s*(\\d+)\\s*\\.\\s*(\\d+)\\s*(:\\s*(\\d+)\\s*)?")
+private val INET_4_REGEX = Regex(
+    "${List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")}(:\\s*(\\d+)\\s*)?"
+)
 
 val String.isInet4Address: Boolean
     get() {
