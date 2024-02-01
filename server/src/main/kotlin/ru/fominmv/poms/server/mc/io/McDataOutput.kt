@@ -93,6 +93,9 @@ interface McDataOutput : UDataOutput, TagOutput {
             write(data)
         }
 
+    fun writeVarUInt(value: UInt) =
+        writeVarInt(value.toInt())
+
     fun writeVarInt(value: Int) {
         var curValue = value
 
@@ -107,6 +110,9 @@ interface McDataOutput : UDataOutput, TagOutput {
             curValue = curValue ushr VAR_INT_SEGMENT_BIT_COUNT
         }
     }
+
+    fun writeVarULong(value: ULong) =
+        writeVarLong(value.toLong())
 
     fun writeVarLong(value: Long) {
         var curValue = value
