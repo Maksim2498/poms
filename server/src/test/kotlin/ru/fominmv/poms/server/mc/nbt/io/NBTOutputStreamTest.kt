@@ -7,21 +7,21 @@ import ru.fominmv.poms.server.util.io.readResourceAsByteArray
 
 import java.io.ByteArrayOutputStream
 
-class TagOutputStreamTest {
+class NBTOutputStreamTest {
     companion object {
         var helloWorldBytes: ByteArray =
             readResourceAsByteArray(
                 "/mc/nbt/io/hello_world.nbt",
-                TagOutputStreamTest::class.java,
+                NBTOutputStreamTest::class.java,
             )
     }
 
     @Test
-    fun writeTag() {
+    fun writeNBT() {
         val byteArrayStream = ByteArrayOutputStream(helloWorldBytes.size)
-        val tagStream       = TagOutputStream(byteArrayStream)
+        val nbtStream       = NBTOutputStream(byteArrayStream)
 
-        tagStream.writeTag(HELLO_WORLD_TAG)
+        nbtStream.writeNBT(HELLO_WORLD_NBT)
 
         val wroteBytes = byteArrayStream.toByteArray()
 

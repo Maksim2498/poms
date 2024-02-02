@@ -1,11 +1,11 @@
 package ru.fominmv.poms.server.mc.io
 
-import ru.fominmv.poms.server.mc.nbt.io.TagOutputStream
+import ru.fominmv.poms.server.mc.nbt.io.NBTOutputStream
 
 import java.io.OutputStream
 
 class McDataOutputStream(stream: OutputStream)
-    : TagOutputStream(stream), McDataOutput {
+    : NBTOutputStream(stream), McDataOutput {
     override fun writeBoolean(value: Boolean) =
         stream.writeBoolean(value)
 

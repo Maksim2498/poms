@@ -6,23 +6,23 @@ import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.zip.GZIPInputStream
 
-class TagInputStreamTest {
+class NBTInputStreamTest {
     @Test
-    fun readTag() {
-        val stream = TagInputStream(
+    fun readNBT() {
+        val stream = NBTInputStream(
             GZIPInputStream(
                 Objects.requireNonNull(
-                    TagInputStreamTest::class.java.getResourceAsStream(
+                    NBTInputStreamTest::class.java.getResourceAsStream(
                         "/mc/nbt/io/big_test.nbt.gz"
                     )
                 )
             )
         )
 
-        val tag = stream.readTag()
+        val nbt = stream.readNBT()
 
         stream.close()
 
-        assertEquals(tag, BIG_TEST_TAG)
+        assertEquals(nbt, BIG_TEST_NBT)
     }
 }

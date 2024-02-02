@@ -1,13 +1,13 @@
 package ru.fominmv.poms.server.mc.io
 
-import ru.fominmv.poms.server.mc.nbt.io.TagInput
+import ru.fominmv.poms.server.mc.nbt.io.NBTInput
 import ru.fominmv.poms.server.util.io.UDataInput
 import ru.fominmv.poms.server.util.io.UTF8InputStream
 
 import java.io.InputStream
 import java.util.UUID
 
-interface McDataInput : UDataInput, TagInput {
+interface McDataInput : UDataInput, NBTInput {
     fun <T> readPacket(read: McDataInput.(id: Int) -> T): T {
         val packet = readPacket()
         val stream = packet.toDataStream()

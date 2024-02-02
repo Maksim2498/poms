@@ -1,6 +1,6 @@
 package ru.fominmv.poms.server.mc.nbt.tag
 
-data object EndTag : Tag {
+data object EndNBT : NBT {
     override val name: String
         get() = ""
 

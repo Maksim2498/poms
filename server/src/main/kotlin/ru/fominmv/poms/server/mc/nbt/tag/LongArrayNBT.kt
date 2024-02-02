@@ -1,9 +1,9 @@
 package ru.fominmv.poms.server.mc.nbt.tag
 
-data class LongArrayTag(
+data class LongArrayNBT(
     override val name:   String,
     override val values: List<Long>,
-) : ContainerTag<Long>() {
+) : ContainerNBT<Long>() {
     override fun toString(): String =
         super.toString()
 }
