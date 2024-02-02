@@ -2,11 +2,11 @@ package ru.fominmv.poms.server.mc.nbt.tag
 
 import ru.fominmv.poms.server.util.text.stringext.declaration
 
-sealed class ValueTag<out T> : Tag {
+sealed class ValueNBT<out T> : NBT {
     abstract val value: T
 
     override fun toString(): String {
-        val tagName     = javaClass.simpleName
+        val nbtName     = javaClass.simpleName
         val name        = this.name.declaration()
         val value       = this.value
         val valueString = if (value is String)
@@ -14,6 +14,6 @@ sealed class ValueTag<out T> : Tag {
         else
             value.toString()
 
-        return "$tagName($name): $valueString"
+        return "$nbtName($name): $valueString"
     }
 }

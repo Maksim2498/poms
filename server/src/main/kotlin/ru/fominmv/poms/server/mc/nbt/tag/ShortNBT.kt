@@ -1,9 +1,9 @@
 package ru.fominmv.poms.server.mc.nbt.tag
 
-data class LongTag(
+data class ShortNBT(
     override val name:  String,
-    override val value: Long,
-) : ValueTag<Long>() {
+    override val value: Short,
+) : ValueNBT<Short>() {
     override fun toString(): String =
-        super.toString() + "L"
+        super.toString()
 }

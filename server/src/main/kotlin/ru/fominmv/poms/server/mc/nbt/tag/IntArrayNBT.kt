@@ -1,9 +1,9 @@
 package ru.fominmv.poms.server.mc.nbt.tag
 
-data class ByteArrayTag(
+data class IntArrayNBT(
     override val name:   String,
-    override val values: List<Byte>,
-) : ContainerTag<Byte>() {
+    override val values: List<Int>,
+) : ContainerNBT<Int>() {
     override fun toString(): String =
         super.toString()
 }

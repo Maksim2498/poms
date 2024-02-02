@@ -1,9 +1,9 @@
 package ru.fominmv.poms.server.mc.nbt.tag
 
-data class ShortTag(
+data class FloatNBT(
     override val name:  String,
-    override val value: Short,
-) : ValueTag<Short>() {
+    override val value: Float,
+) : ValueNBT<Float>() {
     override fun toString(): String =
-        super.toString()
+        super.toString() + "f"
 }

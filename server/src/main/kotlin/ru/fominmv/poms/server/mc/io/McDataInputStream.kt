@@ -1,12 +1,12 @@
 package ru.fominmv.poms.server.mc.io
 
-import ru.fominmv.poms.server.mc.nbt.io.TagInputStream
+import ru.fominmv.poms.server.mc.nbt.io.NBTInputStream
 import ru.fominmv.poms.server.util.io.UTF8InputStream
 
 import java.io.InputStream
 
 class McDataInputStream(stream: InputStream)
-    : TagInputStream(stream), McDataInput {
+    : NBTInputStream(stream), McDataInput {
     override fun readVarString(): String {
         val stream = UTF8InputStream(this)
         val length = readVarInt()

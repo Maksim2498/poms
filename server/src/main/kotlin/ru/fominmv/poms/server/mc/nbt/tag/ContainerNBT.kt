@@ -2,15 +2,15 @@ package ru.fominmv.poms.server.mc.nbt.tag
 
 import ru.fominmv.poms.server.util.text.stringext.declaration
 
-sealed class ContainerTag<out T> : Tag {
+sealed class ContainerNBT<out T> : NBT {
     abstract val values: Collection<T>
 
     override fun toString(): String {
-        val tagName    = javaClass.simpleName
+        val nbtName    = javaClass.simpleName
         val name       = this.name.declaration()
         val size       = values.size
         val sizePlural = if (size == 1) "entry" else "entries"
-        val header     = "$tagName($name): $size $sizePlural"
+        val header     = "$nbtName($name): $size $sizePlural"
         val body       = if (size > 0)
             """
             |

@@ -3,15 +3,15 @@ package ru.fominmv.poms.server.mc.nbt.tag
 import java.util.*
 
 @Suppress("RedundantModalityModifier")
-final class ListTag<out T : Tag>(
+final class ListNBT<out T : NBT>(
     override val name:   String,
                  values: List<T>,
-) : ContainerTag<T>() {
+) : ContainerNBT<T>() {
     override val values:      List<T>        = values.toList()
-             val valuesClass: Class<out Tag> = this.values.firstOrNull()?.javaClass ?: EndTag::class.java
+             val valuesClass: Class<out NBT> = this.values.firstOrNull()?.javaClass ?: EndNBT::class.java
 
     init {
-        if (this.values.any { it === EndTag })
+        if (this.values.any { it === EndNBT })
             throw IllegalArgumentException("End tag is not allowed")
 
         if (this.values.any { it.javaClass != valuesClass })
@@ -27,8 +27,8 @@ final class ListTag<out T : Tag>(
     fun copy(
         name:   String                  = this.name,
         values: List<@UnsafeVariance T> = this.values,
-    ): ListTag<T> =
-        ListTag(name, values)
+    ): ListNBT<T> =
+        ListNBT(name, values)
 
     override fun equals(other: Any?): Boolean {
         if (this === other)
@@ -37,7 +37,7 @@ final class ListTag<out T : Tag>(
         if (javaClass != other?.javaClass)
             return false
 
-        other as ListTag<*>
+        other as ListNBT<*>
 
         return name   == other.name
             && values == other.values

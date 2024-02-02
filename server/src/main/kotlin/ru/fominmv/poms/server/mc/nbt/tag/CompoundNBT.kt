@@ -3,33 +3,33 @@ package ru.fominmv.poms.server.mc.nbt.tag
 import java.util.*
 
 @Suppress("RedundantModalityModifier")
-final class CompoundTag(
+final class CompoundNBT(
     override val name:   String,
-                 values: Collection<Tag>,
-) : ContainerTag<Tag>() {
-    val valuesMap: Map<String, Tag> = buildMap {
+                 values: Collection<NBT>,
+) : ContainerNBT<NBT>() {
+    val valuesMap: Map<String, NBT> = buildMap {
         values.forEach { put(it.name, it) }
     }
 
-    override val values: Collection<Tag>
+    override val values: Collection<NBT>
         get() = valuesMap.values
 
     init {
-        if (this.values.any { it === EndTag })
+        if (this.values.any { it === EndNBT })
             throw IllegalArgumentException("End tag is not allowed")
     }
 
     operator fun component1(): String =
         name
 
-    operator fun component2(): Collection<Tag> =
+    operator fun component2(): Collection<NBT> =
         values
 
     fun copy(
         name:   String          = this.name,
-        values: Collection<Tag> = this.values,
-    ): CompoundTag =
-        CompoundTag(name, values)
+        values: Collection<NBT> = this.values,
+    ): CompoundNBT =
+        CompoundNBT(name, values)
 
     override fun equals(other: Any?): Boolean {
         if (this === other)
@@ -38,7 +38,7 @@ final class CompoundTag(
         if (javaClass != other?.javaClass)
             return false
 
-        other as CompoundTag
+        other as CompoundNBT
 
         return name      == other.name
             && valuesMap == other.valuesMap
