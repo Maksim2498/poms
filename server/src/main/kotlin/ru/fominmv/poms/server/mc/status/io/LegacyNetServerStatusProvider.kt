@@ -8,19 +8,18 @@ import java.net.InetSocketAddress
 
 class LegacyNetServerStatusProvider(
     val address:  InetSocketAddress = InetSocketAddress(InetAddress.getLocalHost(), 25565),
-    val hostname: String            = address.hostString,
     val protocol: Int               = -1,
 ) : ServerStatusProvider {
     constructor(
         address:  InetAddress = InetAddress.getLocalHost(),
         port:     UShort      = 25565u,
-        hostname: String      = address.hostAddress,
-        protocol: Int         = 0,
-    ): this(
-        InetSocketAddress(address, port.toInt()),
-        hostname,
-        protocol
-    )
+        protocol: Int         = -1,
+    ): this(InetSocketAddress(address, port.toInt()), protocol)
+
+    constructor(
+        address:  String = "localhost",
+        protocol: Int    = -1,
+    ): this(resolveServerAddress(address), protocol)
 
     override val serverStatus: ServerStatus
         get() = TODO("Not yet implemented")
