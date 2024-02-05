@@ -3,48 +3,41 @@ package ru.fominmv.poms.server.util.text.stringext
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 
-private val INET_4_ADDRESS_REGEX = Regex(
-    List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")
+private val IP_4_ADDRESS_REGEX = Regex(
+    "${List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")}(:\\s*(\\d+)\\s*)?"
 )
 
-val String.isInet4Address: Boolean
-    get() {
-        val match = INET_4_ADDRESS_REGEX.matchEntire(this) ?: return false
+enum class PortMode {
+    NO,
+    OPTIONAL,
+    REQUIRED,
+}
 
-        for (i in 1..4) {
-            val byte = match.groupValues[i].toIntOrNull() ?: return false
+val String.isIP4Address: Boolean
+    get() = isIP4Address()
 
-            if (byte !in 0..UByte.MAX_VALUE.toInt())
-                return false
-        }
+fun String.isIP4Address(portMode: PortMode = PortMode.OPTIONAL): Boolean {
+    val match = IP_4_ADDRESS_REGEX.matchEntire(this) ?: return false
 
-        return true
+    for (i in 1..4) {
+        val byte = match.groupValues[i].toIntOrNull() ?: return false
+
+        if (byte !in 0..UByte.MAX_VALUE.toInt())
+            return false
     }
 
-private val INET_4_SOCKET_ADDRESS_REGEX = Regex(
-    "${INET_4_ADDRESS_REGEX.pattern}(:\\s*(\\d+)\\s*)?"
-)
+    val portString = match.groupValues[6]
 
-val String.isInet4SocketAddress: Boolean
-    get() {
-        val match = INET_4_SOCKET_ADDRESS_REGEX.matchEntire(this) ?: return false
+    if (portString.isEmpty())
+        return portMode != PortMode.REQUIRED
 
-        for (i in 1..4) {
-            val byte = match.groupValues[i].toIntOrNull() ?: return false
+    val port = portString.toIntOrNull() ?: return false
 
-            if (byte !in 0..UByte.MAX_VALUE.toInt())
-                return false
-        }
+    if (port !in 0..UShort.MAX_VALUE.toInt())
+        return false
 
-        val portString = match.groupValues[6]
-
-        if (portString.isEmpty())
-            return true
-
-        val port = portString.toIntOrNull() ?: return false
-
-        return port in 0..UShort.MAX_VALUE.toInt()
-    }
+    return portMode != PortMode.NO
+}
 
 fun String.toInet4Address(): Inet4Address =
     toInet4AddressOrNull() ?: throw IllegalArgumentException("Bad address")
