@@ -74,7 +74,7 @@ class McDataOutputStreamTest {
             pair.second.forEach { expectedByte ->
                 val actualByte = dataInputStream.readByte().toUByte()
 
-                assertEquals(actualByte, expectedByte)
+                assertEquals(expectedByte, actualByte)
             }
         }
     }
