@@ -28,6 +28,8 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin"		)
 	implementation("org.jetbrains.kotlin:kotlin-reflect"					)
 //	implementation("org.springframework.session:spring-session-core"		)
+	implementation("net.kyori:adventure-api:4.15.0"							)
+	implementation("net.kyori:adventure-text-serializer-gson:4.15.0"	    )
 
 	runtimeOnly("com.mysql:mysql-connector-j")
 
