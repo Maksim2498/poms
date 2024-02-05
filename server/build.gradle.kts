@@ -32,6 +32,7 @@ dependencies {
 	implementation("net.kyori:adventure-text-serializer-gson:4.15.0"	    )
 
 	runtimeOnly("com.mysql:mysql-connector-j")
+	runtimeOnly("com.h2database:h2")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 //	testImplementation("org.springframework.security:spring-security-test")
