@@ -19,7 +19,6 @@ import kotlin.time.toDuration
 
 class NewNetServerStatusProvider(
     val address:  InetSocketAddress = InetSocketAddress(InetAddress.getLocalHost(), 25565),
-    val hostname: String            = address.hostString,
     val protocol: Int               = -1,
 ) : ServerStatusProvider {
     companion object {
@@ -32,13 +31,13 @@ class NewNetServerStatusProvider(
     constructor(
         address:  InetAddress = InetAddress.getLocalHost(),
         port:     UShort      = 25565u,
-        hostname: String      = address.hostAddress,
-        protocol: Int         = 0,
-    ): this(
-        InetSocketAddress(address, port.toInt()),
-        hostname,
-        protocol
-    )
+        protocol: Int         = -1,
+    ): this(InetSocketAddress(address, port.toInt()), protocol)
+
+    constructor(
+        address:  String = "localhost",
+        protocol: Int    = -1,
+    ): this(resolveServerAddress(address), protocol)
 
     private val objectMapper = jacksonObjectMapper()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -53,7 +52,7 @@ class NewNetServerStatusProvider(
         with (McDataOutputStream(socket.getOutputStream())) {
             writePacket(HANDSHAKE_PACKET_ID) {
                 writeVarInt(protocol)
-                writeVarString(hostname)
+                writeVarString(address.hostString)
                 writeUShort(address.port.toUInt())
                 writeVarInt(STATUS_STATE_ID)
             }

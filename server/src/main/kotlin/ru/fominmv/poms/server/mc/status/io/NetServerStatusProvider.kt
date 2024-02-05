@@ -2,29 +2,28 @@ package ru.fominmv.poms.server.mc.status.io
 
 import ru.fominmv.poms.server.mc.status.ServerStatus
 import ru.fominmv.poms.server.mc.status.ServerStatusProvider
-import java.net.ConnectException
 
+import java.net.ConnectException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 
 class NetServerStatusProvider(
-    val address: InetSocketAddress = InetSocketAddress(InetAddress.getLocalHost(), 25565),
-    val hostname: String            = address.hostString,
+    val address:  InetSocketAddress = InetSocketAddress(InetAddress.getLocalHost(), 25565),
     val protocol: Int               = -1,
 ) : ServerStatusProvider {
-    private val new    = NewNetServerStatusProvider(address, hostname, protocol)
-    private val legacy = LegacyNetServerStatusProvider(address, hostname, protocol)
+    private val new    = NewNetServerStatusProvider(address, protocol)
+    private val legacy = LegacyNetServerStatusProvider(address, protocol)
 
     constructor(
         address:  InetAddress = InetAddress.getLocalHost(),
         port:     UShort      = 25565u,
-        hostname: String      = address.hostAddress,
-        protocol: Int         = 0,
-    ): this(
-        InetSocketAddress(address, port.toInt()),
-        hostname,
-        protocol
-    )
+        protocol: Int         = -1,
+    ): this(InetSocketAddress(address, port.toInt()), protocol)
+
+    constructor(
+        address:  String = "localhost",
+        protocol: Int    = -1,
+    ): this(resolveServerAddress(address), protocol)
 
     override val serverStatus: ServerStatus
         get() =
