@@ -13,6 +13,14 @@ class DataURL(
     val data:     ByteArray = byteArrayOf(),
     val mimeType: MimeType  = DEFAULT_MIME_TYPE,
 ) {
+    constructor(
+        data:        ByteArray = byteArrayOf(),
+        mimeType:    String    = DEFAULT_MIME_TYPE.type,
+        mimeSubtype: String    = DEFAULT_MIME_TYPE.subtype,
+        charset:     Charset   = StandardCharsets.US_ASCII,
+    ): this(data, MimeType(mimeType, mimeSubtype, charset)) {
+    }
+
     companion object {
         val DEFAULT_MIME_TYPE = MimeType(
             "text",
