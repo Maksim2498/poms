@@ -23,6 +23,6 @@ class NBTInputStreamTest {
 
         stream.close()
 
-        assertEquals(nbt, BIG_TEST_NBT)
+        assertEquals(BIG_TEST_NBT, nbt)
     }
 }
