@@ -1,12 +1,5 @@
 package ru.fominmv.poms.server.util.text.stringext
 
-import java.net.Inet4Address
-import java.net.InetSocketAddress
-
-private val IP_4_ADDRESS_REGEX = Regex(
-    "${List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")}(:\\s*(\\d+)\\s*)?"
-)
-
 enum class PortMode {
     NO,
     OPTIONAL,
@@ -39,16 +32,6 @@ fun String.isIP4Address(portMode: PortMode = PortMode.OPTIONAL): Boolean {
     return portMode != PortMode.NO
 }
 
-fun String.toInet4Address(): Inet4Address =
-    toInet4AddressOrNull() ?: throw IllegalArgumentException("Bad address")
-
-fun String.toInet4AddressOrNull(): Inet4Address? {
-    return null
-}
-
-fun String.toInetSocketAddress(defaultPort: UShort = 0u): InetSocketAddress =
-    toInetSocketAddressOrNull(defaultPort) ?: throw IllegalArgumentException("Bad address")
-
-fun String.toInetSocketAddressOrNull(defaultPort: UShort = 0u): InetSocketAddress? {
-    return null
-}
+private val IP_4_ADDRESS_REGEX = Regex(
+    "${List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")}(:\\s*(\\d+)\\s*)?"
+)
