@@ -35,3 +35,25 @@ fun String.isIP4Address(portMode: PortMode = PortMode.OPTIONAL): Boolean {
 private val IP_4_ADDRESS_REGEX = Regex(
     "${List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")}(:\\s*(\\d+)\\s*)?"
 )
+
+val String.isDomainName: Boolean
+    get() {
+        if (length > MAX_DOMAIN_NAME_LENGTH)
+            return false
+
+        val match = DOMAIN_NAME_REGEX.matchEntire(this) ?: return false
+
+        for (i in 1..<match.groupValues.size)
+            if (match.groupValues[i].length > MAX_DOMAIN_NAME_LABEL_LENGTH)
+                return false
+
+        return true
+    }
+
+private const val MAX_DOMAIN_NAME_LENGTH       = 253
+private const val MAX_DOMAIN_NAME_LABEL_LENGTH = 63
+private const val DOMAIN_NAME_LABEL_PATTERN    = "([a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?)"
+
+private val DOMAIN_NAME_REGEX = Regex(
+    "$DOMAIN_NAME_LABEL_PATTERN(\\.$DOMAIN_NAME_LABEL_PATTERN)*"
+)
