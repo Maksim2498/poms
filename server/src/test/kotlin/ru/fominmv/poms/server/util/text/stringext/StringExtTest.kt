@@ -66,4 +66,38 @@ class StringExtTest {
 
         println(sep)
     }
+
+    @Test
+    fun isDomainName() {
+        val tests = listOf(
+            Pair("",                                                                    false),
+            Pair("example.org",                                                         true ),
+            Pair(" example.org",                                                        false),
+            Pair("example.org ",                                                        false),
+            Pair("example .org",                                                        false),
+            Pair("a.b",                                                                 true ),
+            Pair("a-.b",                                                                false),
+            Pair("a-b.c",                                                               true ),
+            Pair("a-b.c-",                                                              false),
+            Pair("a-b.c-d",                                                             true ),
+            Pair("a-b.c-d.0-1-2-3-4-5-6-7-8-9",                                         false),
+            Pair("a-b.c-d.e-0-1-2-3-4-5-6-7-8-9",                                       true ),
+            Pair("${"a".repeat(63)}.com",                                            true ),
+            Pair("${"a".repeat(64)}.com",                                            false),
+            Pair(List(4) { "a".repeat(62) }.joinToString("."),         true ),
+            Pair(List(4) { "a".repeat(62) }.joinToString(".") + ".a",  true ),
+            Pair(List(4) { "a".repeat(62) }.joinToString(".") + ".ab", false),
+        )
+
+        val sep = "*".repeat(64)
+
+        println(sep)
+
+        for ((string, isDomainName) in tests) {
+            println("Testing: ${string.declaration()}.isDomainName == $isDomainName")
+            assertEquals(isDomainName, string.isDomainName)
+        }
+
+        println(sep)
+    }
 }
