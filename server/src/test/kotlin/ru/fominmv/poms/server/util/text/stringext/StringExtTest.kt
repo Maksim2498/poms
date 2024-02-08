@@ -2,6 +2,7 @@ package ru.fominmv.poms.server.util.text.stringext
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.net.InetAddress
 
 class StringExtTest {
     @Test
@@ -100,6 +101,33 @@ class StringExtTest {
         for ((string, isDomainName) in tests) {
             println("Testing: ${string.declaration()}.isDomainName == $isDomainName")
             assertEquals(isDomainName, string.isDomainName)
+        }
+
+        println(sep)
+    }
+
+    @Test
+    fun toInet4Address() {
+        val tests = listOf(
+            Pair("127.0.0.1",             InetAddress.getByName("127.0.0.1")      ),
+            Pair("  127.0.0.1",           InetAddress.getByName("127.0.0.1")      ),
+            Pair("127.0.0.1  ",           InetAddress.getByName("127.0.0.1")      ),
+            Pair("  127  .  0 .  0.  1 ", InetAddress.getByName("127.0.0.1")      ),
+            Pair("255.255.255.255",       InetAddress.getByName("255.255.255.255")),
+            Pair("256.255.255.255",       null                                         ),
+            Pair("255.256.255.255",       null                                         ),
+            Pair("255.255.256.255",       null                                         ),
+            Pair("255.255.255.256",       null                                         ),
+            Pair("",                      null                                         ),
+        )
+
+        val sep = "*".repeat(64)
+
+        println(sep)
+
+        for ((string, address) in tests) {
+            println("Testing: ${string.declaration()}.toInet4AddressOrNull() == $address")
+            assertEquals(address, string.toInet4AddressOrNull())
         }
 
         println(sep)
