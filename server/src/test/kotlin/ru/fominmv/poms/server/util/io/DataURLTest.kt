@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test
 
 import org.springframework.util.MimeType
 
+import ru.fominmv.poms.server.util.printSep
 import ru.fominmv.poms.server.util.text.stringext.declaration
 
 import java.nio.charset.StandardCharsets
 
 class DataURLTest {
-    private val SEP   = "-".repeat(64)
-    private val TESTS = listOf(
+    private val tests = listOf(
         Pair(
             "data:,A%20brief%20note",
             DataURL("A brief note".toByteArray(StandardCharsets.US_ASCII))
@@ -97,28 +97,28 @@ class DataURLTest {
 
     @Test
     fun decode() {
-        println(SEP)
+        printSep()
 
-        for ((encodedURL, expectedURL) in TESTS) {
-            println("Testing: ${encodedURL.declaration()} == $expectedURL")
+        for ((encodedURL, expectedURL) in tests) {
+            println("Testing ${encodedURL.declaration()} == $expectedURL")
 
             val actualURL = DataURL.decode(encodedURL)
 
             assertEquals(expectedURL, actualURL)
         }
 
-        println(SEP)
+        printSep()
     }
 
     @Test
     fun `should decode the same that encodes`() {
-        println(SEP)
+        printSep()
 
-        for ((_, url) in TESTS) {
-            println("Testing: $url")
+        for ((_, url) in tests) {
+            println("Testing encoding/decoding of $url")
             assertEquals(url, DataURL.decode(url.encode()))
         }
 
-        println(SEP)
+        printSep()
     }
 }
