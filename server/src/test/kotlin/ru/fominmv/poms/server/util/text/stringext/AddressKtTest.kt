@@ -3,6 +3,8 @@ package ru.fominmv.poms.server.util.text.stringext
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
+import ru.fominmv.poms.server.util.printSep
+
 import java.net.InetAddress
 
 class AddressKtTest {
@@ -30,16 +32,14 @@ class AddressKtTest {
             Triple("",                          PortMode.OPTIONAL, false),
         )
 
-        val sep = "*".repeat(64)
-
-        println(sep)
+        printSep()
 
         for ((string, portMode, isAddress) in tests) {
-            println("Testing: ${string.declaration()}.isInet4SocketAddress(${portMode}) == $isAddress")
+            println("Testing ${string.declaration()}.isInet4SocketAddress(${portMode}) == $isAddress")
             assertEquals(isAddress, string.isIP4Address(portMode))
         }
 
-        println(sep)
+        printSep()
     }
 
     @Test
@@ -67,16 +67,14 @@ class AddressKtTest {
             Pair(List(4) { "a".repeat(62) }.joinToString(".") + ".ab", false),
         )
 
-        val sep = "*".repeat(64)
-
-        println(sep)
+        printSep()
 
         for ((string, isDomainName) in tests) {
-            println("Testing: ${string.declaration()}.isDomainName == $isDomainName")
+            println("Testing ${string.declaration()}.isDomainName == $isDomainName")
             assertEquals(isDomainName, string.isDomainName)
         }
 
-        println(sep)
+        printSep()
     }
 
     @Test
@@ -94,15 +92,13 @@ class AddressKtTest {
             Pair("",                      null                                         ),
         )
 
-        val sep = "*".repeat(64)
-
-        println(sep)
+        printSep()
 
         for ((string, address) in tests) {
-            println("Testing: ${string.declaration()}.toInet4AddressOrNull() == $address")
+            println("Testing ${string.declaration()}.toInet4AddressOrNull() == $address")
             assertEquals(address, string.toInet4AddressOrNull())
         }
 
-        println(sep)
+        printSep()
     }
 }
