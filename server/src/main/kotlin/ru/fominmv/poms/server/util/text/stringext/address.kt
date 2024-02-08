@@ -1,5 +1,31 @@
 package ru.fominmv.poms.server.util.text.stringext
 
+import java.net.Inet4Address
+import java.net.InetAddress
+
+private val INET_4_ADDRESS_REGEX = Regex(
+    List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")
+)
+
+fun String.toInet4Address(): Inet4Address =
+    toInet4AddressOrNull() ?: throw IllegalArgumentException("Bad IPv4 address")
+
+fun String.toInet4AddressOrNull(): Inet4Address? {
+    val match = INET_4_ADDRESS_REGEX.matchEntire(this) ?: return null
+    val bytes = ByteArray(4)
+
+    for (i in 1..4) {
+        val byte = match.groupValues[i].toIntOrNull() ?: return null
+
+        if (byte > UByte.MAX_VALUE.toInt())
+            return null
+
+        bytes[i - 1] = byte.toByte()
+    }
+
+    return InetAddress.getByAddress(bytes) as? Inet4Address
+}
+
 val String.isIP4Address: Boolean
     get() = isIP4Address()
 
@@ -13,7 +39,7 @@ fun String.isIP4Address(portMode: PortMode = PortMode.OPTIONAL): Boolean {
     for (i in 1..4) {
         val byte = match.groupValues[i].toIntOrNull() ?: return false
 
-        if (byte !in 0..UByte.MAX_VALUE.toInt())
+        if (byte > UByte.MAX_VALUE.toInt())
             return false
     }
 
