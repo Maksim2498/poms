@@ -2,8 +2,7 @@ package ru.fominmv.poms.server.mc.nbt.tag
 
 import java.util.*
 
-@Suppress("RedundantModalityModifier")
-final class CompoundNBT(
+class CompoundNBT(
     override val name:   String,
                  values: Collection<NBT>,
 ) : ContainerNBT<NBT>() {
