@@ -1,3 +1,8 @@
+poms:
+  mc:
+    server:
+      address: localhost
+
 spring:
   main:
     banner-mode: "off"
