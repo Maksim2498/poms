@@ -16,9 +16,9 @@ fun String.toInetSocketAddressOrNull(
     portMode:    PortMode = PortMode.OPTIONAL,
     defaultPort: UShort   = 0u,
     resolve:     Boolean  = true,
-): InetSocketAddress? {
-    TODO()
-}
+): InetSocketAddress? =
+    toIP4AddressInetSocketAddressOrNull(portMode, defaultPort)
+        ?: toDomainNameInetSocketAddressOrNull(portMode, defaultPort, resolve)
 
 fun String.toIP4AddressInetSocketAddress(
     portMode:    PortMode = PortMode.OPTIONAL,
