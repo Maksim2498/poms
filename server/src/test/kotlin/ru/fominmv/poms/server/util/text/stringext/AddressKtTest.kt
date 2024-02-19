@@ -6,8 +6,35 @@ import org.junit.jupiter.api.Test
 import ru.fominmv.poms.server.util.printSep
 
 import java.net.InetAddress
+import java.net.InetSocketAddress
 
 class AddressKtTest {
+    @Test
+    fun toDomainNameInetSocketAddressOrNull() {
+        val defaultPort: UShort = 2498u
+
+        fun create(domainName: String, port: UShort = defaultPort): InetSocketAddress =
+            InetSocketAddress.createUnresolved(domainName, port.toInt())
+
+        val tests = listOf(
+            Pair("",                                 null                                    ),
+            Pair("x0123456789abcdef.hex",            create("x0123456789abcdef.hex"         )),
+            Pair("  x0123456789abcdef.hex : 4090  ", create("x0123456789abcdef.hex",   4090u)),
+            Pair("abc:24982498",                     null                                    ),
+            Pair("definitely not a domain name",     null                                    ),
+            Pair("a-valid-domain-name.dns:4040",     create("a-valid-domain-name.dns", 4040u)),
+        )
+
+        printSep()
+
+        for ((string, expectedAddress) in tests) {
+            println("Testing ${string.declaration()}.toDomainNameInetSocketAddressOrNull(defaultPort = $defaultPort) == $expectedAddress")
+            assertEquals(expectedAddress, string.toDomainNameInetSocketAddressOrNull(defaultPort = defaultPort, resolve = false))
+        }
+
+        printSep()
+    }
+
     @Test
     fun isIP4Address() {
         val tests = listOf(
@@ -45,23 +72,23 @@ class AddressKtTest {
     @Test
     fun isDomainName() {
         val tests = listOf(
-            Pair("",                                                                    false),
-            Pair("example.org",                                                         true ),
-            Pair(" example.org",                                                        true ),
-            Pair("example.org ",                                                        true ),
-            Pair("example .org",                                                        false),
-            Pair("a.b",                                                                 true ),
-            Pair("a-.b",                                                                false),
-            Pair("a-b.c",                                                               true ),
-            Pair("a-b.c-",                                                              false),
-            Pair("a-b.c-d",                                                             true ),
-            Pair("a-b.c-d:",                                                            false),
-            Pair(" a-b.c-d : 24980",                                                    true ),
-            Pair(" a-b.c-d : 249800",                                                   false),
-            Pair("a-b.c-d.0-1-2-3-4-5-6-7-8-9",                                         false),
-            Pair("a-b.c-d.e-0-1-2-3-4-5-6-7-8-9:2498",                                  true ),
-            Pair("${"a".repeat(63)}.com",                                            true ),
-            Pair("${"a".repeat(64)}.com",                                            false),
+            Pair("",                                                   false),
+            Pair("example.org",                                        true ),
+            Pair(" example.org",                                       true ),
+            Pair("example.org ",                                       true ),
+            Pair("example .org",                                       false),
+            Pair("a.b",                                                true ),
+            Pair("a-.b",                                               false),
+            Pair("a-b.c",                                              true ),
+            Pair("a-b.c-",                                             false),
+            Pair("a-b.c-d",                                            true ),
+            Pair("a-b.c-d:",                                           false),
+            Pair(" a-b.c-d : 24980",                                   true ),
+            Pair(" a-b.c-d : 249800",                                  false),
+            Pair("a-b.c-d.0-1-2-3-4-5-6-7-8-9",                        false),
+            Pair("a-b.c-d.e-0-1-2-3-4-5-6-7-8-9:2498",                 true ),
+            Pair("${"a".repeat(63)}.com",                              true ),
+            Pair("${"a".repeat(64)}.com",                              false),
             Pair(List(4) { "a".repeat(62) }.joinToString("."),         true ),
             Pair(List(4) { "a".repeat(62) }.joinToString(".") + ".a",  true ),
             Pair(List(4) { "a".repeat(62) }.joinToString(".") + ".ab", false),
@@ -85,11 +112,11 @@ class AddressKtTest {
             Pair("127.0.0.1  ",           InetAddress.getByName("127.0.0.1")      ),
             Pair("  127  .  0 .  0.  1 ", InetAddress.getByName("127.0.0.1")      ),
             Pair("255.255.255.255",       InetAddress.getByName("255.255.255.255")),
-            Pair("256.255.255.255",       null                                         ),
-            Pair("255.256.255.255",       null                                         ),
-            Pair("255.255.256.255",       null                                         ),
-            Pair("255.255.255.256",       null                                         ),
-            Pair("",                      null                                         ),
+            Pair("256.255.255.255",       null                                    ),
+            Pair("255.256.255.255",       null                                    ),
+            Pair("255.255.256.255",       null                                    ),
+            Pair("255.255.255.256",       null                                    ),
+            Pair("",                      null                                    ),
         )
 
         printSep()
