@@ -17,21 +17,46 @@ fun String.toInetSocketAddressOrNull(
     defaultPort: UShort   = 0u,
     resolve:     Boolean  = true,
 ): InetSocketAddress? =
-    toIP4AddressInetSocketAddressOrNull(portMode, defaultPort)
+    toIP4InetSocketAddressOrNull(portMode, defaultPort)
         ?: toDomainNameInetSocketAddressOrNull(portMode, defaultPort, resolve)
 
-fun String.toIP4AddressInetSocketAddress(
+fun String.toIP4InetSocketAddress(
     portMode:    PortMode = PortMode.OPTIONAL,
     defaultPort: UShort   = 0u,
 ): InetSocketAddress =
-    toIP4AddressInetSocketAddressOrNull(portMode, defaultPort)
+    toIP4InetSocketAddressOrNull(portMode, defaultPort)
         ?: throw IllegalArgumentException("Bad IPv4 socket address")
 
-fun String.toIP4AddressInetSocketAddressOrNull(
+fun String.toIP4InetSocketAddressOrNull(
     portMode:    PortMode = PortMode.OPTIONAL,
     defaultPort: UShort   = 0u,
 ): InetSocketAddress? {
-    TODO()
+    val match = IP_4_SOCKET_ADDRESS_REGEX.matchEntire(this) ?: return null
+    val bytes = ByteArray(4)
+
+    for (i in 1..4) {
+        val byte = match.groupValues[i].toIntOrNull() ?: return null
+
+        if (byte > UByte.MAX_VALUE.toInt())
+            return null
+
+        bytes[i - 1] = byte.toByte()
+    }
+
+    fun create(port: Int = defaultPort.toInt()): InetSocketAddress =
+        InetSocketAddress(InetAddress.getByAddress(bytes), port)
+
+    val portString = match.groupValues[5]
+
+    if (portString.isEmpty())
+        return if (portMode != PortMode.REQUIRED) create() else null
+
+    if (portMode == PortMode.NO)
+        return null
+
+    val port = portString.toIntOrNull() ?: return null
+
+    return if (port <= UShort.MAX_VALUE.toInt()) create(port) else null
 }
 
 fun String.toDomainNameInetSocketAddress(
@@ -47,7 +72,7 @@ fun String.toDomainNameInetSocketAddressOrNull(
     defaultPort: UShort   = 0u,
     resolve:     Boolean  = true,
 ): InetSocketAddress? {
-    val match      = DOMAIN_NAME_REGEX.matchEntire(this) ?: return null
+    val match      = DOMAIN_NAME_SOCKET_ADDRESS_REGEX.matchEntire(this) ?: return null
     val domainName = match.groupValues[1]
 
     if (domainName.length > MAX_DOMAIN_NAME_LENGTH)
@@ -57,13 +82,13 @@ fun String.toDomainNameInetSocketAddressOrNull(
         if (match.groupValues[i].length > MAX_DOMAIN_NAME_LABEL_LENGTH)
             return null
 
-    val portString = match.groupValues[match.groupValues.size - 1]
-
     fun create(port: Int = defaultPort.toInt()): InetSocketAddress =
         if (resolve)
             InetSocketAddress(domainName, port)
         else
             InetSocketAddress.createUnresolved(domainName, port)
+
+    val portString = match.groupValues[match.groupValues.size - 1]
 
     if (portString.isEmpty())
         return if (portMode != PortMode.REQUIRED) create() else null
@@ -73,14 +98,14 @@ fun String.toDomainNameInetSocketAddressOrNull(
 
     val port = portString.toIntOrNull() ?: return null
 
-    return if (port in 0..UShort.MAX_VALUE.toInt()) create(port) else null
+    return if (port <= UShort.MAX_VALUE.toInt()) create(port) else null
 }
 
 fun String.toInet4Address(): Inet4Address =
     toInet4AddressOrNull() ?: throw IllegalArgumentException("Bad IPv4 address")
 
 fun String.toInet4AddressOrNull(): Inet4Address? {
-    val match = INET_4_ADDRESS_REGEX.matchEntire(this) ?: return null
+    val match = IP_4_ADDRESS_REGEX.matchEntire(this) ?: return null
     val bytes = ByteArray(4)
 
     for (i in 1..4) {
@@ -98,70 +123,35 @@ fun String.toInet4AddressOrNull(): Inet4Address? {
 val String.isIP4Address: Boolean
     get() = isIP4Address()
 
-fun String.isIP4Address(portMode: PortMode = PortMode.OPTIONAL): Boolean {
-    val match = IP_4_ADDRESS_REGEX.matchEntire(this) ?: return false
-
-    for (i in 1..4) {
-        val byte = match.groupValues[i].toIntOrNull() ?: return false
-
-        if (byte > UByte.MAX_VALUE.toInt())
-            return false
-    }
-
-    val portString = match.groupValues[5]
-
-    if (portString.isEmpty())
-        return portMode != PortMode.REQUIRED
-
-    val port = portString.toIntOrNull() ?: return false
-
-    if (port !in 0..UShort.MAX_VALUE.toInt())
-        return false
-
-    return portMode != PortMode.NO
-}
+fun String.isIP4Address(portMode: PortMode = PortMode.OPTIONAL): Boolean =
+    toIP4InetSocketAddressOrNull(portMode) != null
 
 val String.isDomainName: Boolean
     get() = isDomainName()
 
-fun String.isDomainName(portMode: PortMode = PortMode.OPTIONAL): Boolean {
-    val match = DOMAIN_NAME_REGEX.matchEntire(this) ?: return false
+fun String.isDomainName(portMode: PortMode = PortMode.OPTIONAL): Boolean =
+    toDomainNameInetSocketAddressOrNull(portMode = portMode, resolve = false) != null
 
-    if (match.groupValues[1].length > MAX_DOMAIN_NAME_LENGTH)
-        return false
 
-    for (i in 2..<match.groupValues.size - 1)
-        if (match.groupValues[i].length > MAX_DOMAIN_NAME_LABEL_LENGTH)
-            return false
-
-    val portString = match.groupValues[match.groupValues.size - 1]
-
-    if (portString.isEmpty())
-        return portMode != PortMode.REQUIRED
-
-    if (portMode == PortMode.NO)
-        return false
-
-    val port = portString.toIntOrNull() ?: return false
-
-    return port in 0..UShort.MAX_VALUE.toInt()
-}
+private const val PORT_PATTERN = "(?::\\s*(\\d+)\\s*)"
 
 private val IP_4_ADDRESS_REGEX = Regex(
-    "${List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")}(?::\\s*(\\d+)\\s*)?"
+    List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")
 )
 
-private val INET_4_ADDRESS_REGEX = Regex(
-    List(4) { "\\s*(\\d+)\\s*" }.joinToString("\\.")
+private val IP_4_SOCKET_ADDRESS_REGEX = Regex(
+    "${IP_4_ADDRESS_REGEX.pattern}$PORT_PATTERN?"
 )
 
 private const val MAX_DOMAIN_NAME_LENGTH       = 253
 private const val MAX_DOMAIN_NAME_LABEL_LENGTH = 63
 private const val DOMAIN_NAME_LABEL_PATTERN    = "([a-zA-Z](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?)"
+private const val DOMAIN_NAME_PATTERN          = "\\s*($DOMAIN_NAME_LABEL_PATTERN(?:\\.$DOMAIN_NAME_LABEL_PATTERN)*)\\s*"
 
-private val DOMAIN_NAME_REGEX = Regex(
-    "\\s*($DOMAIN_NAME_LABEL_PATTERN(?:\\.$DOMAIN_NAME_LABEL_PATTERN)*)\\s*(?::\\s*(\\d+)\\s*)?"
+private val DOMAIN_NAME_SOCKET_ADDRESS_REGEX = Regex(
+    "$DOMAIN_NAME_PATTERN$PORT_PATTERN?"
 )
+
 
 enum class PortMode {
     NO,
