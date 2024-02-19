@@ -24,10 +24,10 @@ fun String.toIP4AddressInetSocketAddress(
     portMode:    PortMode = PortMode.OPTIONAL,
     defaultPort: UShort   = 0u,
 ): InetSocketAddress =
-    toInet4AddressInetSocketAddressOrNull(portMode, defaultPort)
+    toIP4AddressInetSocketAddressOrNull(portMode, defaultPort)
         ?: throw IllegalArgumentException("Bad IPv4 socket address")
 
-fun String.toInet4AddressInetSocketAddressOrNull(
+fun String.toIP4AddressInetSocketAddressOrNull(
     portMode:    PortMode = PortMode.OPTIONAL,
     defaultPort: UShort   = 0u,
 ): InetSocketAddress? {
