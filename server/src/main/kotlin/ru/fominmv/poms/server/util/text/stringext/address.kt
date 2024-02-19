@@ -47,7 +47,33 @@ fun String.toDomainNameInetSocketAddressOrNull(
     defaultPort: UShort   = 0u,
     resolve:     Boolean  = true,
 ): InetSocketAddress? {
-    TODO()
+    val match      = DOMAIN_NAME_REGEX.matchEntire(this) ?: return null
+    val domainName = match.groupValues[1]
+
+    if (domainName.length > MAX_DOMAIN_NAME_LENGTH)
+        return null
+
+    for (i in 2..<match.groupValues.size - 1)
+        if (match.groupValues[i].length > MAX_DOMAIN_NAME_LABEL_LENGTH)
+            return null
+
+    val portString = match.groupValues[match.groupValues.size - 1]
+
+    fun create(port: Int = defaultPort.toInt()): InetSocketAddress =
+        if (resolve)
+            InetSocketAddress(domainName, port)
+        else
+            InetSocketAddress.createUnresolved(domainName, port)
+
+    if (portString.isEmpty())
+        return if (portMode != PortMode.REQUIRED) create() else null
+
+    if (portMode == PortMode.NO)
+        return null
+
+    val port = portString.toIntOrNull() ?: return null
+
+    return if (port in 0..UShort.MAX_VALUE.toInt()) create(port) else null
 }
 
 fun String.toInet4Address(): Inet4Address =
@@ -101,8 +127,6 @@ val String.isDomainName: Boolean
 fun String.isDomainName(portMode: PortMode = PortMode.OPTIONAL): Boolean {
     val match = DOMAIN_NAME_REGEX.matchEntire(this) ?: return false
 
-    print(match.groupValues.map(String::declaration))
-
     if (match.groupValues[1].length > MAX_DOMAIN_NAME_LENGTH)
         return false
 
@@ -115,12 +139,12 @@ fun String.isDomainName(portMode: PortMode = PortMode.OPTIONAL): Boolean {
     if (portString.isEmpty())
         return portMode != PortMode.REQUIRED
 
-    val port = portString.toIntOrNull() ?: return false
-
-    if (port !in 0..UShort.MAX_VALUE.toInt())
+    if (portMode == PortMode.NO)
         return false
 
-    return portMode != PortMode.NO
+    val port = portString.toIntOrNull() ?: return false
+
+    return port in 0..UShort.MAX_VALUE.toInt()
 }
 
 private val IP_4_ADDRESS_REGEX = Regex(
