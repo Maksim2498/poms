@@ -2,23 +2,24 @@ package ru.fominmv.poms.server.mc.status.io
 
 import ru.fominmv.poms.server.mc.status.ServerStatus
 import ru.fominmv.poms.server.mc.status.ServerStatusProvider
+import ru.fominmv.poms.server.mc.status.Version
 
 import java.net.InetAddress
 import java.net.InetSocketAddress
 
 class LegacyNetServerStatusProvider(
-    val address:  InetSocketAddress = InetSocketAddress(InetAddress.getLocalHost(), 25565),
-    val protocol: Int               = -1,
+    val address:  InetSocketAddress = DEFAULT_SERVER_SOCKET_ADDRESS,
+    val protocol: Int               = Version.DEFAULT_PROTOCOL,
 ) : ServerStatusProvider {
     constructor(
-        address:  InetAddress = InetAddress.getLocalHost(),
-        port:     UShort      = 25565u,
-        protocol: Int         = -1,
+        address:  InetAddress = DEFAULT_SERVER_ADDRESS,
+        port:     UShort      = DEFAULT_SERVER_PORT,
+        protocol: Int         = Version.DEFAULT_PROTOCOL,
     ): this(InetSocketAddress(address, port.toInt()), protocol)
 
     constructor(
-        address:  String = "localhost",
-        protocol: Int    = -1,
+        address:  String = DEFAULT_SERVER_HOST_NAME,
+        protocol: Int    = Version.DEFAULT_PROTOCOL,
     ): this(resolveServerAddress(address), protocol)
 
     override val serverStatus: ServerStatus
