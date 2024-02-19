@@ -5,15 +5,43 @@ import org.junit.jupiter.api.Test
 
 import ru.fominmv.poms.server.util.printSep
 
+import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
 
 class AddressKtTest {
+    companion object {
+        const val DEFAULT_PORT: UShort = 2498u
+    }
+
+    @Test
+    fun toIP4InetSocketAddressOrNull() {
+        fun create(address: String, port: UShort = DEFAULT_PORT): InetSocketAddress =
+            InetSocketAddress(Inet4Address.getByName(address), port.toInt())
+
+        val tests = listOf(
+            Pair("",                           null                             ),
+            Pair("  40  .  20  .  10  .  0  ", create("40.20.10.0"             )),
+            Pair("1.2.3.4:5",                  create("1.2.3.4", 5u            )),
+            Pair("Not an IPv4 address",        null                             ),
+            Pair("255.255.255.255:65535",      create("255.255.255.255", 65535u)),
+            Pair("256.255.255.255:65535",      null                             ),
+            Pair("255.255.255.255:65536",      null                             ),
+        )
+
+        printSep()
+
+        for ((string, expectedAddress) in tests) {
+            println("Testing ${string.declaration()}.toIP4InetSocketAddressOrNull(defaultPort = $DEFAULT_PORT) == $expectedAddress")
+            assertEquals(expectedAddress, string.toIP4InetSocketAddressOrNull(defaultPort = DEFAULT_PORT))
+        }
+
+        printSep()
+    }
+
     @Test
     fun toDomainNameInetSocketAddressOrNull() {
-        val defaultPort: UShort = 2498u
-
-        fun create(domainName: String, port: UShort = defaultPort): InetSocketAddress =
+        fun create(domainName: String, port: UShort = DEFAULT_PORT): InetSocketAddress =
             InetSocketAddress.createUnresolved(domainName, port.toInt())
 
         val tests = listOf(
@@ -28,8 +56,8 @@ class AddressKtTest {
         printSep()
 
         for ((string, expectedAddress) in tests) {
-            println("Testing ${string.declaration()}.toDomainNameInetSocketAddressOrNull(defaultPort = $defaultPort) == $expectedAddress")
-            assertEquals(expectedAddress, string.toDomainNameInetSocketAddressOrNull(defaultPort = defaultPort, resolve = false))
+            println("Testing ${string.declaration()}.toDomainNameInetSocketAddressOrNull(defaultPort = $DEFAULT_PORT) == $expectedAddress")
+            assertEquals(expectedAddress, string.toDomainNameInetSocketAddressOrNull(defaultPort = DEFAULT_PORT, resolve = false))
         }
 
         printSep()
