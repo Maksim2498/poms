@@ -3,6 +3,9 @@ poms:
     server:
       address: localhost
 
+      status:
+        cache-for: 10s
+
 spring:
   main:
     banner-mode: "off"
