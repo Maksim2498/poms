@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 
 import ru.fominmv.poms.server.mc.status.Player
 import ru.fominmv.poms.server.mc.status.ServerStatus
@@ -101,8 +102,23 @@ class JSONServerStatusDeserializer(
         }
     }
 
-    private fun deserializeDescriptionNode(node: JsonNode): TextComponent =
-        JSONComponentSerializer.json().deserialize(node.toString()) as TextComponent
+    private fun deserializeDescriptionNode(node: JsonNode): TextComponent {
+        val json       = node.toString()
+        val serializer = JSONComponentSerializer.json()
+        val component  = serializer.deserialize(json) as TextComponent
+        val content    = component.content()
+        val isLegacy   = !component.hasStyling()
+                      && component.children().isEmpty()
+                      && '§' in content
+
+        if (isLegacy) {
+            val legacySerializer = LegacyComponentSerializer.legacySection()
+            return legacySerializer.deserialize(content)
+        }
+
+        return component
+    }
+
 
     private fun deserializePingNode(node: JsonNode): Duration =
         node.asLong().toDuration(DurationUnit.MILLISECONDS)
