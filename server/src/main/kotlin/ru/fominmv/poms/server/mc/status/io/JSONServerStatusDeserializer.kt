@@ -13,10 +13,12 @@ import ru.fominmv.poms.server.mc.status.ServerStatus
 import ru.fominmv.poms.server.mc.status.Version
 import ru.fominmv.poms.server.util.io.DataURL
 
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 
 import javax.imageio.ImageIO
 
+import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -33,16 +35,41 @@ class JSONServerStatusDeserializer(
         if (context == null)
             throw NullPointerException("<context> is null")
 
-        val rootNode = parser.readValueAsTree<JsonNode>()
+        val rootNode              = parser.readValueAsTree<JsonNode>()
+        val versionNode           = rootNode.required("version")
+        val version               = deserializeVersionNode(versionNode)
+        val playersNode           = rootNode.required("players")
+        val (players, maxPlayers) = deserializePlayersNode(playersNode, context)
+        val faviconNode           = rootNode.path("favicon")
+        val favicon               = deserializeFaviconNode(faviconNode)
+        val descriptionNode       = rootNode.required("description")
+        val description           = deserializeDescriptionNode(descriptionNode)
+        val pingNode              = rootNode.path("ping")
+        val ping                  = deserializePingNode(pingNode)
 
-        val version = with (rootNode.required("version")) {
+        return ServerStatus(
+            version     = version,
+            maxPlayers  = maxPlayers,
+            players     = players,
+            description = description,
+            favicon     = favicon,
+            ping        = ping,
+        )
+    }
+
+    private fun deserializeVersionNode(node: JsonNode): Version =
+        with (node) {
             Version(
-                required("name"    ).asText(),
+                required("name").asText(),
                 required("protocol").asInt(),
             )
         }
 
-        val (players, maxPlayers) = with (rootNode.required("players")) {
+    private fun deserializePlayersNode(
+        node:    JsonNode,
+        context: DeserializationContext,
+    ): Pair<List<Player>, UInt> =
+        with (node) {
             val max        = required("max").asInt().toUInt()
             val sampleNode = path("sample")
             val sample     = if (sampleNode.isMissingNode)
@@ -50,10 +77,11 @@ class JSONServerStatusDeserializer(
             else
                 context.readTreeAsValue(sampleNode, Array<Player>::class.java).toList()
 
-            Pair(sample, max)
+            return Pair(sample, max)
         }
 
-        val favicon = with (rootNode.path("favicon")) {
+    private fun deserializeFaviconNode(node: JsonNode): BufferedImage? =
+        with (node) {
             try {
                 val encodedURL      = asText()
                 val url             = DataURL.decode(encodedURL)
@@ -69,29 +97,15 @@ class JSONServerStatusDeserializer(
                         return@with reader.read(0)
                     } catch (_: Exception) { }
 
-                    null
+                null
             } catch (_: Exception) {
                 null
             }
         }
 
-        val description = with (rootNode.required("description")) {
-            val json = toString()
+    private fun deserializeDescriptionNode(node: JsonNode): TextComponent =
+        JSONComponentSerializer.json().deserialize(node.toString()) as TextComponent
 
-            JSONComponentSerializer.json().deserialize(json) as TextComponent
-        }
-
-        val ping = rootNode.path("ping")
-                           .asLong()
-                           .toDuration(DurationUnit.MILLISECONDS)
-
-        return ServerStatus(
-            version     = version,
-            maxPlayers  = maxPlayers,
-            players     = players,
-            description = description,
-            favicon     = favicon,
-            ping        = ping,
-        )
-    }
+    private fun deserializePingNode(node: JsonNode): Duration =
+        node.asLong().toDuration(DurationUnit.MILLISECONDS)
 }
