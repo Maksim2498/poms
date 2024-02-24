@@ -30,6 +30,7 @@ dependencies {
 //	implementation("org.springframework.session:spring-session-core"		)
 	implementation("net.kyori:adventure-api:4.15.0"							)
 	implementation("net.kyori:adventure-text-serializer-gson:4.15.0"		)
+	implementation("net.kyori:adventure-text-serializer-legacy:4.16.0"		)
 	implementation("dnsjava:dnsjava:3.5.3"									)
 
 	runtimeOnly("com.mysql:mysql-connector-j")
