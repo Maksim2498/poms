@@ -80,28 +80,26 @@ class JSONServerStatusDeserializer(
             return Pair(sample, max)
         }
 
-    private fun deserializeFaviconNode(node: JsonNode): BufferedImage? =
-        with (node) {
-            try {
-                val encodedURL      = asText()
-                val url             = DataURL.decode(encodedURL)
-                val byteArrayStream = ByteArrayInputStream(url.data)
-                val imageStream     = ImageIO.createImageInputStream(byteArrayStream)
-                val mimeType        = "${url.mimeType.type}/${url.mimeType.subtype}"
-                val readers         = ImageIO.getImageReadersByMIMEType(mimeType)
+    private fun deserializeFaviconNode(node: JsonNode): BufferedImage? {
+        try {
+            val encodedURL      = node.asText()
+            val url             = DataURL.decode(encodedURL)
+            val byteArrayStream = ByteArrayInputStream(url.data)
+            val imageStream     = ImageIO.createImageInputStream(byteArrayStream)
+            val mimeType        = "${url.mimeType.type}/${url.mimeType.subtype}"
+            val readers         = ImageIO.getImageReadersByMIMEType(mimeType)
 
-                for (reader in readers)
-                    try {
-                        reader.input = imageStream
+            for (reader in readers)
+                try {
+                    reader.input = imageStream
+                    return reader.read(0)
+                } catch (_: Exception) { }
 
-                        return@with reader.read(0)
-                    } catch (_: Exception) { }
-
-                null
-            } catch (_: Exception) {
-                null
-            }
+            return null
+        } catch (_: Exception) {
+            return null
         }
+    }
 
     private fun deserializeDescriptionNode(node: JsonNode): TextComponent =
         JSONComponentSerializer.json().deserialize(node.toString()) as TextComponent
