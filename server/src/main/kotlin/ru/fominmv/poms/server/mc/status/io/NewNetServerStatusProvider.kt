@@ -50,7 +50,7 @@ class NewNetServerStatusProvider(
         }
 
     private fun requestStatus(socket: Socket) =
-        with (McDataOutputStream(socket.getOutputStream())) {
+        with (McDataOutputStream(socket.outputStream)) {
             writePacket(HANDSHAKE_PACKET_ID) {
                 writeVarInt(protocol)
                 writeVarString(address.hostString)
@@ -68,7 +68,7 @@ class NewNetServerStatusProvider(
         }
 
     private fun receiveStatus(socket: Socket): ServerStatus =
-        with (McDataInputStream(socket.getInputStream())) {
+        with (McDataInputStream(socket.inputStream)) {
             var json:       String? = null
             var pingMillis: Long    = 0
 
