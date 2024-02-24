@@ -3,6 +3,8 @@ package ru.fominmv.poms.server.mc.io
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
+import ru.fominmv.poms.server.util.text.stringext.utf8Length
+
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
@@ -111,7 +113,7 @@ class McDataOutputStreamTest {
         val mcDataInputStream    = McDataInputStream(byteArrayInputStream)
 
         for (test in tests) {
-            assertEquals(test.length, mcDataInputStream.readVarInt())
+            assertEquals(test.utf8Length, mcDataInputStream.readVarInt())
 
             val expectedBytes = test.toByteArray()
             val actualBytes   = ByteArray(expectedBytes.size)
