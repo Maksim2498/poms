@@ -2,9 +2,7 @@ package ru.fominmv.poms.server.mc.io
 
 import ru.fominmv.poms.server.mc.nbt.io.NBTInput
 import ru.fominmv.poms.server.util.io.UDataInput
-import ru.fominmv.poms.server.util.io.UTF8InputStream
 
-import java.io.InputStream
 import java.util.UUID
 
 interface McDataInput : UDataInput, NBTInput {
@@ -75,14 +73,12 @@ interface McDataInput : UDataInput, NBTInput {
     }
 
     fun readVarString(): String {
-        val stream = UTF8InputStream(object : InputStream() { override fun read(): Int = readUByte().toInt() })
-        val length = readVarInt()
+        val size  = readVarInt()
+        val bytes = ByteArray(size)
 
-        return buildString {
-            repeat (length) {
-                append(stream.readUTF8Char())
-            }
-        }
+        readFully(bytes)
+
+        return String(bytes)
     }
 
     fun readUUID(): UUID =

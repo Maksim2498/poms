@@ -4,8 +4,7 @@ import ru.fominmv.poms.server.mc.nbt.io.NBTOutputStream
 
 import java.io.OutputStream
 
-class McDataOutputStream(stream: OutputStream)
-    : NBTOutputStream(stream), McDataOutput {
+class McDataOutputStream(stream: OutputStream) : NBTOutputStream(stream), McDataOutput {
     override fun writeBoolean(value: Boolean) =
         stream.writeBoolean(value)
 

@@ -130,8 +130,10 @@ interface McDataOutput : UDataOutput, NBTOutput {
     }
 
     fun writeVarString(value: String) {
-        writeVarInt(value.length)
-        write(value.encodeToByteArray())
+        val bytes = value.encodeToByteArray()
+
+        writeVarInt(bytes.size)
+        write(bytes)
     }
 
     fun writeUUID(value: UUID) {
