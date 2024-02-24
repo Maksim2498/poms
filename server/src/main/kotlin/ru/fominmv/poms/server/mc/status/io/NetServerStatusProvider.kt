@@ -9,8 +9,8 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 
 class NetServerStatusProvider(
-    val address:  InetSocketAddress = DEFAULT_SERVER_SOCKET_ADDRESS,
-    val protocol: Int               = Version.DEFAULT_PROTOCOL,
+    address:  InetSocketAddress = DEFAULT_SERVER_SOCKET_ADDRESS,
+    protocol: Int               = Version.DEFAULT_PROTOCOL,
 ) : ServerStatusProvider {
     private val new    = NewNetServerStatusProvider(address, protocol)
     private val legacy = LegacyNetServerStatusProvider(address, protocol)
@@ -25,6 +25,12 @@ class NetServerStatusProvider(
         address:  String = DEFAULT_SERVER_HOST_NAME,
         protocol: Int    = Version.DEFAULT_PROTOCOL,
     ): this(resolveServerAddress(address), protocol)
+
+    val address: InetSocketAddress
+        get() = new.address
+
+    val protocol: Int
+        get() = new.protocol
 
     override val serverStatus: ServerStatus
         get() =
