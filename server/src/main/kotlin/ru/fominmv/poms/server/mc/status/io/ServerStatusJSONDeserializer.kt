@@ -9,7 +9,7 @@ import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 
-import ru.fominmv.poms.server.mc.status.Player
+import ru.fominmv.poms.server.mc.status.Players
 import ru.fominmv.poms.server.mc.status.ServerStatus
 import ru.fominmv.poms.server.mc.status.Version
 import ru.fominmv.poms.server.util.io.DataURL
@@ -23,63 +23,31 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-class JSONServerStatusDeserializer(
-    clazz: Class<*>? = null,
-) : StdDeserializer<ServerStatus>(clazz) {
+class ServerStatusJSONDeserializer : StdDeserializer<ServerStatus>(ServerStatus::class.java) {
     override fun deserialize(
-        parser:  JsonParser?,
-        context: DeserializationContext?,
+        parser:  JsonParser,
+        context: DeserializationContext,
     ): ServerStatus {
-        if (parser == null)
-            throw NullPointerException("<parser> is null")
-
-        if (context == null)
-            throw NullPointerException("<context> is null")
-
-        val rootNode              = parser.readValueAsTree<JsonNode>()
-        val versionNode           = rootNode.required("version")
-        val version               = deserializeVersionNode(versionNode)
-        val playersNode           = rootNode.required("players")
-        val (players, maxPlayers) = deserializePlayersNode(playersNode, context)
-        val faviconNode           = rootNode.path("favicon")
-        val favicon               = deserializeFaviconNode(faviconNode)
-        val descriptionNode       = rootNode.required("description")
-        val description           = deserializeDescriptionNode(descriptionNode)
-        val pingNode              = rootNode.path("ping")
-        val ping                  = deserializePingNode(pingNode)
+        val rootNode        = parser.readValueAsTree<JsonNode>()
+        val versionNode     = rootNode.required("version")
+        val version         = context.readTreeAsValue(versionNode, Version::class.java)
+        val playersNode     = rootNode.required("players")
+        val players         = context.readTreeAsValue(playersNode, Players::class.java)
+        val faviconNode     = rootNode.path("favicon")
+        val favicon         = deserializeFaviconNode(faviconNode)
+        val descriptionNode = rootNode.required("description")
+        val description     = deserializeDescriptionNode(descriptionNode)
+        val pingNode        = rootNode.path("ping")
+        val ping            = deserializePingNode(pingNode)
 
         return ServerStatus(
             version     = version,
-            maxPlayers  = maxPlayers,
             players     = players,
             description = description,
             favicon     = favicon,
             ping        = ping,
         )
     }
-
-    private fun deserializeVersionNode(node: JsonNode): Version =
-        with (node) {
-            Version(
-                required("name").asText(),
-                required("protocol").asInt(),
-            )
-        }
-
-    private fun deserializePlayersNode(
-        node:    JsonNode,
-        context: DeserializationContext,
-    ): Pair<List<Player>, UInt> =
-        with (node) {
-            val max        = required("max").asInt().toUInt()
-            val sampleNode = path("sample")
-            val sample     = if (sampleNode.isMissingNode)
-                emptyList()
-            else
-                context.readTreeAsValue(sampleNode, Array<Player>::class.java).toList()
-
-            return Pair(sample, max)
-        }
 
     private fun deserializeFaviconNode(node: JsonNode): BufferedImage? {
         try {
@@ -118,7 +86,6 @@ class JSONServerStatusDeserializer(
 
         return component
     }
-
 
     private fun deserializePingNode(node: JsonNode): Duration =
         node.asLong().toDuration(DurationUnit.MILLISECONDS)
