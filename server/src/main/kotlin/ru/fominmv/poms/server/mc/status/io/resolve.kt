@@ -28,16 +28,16 @@ fun resolveServerAddress(address: String): InetSocketAddress {
 
 fun resolveServerPort(hostName: String): UShort {
     try {
-        val lookupSession = LookupSession.defaultBuilder().build()
-        val lookup = Name.fromString("_minecraft._tcp.$hostName")
-        val records = lookupSession.lookupAsync(lookup, Type.SRV)
-            .toCompletableFuture()
-            .get()
-            .records
-            .map { it as SRVRecord }
+        val lookupSession     = LookupSession.defaultBuilder().build()
+        val lookup            = Name.fromString("_minecraft._tcp.$hostName")
+        val records           = lookupSession.lookupAsync(lookup, Type.SRV)
+                                             .toCompletableFuture()
+                                             .get()
+                                             .records
+                                             .map { it as SRVRecord }
         val minRecordPriority = records.minOf(SRVRecord::getPriority)
-        val preferredRecord = records.filter { it.priority == minRecordPriority }
-            .maxBy(SRVRecord::getWeight)
+        val preferredRecord   = records.filter { it.priority == minRecordPriority }
+                                       .maxBy(SRVRecord::getWeight)
 
         return preferredRecord.port.toUShort()
     } catch (_: Exception) {
