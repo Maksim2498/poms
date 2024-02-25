@@ -79,7 +79,7 @@ class NewNetServerStatusProvider(
                 when (packet.id) {
                     STATUS_PACKET_ID -> json       = packetDataStream.readVarString()
                     PING_PACKET_ID   -> pingMillis = System.currentTimeMillis() - packetDataStream.readLong()
-                    else             -> throw PacketFormatException("Unexpected packet id: ${packet.id}")
+                    else             -> throw PacketFormatException("Unexpected packet id (expected: $STATUS_PACKET_ID or $PING_PACKET_ID, got: ${packet.id})")
                 }
             } while (available() > 0)
 
