@@ -22,23 +22,21 @@ class NewNetServerStatusProvider(
     val address:  InetSocketAddress = DEFAULT_SERVER_SOCKET_ADDRESS,
     val protocol: Int               = Version.DEFAULT_PROTOCOL,
 ) : ServerStatusProvider {
+    constructor(
+        address:  InetAddress,
+        port:     UShort = DEFAULT_SERVER_PORT,
+        protocol: Int    = Version.DEFAULT_PROTOCOL,
+    ): this(InetSocketAddress(address, port.toInt()), protocol)
+
+    constructor(address: String, protocol: Int = Version.DEFAULT_PROTOCOL):
+        this(resolveServerAddress(address), protocol)
+
     companion object {
         private const val HANDSHAKE_PACKET_ID = 0
         private const val STATUS_PACKET_ID    = 0
         private const val PING_PACKET_ID      = 1
         private const val STATUS_STATE_ID     = 1
     }
-
-    constructor(
-        address:  InetAddress = DEFAULT_SERVER_ADDRESS,
-        port:     UShort      = DEFAULT_SERVER_PORT,
-        protocol: Int         = Version.DEFAULT_PROTOCOL,
-    ): this(InetSocketAddress(address, port.toInt()), protocol)
-
-    constructor(
-        address:  String = DEFAULT_SERVER_HOST_NAME,
-        protocol: Int    = Version.DEFAULT_PROTOCOL,
-    ): this(resolveServerAddress(address), protocol)
 
     private val objectMapper = jacksonObjectMapper()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
