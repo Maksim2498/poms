@@ -29,9 +29,9 @@ class ServerStatusJSONSerializer : StdSerializer<ServerStatus>(ServerStatus::cla
         writeStartObject()
         writeObjectField("version", value.version)
         writeObjectField("players", value.players)
-        writeFavicon(value.favicon, this)
-        writeDescription(value.description, this)
-        writePing(value.ping, this)
+        writeFavicon(value.favicon, generator)
+        writeDescription(value.description, generator)
+        writePing(value.ping, generator)
         writeEndObject()
     }
 
