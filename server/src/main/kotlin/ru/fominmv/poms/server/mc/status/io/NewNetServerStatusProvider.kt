@@ -9,7 +9,6 @@ import ru.fominmv.poms.server.mc.io.McDataOutputStream
 import ru.fominmv.poms.server.mc.io.PacketFormatException
 import ru.fominmv.poms.server.mc.status.ServerStatus
 import ru.fominmv.poms.server.mc.status.ServerStatusProvider
-import ru.fominmv.poms.server.mc.status.Version
 
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -20,18 +19,20 @@ import kotlin.time.toDuration
 
 class NewNetServerStatusProvider(
     val address:  InetSocketAddress = DEFAULT_SERVER_SOCKET_ADDRESS,
-    val protocol: Int               = Version.DEFAULT_PROTOCOL,
+    val protocol: Int               = DEFAULT_PROTOCOL,
 ) : ServerStatusProvider {
     constructor(
         address:  InetAddress,
         port:     UShort = DEFAULT_SERVER_PORT,
-        protocol: Int    = Version.DEFAULT_PROTOCOL,
+        protocol: Int    = DEFAULT_PROTOCOL,
     ): this(InetSocketAddress(address, port.toInt()), protocol)
 
-    constructor(address: String, protocol: Int = Version.DEFAULT_PROTOCOL):
+    constructor(address: String, protocol: Int = DEFAULT_PROTOCOL):
         this(resolveServerAddress(address), protocol)
 
     companion object {
+        const val DEFAULT_PROTOCOL = 0
+
         private const val HANDSHAKE_PACKET_ID = 0
         private const val STATUS_PACKET_ID    = 0
         private const val PING_PACKET_ID      = 1
