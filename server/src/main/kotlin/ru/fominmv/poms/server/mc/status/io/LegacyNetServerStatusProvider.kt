@@ -11,6 +11,7 @@ import ru.fominmv.poms.server.mc.status.Players
 import ru.fominmv.poms.server.util.text.stringext.declaration
 
 import java.io.DataInputStream
+import java.io.DataOutputStream
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -20,19 +21,36 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 class LegacyNetServerStatusProvider(
-    val address:  InetSocketAddress = DEFAULT_SERVER_SOCKET_ADDRESS,
-    val protocol: Int               = Version.DEFAULT_PROTOCOL,
+    val address:           InetSocketAddress = DEFAULT_SERVER_SOCKET_ADDRESS,
+    val protocol:          Int               = DEFAULT_PROTOCOL,
+    val compatibilityMode: Boolean           = false,
 ) : ServerStatusProvider {
+    constructor(
+        address:  InetAddress,
+        port:     UShort = DEFAULT_SERVER_PORT,
+        protocol: Int    = DEFAULT_PROTOCOL,
+    ): this(InetSocketAddress(address, port.toInt()), protocol)
+
+    constructor(address: String, protocol: Int = DEFAULT_PROTOCOL):
+        this(resolveServerAddress(address), protocol)
+
     companion object {
+        const val DEFAULT_PROTOCOL = 0x4A
+
         private const val PING_PACKET_ID      = 0xFE.toByte()
         private const val PING_PACKET_PAYLOAD = 0x01.toByte()
         private const val MOTD_PACKET_ID      = 0xFA.toByte()
+        private const val MOTD_PACKET_MESSAGE = "MC|PingHost"
         private const val KICK_PACKET_ID      = 0xFF.toByte()
 
-        private val REQUEST_BYTES = byteArrayOf(
+        private val REQUEST_START_BYTES = byteArrayOf(
             PING_PACKET_ID,
             PING_PACKET_PAYLOAD,
+
             MOTD_PACKET_ID,
+            (MOTD_PACKET_MESSAGE.length ushr 8).toByte(),
+            MOTD_PACKET_MESSAGE.length.toByte(),
+            *MOTD_PACKET_MESSAGE.toByteArray(StandardCharsets.UTF_16BE),
         )
 
         private const val RESPONSE_PACKET_PREFIX                       = "§1"
@@ -45,17 +63,6 @@ class LegacyNetServerStatusProvider(
         private const val RESPONSE_PACKET_MAX_PLAYER_COUNT_ENTRY_ID    = 5
     }
 
-    constructor(
-        address:  InetAddress = DEFAULT_SERVER_ADDRESS,
-        port:     UShort      = DEFAULT_SERVER_PORT,
-        protocol: Int         = Version.DEFAULT_PROTOCOL,
-    ): this(InetSocketAddress(address, port.toInt()), protocol)
-
-    constructor(
-        address:  String = DEFAULT_SERVER_HOST_NAME,
-        protocol: Int    = Version.DEFAULT_PROTOCOL,
-    ): this(resolveServerAddress(address), protocol)
-
     override val serverStatus: ServerStatus
         get() = Socket(address.address, address.port).use { socket ->
             requestStatus(socket)
@@ -63,7 +70,23 @@ class LegacyNetServerStatusProvider(
         }
 
     private fun requestStatus(socket: Socket) =
-        socket.outputStream.write(REQUEST_BYTES)
+        with (DataOutputStream(socket.outputStream)) {
+            if (compatibilityMode) {
+                REQUEST_START_BYTES.slice(0..3).forEach { writeByte(it.toInt()) }
+                return
+            }
+
+            val hostname      = address.hostString
+            val hostnameBytes = hostname.toByteArray(StandardCharsets.UTF_16BE)
+            val restSize      = 7 + hostnameBytes.size
+
+            write(REQUEST_START_BYTES)
+            writeShort(restSize)
+            writeByte(protocol)
+            writeShort(hostname.length)
+            write(hostnameBytes)
+            writeInt(address.port)
+        }
 
     private fun receiveStatus(socket: Socket): ServerStatus =
         with (DataInputStream(socket.inputStream)) {
