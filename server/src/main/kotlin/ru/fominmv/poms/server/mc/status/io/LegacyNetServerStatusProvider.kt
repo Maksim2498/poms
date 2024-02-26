@@ -35,7 +35,7 @@ class LegacyNetServerStatusProvider(
         this(resolveServerAddress(address), protocol)
 
     companion object {
-        const val DEFAULT_PROTOCOL = 0x4A
+        const val DEFAULT_PROTOCOL = 0x2F
 
         private const val PING_PACKET_ID      = 0xFE.toByte()
         private const val PING_PACKET_PAYLOAD = 0x01.toByte()
@@ -86,6 +86,7 @@ class LegacyNetServerStatusProvider(
             writeShort(hostname.length)
             write(hostnameBytes)
             writeInt(address.port)
+            flush()
         }
 
     private fun receiveStatus(socket: Socket): ServerStatus =
