@@ -44,9 +44,9 @@ class NewNetServerStatusProvider(
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     override val serverStatus: ServerStatus
-        get() = Socket(address.address, address.port).use {
-            requestStatus(it)
-            receiveStatus(it)
+        get() = Socket(address.address, address.port).use { socket ->
+            requestStatus(socket)
+            receiveStatus(socket)
         }
 
     private fun requestStatus(socket: Socket) =

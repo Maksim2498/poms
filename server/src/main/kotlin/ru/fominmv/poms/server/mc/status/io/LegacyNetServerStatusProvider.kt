@@ -11,11 +11,11 @@ import ru.fominmv.poms.server.mc.status.Players
 import ru.fominmv.poms.server.util.text.stringext.declaration
 
 import java.io.DataInputStream
-import java.io.DataOutputStream
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -57,9 +57,9 @@ class LegacyNetServerStatusProvider(
     ): this(resolveServerAddress(address), protocol)
 
     override val serverStatus: ServerStatus
-        get() = Socket(address.address, address.port).use {
-            requestStatus(it)
-            receiveStatus(it)
+        get() = Socket(address.address, address.port).use { socket ->
+            requestStatus(socket)
+            receiveStatus(socket)
         }
 
     private fun requestStatus(socket: Socket) =
