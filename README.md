@@ -1,4 +1,4 @@
-# POMS - Personal Offline-mode Minecraft Server administration system (WIP)
+# POMS - Personal Offline-mode Minecraft Server administration system (WIP) (The work will not be continued until 2025)
 
 ![Logo](/images/logo.png)
 
