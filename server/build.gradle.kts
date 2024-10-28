@@ -1,5 +1,10 @@
+group = "ru.fominmv.poms.server"
+version = "0.0.1-SNAPSHOT"
+
+// Plugins
+
 plugins {
-	kotlin("jvm") version "2.0.21"
+	kotlin("jvm")
 	kotlin("plugin.spring") version "2.0.21"
 
 	id("org.springframework.boot") version "3.3.5"
@@ -8,18 +13,17 @@ plugins {
 	kotlin("plugin.jpa") version "2.0.21"
 }
 
-group = "ru.fominmv.poms.server"
-version = "0.0.1-SNAPSHOT"
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+allOpen {
+	annotation("jakarta.persistence.Entity")
+	annotation("jakarta.persistence.MappedSuperclass")
+	annotation("jakarta.persistence.Embeddable")
 }
 
-repositories {
-	mavenCentral()
+springBoot {
+	mainClass = "ru.fominmv.poms.server.ApplicationKt"
 }
+
+// Dependencies
 
 dependencies {
 	// Libs
@@ -57,21 +61,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict")
-	}
-}
-
-allOpen {
-	annotation("jakarta.persistence.Entity")
-	annotation("jakarta.persistence.MappedSuperclass")
-	annotation("jakarta.persistence.Embeddable")
-}
-
-springBoot {
-	mainClass = "ru.fominmv.poms.server.ApplicationKt"
-}
+// Tasks
 
 tasks.withType<Test> {
 	useJUnitPlatform()
