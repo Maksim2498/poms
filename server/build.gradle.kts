@@ -36,6 +36,7 @@ dependencies {
 	// JSON
 
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("com.github.fge:json-patch:1.9")
 
 	// SQL
 
