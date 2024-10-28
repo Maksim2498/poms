@@ -2,9 +2,9 @@ package ru.fominmv.poms.server.model.classes
 
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
-import ru.fominmv.poms.server.util.string.ext.removeWhiteSpace
-import ru.fominmv.poms.server.util.string.Secret
 import ru.fominmv.poms.server.validation.constraints.*
+import ru.fominmv.poms.libs.commons.string.ext.removeWhiteSpace
+import ru.fominmv.poms.libs.commons.string.Secret
 
 import jakarta.persistence.*
 

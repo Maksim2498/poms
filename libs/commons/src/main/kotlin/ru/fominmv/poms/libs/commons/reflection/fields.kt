@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.util.reflection
+package ru.fominmv.poms.libs.commons.reflection
 
 import java.lang.reflect.Field
 

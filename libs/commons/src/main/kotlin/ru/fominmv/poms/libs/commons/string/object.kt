@@ -1,6 +1,8 @@
-package ru.fominmv.poms.server.util.string
+package ru.fominmv.poms.libs.commons.string
 
-import ru.fominmv.poms.server.util.reflection.allDeclaredFields
+import ru.fominmv.poms.libs.commons.reflection.allDeclaredFields
+
+// Annotations
 
 @MustBeDocumented
 @Target(AnnotationTarget.FIELD)
@@ -9,6 +11,8 @@ annotation class Hidden
 @MustBeDocumented
 @Target(AnnotationTarget.FIELD)
 annotation class Secret
+
+// To
 
 fun Any.toObjectString(): String {
     val any = this
@@ -35,6 +39,8 @@ fun Any.toObjectString(): String {
 
 fun Any.toObjectString(fields: Map<String, Any?>): String =
     createObjectString(this, fields)
+
+// Create
 
 fun createObjectString(any: Any, fields: Map<String, Any?>): String =
     createObjectString(any.javaClass, fields)

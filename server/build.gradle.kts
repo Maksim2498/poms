@@ -22,6 +22,10 @@ repositories {
 }
 
 dependencies {
+	// Libs
+
+	implementation(project(":libs:commons"))
+
 	// Kotlin
 
 	implementation("org.jetbrains.kotlin:kotlin-reflect")

@@ -3,7 +3,7 @@ package ru.fominmv.poms.server.util.hibernate
 import org.hibernate.boot.model.naming.*
 import org.hibernate.boot.model.source.spi.AttributePath
 
-import ru.fominmv.poms.server.util.string.ext.firstLower
+import ru.fominmv.poms.libs.commons.string.ext.firstLower
 
 class CustomImplicitNamingStrategy(
     private val ignoredAttributePathPartPrefixes: Set<String> = setOf("internal"),

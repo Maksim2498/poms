@@ -4,4 +4,8 @@ plugins {
 
 rootProject.name = "poms"
 
-include("plugin", "server")
+include(
+    ":libs:commons",
+    ":plugin",
+    ":server",
+)
