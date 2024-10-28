@@ -1,3 +1,13 @@
+poms:
+    database:
+        host: localhost
+        port: 0
+
+        name: poms
+
+        username: root
+        password:
+
 spring:
     application:
         name: POMS Server
