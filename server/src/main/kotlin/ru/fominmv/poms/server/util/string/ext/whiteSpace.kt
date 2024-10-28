@@ -32,7 +32,4 @@ fun String.collapseWhiteSpace(): String =
 // Trim to null
 
 fun String?.trimToNull(): String? =
-    if (this != null)
-        trim().ifEmpty { null }
-    else
-        null
+    this?.trim()?.ifEmpty { null }
