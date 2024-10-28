@@ -6,6 +6,10 @@ import ru.fominmv.poms.server.util.reflection.allDeclaredFields
 @Target(AnnotationTarget.FIELD)
 annotation class Hidden
 
+@MustBeDocumented
+@Target(AnnotationTarget.FIELD)
+annotation class Secret
+
 fun Any.toObjectString(): String {
     val any = this
     val anyClass = javaClass
@@ -17,7 +21,12 @@ fun Any.toObjectString(): String {
             if (field.getAnnotation(Hidden::class.java) != null)
                 continue
 
-            put(field.name, field.get(any))
+            val fieldValue = if (field.getAnnotation(Secret::class.java) != null)
+                "[PROTECTED]"
+            else
+                field.get(any)
+
+            put(field.name, fieldValue)
         }
     }
 
