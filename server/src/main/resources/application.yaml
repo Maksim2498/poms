@@ -7,6 +7,9 @@ spring:
         allow-circular-references: true
         banner-mode: off
 
+    profiles:
+        default: development
+
     web:
         resources:
             add-mappings: false
