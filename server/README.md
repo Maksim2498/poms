@@ -1,3 +1,0 @@
-# POMS Server
-
-***WIP***

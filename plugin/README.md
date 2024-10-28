@@ -1,3 +1,0 @@
-# POMS Plugin
-
-***WIP***
