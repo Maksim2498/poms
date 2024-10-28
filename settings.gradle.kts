@@ -4,4 +4,4 @@ plugins {
 
 rootProject.name = "poms"
 
-include("server")
+include("plugin", "server")
