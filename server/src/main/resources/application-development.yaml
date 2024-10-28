@@ -1,0 +1,15 @@
+spring:
+    datasource:
+        url: jdbc:h2:mem:${poms.database.name}
+        username: ${poms.database.username}
+        password: ${poms.database.password}
+        driverClassName: org.h2.Driver
+
+    jpa:
+        spring:
+            jpa:
+                database-platform: org.hibernate.dialect.H2Dialect
+
+    h2:
+        console:
+            enabled: true
