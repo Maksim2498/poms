@@ -1,0 +1,38 @@
+spring:
+    application:
+        name: POMS Server
+
+    main:
+        allow-bean-definition-overriding: true
+        allow-circular-references: true
+        banner-mode: off
+
+    web:
+        resources:
+            add-mappings: false
+
+    jpa:
+        open-in-view: false
+
+        hibernate:
+            naming:
+                implicit-strategy: ru.fominmv.poms.server.util.hibernate.CustomImplicitNamingStrategy
+
+        properties:
+            hibernate:
+                globally_quoted_identifiers: true
+
+server:
+    servlet:
+        context-path: /api
+
+        session:
+            cookie:
+                http-only: true
+                secure: true
+                same-site: Lax
+                name: session-id
+
+    error:
+        whitelabel:
+            enabled: false
