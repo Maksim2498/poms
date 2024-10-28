@@ -10,7 +10,7 @@ poms:
 
 spring:
     application:
-        name: POMS Server
+        name: POMS
 
     main:
         allow-bean-definition-overriding: true
