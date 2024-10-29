@@ -33,7 +33,7 @@
 
 ## Architecture
 
-***WIP***
+![Architecture](./images/architecture.png)
 
 ## Project Structure
 
