@@ -1,10 +1,30 @@
 package ru.fominmv.poms.libs.commons.strings.ext
 
-fun String.capitalize(): String =
-    lowercase().firstUpper()
+fun String.capitalizedText(): String {
+    var lastSpace = true
 
-fun String.firstUpper(): String =
+    return buildString {
+        this@capitalizedText.forEach { char ->
+            val currentSpace = char.isWhitespace()
+
+            val newChar = when {
+                currentSpace -> char
+                lastSpace -> char.uppercaseChar()
+                else -> char.lowercaseChar()
+            }
+
+            append(newChar)
+
+            lastSpace = currentSpace
+        }
+    }
+}
+
+fun String.capitalized(): String =
+    lowercase().withFirstUppercase()
+
+fun String.withFirstUppercase(): String =
     replaceFirstChar(Char::uppercase)
 
-fun String.firstLower(): String =
+fun String.withFirstLowercase(): String =
     replaceFirstChar(Char::lowercase)
