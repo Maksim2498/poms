@@ -1,4 +1,4 @@
-package ru.fominmv.poms.libs.commons.string
+package ru.fominmv.poms.libs.commons.strings
 
 import ru.fominmv.poms.libs.commons.reflection.allDeclaredFields
 

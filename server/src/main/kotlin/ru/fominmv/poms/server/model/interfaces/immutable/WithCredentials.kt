@@ -1,6 +1,6 @@
 package ru.fominmv.poms.server.model.interfaces.immutable
 
-import ru.fominmv.poms.libs.commons.string.ext.removeWhiteSpace
+import ru.fominmv.poms.libs.commons.strings.ext.removeWhiteSpace
 
 interface WithCredentials {
     val login: String

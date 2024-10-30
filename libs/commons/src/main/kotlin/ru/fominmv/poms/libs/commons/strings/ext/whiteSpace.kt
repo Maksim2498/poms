@@ -1,4 +1,4 @@
-package ru.fominmv.poms.libs.commons.string.ext
+package ru.fominmv.poms.libs.commons.strings.ext
 
 // Regex
 

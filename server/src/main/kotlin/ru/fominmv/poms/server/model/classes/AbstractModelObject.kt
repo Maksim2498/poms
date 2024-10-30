@@ -4,7 +4,7 @@ import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.UpdateTimestamp
 
 import ru.fominmv.poms.server.model.interfaces.mutable.MutableModelObject
-import ru.fominmv.poms.libs.commons.string.toObjectString
+import ru.fominmv.poms.libs.commons.strings.toObjectString
 
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass

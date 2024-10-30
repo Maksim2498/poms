@@ -3,8 +3,8 @@ package ru.fominmv.poms.server.model.classes
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
-import ru.fominmv.poms.libs.commons.string.ext.*
-import ru.fominmv.poms.libs.commons.string.Secret
+import ru.fominmv.poms.libs.commons.strings.ext.*
+import ru.fominmv.poms.libs.commons.strings.Secret
 
 import jakarta.persistence.*
 
