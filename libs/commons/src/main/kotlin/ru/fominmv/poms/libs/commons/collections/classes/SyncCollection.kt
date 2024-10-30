@@ -33,10 +33,10 @@ class SyncCollection<
             initial: MutableCollection<ElementType>,
             getCollectionFromElement: (element: ElementType) -> MutableCollection<HolderType>,
         ): SyncCollection<
-                HolderType,
-                ProxyCollection.Element<HolderType, ElementType>,
-                ProxyCollection<HolderType, ElementType>
-                > =
+            HolderType,
+            ProxyCollection.Element<HolderType, ElementType>,
+            ProxyCollection<HolderType, ElementType>
+        > =
             SyncCollection(
                 holder,
                 ProxyCollection(initial, getCollectionFromElement),
