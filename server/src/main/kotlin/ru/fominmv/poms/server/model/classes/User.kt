@@ -1,9 +1,8 @@
 package ru.fominmv.poms.server.model.classes
 
 import ru.fominmv.poms.server.model.interfaces.events.*
-import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
+import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
-import ru.fominmv.poms.libs.commons.string.ext.removeWhiteSpace
 import ru.fominmv.poms.libs.commons.string.Secret
 
 import jakarta.persistence.*
@@ -17,12 +16,12 @@ class User(
 
     @field:Login
     @Column(unique = true, nullable = false, length = Login.MAX_LENGTH)
-    var login: String,
+    override var login: String,
 
     @Secret
     @field:ShortText
     @Column(nullable = false, length = ShortText.MAX_LENGTH)
-    var password: String = "",
+    override var password: String = "",
 
     // Model object
 
@@ -40,6 +39,7 @@ class User(
 
     PrePersistEventListener,
     PreRemoveEventListener,
+    MutableWithCredentials,
     Normalizable
 {
     // Events
@@ -56,6 +56,6 @@ class User(
     // Normalization
 
     override fun normalize() {
-        login = login.removeWhiteSpace().lowercase()
+        super.normalize()
     }
 }
