@@ -6,3 +6,23 @@ author: Maksim Fomin Victorovich
 website: https://github.com/Maksim2498/poms
 api-version: 1.13
 load: STARTUP
+
+commands:
+    invite:
+        permission: poms.commands.invite
+        description: "Manages invites"
+        usage: "/<command> <args>"
+
+    user:
+        permission: poms.commands.user
+        description: "Manages users"
+        usage: "/<command> <args>"
+
+permissions:
+    poms.commands.invite:
+        description: "Allows usage of the /invite command"
+        default: true
+
+    poms.commands.user:
+        description: "Allows usage of the /user command"
+        default: true
