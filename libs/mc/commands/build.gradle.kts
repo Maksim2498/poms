@@ -1,5 +1,5 @@
 group = "ru.fominmv.poms.libs.mc.commands"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 
 // Plugins
 

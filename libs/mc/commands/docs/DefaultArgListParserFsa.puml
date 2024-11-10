@@ -1,0 +1,50 @@
+@startuml
+
+hide empty description
+
+state "Waiting" as W
+
+state "Value" as V
+state "ValueBackslash" as VB
+
+state "ValueOption" as VO
+state "ValueOptionBackslash" as VOB
+
+state "Literal" as L
+state "LiteralBackslash" as LB
+
+[*] --> W
+
+W -> W : white space
+V -> V : other
+VO -> VO : other
+L -> L : other
+
+W --> V : '{'
+V --> W : '}'
+
+V --> VB : '\'
+VB --> V : any
+
+V --> VO : ':'
+
+VO --> VOB : '\'
+VOB --> VO : any
+
+VO --> W : '}'
+
+W --> LB : '\'
+
+LB --> L : any
+L --> LB : '\'
+
+W --> L : other
+L --> W : white space
+
+L --> V : '{'
+
+W --> [*] : EOT
+L --> [*] : EOT
+LB --> [*] : EOT
+
+@enduml
