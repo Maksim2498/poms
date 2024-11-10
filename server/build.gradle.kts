@@ -23,7 +23,23 @@ springBoot {
 	mainClass = "ru.fominmv.poms.server.ApplicationKt"
 }
 
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+kotlin {
+	compilerOptions {
+		freeCompilerArgs.addAll("-Xjsr305=strict")
+	}
+}
+
 // Dependencies
+
+repositories {
+	mavenCentral()
+}
 
 dependencies {
 	// Libs
