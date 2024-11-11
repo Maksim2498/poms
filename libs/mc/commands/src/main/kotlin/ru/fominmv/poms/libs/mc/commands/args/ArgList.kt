@@ -34,12 +34,13 @@ data class ArgList(
         ))
     }
 
+    @Suppress("RedundantNullableReturnType")
     override fun onTabComplete(
         sender: CommandSender,
         command: Command,
         label: String,
         rawArgs: Array<out String>,
-    ): MutableList<String> {
+    ): MutableList<String>? {
         if (rawArgs.isEmpty() || rawArgs.size > args.size)
             return mutableListOf()
 
