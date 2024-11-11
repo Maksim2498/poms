@@ -10,6 +10,13 @@ open class MutableDispatchingCommandProcessor(
     DispatchingCommandProcessor(argLists),
     CommandProcessor
 {
+    inner class ParsingFiller(val parser: ArgListParser = DefaultArgListParser()) {
+        fun add(string: String, action: ArgList.Action): ParsingFiller {
+            this@MutableDispatchingCommandProcessor.argLists.add(parser.parse(string, action))
+            return this
+        }
+    }
+
     open class ParsingBuilder(parser: ArgListParser = DefaultArgListParser()) :
         DispatchingCommandProcessor.ParsingBuilder(parser)
     {
