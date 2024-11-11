@@ -68,6 +68,9 @@ class DefaultArgListParser : ArgListParser {
         "b" to ArgParser { BooleanArg() },
     )
 
+    // See /libs/mc/commands/docs/fsa/DefaultArgListParser.svg
+    // for FSA reference
+
     override fun parse(string: String): List<Arg<*>> =
         buildList {
             var state = State.WAITING
