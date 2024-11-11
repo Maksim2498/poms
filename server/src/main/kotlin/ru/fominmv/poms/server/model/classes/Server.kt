@@ -36,7 +36,7 @@ class Server(
 
     // Model object
 
-    id: UUID,
+    id: UUID = UUID.randomUUID(),
     now: Instant = Instant.now(),
     createdAt: Instant = now,
     modifiedAt: Instant = now,

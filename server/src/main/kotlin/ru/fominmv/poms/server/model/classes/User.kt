@@ -3,6 +3,8 @@ package ru.fominmv.poms.server.model.classes
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
+import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.strings.Secret
 
 import jakarta.persistence.*
@@ -25,7 +27,7 @@ class User(
 
     // Model object
 
-    id: UUID ,
+    id: UUID = UUID.randomUUID(),
     now: Instant = Instant.now(),
     createdAt: Instant = now,
     modifiedAt: Instant = now,
@@ -42,6 +44,23 @@ class User(
     MutableWithCredentials,
     Normalizable
 {
+    // Sent chat messages
+
+    @OneToMany(
+        mappedBy = "internalOwner",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+    )
+    internal var internalNicknames: MutableSet<Nickname> = mutableSetOf()
+
+    @delegate:Transient
+    var nicknames: MutableSet<Nickname> by NullablyReferencedSyncCollectionDelegate(
+        getCollectionFromHolder = { it.internalNicknames },
+        updateElementHolder = { nickname, owner -> nickname.internalOwner = owner },
+        convertCollection = { it.createProxySet() },
+        getEffectiveHolder = { it },
+    )
+    
     // Events
 
     @PrePersist
@@ -50,7 +69,7 @@ class User(
 
     @PreRemove
     override fun onPreRemove() {
-
+        nicknames.clear()
     }
 
     // Normalization

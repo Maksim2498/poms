@@ -1,9 +1,12 @@
 package ru.fominmv.poms.server.model.classes
 
+import org.hibernate.Hibernate
+
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.server.validation.constraints.Nickname as NicknameConstraint
 import ru.fominmv.poms.libs.commons.strings.ext.removeWhiteSpace
+import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 
 import jakarta.persistence.*
 
@@ -16,7 +19,9 @@ class Nickname(
     @Column(unique = true, nullable = false, length = NicknameConstraint.MAX_LENGTH)
     var nickname: String,
 
-    id: UUID,
+    owner: User? = null,
+
+    id: UUID = UUID.randomUUID(),
     now: Instant = Instant.now(),
     createdAt: Instant = now,
     modifiedAt: Instant = now,
@@ -32,6 +37,29 @@ class Nickname(
     PreRemoveEventListener,
     Normalizable
 {
+    // Owner
+
+    @ManyToOne(
+        fetch = FetchType.LAZY,
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalOwner: User? = owner?.apply {
+        if (Hibernate.isInitialized(internalNicknames))
+            internalNicknames.add(this@Nickname)
+    }
+
+    @delegate:Transient
+    var owner: User? by NullablyReferencedSyncCollectionDelegate.Reference(
+        get = { internalOwner },
+        set = { internalOwner = it },
+        getCollection = { it.internalNicknames },
+        getEffectiveHolder = { it },
+    )
+
     // Events
 
     @PrePersist
@@ -40,7 +68,7 @@ class Nickname(
 
     @PreRemove
     override fun onPreRemove() {
-
+        owner = null
     }
 
     // Normalization
