@@ -1,0 +1,26 @@
+@startuml
+
+database MySQL as Database
+
+[Minecraft Server] as MinecraftServer
+
+package POMS {
+    [Server]
+    [Plugin]
+    [Site]
+}
+
+actor "Site User" as SiteUser
+actor Player
+
+Database <--> Server : MySQL Protocol
+
+Server <-l-> Plugin : WebSockets
+Server <-r-> Site : HTTP + WebSockets
+
+Plugin <--> MinecraftServer : Bukkit API
+
+MinecraftServer -- Player
+Site -- SiteUser
+
+@enduml

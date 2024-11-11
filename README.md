@@ -39,7 +39,7 @@ all the **Plugin**'s commands.
 
 ## Architecture
 
-![Architecture](./images/architecture.png)
+![Architecture](./docs/architecture.svg)
 
 The architecture is pretty simple. **Server** communicates with user's browser using **HTTP** and
 **WebSockets** protocols. With **Plugin** it communicates using **WebSockets** protocol solely.
