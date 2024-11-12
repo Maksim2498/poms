@@ -41,7 +41,7 @@ class Server(
     createdAt: Instant = now,
     modifiedAt: Instant = now,
 ) :
-    AbstractModelObject<UUID>(
+    AbstractTrackableModelObject<UUID>(
         id = id,
         now = now,
         createdAt = createdAt,

@@ -9,7 +9,6 @@ import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import jakarta.persistence.*
 
 import java.time.Duration
-import java.time.Instant
 import java.util.*
 
 @Entity
@@ -25,19 +24,9 @@ class PotionEffect(
     @Column(nullable = false)
     var amplifier: Int = 1,
 
-    // Model object
-
     id: UUID = UUID.randomUUID(),
-    now: Instant = Instant.now(),
-    createdAt: Instant = now,
-    modifiedAt: Instant = now,
 ) :
-    AbstractModelObject<UUID>(
-        id = id,
-        now = now,
-        createdAt = createdAt,
-        modifiedAt = modifiedAt,
-    ),
+    AbstractModelObject<UUID>(id),
 
     PreRemoveEventListener
 {

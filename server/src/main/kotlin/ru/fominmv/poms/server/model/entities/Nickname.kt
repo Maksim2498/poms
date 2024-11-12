@@ -10,7 +10,6 @@ import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSync
 
 import jakarta.persistence.*
 
-import java.time.Instant
 import java.util.*
 
 @Entity
@@ -22,16 +21,8 @@ class Nickname(
     owner: User? = null,
 
     id: UUID = UUID.randomUUID(),
-    now: Instant = Instant.now(),
-    createdAt: Instant = now,
-    modifiedAt: Instant = now,
 ) :
-    AbstractModelObject<UUID>(
-        id = id,
-        now = now,
-        createdAt = createdAt,
-        modifiedAt = modifiedAt,
-    ),
+    AbstractModelObject<UUID>(id),
 
     PrePersistEventListener,
     PreRemoveEventListener,
