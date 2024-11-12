@@ -1,9 +1,9 @@
 package ru.fominmv.poms.plugin
 
 import org.bukkit.configuration.serialization.ConfigurationSerializable
+import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.plugin.java.JavaPlugin
 
 import ru.fominmv.poms.plugin.commands.*
@@ -11,26 +11,19 @@ import ru.fominmv.poms.plugin.commands.*
 class Plugin : JavaPlugin() {
     override fun onEnable() {
         registerCommands()
+        registerDebugEventHandler()
+    }
 
-        fun serialize(s: Any?, indentLevel: Int = 0): String {
-            if (s !is ConfigurationSerializable)
-                return s.toString()
+    override fun onDisable() {
 
-            val INDENT_STRING = "    "
+    }
 
-            val fields = s.serialize()
+    private fun registerCommands() {
+        InviteCommandProcessor().register(this)
+        UserCommandProcessor().register(this)
+    }
 
-            val indent = INDENT_STRING.repeat(indentLevel)
-            val nextIndentLevel = indentLevel + 1
-            val nextIndent = INDENT_STRING.repeat(nextIndentLevel)
-
-            val stringFields = fields
-                .map { (key, value) -> "$key: ${serialize(value, nextIndentLevel)}" }
-                .joinToString("\n") { nextIndent + it }
-
-            return "{\n$stringFields\n$indent}"
-        }
-
+    private fun registerDebugEventHandler() {
         server.pluginManager.registerEvents(
             object : Listener {
                 @EventHandler
@@ -45,12 +38,24 @@ class Plugin : JavaPlugin() {
         )
     }
 
-    override fun onDisable() {
+    private fun serialize(s: Any?, indentLevel: Int = 0): String {
+        if (s !is ConfigurationSerializable)
+            return s.toString()
 
-    }
+        val INDENT_STRING = "    "
 
-    private fun registerCommands() {
-        InviteCommandProcessor().register(this)
-        UserCommandProcessor().register(this)
+        val fields = s.serialize()
+
+        val indent = INDENT_STRING.repeat(indentLevel)
+        val nextIndentLevel = indentLevel + 1
+        val nextIndent = INDENT_STRING.repeat(nextIndentLevel)
+
+        val stringFields = fields
+            .map { (key, value) ->
+                "$key: ${value.javaClass.name} ${serialize(value, nextIndentLevel)}"
+            }
+            .joinToString("\n") { nextIndent + it }
+
+        return "{\n$stringFields\n$indent}"
     }
 }
