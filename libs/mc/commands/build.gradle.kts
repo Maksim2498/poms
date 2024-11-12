@@ -27,11 +27,11 @@ repositories {
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
 
-//    mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-//   implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     implementation(project(":libs:commons"))
 
