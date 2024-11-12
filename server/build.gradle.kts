@@ -44,6 +44,7 @@ repositories {
 dependencies {
 	// Libs
 
+	implementation(project(":libs:mc:commons"))
 	implementation(project(":libs:commons"))
 
 	// Kotlin
