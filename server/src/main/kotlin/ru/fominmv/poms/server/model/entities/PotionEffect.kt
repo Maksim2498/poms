@@ -85,6 +85,8 @@ class PotionEffect(
         }
     }
 
+    // Target
+
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -105,6 +107,8 @@ class PotionEffect(
         getCollection = { it.internalPotionEffects },
         getEffectiveHolder = { it },
     )
+
+    // Events
 
     @PreRemove
     override fun onPreRemove() {
