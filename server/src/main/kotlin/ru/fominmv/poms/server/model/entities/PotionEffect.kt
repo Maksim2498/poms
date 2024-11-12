@@ -4,7 +4,7 @@ import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
-import ru.fominmv.poms.mc.commons.duration.ext.toTicks
+import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 
 import jakarta.persistence.*
 

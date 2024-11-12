@@ -1,4 +1,4 @@
-package ru.fominmv.poms.mc.commons.duration
+package ru.fominmv.poms.libs.mc.commons.duration
 
 const val TICKS_IN_SECOND = 20
 const val TICKS_IN_MINUTE = 60 * TICKS_IN_SECOND
