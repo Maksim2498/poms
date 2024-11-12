@@ -4,7 +4,7 @@ main: ru.fominmv.poms.plugin.Plugin
 description: A POMS plugin used as intermediary between Minecraft server and POMS server
 author: Maksim Fomin Victorovich
 website: https://github.com/Maksim2498/poms
-api-version: 1.13
+api-version: 1.21
 load: STARTUP
 
 commands:
