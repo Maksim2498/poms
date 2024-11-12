@@ -5,8 +5,9 @@ plugins {
 }
 
 include(
-    ":libs:commons",
     ":libs:mc:commands",
+    ":libs:mc:commons",
+    ":libs:commons",
     ":plugin",
     ":server",
 )
