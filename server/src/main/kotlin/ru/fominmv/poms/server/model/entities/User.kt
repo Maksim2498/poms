@@ -13,6 +13,7 @@ import jakarta.validation.constraints.PositiveOrZero
 
 import java.time.Instant
 import java.util.UUID
+import kotlin.math.max
 
 import kotlin.math.min
 
@@ -28,6 +29,12 @@ class User(
     @field:ShortText
     @Column(nullable = false, length = ShortText.MAX_LENGTH)
     override var password: String = "",
+
+    // Nicknames
+
+    @field:PositiveOrZero
+    @Column(nullable = false)
+    var maxNicknames: Int = DEFAULT_MAX_NICKNAMES,
 
     // Avatar state
 
@@ -76,6 +83,10 @@ class User(
     MutableWithCredentials,
     Normalizable
 {
+    companion object {
+        const val DEFAULT_MAX_NICKNAMES = 5
+    }
+
     // Nicknames
 
     @OneToMany(
@@ -127,10 +138,29 @@ class User(
     override fun normalize() {
         super.normalize()
 
-        health = min(health, 0.0)
-        foodLevel = min(foodLevel, 0)
-        remainingAir = min(remainingAir, 0)
-        level = min(level, 0)
-        exp = min(exp, 0f)
+        normalizeNicknames()
+        normalizeAvatarState()
+    }
+
+    private fun normalizeNicknames() {
+        maxNicknames = max(maxNicknames, 0)
+
+        when {
+            maxNicknames == 0 -> nicknames.clear()
+
+            nicknames.size > maxNicknames -> {
+                val toRemove = nicknames.take(nicknames.size - maxNicknames).toSet()
+
+                nicknames.removeAll(toRemove)
+            }
+        }
+    }
+
+    private fun normalizeAvatarState() {
+        health = max(health, 0.0)
+        foodLevel = max(foodLevel, 0)
+        remainingAir = max(remainingAir, 0)
+        level = max(level, 0)
+        exp = max(exp, 0f)
     }
 }
