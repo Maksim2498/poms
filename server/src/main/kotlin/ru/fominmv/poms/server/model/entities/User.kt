@@ -1,5 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
+import ru.fominmv.poms.server.model.embedabbles.Vector3
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
@@ -8,9 +9,12 @@ import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.strings.Secret
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.PositiveOrZero
 
 import java.time.Instant
 import java.util.UUID
+
+import kotlin.math.min
 
 @Entity
 class User(
@@ -24,6 +28,34 @@ class User(
     @field:ShortText
     @Column(nullable = false, length = ShortText.MAX_LENGTH)
     override var password: String = "",
+
+    // Avatar state
+
+    @field:PositiveOrZero
+    @Column(nullable = false)
+    var health: Double = 20.0,
+
+    @field:PositiveOrZero
+    @Column(nullable = false)
+    var foodLevel: Int = 20,
+
+    @field:PositiveOrZero
+    @Column(nullable = false)
+    var remainingAir: Int = 0,
+
+    @field:PositiveOrZero
+    @Column(nullable = false)
+    var level: Int = 0,
+
+    @field:PositiveOrZero
+    @Column(nullable = false)
+    var exp: Float = 0f,
+
+    @Embedded
+    var position: Vector3 = Vector3(),
+
+    @Embedded
+    var velocity: Vector3 = Vector3(),
 
     // Model object
 
@@ -76,5 +108,11 @@ class User(
 
     override fun normalize() {
         super.normalize()
+
+        health = min(health, 0.0)
+        foodLevel = min(foodLevel, 0)
+        remainingAir = min(remainingAir, 0)
+        level = min(level, 0)
+        exp = min(exp, 0f)
     }
 }
