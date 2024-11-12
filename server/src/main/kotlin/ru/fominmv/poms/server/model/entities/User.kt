@@ -76,7 +76,7 @@ class User(
     MutableWithCredentials,
     Normalizable
 {
-    // Sent chat messages
+    // Nicknames
 
     @OneToMany(
         mappedBy = "internalOwner",
@@ -92,7 +92,24 @@ class User(
         convertCollection = { it.createProxySet() },
         getEffectiveHolder = { it },
     )
-    
+
+    // Effects
+
+    @OneToMany(
+        mappedBy = "internalTarget",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+    )
+    internal var internalPotionEffects: MutableSet<PotionEffect> = mutableSetOf()
+
+    @delegate:Transient
+    var potionEffects: MutableSet<PotionEffect> by NullablyReferencedSyncCollectionDelegate(
+        getCollectionFromHolder = { it.internalPotionEffects },
+        updateElementHolder = { potionEffect, target -> potionEffect.internalTarget = target },
+        convertCollection = { it.createProxySet() },
+        getEffectiveHolder = { it },
+    )
+
     // Events
 
     @PrePersist
@@ -102,6 +119,7 @@ class User(
     @PreRemove
     override fun onPreRemove() {
         nicknames.clear()
+        potionEffects.clear()
     }
 
     // Normalization
