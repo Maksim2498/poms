@@ -55,7 +55,10 @@ The project consists of the several directories which names are mostly self-expl
 - [plugin](./plugin);
 - [site](./site);
 - [libs](./libs):
-  - [commons](./libs/commons).
+  - [commons](./libs/commons);
+  - [mc](./libs/mc):
+    - [commands](./libs/mc/commands);
+    - [commons](./libs/mc/commons).
 
 Other directories not mentioned above contain either documentation and images, either some
 build-related data.
