@@ -9,7 +9,7 @@ import jakarta.persistence.*
     AttributeOverride(name = "z", column = Column()),
 )
 class NullableVector3(
-    x: Float = 0f,
-    y: Float = 0f,
-    z: Float = 0f,
+    x: Double = 0.0,
+    y: Double = 0.0,
+    z: Double = 0.0,
 ) : Vector3(x, y, z)
