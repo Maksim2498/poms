@@ -13,9 +13,8 @@ import jakarta.validation.constraints.PositiveOrZero
 
 import java.time.Instant
 import java.util.UUID
-import kotlin.math.max
 
-import kotlin.math.min
+import kotlin.math.max
 
 @Entity
 class User(
