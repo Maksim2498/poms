@@ -1,19 +1,18 @@
-package ru.fominmv.poms.server.model.classes
+package ru.fominmv.poms.server.model.entities
 
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
-import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
-import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
+import ru.fominmv.poms.libs.commons.strings.ext.*
 import ru.fominmv.poms.libs.commons.strings.Secret
 
 import jakarta.persistence.*
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Entity
-class User(
+class Server(
     // Credentials
 
     @field:Login
@@ -24,6 +23,16 @@ class User(
     @field:ShortText
     @Column(nullable = false, length = ShortText.MAX_LENGTH)
     override var password: String = "",
+
+    // Description
+
+    @field:ShortText
+    @Column(length = ShortText.MAX_LENGTH)
+    var name: String? = null,
+
+    @field:MediumText
+    @Column(length = MediumText.MAX_LENGTH)
+    var description: String? = null,
 
     // Model object
 
@@ -44,23 +53,6 @@ class User(
     MutableWithCredentials,
     Normalizable
 {
-    // Sent chat messages
-
-    @OneToMany(
-        mappedBy = "internalOwner",
-        cascade = [CascadeType.ALL],
-        orphanRemoval = true,
-    )
-    internal var internalNicknames: MutableSet<Nickname> = mutableSetOf()
-
-    @delegate:Transient
-    var nicknames: MutableSet<Nickname> by NullablyReferencedSyncCollectionDelegate(
-        getCollectionFromHolder = { it.internalNicknames },
-        updateElementHolder = { nickname, owner -> nickname.internalOwner = owner },
-        convertCollection = { it.createProxySet() },
-        getEffectiveHolder = { it },
-    )
-    
     // Events
 
     @PrePersist
@@ -69,12 +61,15 @@ class User(
 
     @PreRemove
     override fun onPreRemove() {
-        nicknames.clear()
+
     }
 
     // Normalization
 
     override fun normalize() {
         super.normalize()
+
+        name = name.collapseWhiteSpaceToNull()
+        description = description.collapseSpacesToNull()
     }
 }

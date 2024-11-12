@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.model.classes
+package ru.fominmv.poms.server.model.entities
 
 import org.hibernate.Hibernate
 
