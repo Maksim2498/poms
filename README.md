@@ -43,6 +43,7 @@ all the **Plugin**'s commands.
 
 The architecture is pretty simple. **Server** communicates with user's browser using **HTTP** and
 **WebSockets** protocols. With **Plugin** it communicates using **WebSockets** protocol solely.
+It also uses **Elastic Search** as search engine.
 
 Details on the communication protocols used can be found in the
 [Documentation section](#documentation).
