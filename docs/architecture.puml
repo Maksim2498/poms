@@ -1,6 +1,7 @@
 @startuml
 
 database MySQL as Database
+database "Elastic Search" as SearchEngine
 
 [Minecraft Server] as MinecraftServer
 
@@ -13,7 +14,8 @@ package POMS {
 actor "Site User" as SiteUser
 actor Player
 
-Database <--> Server : MySQL Protocol
+Database <--> Server
+SearchEngine <--> Server
 
 Server <-l-> Plugin : WebSockets
 Server <-r-> Site : HTTP + WebSockets
