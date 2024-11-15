@@ -7,6 +7,7 @@ plugins {
 include(
     ":libs:mc:commands",
     ":libs:mc:commons",
+    ":libs:mc:nbt",
     ":libs:commons",
     ":plugin",
     ":server",
