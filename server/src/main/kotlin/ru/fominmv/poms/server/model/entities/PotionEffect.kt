@@ -2,9 +2,11 @@ package ru.fominmv.poms.server.model.entities
 
 import org.hibernate.Hibernate
 
-import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
+import ru.fominmv.poms.server.model.interfaces.events.*
+import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
+import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 
 import jakarta.persistence.*
 
@@ -13,13 +15,13 @@ import java.util.*
 
 @Entity
 class PotionEffect(
-    target: User? = null,
+    target: AvatarState? = null,
 
     @Column(nullable = false)
     var typeId: Int = TypeId.SPEED,
 
     @Column(nullable = false)
-    var duration: Int = Duration.ofMinutes(1).toTicks().toInt(),
+    var durationInTicks: Int = Duration.ofMinutes(1).toTicks().toInt(),
 
     @Column(nullable = false)
     var amplifier: Int = 1,
@@ -28,9 +30,13 @@ class PotionEffect(
 ) :
     AbstractModelObject<UUID>(id),
 
-    PreRemoveEventListener
+    PrePersistEventListener,
+    PreRemoveEventListener,
+    Normalizable
 {
     companion object {
+        const val INFINITE_DURATION_IN_TICKS = -1
+
         object TypeId {
             const val SPEED = 1
             const val SLOWNESS = 2
@@ -74,6 +80,15 @@ class PotionEffect(
         }
     }
 
+    // Duration
+
+    var duration: Duration
+        get() = durationFromTicks(durationInTicks)
+
+        set(value) {
+            durationInTicks = value.toTicks().toInt()
+        }
+
     // Target
 
     @ManyToOne(
@@ -84,13 +99,13 @@ class PotionEffect(
             CascadeType.REFRESH,
         ],
     )
-    internal var internalTarget: User? = target?.apply {
+    internal var internalTarget: AvatarState? = target?.apply {
         if (Hibernate.isInitialized(internalPotionEffects))
             internalPotionEffects.add(this@PotionEffect)
     }
 
     @delegate:Transient
-    var target: User? by NullablyReferencedSyncCollectionDelegate.Reference(
+    var target: AvatarState? by NullablyReferencedSyncCollectionDelegate.Reference(
         get = { internalTarget },
         set = { internalTarget = it },
         getCollection = { it.internalPotionEffects },
@@ -99,8 +114,19 @@ class PotionEffect(
 
     // Events
 
+    @PrePersist
+    override fun onPrePersist() =
+        normalize()
+
     @PreRemove
     override fun onPreRemove() {
         target = null
+    }
+
+    // Normalization
+
+    override fun normalize() {
+        if (durationInTicks < 0)
+            durationInTicks = INFINITE_DURATION_IN_TICKS
     }
 }

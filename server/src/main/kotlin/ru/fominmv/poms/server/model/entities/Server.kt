@@ -24,7 +24,7 @@ class Server(
     @Column(nullable = false, length = ShortText.MAX_LENGTH)
     override var password: String = "",
 
-    // Description
+    // About
 
     @field:ShortText
     @Column(length = ShortText.MAX_LENGTH)
