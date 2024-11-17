@@ -1,5 +1,7 @@
 package ru.fominmv.poms.server.model.entities
 
+import org.hibernate.Hibernate
+
 import ru.fominmv.poms.server.model.embedabbles.Vector3
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
@@ -10,7 +12,6 @@ import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.PositiveOrZero
-import org.hibernate.Hibernate
 
 import java.time.Duration
 import java.util.*
@@ -19,9 +20,8 @@ import kotlin.math.max
 
 @Entity
 class AvatarState(
-    // User
-
     user: User? = null,
+    group: AvatarStateGroup? = null,
 
     // State
 
@@ -97,6 +97,29 @@ class AvatarState(
         getEffectiveHolder = { it },
     )
 
+    // Group
+
+    @ManyToOne(
+        fetch = FetchType.LAZY,
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalGroup: AvatarStateGroup? = group?.apply {
+        if (Hibernate.isInitialized(internalAvatarStates))
+            internalAvatarStates.add(this@AvatarState)
+    }
+
+    @delegate:Transient
+    var group: AvatarStateGroup? by NullablyReferencedSyncCollectionDelegate.Reference(
+        get = { internalGroup },
+        set = { internalGroup = it },
+        getCollection = { it.internalAvatarStates },
+        getEffectiveHolder = { it },
+    )
+
     // Effects
 
     @OneToMany(
@@ -123,6 +146,7 @@ class AvatarState(
     @PreRemove
     override fun onPreRemove() {
         user = null
+        group = null
 
         potionEffects.clear()
     }

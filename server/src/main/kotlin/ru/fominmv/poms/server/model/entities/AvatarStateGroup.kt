@@ -6,6 +6,8 @@ import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.strings.ext.*
 
 import jakarta.persistence.*
+import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 
 import java.time.Instant
 import java.util.*
@@ -40,6 +42,23 @@ class AvatarStateGroup(
     PreRemoveEventListener,
     Normalizable
 {
+    // Avatar states
+
+    @OneToMany(
+        mappedBy = "internalGroup",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+    )
+    internal var internalAvatarStates: MutableSet<AvatarState> = mutableSetOf()
+
+    @delegate:Transient
+    var avatarStates: MutableSet<AvatarState> by NullablyReferencedSyncCollectionDelegate(
+        getCollectionFromHolder = { it.internalAvatarStates },
+        updateElementHolder = { avatarState, group -> avatarState.internalGroup = group },
+        convertCollection = { it.createProxySet() },
+        getEffectiveHolder = { it },
+    )
+
     // Events
 
     @PrePersist
@@ -48,7 +67,7 @@ class AvatarStateGroup(
 
     @PreRemove
     override fun onPreRemove() {
-
+        avatarStates.clear()
     }
 
     // Normalization
