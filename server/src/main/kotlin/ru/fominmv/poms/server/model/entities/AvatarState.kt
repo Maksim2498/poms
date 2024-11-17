@@ -10,6 +10,7 @@ import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.PositiveOrZero
+import org.hibernate.Hibernate
 
 import java.time.Duration
 import java.util.*
@@ -18,6 +19,12 @@ import kotlin.math.max
 
 @Entity
 class AvatarState(
+    // User
+
+    user: User? = null,
+
+    // State
+
     @field:PositiveOrZero
     @Column(nullable = false)
     var health: Double = 20.0,
@@ -48,6 +55,8 @@ class AvatarState(
     @Embedded
     var velocity: Vector3 = Vector3(),
 
+    // Model object
+
     id: UUID = UUID.randomUUID(),
 ) :
     AbstractModelObject<UUID>(id),
@@ -64,6 +73,29 @@ class AvatarState(
         set(value) {
             fireDurationInTicks = value.toTicks().toInt()
         }
+    
+    // User
+    
+    @ManyToOne(
+        fetch = FetchType.LAZY,
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalUser: User? = user?.apply {
+        if (Hibernate.isInitialized(internalAvatarStates))
+            internalAvatarStates.add(this@AvatarState)
+    }
+
+    @delegate:Transient
+    var user: User? by NullablyReferencedSyncCollectionDelegate.Reference(
+        get = { internalUser },
+        set = { internalUser = it },
+        getCollection = { it.internalAvatarStates },
+        getEffectiveHolder = { it },
+    )
 
     // Effects
 
@@ -90,6 +122,8 @@ class AvatarState(
 
     @PreRemove
     override fun onPreRemove() {
+        user = null
+
         potionEffects.clear()
     }
 

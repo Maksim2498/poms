@@ -77,6 +77,23 @@ class User(
         convertCollection = { it.createProxySet() },
         getEffectiveHolder = { it },
     )
+    
+    // Avatar states
+    
+    @OneToMany(
+        mappedBy = "internalUser",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+    )
+    internal var internalAvatarStates: MutableSet<AvatarState> = mutableSetOf()
+
+    @delegate:Transient
+    var avatarStates: MutableSet<AvatarState> by NullablyReferencedSyncCollectionDelegate(
+        getCollectionFromHolder = { it.internalAvatarStates },
+        updateElementHolder = { avatarState, user -> avatarState.internalUser = user },
+        convertCollection = { it.createProxySet() },
+        getEffectiveHolder = { it },
+    )
 
     // Events
 
@@ -87,6 +104,7 @@ class User(
     @PreRemove
     override fun onPreRemove() {
         nicknames.clear()
+        avatarStates.clear()
     }
 
     // Normalization
