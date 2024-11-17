@@ -8,7 +8,8 @@ import java.io.DataInputStream
 class NbtInputStream<T : DataInputStream>(stream: T) :
     InputStreamWrapper<T>(stream),
 
-    NbtInput {
+    NbtInput
+{
     override fun readNbt(): Nbt =
         when (val nbtId = stream.readByte().toInt()) {
             END_NBT_ID -> readEndNbt()
