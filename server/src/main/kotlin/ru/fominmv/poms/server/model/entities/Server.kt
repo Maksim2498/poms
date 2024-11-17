@@ -1,8 +1,11 @@
 package ru.fominmv.poms.server.model.entities
 
+import org.hibernate.Hibernate
+
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
+import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.strings.ext.*
 import ru.fominmv.poms.libs.commons.strings.Secret
 
@@ -34,6 +37,10 @@ class Server(
     @Column(length = MediumText.MAX_LENGTH)
     var description: String? = null,
 
+    // Avatar state group
+
+    avatarStateGroup: AvatarStateGroup? = null,
+
     // Model object
 
     id: UUID = UUID.randomUUID(),
@@ -53,6 +60,29 @@ class Server(
     MutableWithCredentials,
     Normalizable
 {
+    // Avatar state group
+
+    @ManyToOne(
+        fetch = FetchType.LAZY,
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalAvatarStateGroup: AvatarStateGroup? = avatarStateGroup?.apply {
+        if (Hibernate.isInitialized(internalServers))
+            internalServers.add(this@Server)
+    }
+
+    @delegate:Transient
+    var avatarStateGroup: AvatarStateGroup? by NullablyReferencedSyncCollectionDelegate.Reference(
+        get = { internalAvatarStateGroup },
+        set = { internalAvatarStateGroup = it },
+        getCollection = { it.internalServers },
+        getEffectiveHolder = { it },
+    )
+    
     // Events
 
     @PrePersist
@@ -61,7 +91,7 @@ class Server(
 
     @PreRemove
     override fun onPreRemove() {
-
+        avatarStateGroup = null
     }
 
     // Normalization

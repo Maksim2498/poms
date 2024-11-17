@@ -3,11 +3,11 @@ package ru.fominmv.poms.server.model.entities
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.server.validation.constraints.*
+import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.strings.ext.*
 
 import jakarta.persistence.*
-import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
-import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 
 import java.time.Instant
 import java.util.*
@@ -42,6 +42,26 @@ class AvatarStateGroup(
     PreRemoveEventListener,
     Normalizable
 {
+    // Servers
+
+    @OneToMany(
+        mappedBy = "internalAvatarStateGroup",
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalServers: MutableSet<Server> = mutableSetOf()
+
+    @delegate:Transient
+    var servers: MutableSet<Server> by NullablyReferencedSyncCollectionDelegate(
+        getCollectionFromHolder = { it.internalServers },
+        updateElementHolder = { server, group -> server.internalAvatarStateGroup = group },
+        convertCollection = { it.createProxySet() },
+        getEffectiveHolder = { it },
+    )
+    
     // Avatar states
 
     @OneToMany(
@@ -67,6 +87,7 @@ class AvatarStateGroup(
 
     @PreRemove
     override fun onPreRemove() {
+        servers.clear()
         avatarStates.clear()
     }
 
