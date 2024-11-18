@@ -31,9 +31,9 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    api(project(":libs:commons"))
 
-    implementation(project(":libs:commons"))
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
 }
