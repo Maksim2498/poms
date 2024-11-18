@@ -6,10 +6,14 @@ import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.mc.nbt.io.*
+import ru.fominmv.poms.libs.mc.nbt.tags.Nbt
 
 import jakarta.persistence.*
 
+import java.io.*
 import java.sql.Blob
+import java.util.zip.GZIPInputStream
 import java.util.UUID
 
 @Entity
@@ -33,6 +37,33 @@ class ItemStack(
 
     PreRemoveEventListener
 {
+    // NBT
+    
+    var nbt: Nbt
+        get() {
+            val byteStream = decompressedNbtBytesInputStream
+            val dataStream = DataInputStream(byteStream)
+            val nbtStream = NbtInputStream(dataStream)
+
+            return nbtStream.readNbt()
+        }
+
+        set(value) {
+            val byteStream = ByteArrayOutputStream()
+            val dataStream = DataOutputStream(byteStream)
+            val nbtStream = NbtOutputStream(dataStream)
+
+            nbtStream.writeNbt(value)
+
+            nbtBytes = BlobProxy.generateProxy(byteStream.toByteArray())
+        }
+
+    val decompressedNbtBytesInputStream: InputStream
+        get() = if (isCompressed)
+            GZIPInputStream(nbtBytes.binaryStream)
+        else
+            nbtBytes.binaryStream
+
     // Avatar state
 
     @ManyToOne(

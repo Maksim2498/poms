@@ -6,11 +6,10 @@ version = "0.0.1-SNAPSHOT"
 plugins {
 	kotlin("jvm")
 	kotlin("plugin.spring") version "2.0.21"
+	kotlin("plugin.jpa") version "2.0.21"
 
 	id("org.springframework.boot") version "3.3.5"
 	id("io.spring.dependency-management") version "1.1.6"
-
-	kotlin("plugin.jpa") version "2.0.21"
 }
 
 allOpen {
@@ -45,6 +44,7 @@ dependencies {
 	// Libs
 
 	implementation(project(":libs:mc:commons"))
+	implementation(project(":libs:mc:nbt"))
 	implementation(project(":libs:commons"))
 
 	// Kotlin
