@@ -32,9 +32,9 @@ repositories {
 
 dependencies {
     api(project(":libs:commons"))
+    api("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-
-    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 }
 
