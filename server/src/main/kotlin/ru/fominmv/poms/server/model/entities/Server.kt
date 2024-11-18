@@ -31,6 +31,10 @@ class Server(
 
     @field:ShortText
     @Column(length = ShortText.MAX_LENGTH)
+    var publicAddress: String? = null,
+
+    @field:ShortText
+    @Column(length = ShortText.MAX_LENGTH)
     var name: String? = null,
 
     @field:MediumText
@@ -99,6 +103,7 @@ class Server(
     override fun normalize() {
         super.normalize()
 
+        publicAddress = publicAddress.collapseWhiteSpaceToNull()
         name = name.collapseWhiteSpaceToNull()
         description = description.collapseSpacesToNull()
     }
