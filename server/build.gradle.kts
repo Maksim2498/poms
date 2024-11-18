@@ -5,11 +5,11 @@ version = "0.0.1-SNAPSHOT"
 
 plugins {
 	kotlin("jvm")
-	kotlin("plugin.spring") version "2.0.21"
-	kotlin("plugin.jpa") version "2.0.21"
+	kotlin("plugin.spring") version libs.versions.kotlin
+	kotlin("plugin.jpa") version libs.versions.kotlin
 
-	id("org.springframework.boot") version "3.3.5"
-	id("io.spring.dependency-management") version "1.1.6"
+	id("org.springframework.boot") version libs.versions.springBoot
+	id("io.spring.dependency-management") version libs.versions.springDependencyManagement
 }
 
 allOpen {
@@ -37,6 +37,11 @@ kotlin {
 // Dependencies
 
 repositories {
+	maven {
+		name = "papermc"
+		url = uri("https://repo.papermc.io/repository/maven-public/")
+	}
+
 	mavenCentral()
 }
 
@@ -60,8 +65,8 @@ dependencies {
 
 	// JSON
 
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-	implementation("com.github.fge:json-patch:1.9")
+	implementation(libs.jsonPatch)
+	implementation(libs.jackson)
 
 	// SQL
 

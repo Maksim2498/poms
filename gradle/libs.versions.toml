@@ -1,0 +1,12 @@
+[versions]
+kotlin = "2.0.21"
+jackson = "2.18.1"
+jsonPatch = "1.9"
+paper = "1.21.1-R0.1-SNAPSHOT"
+springBoot = "3.3.5"
+springDependencyManagement = "1.1.6"
+
+[libraries]
+jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+jsonPatch = { module = "com.github.fge:json-patch", version.ref = "jsonPatch" }

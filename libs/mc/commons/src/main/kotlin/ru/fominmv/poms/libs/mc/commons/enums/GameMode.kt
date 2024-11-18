@@ -5,45 +5,60 @@ import org.bukkit.GameMode as BukkitGameMode
 import com.fasterxml.jackson.annotation.JsonProperty
 
 private object GameModeDisplayName {
-    const val CREATIVE = "creative"
     const val SURVIVAL = "survival"
+    const val CREATIVE = "creative"
     const val ADVENTURE = "adventure"
     const val SPECTATOR = "spectator"
 }
 
 private object GameModeId {
-    const val CREATIVE = 0
-    const val SURVIVAL = 1
+    const val SURVIVAL = 0
+    const val CREATIVE = 1
     const val ADVENTURE = 2
     const val SPECTATOR = 3
 }
 
-enum class GameMode(val id: Int, val displayName: String) {
-    @JsonProperty(GameModeDisplayName.CREATIVE)
-    CREATIVE(GameModeId.CREATIVE, GameModeDisplayName.CREATIVE) {
-        override fun toBukkit(): BukkitGameMode =
-            BukkitGameMode.CREATIVE
-    },
+enum class GameMode(
+    val id: Int,
+    val displayName: String,
+    val isInvulnerable: Boolean,
 
+    private val bukkitGameMode: BukkitGameMode,
+) {
     @JsonProperty(GameModeDisplayName.SURVIVAL)
-    SURVIVAL(GameModeId.SURVIVAL, GameModeDisplayName.SURVIVAL) {
-        override fun toBukkit(): BukkitGameMode =
-            BukkitGameMode.SURVIVAL
-    },
+    SURVIVAL(
+        id = GameModeId.SURVIVAL,
+        displayName = GameModeDisplayName.SURVIVAL,
+        isInvulnerable = false,
+        bukkitGameMode = BukkitGameMode.SURVIVAL,
+    ),
+
+    @JsonProperty(GameModeDisplayName.CREATIVE)
+    CREATIVE(
+        id = GameModeId.CREATIVE,
+        displayName = GameModeDisplayName.CREATIVE,
+        isInvulnerable = true,
+        bukkitGameMode = BukkitGameMode.CREATIVE,
+    ),
 
     @JsonProperty(GameModeDisplayName.ADVENTURE)
-    ADVENTURE(GameModeId.ADVENTURE, GameModeDisplayName.ADVENTURE) {
-        override fun toBukkit(): BukkitGameMode =
-            BukkitGameMode.ADVENTURE
-    },
+    ADVENTURE(
+        id = GameModeId.ADVENTURE,
+        displayName = GameModeDisplayName.ADVENTURE,
+        isInvulnerable = false,
+        bukkitGameMode = BukkitGameMode.ADVENTURE,
+    ),
 
     @JsonProperty(GameModeDisplayName.SPECTATOR)
-    SPECTATOR(GameModeId.SPECTATOR, GameModeDisplayName.SPECTATOR) {
-        override fun toBukkit(): BukkitGameMode =
-            BukkitGameMode.SPECTATOR
-    };
+    SPECTATOR(
+        id = GameModeId.SPECTATOR,
+        displayName = GameModeDisplayName.SPECTATOR,
+        isInvulnerable = true,
+        bukkitGameMode = BukkitGameMode.SPECTATOR,
+    );
 
-    abstract fun toBukkit(): BukkitGameMode
+    fun toBukkit(): BukkitGameMode =
+        bukkitGameMode
 
     companion object {
         const val CREATIVE_ID = GameModeId.CREATIVE
