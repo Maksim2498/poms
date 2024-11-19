@@ -13,8 +13,8 @@
 
 ## About
 
-Ever wanted to host a *Minecraft* server to play with friends, but some of them (for some reason 😉)
-cannot join the server with `online-mode` set to `true`, and you don't want to set up *VPN* or
+Ever wanted to host a *Minecraft* server to play with friends, but some of them cannot join the
+server with `online-mode` set to `true` (for some reason 😉), and you don't want to set up *VPN* or
 something like this to play safe don't being aware of world-crapping bots walking all over the
 internet which will find your server and destroy everything you've built there with your friends no
 matter using you *non-standard ports*, *whitelists* or some other standard mechanisms Minecraft
@@ -32,7 +32,12 @@ event launching Minecraft and joining the Server and learning all the **Plugin**
 
 ## Features
 
-***WIP***
+- Authentication and authorization (***WIP***);
+- Multiple servers support (***WIP***);
+- Inventory sharing between servers (***WIP***);
+- Global chat history (***WIP***);
+- Custom skins (***WIP***);
+- Web server console (***WIP***).
 
 ## How to Use
 
