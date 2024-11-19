@@ -60,7 +60,9 @@ The project consists of the several directories which names are mostly self-expl
   - [mc](./libs/mc):
     - [commands](./libs/mc/commands);
     - [commons](./libs/mc/commons);
-    - [nbt](./libs/mc/nbt).
+    - [nbt](./libs/mc/nbt);
+    - [protocol](./libs/mc/protocol);
+    - [status](./libs/mc/status).
 
 Other directories not mentioned above contain either documentation and images, either some
 build-related data.

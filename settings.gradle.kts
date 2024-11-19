@@ -8,7 +8,11 @@ include(
     ":libs:mc:commands",
     ":libs:mc:commons",
     ":libs:mc:nbt",
+    ":libs:mc:protocol",
+    ":libs:mc:status",
+
     ":libs:commons",
+
     ":plugin",
     ":server",
 )
