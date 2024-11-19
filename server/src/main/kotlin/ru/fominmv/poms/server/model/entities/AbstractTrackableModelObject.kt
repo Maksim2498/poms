@@ -3,7 +3,7 @@ package ru.fominmv.poms.server.model.entities
 import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.UpdateTimestamp
 
-import ru.fominmv.poms.server.model.interfaces.immutable.Trackable
+import ru.fominmv.poms.server.model.interfaces.mutable.MutableTrackable
 
 import jakarta.persistence.Column
 import jakarta.persistence.MappedSuperclass
@@ -30,4 +30,4 @@ abstract class AbstractTrackableModelObject<Id>(
 ) :
     AbstractModelObject<Id>(id),
 
-    Trackable
+    MutableTrackable
