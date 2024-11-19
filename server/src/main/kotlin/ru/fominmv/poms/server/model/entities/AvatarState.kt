@@ -7,11 +7,13 @@ import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
+import ru.fominmv.poms.libs.mc.commons.enums.GameMode
 import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.PositiveOrZero
+import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 
 import java.time.Duration
 import java.util.*
@@ -24,6 +26,10 @@ class AvatarState(
     group: AvatarStateGroup? = null,
 
     // State
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var gameMode: GameMode = GameMode.SURVIVAL,
 
     @field:PositiveOrZero
     @Column(nullable = false)
@@ -54,6 +60,9 @@ class AvatarState(
 
     @Embedded
     var velocity: Vector3 = Vector3(),
+
+    inventory: Inventory? = null,
+    enderChestInventory: Inventory? = null,
 
     // Model object
 
@@ -120,6 +129,44 @@ class AvatarState(
         getEffectiveHolder = { it },
     )
 
+    // Inventory
+
+    @OneToOne(
+        fetch = FetchType.LAZY,
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+    )
+    internal var internalInventory: Inventory? = inventory?.apply {
+        if (Hibernate.isInitialized(internalInventoryAvatarState))
+            internalInventoryAvatarState = this@AvatarState
+    }
+
+    @delegate:Transient
+    var inventory: Inventory? by NullableSyncFieldDelegate(
+        get = { internalInventory },
+        set = { internalInventory = it },
+        update = { inventory, avatarState -> inventory.internalInventoryAvatarState = avatarState },
+    )
+
+    // Ender check inventory
+
+    @OneToOne(
+        fetch = FetchType.LAZY,
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+    )
+    internal var internalEnderChestInventory: Inventory? = enderChestInventory?.apply {
+        if (Hibernate.isInitialized(internalEnderChestInventoryAvatarState))
+            internalEnderChestInventoryAvatarState = this@AvatarState
+    }
+
+    @delegate:Transient
+    var enderChestInventory: Inventory? by NullableSyncFieldDelegate(
+        get = { internalEnderChestInventory },
+        set = { internalEnderChestInventory = it },
+        update = { inventory, avatarState -> inventory.internalEnderChestInventoryAvatarState = avatarState },
+    )
+
     // Effects
 
     @OneToMany(
@@ -147,6 +194,9 @@ class AvatarState(
     override fun onPreRemove() {
         user = null
         group = null
+
+        inventory = null
+        enderChestInventory = null
 
         potionEffects.clear()
     }
