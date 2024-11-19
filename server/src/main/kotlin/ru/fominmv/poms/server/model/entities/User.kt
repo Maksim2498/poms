@@ -1,5 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
+import ru.fominmv.poms.server.model.embedabbles.UserRights
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
@@ -35,6 +36,11 @@ class User(
     @field:PositiveOrZero
     @Column(nullable = false)
     var maxNicknames: Int = DEFAULT_MAX_NICKNAMES,
+
+    // Rights
+
+    @Embedded
+    var rights: UserRights = UserRights(),
 
     // Model object
 
