@@ -16,7 +16,7 @@ import java.util.*
 class Nickname(
     @field:NicknameConstraint
     @Column(unique = true, nullable = false, length = NicknameConstraint.MAX_LENGTH)
-    var nickname: String,
+    var nickname: String = "player",
 
     owner: User? = null,
 

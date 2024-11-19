@@ -21,7 +21,7 @@ class User(
 
     @field:Login
     @Column(unique = true, nullable = false, length = Login.MAX_LENGTH)
-    override var login: String,
+    override var login: String = "user",
 
     @Secret
     @field:ShortText
