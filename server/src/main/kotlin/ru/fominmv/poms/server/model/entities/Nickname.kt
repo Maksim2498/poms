@@ -3,12 +3,15 @@ package ru.fominmv.poms.server.model.entities
 import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.*
+import ru.fominmv.poms.server.model.interfaces.immutable.Validatable
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.server.validation.constraints.Nickname as NicknameConstraint
 import ru.fominmv.poms.libs.commons.strings.ext.removeWhiteSpace
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.AssertTrue
 
 import java.util.*
 
@@ -19,6 +22,7 @@ class Nickname(
     var nickname: String = "player",
 
     owner: User? = null,
+    invite: Invite? = null,
 
     id: UUID = UUID.randomUUID(),
 ) :
@@ -26,6 +30,7 @@ class Nickname(
 
     PrePersistEventListener,
     PreRemoveEventListener,
+    Validatable,
     Normalizable
 {
     // Owner
@@ -50,6 +55,29 @@ class Nickname(
         getCollection = { it.internalNicknames },
         getEffectiveHolder = { it },
     )
+    
+    // Invite
+    
+    @OneToOne(
+        mappedBy = "internalNickname",
+        fetch = FetchType.LAZY,
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalInvite: Invite? = invite?.apply {
+        if (Hibernate.isInitialized(internalNickname))
+            internalNickname = this@Nickname
+    }
+
+    @delegate:Transient
+    var invite: Invite? by NullableSyncFieldDelegate(
+        get = { internalInvite },
+        set = { internalInvite = it },
+        update = { invite, nickname -> invite.internalNickname = nickname }
+    )
 
     // Events
 
@@ -60,6 +88,7 @@ class Nickname(
     @PreRemove
     override fun onPreRemove() {
         owner = null
+        invite = null
     }
 
     // Normalization
@@ -67,4 +96,10 @@ class Nickname(
     override fun normalize() {
         nickname = nickname.removeWhiteSpace()
     }
+
+    // Validation
+
+    @get:AssertTrue
+    override val isValid: Boolean
+        get() = (owner == null) != (invite == null)
 }
