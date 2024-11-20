@@ -6,14 +6,15 @@ import ru.fominmv.poms.server.model.embedabbles.Vector3
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.mc.commons.enums.GameMode
 import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.PositiveOrZero
-import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 
 import java.time.Duration
 import java.util.*
@@ -84,7 +85,8 @@ class AvatarState(
         }
     
     // User
-    
+
+    @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -92,6 +94,7 @@ class AvatarState(
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
+        optional = false,
     )
     internal var internalUser: User? = user?.apply {
         if (Hibernate.isInitialized(internalAvatarStates))
@@ -108,6 +111,7 @@ class AvatarState(
 
     // Group
 
+    @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -115,6 +119,7 @@ class AvatarState(
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
+        optional = false,
     )
     internal var internalGroup: AvatarStateGroup? = group?.apply {
         if (Hibernate.isInitialized(internalAvatarStates))
@@ -131,10 +136,12 @@ class AvatarState(
 
     // Inventory
 
+    @NotNull
     @OneToOne(
         fetch = FetchType.LAZY,
         cascade = [CascadeType.ALL],
         orphanRemoval = true,
+        optional = false,
     )
     internal var internalInventory: Inventory? = inventory?.apply {
         if (Hibernate.isInitialized(internalInventoryAvatarState))
@@ -150,10 +157,12 @@ class AvatarState(
 
     // Ender check inventory
 
+    @NotNull
     @OneToOne(
         fetch = FetchType.LAZY,
         cascade = [CascadeType.ALL],
         orphanRemoval = true,
+        optional = false,
     )
     internal var internalEnderChestInventory: Inventory? = enderChestInventory?.apply {
         if (Hibernate.isInitialized(internalEnderChestInventoryAvatarState))

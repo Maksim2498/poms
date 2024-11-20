@@ -6,6 +6,7 @@ import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.NotNull
 
 import java.util.UUID
 
@@ -17,6 +18,7 @@ class Inventory(id: UUID = UUID.randomUUID()) :
 {
     // Avatar state
 
+    @NotNull
     @OneToOne(
         mappedBy = "internalInventory",
         fetch = FetchType.LAZY,
@@ -24,7 +26,8 @@ class Inventory(id: UUID = UUID.randomUUID()) :
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
-        ]
+        ],
+        optional = false,
     )
     internal var internalInventoryAvatarState: AvatarState? = null
 
@@ -35,6 +38,7 @@ class Inventory(id: UUID = UUID.randomUUID()) :
         update = { avatarState, inventory -> avatarState.internalInventory = inventory },
     )
 
+    @NotNull
     @OneToOne(
         mappedBy = "internalEnderChestInventory",
         fetch = FetchType.LAZY,
@@ -42,7 +46,8 @@ class Inventory(id: UUID = UUID.randomUUID()) :
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
-        ]
+        ],
+        optional = false,
     )
     internal var internalEnderChestInventoryAvatarState: AvatarState? = null
 

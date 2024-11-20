@@ -10,6 +10,7 @@ import ru.fominmv.poms.libs.mc.nbt.io.*
 import ru.fominmv.poms.libs.mc.nbt.tags.Nbt
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.NotNull
 
 import java.io.*
 import java.sql.Blob
@@ -67,6 +68,7 @@ class ItemStack(
 
     // Avatar state
 
+    @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -74,6 +76,7 @@ class ItemStack(
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
+        optional = false,
     )
     internal var internalInventory: Inventory? = inventory?.apply {
         if (Hibernate.isInitialized(internalItemStacks))

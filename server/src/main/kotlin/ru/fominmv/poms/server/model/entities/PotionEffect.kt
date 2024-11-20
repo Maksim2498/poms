@@ -10,6 +10,7 @@ import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 import ru.fominmv.poms.libs.mc.commons.enums.PotionEffectType
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.NotNull
 
 import java.time.Duration
 import java.util.*
@@ -50,6 +51,7 @@ class PotionEffect(
 
     // Target
 
+    @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -57,6 +59,7 @@ class PotionEffect(
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
+        optional = false,
     )
     internal var internalTarget: AvatarState? = target?.apply {
         if (Hibernate.isInitialized(internalPotionEffects))

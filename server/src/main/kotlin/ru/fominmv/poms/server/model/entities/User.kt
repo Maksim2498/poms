@@ -1,5 +1,7 @@
 package ru.fominmv.poms.server.model.entities
 
+import org.hibernate.Hibernate
+
 import ru.fominmv.poms.server.model.embedabbles.UserRights
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
@@ -10,7 +12,6 @@ import ru.fominmv.poms.libs.commons.strings.Secret
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.PositiveOrZero
-import org.hibernate.Hibernate
 
 import java.time.Instant
 import java.util.UUID
@@ -151,6 +152,26 @@ class User(
         convertCollection = { it.createProxySet() },
         getEffectiveHolder = { it },
     )
+    
+    // Created invite
+
+    @OneToMany(
+        mappedBy = "internalCreator",
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalCreatedInvites: MutableSet<Invite> = mutableSetOf()
+
+    @delegate:Transient
+    var createdInvites: MutableSet<Invite> by NullablyReferencedSyncCollectionDelegate(
+        getCollectionFromHolder = { it.internalCreatedInvites },
+        updateElementHolder = { invite, creator -> invite.internalCreator = creator },
+        convertCollection = { it.createProxySet() },
+        getEffectiveHolder = { it },
+    )
 
     // Events
 
@@ -164,7 +185,9 @@ class User(
         avatarStates.clear()
 
         creator = null
+
         createdUsers.clear()
+        createdInvites.clear()
     }
 
     // Normalization

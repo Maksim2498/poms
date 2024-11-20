@@ -10,6 +10,7 @@ import ru.fominmv.poms.libs.commons.strings.ext.*
 import ru.fominmv.poms.libs.commons.strings.Secret
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.NotNull
 
 import java.time.Instant
 import java.util.*
@@ -66,6 +67,7 @@ class Server(
 {
     // Avatar state group
 
+    @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -73,6 +75,7 @@ class Server(
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
+        optional = false,
     )
     internal var internalAvatarStateGroup: AvatarStateGroup? = avatarStateGroup?.apply {
         if (Hibernate.isInitialized(internalServers))

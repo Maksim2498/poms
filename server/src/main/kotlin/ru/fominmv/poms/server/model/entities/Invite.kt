@@ -4,11 +4,11 @@ import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.embedabbles.UserRights
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
-import ru.fominmv.poms.server.model.interfaces.immutable.Validatable
+import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 
 import jakarta.persistence.*
-import jakarta.validation.constraints.AssertTrue
+import jakarta.validation.constraints.NotNull
 import jakarta.validation.Valid
 
 import java.time.Instant
@@ -17,6 +17,7 @@ import java.util.*
 @Entity
 class Invite(
     nickname: Nickname? = null,
+    creator: User? = null,
 
     @Embedded
     var rights: UserRights = UserRights(),
@@ -37,16 +38,17 @@ class Invite(
         expiresAt = expiresAt,
     ),
 
-    PreRemoveEventListener,
-    Validatable
+    PreRemoveEventListener
 {
     // Nickname
 
     @Valid
+    @NotNull
     @OneToOne(
         fetch = FetchType.LAZY,
         cascade = [CascadeType.ALL],
         orphanRemoval = true,
+        optional = false,
     )
     internal var internalNickname: Nickname? = nickname?.apply {
         if (Hibernate.isInitialized(internalInvite))
@@ -60,16 +62,34 @@ class Invite(
         update = { nickname, invite -> nickname.internalInvite = invite }
     )
 
+    // Creator
+
+    @ManyToOne(
+        fetch = FetchType.LAZY,
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalCreator: User? = creator?.apply {
+        if (Hibernate.isInitialized(internalCreatedInvites))
+            internalCreatedInvites.add(this@Invite)
+    }
+
+    @delegate:Transient
+    var creator: User? by NullablyReferencedSyncCollectionDelegate.Reference(
+        get = { internalCreator },
+        set = { internalCreator = it },
+        getCollection = { it.internalCreatedInvites },
+        getEffectiveHolder = { it },
+    )
+
     // Events
 
     @PreRemove
     override fun onPreRemove() {
         nickname = null
+        creator = null
     }
-
-    // Validation
-
-    @get:AssertTrue
-    override val isValid: Boolean
-        get() = nickname != null
 }
