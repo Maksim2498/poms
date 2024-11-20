@@ -70,6 +70,8 @@ entity invite {
     * rights_users_can_read: bool
     * rights_users_can_update: bool
     * rights_users_can_delete: bool
+
+    * op_level: enum('ADMIN', 'ALL', 'GAME_MASTER', 'MODERATOR', 'OWNER')
 }
 
 entity item_stack {
@@ -151,6 +153,8 @@ entity user {
     * rights_users_can_read: bool
     * rights_users_can_update: bool
     * rights_users_can_delete: bool
+
+    * op_level: enum('ADMIN', 'ALL', 'GAME_MASTER', 'MODERATOR', 'OWNER')
 
     * is_created_via_invite: bool
     creator_id: uuid
