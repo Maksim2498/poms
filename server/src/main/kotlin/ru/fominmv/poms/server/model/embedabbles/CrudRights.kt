@@ -1,20 +1,26 @@
 package ru.fominmv.poms.server.model.embedabbles
 
+import org.hibernate.annotations.ColumnDefault
+
 import jakarta.persistence.*
 
 @Embeddable
 data class CrudRights(
+    @ColumnDefault("FALSE")
     @Column(nullable = false)
-    var canCreate: Boolean = true,
+    var canCreate: Boolean = false,
 
+    @ColumnDefault("TRUE")
     @Column(nullable = false)
     var canRead: Boolean = true,
 
+    @ColumnDefault("FALSE")
     @Column(nullable = false)
-    var canUpdate: Boolean = true,
+    var canUpdate: Boolean = false,
 
+    @ColumnDefault("FALSE")
     @Column(nullable = false)
-    var canDelete: Boolean = true,
+    var canDelete: Boolean = false,
 ) {
     var canNotCreate: Boolean
         get() = !canCreate
