@@ -1,0 +1,175 @@
+@startuml
+
+entity avatar_state {
+    * id: uuid
+
+    --
+
+    * user_id: uuid
+    * group_id: uuid
+
+    * game_mode: enum('ADVENTURE', 'CREATIVE', 'SPECTATOR', 'SURVIVAL')
+    * health: double
+    * food_level: int
+    * air_level: int
+    * level: int
+    * exp: float
+    * fire_duration_in_tics: int
+
+    * position_x: double
+    * position_y: double
+    * position_z: double
+
+    * velocity_x: double
+    * velocity_y: double
+    * velocity_z: double
+
+    * inventory_id: uuid
+    * ender_chest_inventory_id: uuid
+}
+
+entity avatar_state_group {
+    * id: uuid
+
+    --
+
+    * createdAt: timestamp(6) with time zone
+    * modifiedAt: timestamp(6) with time zone
+
+    name: varchar(255)
+    description: varchar(65535)
+}
+
+entity inventory {
+    * id: uuid
+}
+
+entity invite {
+    * id: uuid
+
+    --
+
+    * createdAt: timestamp(6) with time zone
+    * modifiedAt: timestamp(6) with time zone
+
+    * expiresAt: timestamp(6) with time zone
+
+    * nickname_id: uuid
+
+    * rights_invites_can_create: bool
+    * rights_invites_can_read: bool
+    * rights_invites_can_update: bool
+    * rights_invites_can_delete: bool
+
+    * rights_servers_can_create: bool
+    * rights_servers_can_read: bool
+    * rights_servers_can_update: bool
+    * rights_servers_can_delete: bool
+
+    * rights_users_can_create: bool
+    * rights_users_can_read: bool
+    * rights_users_can_update: bool
+    * rights_users_can_delete: bool
+}
+
+entity item_stack {
+    * id: uuid
+
+    --
+
+    * inventory_id: uuid
+
+    * slot_index: int
+    * nbt_bytes: varbinary(16_777_215)
+    * is_compressed: bool
+}
+
+entity nickname {
+    * id: uuid
+
+    --
+
+    * nickname: varchar(16)
+
+    owner_id: uuid
+}
+
+entity potion_effect {
+    * id: uuid
+
+    --
+
+    * target_id: uuid
+
+    * type_id: int
+    * amplifier: int
+    * duration_in_ticks: int
+}
+
+entity server {
+    * id: uuid
+
+    --
+
+    * createdAt: timestamp(6) with time zone
+    * modifiedAt: timestamp(6) with time zone
+
+    * login: varchar(255)
+    * password: varchar(255)
+
+    * avatar_state_group_id: uuid
+
+    name: varchar(255)
+    description: varchar(65535)
+    public_address: varchar(255)
+}
+
+entity user {
+    * id: uuid
+
+    --
+
+    * createdAt: timestamp(6) with time zone
+    * modifiedAt: timestamp(6) with time zone
+
+    * login: varchar(255)
+    * password: varchar(255)
+
+    * max_nicknames: int
+
+    * rights_invites_can_create: bool
+    * rights_invites_can_read: bool
+    * rights_invites_can_update: bool
+    * rights_invites_can_delete: bool
+
+    * rights_servers_can_create: bool
+    * rights_servers_can_read: bool
+    * rights_servers_can_update: bool
+    * rights_servers_can_delete: bool
+
+    * rights_users_can_create: bool
+    * rights_users_can_read: bool
+    * rights_users_can_update: bool
+    * rights_users_can_delete: bool
+
+    * is_created_via_invite: bool
+    creator_id: uuid
+}
+
+user |o--o{ user : user created other users
+user ||--o{ nickname : user owns nicknames
+user |o--o{ invite : user created invites
+user ||--o{ avatar_state : user has avatar states
+
+avatar_state_group ||--o{ avatar_state : avatar states belongs to group
+avatar_state_group ||--o{ server : servers belongs to avatar state group
+
+avatar_state ||--o{ potion_effect : avatar state holds potion effects
+avatar_state ||--o| inventory : avatar state hold inventory
+avatar_state ||--o| inventory : avatar state hold ender chest inventory
+
+inventory ||--o{ item_stack : inventory contains item stacks
+
+invite ||--o| nickname : invite registered for nickname
+
+@enduml
