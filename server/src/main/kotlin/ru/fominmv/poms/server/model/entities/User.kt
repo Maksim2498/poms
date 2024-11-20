@@ -10,6 +10,7 @@ import ru.fominmv.poms.libs.commons.strings.Secret
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.PositiveOrZero
+import org.hibernate.Hibernate
 
 import java.time.Instant
 import java.util.UUID
@@ -41,6 +42,13 @@ class User(
 
     @Embedded
     var rights: UserRights = UserRights(),
+
+    // Creator
+
+    creator: User? = null,
+
+    @Column(nullable = false)
+    var isCreatedViaInvite: Boolean = false,
 
     // Model object
 
@@ -100,6 +108,49 @@ class User(
         convertCollection = { it.createProxySet() },
         getEffectiveHolder = { it },
     )
+    
+    // Creator
+
+    @ManyToOne(
+        fetch = FetchType.LAZY,
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+        ],
+    )
+    internal var internalCreator: User? = creator?.apply {
+        if (Hibernate.isInitialized(internalCreatedUsers))
+            internalCreatedUsers.add(this@User)
+    }
+
+    @delegate:Transient
+    var creator: User? by NullablyReferencedSyncCollectionDelegate.Reference(
+        get = { internalCreator },
+        set = { internalCreator = it },
+        getCollection = { it.internalCreatedUsers },
+        getEffectiveHolder = { it },
+    )
+    
+    // Created users
+
+    @OneToMany(
+        mappedBy = "internalCreator",
+        cascade = [
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.REFRESH,
+      ],
+    )
+    internal var internalCreatedUsers: MutableSet<User> = mutableSetOf()
+
+    @delegate:Transient
+    var createdUsers: MutableSet<User> by NullablyReferencedSyncCollectionDelegate(
+        getCollectionFromHolder = { it.internalCreatedUsers },
+        updateElementHolder = { user, creator -> user.internalCreator = creator },
+        convertCollection = { it.createProxySet() },
+        getEffectiveHolder = { it },
+    )
 
     // Events
 
@@ -111,6 +162,9 @@ class User(
     override fun onPreRemove() {
         nicknames.clear()
         avatarStates.clear()
+
+        creator = null
+        createdUsers.clear()
     }
 
     // Normalization
