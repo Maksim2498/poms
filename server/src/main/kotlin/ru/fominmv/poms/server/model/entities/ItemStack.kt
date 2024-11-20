@@ -17,6 +17,7 @@ import java.util.zip.GZIPInputStream
 import java.util.UUID
 
 @Entity
+@Table(uniqueConstraints = [UniqueConstraint(columnNames = ["id", "slotIndex"])])
 class ItemStack(
     inventory: Inventory? = null,
 
