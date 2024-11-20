@@ -9,6 +9,7 @@ import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.strings.Secret
+import ru.fominmv.poms.libs.mc.commons.enums.OpLevel
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.PositiveOrZero
@@ -43,6 +44,10 @@ class User(
 
     @Embedded
     var rights: UserRights = UserRights(),
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    var opLevel: OpLevel = OpLevel.ALL,
 
     // Creator
 
