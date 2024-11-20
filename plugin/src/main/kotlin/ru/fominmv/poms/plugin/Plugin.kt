@@ -27,7 +27,7 @@ class Plugin : JavaPlugin() {
             object : Listener {
                 @EventHandler
                 fun onClick(event: PlayerInteractEvent) {
-                    event.player.gameMode
+                    // Left for future debug
                 }
             },
 
