@@ -1,12 +1,17 @@
 package ru.fominmv.poms.server.config
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 private object ApplicationProfileDisplayName {
     const val DEVELOPMENT = "development"
     const val PRODUCTION = "production"
 }
 
 enum class ApplicationProfile(val displayName: String) {
+    @JsonProperty(ApplicationProfileDisplayName.DEVELOPMENT)
     DEVELOPMENT(ApplicationProfileDisplayName.DEVELOPMENT),
+
+    @JsonProperty(ApplicationProfileDisplayName.PRODUCTION)
     PRODUCTION(ApplicationProfileDisplayName.PRODUCTION);
 
     companion object {
