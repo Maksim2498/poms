@@ -7,16 +7,12 @@ plugins {
     kotlin("jvm")
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
+
+    jvmToolchain(21)
 }
 
 // Dependencies
