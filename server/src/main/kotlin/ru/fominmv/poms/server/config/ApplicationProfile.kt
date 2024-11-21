@@ -19,6 +19,6 @@ enum class ApplicationProfile(val displayName: String) {
             PRODUCTION_DISPLAY_NAME -> PRODUCTION
             DEVELOPMENT_DISPLAY_NAME -> DEVELOPMENT
 
-            else -> throw IllegalArgumentException("There is no profile with display name $displayName")
+            else -> throw IllegalArgumentException("No profile with display name $displayName")
         }
 }
