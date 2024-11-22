@@ -13,6 +13,7 @@ import ru.fominmv.poms.libs.mc.commons.enums.OpLevel
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.PositiveOrZero
+import org.hibernate.annotations.ColumnDefault
 
 import java.time.Instant
 import java.util.UUID
@@ -48,6 +49,10 @@ class User(
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var opLevel: OpLevel = OpLevel.ALL,
+
+    @ColumnDefault("FALSE")
+    @Column(nullable = false)
+    var isBlocked: Boolean = false,
 
     // Creator
 
