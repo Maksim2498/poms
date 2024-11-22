@@ -8,7 +8,7 @@ entity avatar_state {
     * user_id: uuid
     * group_id: uuid
 
-    * game_mode: enum('ADVENTURE', 'CREATIVE', 'SPECTATOR', 'SURVIVAL')
+    * game_mode: enum('SURVIVAL', 'CREATIVE', 'ADVENTURE', 'SPECTATOR')
     * health: double
     * food_level: int
     * air_level: int
@@ -73,7 +73,7 @@ entity invite {
 
     * rights_can_manage_rights: bool
 
-    * op_level: enum('ADMIN', 'ALL', 'GAME_MASTER', 'MODERATOR', 'OWNER')
+    * op_level: enum('ALL', 'MODERATOR', 'GAME_MASTER', 'ADMIN', 'OWNER')
 }
 
 entity item_stack {
@@ -158,7 +158,7 @@ entity user {
 
     * rights_can_manage_rights: bool
 
-    * op_level: enum('ADMIN', 'ALL', 'GAME_MASTER', 'MODERATOR', 'OWNER')
+    * op_level: enum('ALL', 'MODERATOR', 'GAME_MASTER', 'ADMIN', 'OWNER')
 
     * is_blocked: bool
 
