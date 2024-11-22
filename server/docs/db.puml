@@ -71,6 +71,8 @@ entity invite {
     * rights_users_can_update: bool
     * rights_users_can_delete: bool
 
+    * rights_can_manage_rights: bool
+
     * op_level: enum('ADMIN', 'ALL', 'GAME_MASTER', 'MODERATOR', 'OWNER')
 }
 
@@ -154,7 +156,11 @@ entity user {
     * rights_users_can_update: bool
     * rights_users_can_delete: bool
 
+    * rights_can_manage_rights: bool
+
     * op_level: enum('ADMIN', 'ALL', 'GAME_MASTER', 'MODERATOR', 'OWNER')
+
+    * is_blocked: bool
 
     * is_created_via_invite: bool
     creator_id: uuid
