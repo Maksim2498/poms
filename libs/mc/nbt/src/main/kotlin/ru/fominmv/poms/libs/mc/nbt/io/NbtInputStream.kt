@@ -5,7 +5,7 @@ import ru.fominmv.poms.libs.mc.nbt.tags.*
 
 import java.io.DataInputStream
 
-class NbtInputStream<T : DataInputStream>(stream: T) :
+open class NbtInputStream<T : DataInputStream>(stream: T) :
     InputStreamWrapper<T>(stream),
 
     NbtInput
