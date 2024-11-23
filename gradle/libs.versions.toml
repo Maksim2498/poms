@@ -5,8 +5,14 @@ jsonPatch = "1.9"
 paper = "1.21.1-R0.1-SNAPSHOT"
 springBoot = "3.3.5"
 springDependencyManagement = "1.1.6"
+dnsJava = "3.6.2"
+kyoriAdventure = "4.17.0"
 
 [libraries]
 jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 paper = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 jsonPatch = { module = "com.github.fge:json-patch", version.ref = "jsonPatch" }
+dnsJava = { module = "dnsjava:dnsjava", version.ref = "dnsJava" }
+kyoriAdventureApi = { module = "net.kyori:adventure-api", version.ref = "kyoriAdventure" }
+kyoriAdventureTextSerializerGson = { module = "net.kyori:adventure-text-serializer-gson", version.ref = "kyoriAdventure" }
+kyoriAdventureTextSerializerLegacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "kyoriAdventure" }

@@ -25,7 +25,7 @@ dependencies {
     api(project(":libs:commons"))
     api(project(":libs:mc:nbt"))
 
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(kotlin("reflect"))
 
     testImplementation(kotlin("test"))
 }

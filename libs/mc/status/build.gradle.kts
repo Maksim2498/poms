@@ -25,7 +25,12 @@ dependencies {
     api(project(":libs:commons"))
     api(project(":libs:mc:protocol"))
 
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(kotlin("reflect"))
+    implementation(libs.jackson)
+    implementation(libs.kyoriAdventureApi)
+    implementation(libs.kyoriAdventureTextSerializerGson)
+    implementation(libs.kyoriAdventureTextSerializerLegacy)
+    implementation(libs.dnsJava)
 
     testImplementation(kotlin("test"))
 }

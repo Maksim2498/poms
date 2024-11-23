@@ -24,7 +24,7 @@ repositories {
 dependencies {
     api(project(":libs:commons"))
 
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(kotlin("reflect"))
 
     testImplementation(kotlin("test"))
 }

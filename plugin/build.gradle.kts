@@ -27,8 +27,8 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(project(":libs:mc:commands"))
+    implementation(kotlin("reflect"))
 
     compileOnly(libs.paper)
 }

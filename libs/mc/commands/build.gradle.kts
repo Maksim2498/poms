@@ -30,6 +30,6 @@ dependencies {
     api(project(":libs:commons"))
     api(libs.paper)
 
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(kotlin("reflect"))
 }
 

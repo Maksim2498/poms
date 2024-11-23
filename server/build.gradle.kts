@@ -50,7 +50,7 @@ dependencies {
 
 	// Kotlin
 
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation(kotlin("reflect"))
 
 	// Spring
 
