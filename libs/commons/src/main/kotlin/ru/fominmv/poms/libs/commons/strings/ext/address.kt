@@ -154,6 +154,9 @@ val String.isDomainName: Boolean
 val String.isDomainNameAddress: Boolean
     get() = tryMatchDomainName(false) != null
 
+fun String.toDomainNameAddress(): InetAddress =
+    toDomainNameAddressOrNull() ?: throw IllegalArgumentException("Bad domain name address")
+
 fun String.toDomainNameAddressOrNull(): InetAddress? =
     tryMatchDomainName(false)
         ?.groupValues
