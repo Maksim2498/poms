@@ -41,11 +41,11 @@ class ListNbt<out T : Nbt>(
     // Validation
 
     init {
-        check(this.values.none { it === EndNbt }) {
+        require(this.values.none { it === EndNbt }) {
             "${EndNbt.javaClass.simpleName} is not allowed"
         }
 
-        check(this.values.all { it.javaClass == valuesClass }) {
+        require(this.values.all { it.javaClass == valuesClass }) {
             "All values must be of the same class"
         }
     }

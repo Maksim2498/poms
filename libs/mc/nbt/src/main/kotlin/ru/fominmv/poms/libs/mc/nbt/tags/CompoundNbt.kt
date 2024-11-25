@@ -36,7 +36,7 @@ class CompoundNbt(
     // Validation
 
     init {
-        check(this.values.none { it === EndNbt }) {
+        require(this.values.none { it === EndNbt }) {
             "${EndNbt.javaClass.simpleName} is not allowed"
         }
     }
