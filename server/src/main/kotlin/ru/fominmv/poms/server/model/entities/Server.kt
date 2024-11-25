@@ -6,8 +6,8 @@ import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
-import ru.fominmv.poms.libs.commons.strings.ext.*
-import ru.fominmv.poms.libs.commons.strings.Secret
+import ru.fominmv.poms.libs.commons.text.strings.ext.*
+import ru.fominmv.poms.libs.commons.text.strings.Secret
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull

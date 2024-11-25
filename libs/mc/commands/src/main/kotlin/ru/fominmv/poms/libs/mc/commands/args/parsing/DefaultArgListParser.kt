@@ -1,6 +1,6 @@
 package ru.fominmv.poms.libs.mc.commands.args.parsing
 
-import ru.fominmv.poms.libs.commons.strings.builders.ext.toStringAndClear
+import ru.fominmv.poms.libs.commons.text.strings.builders.ext.toStringAndClear
 import ru.fominmv.poms.libs.mc.commands.args.*
 
 class DefaultArgListParser : ArgListParser {

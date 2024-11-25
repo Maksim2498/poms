@@ -2,7 +2,7 @@ package ru.fominmv.poms.libs.mc.protocol
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 
-import ru.fominmv.poms.libs.commons.strings.ext.utf8Length
+import ru.fominmv.poms.libs.commons.text.strings.ext.utf8Length
 
 import java.io.*
 import java.util.UUID

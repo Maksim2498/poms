@@ -1,6 +1,6 @@
 package ru.fominmv.poms.libs.mc.nbt.tags
 
-import ru.fominmv.poms.libs.commons.strings.ext.declaration
+import ru.fominmv.poms.libs.commons.text.strings.ext.declaration
 
 /**
  * A base class for all classes representing a NBT tag holding only one value

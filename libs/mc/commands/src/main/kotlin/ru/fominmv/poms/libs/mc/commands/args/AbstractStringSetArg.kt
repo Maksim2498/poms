@@ -1,6 +1,6 @@
 package ru.fominmv.poms.libs.mc.commands.args
 
-import ru.fominmv.poms.libs.commons.strings.ext.startsWithAndNotEquals
+import ru.fominmv.poms.libs.commons.text.strings.ext.startsWithAndNotEquals
 
 abstract class AbstractStringSetArg : Arg<String> {
     override fun matches(arg: String): Boolean =

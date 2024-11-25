@@ -1,6 +1,6 @@
 package ru.fominmv.poms.libs.mc.commands.args
 
-import ru.fominmv.poms.libs.commons.strings.ext.startsWithAndNotEquals
+import ru.fominmv.poms.libs.commons.text.strings.ext.startsWithAndNotEquals
 
 data class LiteralArg(val literal: String) : Arg<String> {
     override fun matches(arg: String): Boolean =

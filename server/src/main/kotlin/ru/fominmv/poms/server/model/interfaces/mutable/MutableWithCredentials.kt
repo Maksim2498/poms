@@ -1,6 +1,6 @@
 package ru.fominmv.poms.server.model.interfaces.mutable
 
-import ru.fominmv.poms.libs.commons.strings.ext.removeWhiteSpace
+import ru.fominmv.poms.libs.commons.text.strings.ext.removeWhiteSpace
 import ru.fominmv.poms.server.model.interfaces.immutable.WithCredentials
 
 interface MutableWithCredentials :

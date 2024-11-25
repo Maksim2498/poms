@@ -1,4 +1,4 @@
-package ru.fominmv.poms.libs.commons.strings.ext
+package ru.fominmv.poms.libs.commons.text.strings.ext
 
 fun String.escapeSpecial(): String =
     map {

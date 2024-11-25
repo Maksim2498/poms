@@ -1,7 +1,7 @@
 package ru.fominmv.poms.server.model.entities
 
 import ru.fominmv.poms.server.model.interfaces.mutable.MutableIdentifiable
-import ru.fominmv.poms.libs.commons.strings.toObjectString
+import ru.fominmv.poms.libs.commons.text.strings.toObjectString
 
 import jakarta.persistence.MappedSuperclass
 import jakarta.persistence.Id as JpaId
