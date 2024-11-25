@@ -1,6 +1,6 @@
 package ru.fominmv.poms.libs.commons.text.chars.ext
 
-val Char.isHttpCodePoint: Boolean
+val Char.isHttpTokenCodePoint: Boolean
     get() = when (this) {
         in 'a'..'z',
         in 'A'..'Z',
