@@ -1,0 +1,48 @@
+@startuml
+
+hide empty description
+
+state Type
+state Subtype
+
+state ParameterKey
+state ParameterValueStart
+state ParameterValue
+state ParameterQuotedValue
+state ParameterQuotedValueEscape
+state ParameterQuotedValueEnd
+
+[*] --> Type
+
+Type --> Subtype : '/'
+Type --> Type : other
+
+Subtype --> ParameterKey : ';'
+Subtype --> Subtype : other
+
+ParameterKey --> ParameterValueStart : '='
+ParameterKey --> ParameterKey : other
+
+ParameterValueStart --> ParameterQuotedValue : '"'
+ParameterValueStart --> ParameterKey : ';'
+ParameterValueStart --> ParameterValue : other
+
+ParameterQuotedValue --> ParameterQuotedValueEscape : '\\'
+ParameterQuotedValue --> ParameterQuotedValueEnd : '"'
+ParameterQuotedValue --> ParameterQuotedValue : other
+
+ParameterQuotedValueEnd --> ParameterKey : ';'
+ParameterQuotedValueEnd --> ParameterQuotedValueEnd : other
+
+ParameterQuotedValueEscape --> ParameterQuotedValue : any
+
+ParameterValue --> ParameterKey : ';"
+ParameterValue --> ParameterValue : other
+
+Subtype --> [*]
+ParameterKey --> [*]
+ParameterValue --> [*]
+ParameterValueStart --> [*]
+ParameterQuotedValueEnd --> [*]
+
+@enduml
