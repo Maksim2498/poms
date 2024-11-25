@@ -1,18 +1,23 @@
 package ru.fominmv.poms.libs.commons.arrays.ext
 
-fun ByteArray.toListView(): List<Byte> =
-    object : List<Byte> {
+import ru.fominmv.poms.libs.commons.collections.interfaces.immutable.ByteArrayListView
+
+fun ByteArray.toListView(): ByteArrayListView =
+    object : ByteArrayListView {
+        override val array: ByteArray
+            get() = this@toListView
+
         override val size: Int
-            get() = this@toListView.size
+            get() = array.size
 
         override fun get(index: Int): Byte =
-            this@toListView[index]
+            array[index]
 
         override fun isEmpty(): Boolean =
-            this@toListView.isEmpty()
+            array.isEmpty()
 
         override fun iterator(): Iterator<Byte> =
-            this@toListView.iterator()
+            array.iterator()
 
         override fun listIterator(): ListIterator<Byte> =
             listIterator(0)
@@ -22,14 +27,14 @@ fun ByteArray.toListView(): List<Byte> =
                 private var index = index
 
                 override fun hasNext(): Boolean =
-                    this.index < this@toListView.size
+                    this.index < array.size
 
                 override fun hasPrevious(): Boolean =
                     this.index > 0
 
                 override fun next(): Byte =
                     if (hasNext())
-                        this@toListView[++this.index]
+                        array[++this.index]
                     else
                         throw NoSuchElementException()
 
@@ -38,7 +43,7 @@ fun ByteArray.toListView(): List<Byte> =
 
                 override fun previous(): Byte =
                     if (hasPrevious())
-                        this@toListView[--this.index]
+                        array[--this.index]
                     else
                         throw NoSuchElementException()
 
@@ -47,17 +52,18 @@ fun ByteArray.toListView(): List<Byte> =
             }
 
         override fun subList(fromIndex: Int, toIndex: Int): List<Byte> =
-            this@toListView.slice(fromIndex..<toIndex)
+            array.slice(fromIndex..<toIndex)
 
         override fun lastIndexOf(element: Byte): Int =
-            this@toListView.lastIndexOf(element)
+            array.lastIndexOf(element)
 
         override fun indexOf(element: Byte): Int =
-            this@toListView.indexOf(element)
+            array.indexOf(element)
 
         override fun containsAll(elements: Collection<Byte>): Boolean =
             elements.all(::contains)
 
         override fun contains(element: Byte): Boolean =
-            element in this@toListView
+            element in array
     }
+
