@@ -43,9 +43,9 @@ class CompoundNbt(
 
     // Destructuring
 
-    fun component1(): String =
+    operator fun component1(): String =
         name
 
-    fun component2(): Set<Nbt> =
+    operator fun component2(): Set<Nbt> =
         values
 }

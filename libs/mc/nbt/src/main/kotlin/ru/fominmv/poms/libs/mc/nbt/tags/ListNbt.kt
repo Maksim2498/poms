@@ -52,10 +52,10 @@ class ListNbt<out T : Nbt>(
 
     // Destructuring
 
-    fun component1(): String =
+    operator fun component1(): String =
         name
 
-    fun component2(): List<T> =
+    operator fun component2(): List<T> =
         values
 
     // Copying
