@@ -8,27 +8,37 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 class MimeType(
-    type: String = "*",
-    subtype: String = "*",
+    type: String = DEFAULT_TYPE,
+    subtype: String = DEFAULT_SUBTYPE,
     parameters: Map<String, String> = emptyMap(),
 
     normalize: Boolean = true,
     validate: Boolean = true,
 ) {
+    // Secondary constructors
+
     constructor(
         type: String,
         subtype: String,
 
         charset: Charset,
+        base64: Boolean = false,
         extraParameters: Map<String, String> = emptyMap(),
 
         normalize: Boolean = true,
         validate: Boolean = true,
     ) : this(
         type, subtype,
-        extraParameters + listOf(Parameter.CHARSET to charset.name()),
+
+        extraParameters + listOfNotNull(
+            Parameter.CHARSET to charset.toString(),
+            if (base64) Parameter.BASE64 to "" else null,
+        ),
+
         normalize, validate,
     )
+
+    // Fields
 
     var type: String
         private set
@@ -39,11 +49,24 @@ class MimeType(
     var parameters: Map<String, String>
         private set
 
+    // Normalization and validation
+
     init {
         if (normalize) {
             this.type = type.trim().lowercase()
             this.subtype = subtype.trim().lowercase()
-            this.parameters = parameters.mapKeys { it.key.trim().lowercase() }
+            this.parameters = buildMap {
+                for ((key, value) in parameters)
+                    set(key.trim().lowercase(), value)
+
+                val charsetName = get(Parameter.CHARSET)
+                val charset = if (charsetName != null)
+                    Charset.forName(charsetName, DEFAULT_CHARSET)
+                else
+                    DEFAULT_CHARSET
+
+                set(Parameter.CHARSET, charset.toString())
+            }
         } else {
             this.type = type
             this.subtype = subtype
@@ -71,6 +94,8 @@ class MimeType(
         }
     }
 
+    // Shortcut properties
+
     val essence: String by lazy {
         "${this.type}/${this.subtype}"
     }
@@ -87,9 +112,9 @@ class MimeType(
         val charsetName = parameters[Parameter.CHARSET]
 
         if (charsetName != null)
-            Charset.forName(charsetName)
+            Charset.forName(charsetName, DEFAULT_CHARSET)
         else
-            StandardCharsets.US_ASCII
+            DEFAULT_CHARSET
     }
 
     // Companion
@@ -97,7 +122,9 @@ class MimeType(
     companion object {
         // Constants
 
-        object Type {
+        // - Types
+
+        object TypeObject {
             const val APPLICATION = "application"
             const val AUDIO = "audio"
             const val IMAGE = "image"
@@ -119,16 +146,40 @@ class MimeType(
             }
         }
 
-        object Parameter {
+        val Type = TypeObject
+
+        // - Parameters
+
+        object ParameterObject {
             const val CHARSET = "charset"
+            const val BASE64 = "base64"
         }
+
+        val Parameter = ParameterObject
+
+        // - Components
+
+        const val DEFAULT_TYPE = TypeObject.TEXT
+        const val DEFAULT_SUBTYPE = "plain"
+        const val DEFAULT_ESSENCE = "$DEFAULT_TYPE/$DEFAULT_SUBTYPE"
+
+        val DEFAULT_CHARSET = StandardCharsets.US_ASCII
+
+        // - MimeTypes
+
+        val TEXT_PLAIN = MimeType()
 
         // Parsing
 
         // See /libs/commons/docs/fsa/MimeType.svg
         // for FSA reference
 
-        fun parse(mimeType: String): MimeType {
+        fun parse(
+            mimeType: String,
+            allowEmpty: Boolean = false,
+            defaultType: String = DEFAULT_TYPE,
+            defaultSubtype: String = DEFAULT_SUBTYPE,
+        ): MimeType {
             var state = ParsingState.TYPE
 
             var type = ""
@@ -144,6 +195,12 @@ class MimeType(
                         '/' -> {
                             type = token.toStringAndClear()
                             state = ParsingState.SUBTYPE
+                        }
+
+                        ';' -> {
+                            require(allowEmpty) { "Missing '/'" }
+                            type = token.toStringAndClear()
+                            state = ParsingState.PARAMETER_KEY
                         }
 
                         else -> { token.append(char) }
@@ -217,7 +274,11 @@ class MimeType(
                 }
 
             when (state) {
-                ParsingState.TYPE -> throw IllegalArgumentException("Missing '/'")
+                ParsingState.TYPE -> {
+                    if (!allowEmpty)
+                        throw IllegalArgumentException("Missing '/'")
+                }
+
                 ParsingState.SUBTYPE -> { subtype = token.toStringAndClear() }
 
                 ParsingState.PARAMETER_KEY -> {
@@ -234,6 +295,14 @@ class MimeType(
                 ParsingState.PARAMETER_QUOTED_VALUE_ESCAPE -> throw IllegalArgumentException("Missing '\"'")
 
                 ParsingState.PARAMETER_QUOTED_VALUE_END -> {}
+            }
+
+            if (allowEmpty) {
+                if (type.isBlank())
+                    type = defaultType
+
+                if (subtype.isBlank())
+                    subtype = defaultSubtype
             }
 
             return MimeType(type, subtype, parameters)
@@ -264,6 +333,30 @@ class MimeType(
         parameters
 
     // Copying
+
+    fun withType(type: String): MimeType =
+        copy(type = type)
+
+    fun withSubtype(subtype: String): MimeType =
+        copy(subtype = subtype)
+
+    fun withCharset(charset: Charset): MimeType =
+        withParametersAdded(Parameter.CHARSET to charset.toString())
+
+    fun withBase64(base64: Boolean): MimeType =
+        if (base64)
+            withParametersAdded(Parameter.BASE64 to "")
+        else
+            withParametersRemoved(Parameter.BASE64)
+
+    fun withParameters(parameters: Map<String, String>): MimeType =
+        copy(parameters = parameters)
+
+    fun withParametersAdded(vararg newParameters: Pair<String, String>): MimeType =
+        copy(parameters = parameters + newParameters)
+
+    fun withParametersRemoved(vararg parametersToRemove: String): MimeType =
+        copy(parameters = parameters.filterKeys { it !in parametersToRemove })
 
     fun copy(
         type: String = this.type,
@@ -297,9 +390,15 @@ class MimeType(
     // To string conversion
 
     override fun toString(): String =
-        toString(true)
+        toString(
+            showEmptyParameterValuesAsFlags = true,
+            showDefaultCharset = false,
+        )
 
-    fun toString(showEmptyParameterValuesAsFlags: Boolean): String =
+    fun toString(
+        showEmptyParameterValuesAsFlags: Boolean,
+        showDefaultCharset: Boolean,
+    ): String =
         buildString {
             append(essence)
 
@@ -307,6 +406,11 @@ class MimeType(
                 return@buildString
 
             for ((key, value) in parameters) {
+                if (!showDefaultCharset &&
+                    key == Parameter.CHARSET &&
+                    value == DEFAULT_CHARSET.toString())
+                    continue
+
                 append(';')
                 append(key)
 

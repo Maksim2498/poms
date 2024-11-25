@@ -15,6 +15,7 @@ state ParameterQuotedValueEnd
 [*] --> Type
 
 Type --> Subtype : '/'
+Type --> ParameterKey : ';'
 Type --> Type : other
 
 Subtype --> ParameterKey : ';'

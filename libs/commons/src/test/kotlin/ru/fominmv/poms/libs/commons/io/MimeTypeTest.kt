@@ -21,12 +21,12 @@ class MimeTypeTest {
         assertEquals("a/b+c;d", MimeType.parse("a/b+c;d; ").toString())
 
         assertEquals(
-            "text/plain;charset=utf-8;base64",
+            "text/plain;charset=UTF-8;base64",
             MimeType.parse("text/plain;charset=utf-8;base64").toString(),
         )
 
         assertEquals(
-            "text/plain;charset=utf-8;base64",
+            "text/plain;charset=UTF-8;base64",
             MimeType.parse("  TeXT  / pLaIN  ; charset  =utf-8; base64  ").toString(),
         )
 
