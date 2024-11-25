@@ -14,3 +14,12 @@ val Char.isHttpTokenCodePoint: Boolean
 
         else -> false
     }
+
+val Char.isHttpQuotedStringTokenCodePoint: Boolean
+    get() = when (this) {
+        '\u0009',
+        in '\u0020'..'\u007E',
+        in '\u0080'..'\u00FF' -> true
+
+        else -> false
+    }
