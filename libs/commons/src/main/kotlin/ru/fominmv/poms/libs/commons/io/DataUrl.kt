@@ -63,31 +63,25 @@ data class DataUrl(
             if (mimeType.essence != MimeType.DEFAULT_ESSENCE)
                 append(mimeType.essence)
 
-            if (mimeType.charset != MimeType.DEFAULT_CHARSET) {
-                append(';')
-                append(MimeType.Parameter.CHARSET)
-                append('=')
-                append(mimeType.charset)
-            }
-
             var useBase64 = false
 
-            for ((key, value) in mimeType.parameters)
+            for ((key, value) in mimeType.parameters) {
                 when (key) {
-                    MimeType.Parameter.CHARSET -> {}
-                    MimeType.Parameter.BASE64 -> { useBase64 = true }
-
-                    else -> {
-                        append(';')
-                        append(key)
-                        append('=')
-                        append(value)
+                    MimeType.Parameter.CHARSET -> {
+                        if (value.equals(MimeType.DEFAULT_CHARSET.toString(), ignoreCase = true))
+                            continue
                     }
+
+                    MimeType.Parameter.BASE64 -> { useBase64 = true }
                 }
 
-            if (useBase64) {
                 append(';')
-                append(MimeType.Parameter.BASE64)
+                append(key)
+
+                if (value.isNotEmpty()) {
+                    append('=')
+                    append(value)
+                }
             }
 
             if (data.isEmpty())
@@ -95,7 +89,7 @@ data class DataUrl(
 
             append(',')
 
-            if (MimeType.Parameter.BASE64 in mimeType.parameters) {
+            if (useBase64) {
                 val encoder = Base64.getEncoder()
                 val encodedData = encoder.encodeToString(data.toByteArray())
 
