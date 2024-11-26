@@ -21,7 +21,7 @@ class MimeType(
         type: String,
         subtype: String,
 
-        charset: Charset,
+        charset: Charset = DEFAULT_CHARSET,
         base64: Boolean = false,
         extraParameters: Map<String, String> = emptyMap(),
 
