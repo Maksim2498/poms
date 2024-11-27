@@ -31,8 +31,11 @@ dependencies {
     implementation(libs.kyoriAdventureTextSerializerGson)
     implementation(libs.kyoriAdventureTextSerializerLegacy)
     implementation(libs.dnsJava)
+    implementation(libs.slf4jApi)
+    implementation(libs.slf4jSimple)
 
     testImplementation(kotlin("test"))
+    testImplementation(libs.kyoriAdventureTextSerializerPlain)
 }
 
 // Tasks
