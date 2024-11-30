@@ -5,7 +5,6 @@ import jakarta.persistence.*
 import kotlin.math.sqrt
 
 @Embeddable
-@MappedSuperclass
 data class Vector3(
     @Column(nullable = false)
     var x: Double = 0.0,
