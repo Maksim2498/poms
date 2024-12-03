@@ -10,9 +10,9 @@ interface BulkAccessor<T> {
     fun count(): Long =
         getAll().size.toLong()
 
-    fun getAll(pageable: Pageable): Page<T>
-
     fun getAll(): List<T>
+
+    fun getAll(pageable: Pageable): Page<T>
 
     fun deleteAll(): Long
 }
