@@ -36,11 +36,11 @@ class Server(
 
     @field:ShortText
     @Column(length = ShortText.MAX_LENGTH)
-    var name: String? = null,
+    override var name: String? = null,
 
     @field:MediumText
     @Column(length = MediumText.MAX_LENGTH)
-    var description: String? = null,
+    override var description: String? = null,
 
     // Avatar state group
 
@@ -63,6 +63,7 @@ class Server(
     PrePersistEventListener,
     PreRemoveEventListener,
     MutableWithCredentials,
+    MutableDescribed<String?>,
     Normalizable
 {
     // Avatar state group
