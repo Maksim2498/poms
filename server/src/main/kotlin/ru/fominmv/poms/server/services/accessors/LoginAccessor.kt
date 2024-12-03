@@ -2,7 +2,7 @@ package ru.fominmv.poms.server.services.accessors
 
 import ru.fominmv.poms.server.errors.not_found.NotFoundByLoginException
 
-interface CredentialsAccessor<T> {
+interface LoginAccessor<T> {
     // Exists
 
     fun allExistsByLogin(logins: Iterable<String>): Boolean =
