@@ -33,6 +33,8 @@ entity avatar_state_group {
 
     --
 
+    * login: varchar(255)
+
     * createdAt: timestamp(6) with time zone
     * modifiedAt: timestamp(6) with time zone
 
