@@ -1,7 +1,7 @@
 package ru.fominmv.poms.server.model.entities
 
 import ru.fominmv.poms.server.model.interfaces.events.*
-import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
+import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
@@ -14,15 +14,21 @@ import java.util.*
 
 @Entity
 class AvatarStateGroup(
+    // Login
+
+    @field:Login
+    @Column(unique = true, nullable = false, length = Login.MAX_LENGTH)
+    override var login: String = "group",
+
     // About
 
     @field:ShortText
     @Column(length = ShortText.MAX_LENGTH)
-    var name: String? = null,
+    override var name: String? = null,
 
     @field:MediumText
     @Column(length = MediumText.MAX_LENGTH)
-    var description: String? = null,
+    override var description: String? = null,
 
     // Model object
 
@@ -40,6 +46,8 @@ class AvatarStateGroup(
 
     PrePersistEventListener,
     PreRemoveEventListener,
+    MutableDescribed<String?>,
+    MutableWithLogin,
     Normalizable
 {
     // Servers
