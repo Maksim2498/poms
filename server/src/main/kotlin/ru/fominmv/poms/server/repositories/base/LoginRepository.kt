@@ -2,12 +2,12 @@ package ru.fominmv.poms.server.repositories.base
 
 import org.springframework.data.repository.NoRepositoryBean
 
-import ru.fominmv.poms.server.model.interfaces.immutable.WithCredentials
+import ru.fominmv.poms.server.model.interfaces.immutable.WithLogin
 
 import java.util.*
 
 @NoRepositoryBean
-interface CredentialsRepository<T : WithCredentials> {
+interface LoginRepository<T : WithLogin> {
     fun findByLogin(login: String): Optional<T>
 
     fun existsByLogin(login: String): Boolean

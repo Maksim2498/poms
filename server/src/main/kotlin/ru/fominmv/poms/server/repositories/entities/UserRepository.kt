@@ -11,4 +11,4 @@ import java.util.*
 interface UserRepository:
     EntityManagementRepository<User>,
     EntityRepository<User, UUID>,
-    CredentialsRepository<User>
+    LoginRepository<User>
