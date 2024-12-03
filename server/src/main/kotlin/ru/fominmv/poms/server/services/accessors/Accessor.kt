@@ -2,7 +2,7 @@ package ru.fominmv.poms.server.services.accessors
 
 import ru.fominmv.poms.server.errors.not_found.NotFoundException
 
-interface ValueAccessor<T> {
+interface Accessor<T> {
     // Exists
 
     fun allExists(values: Iterable<T>): Boolean =
