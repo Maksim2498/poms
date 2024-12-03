@@ -7,4 +7,4 @@ import org.springframework.web.bind.annotation.ResponseStatus
 open class IdDuplicateException (
     val id: Any,
     cause: Throwable? = null,
-) : RuntimeException("Id $id is already in use", cause)
+) : DuplicateException("Id $id is already in use", cause)
