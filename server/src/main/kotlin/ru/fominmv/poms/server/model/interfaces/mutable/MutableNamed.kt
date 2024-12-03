@@ -2,6 +2,6 @@ package ru.fominmv.poms.server.model.interfaces.mutable
 
 import ru.fominmv.poms.server.model.interfaces.immutable.Named
 
-interface MutableNamed : Named {
-    override var name: String
+interface MutableNamed<T : String?> : Named<T> {
+    override var name: T
 }
