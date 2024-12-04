@@ -1,5 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
+import org.hibernate.annotations.*
 import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.*
@@ -10,6 +11,7 @@ import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 import ru.fominmv.poms.libs.mc.commons.enums.PotionEffectType
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
 
@@ -63,6 +65,7 @@ class PotionEffect(
         ],
         optional = false,
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     internal var internalTarget: AvatarState? = target?.apply {
         if (Hibernate.isInitialized(internalPotionEffects))
             internalPotionEffects.add(this@PotionEffect)

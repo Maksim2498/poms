@@ -1,5 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
+import org.hibernate.annotations.*
 import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.*
@@ -9,6 +10,7 @@ import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSync
 import ru.fominmv.poms.libs.commons.text.strings.ext.*
 import ru.fominmv.poms.libs.commons.text.strings.*
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
 
@@ -79,6 +81,7 @@ class Server(
         ],
         optional = false,
     )
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     internal var internalAvatarStateGroup: AvatarStateGroup? = avatarStateGroup?.apply {
         if (Hibernate.isInitialized(internalServers))
             internalServers.add(this@Server)

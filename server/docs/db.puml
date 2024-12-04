@@ -11,7 +11,7 @@ entity avatar_state {
     * game_mode: enum('SURVIVAL', 'CREATIVE', 'ADVENTURE', 'SPECTATOR')
     * health: double
     * food_level: int
-    * air_level: int
+    * remaining_air_in_ticks: int
     * level: int
     * exp: float
     * fire_duration_in_tics: int

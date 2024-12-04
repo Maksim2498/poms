@@ -1,5 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
+import org.hibernate.annotations.*
 import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.*
@@ -11,6 +12,7 @@ import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.*
 import jakarta.validation.constraints.AssertTrue
 
@@ -45,6 +47,7 @@ class Nickname(
             CascadeType.REFRESH,
         ],
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     internal var internalOwner: User? = owner?.apply {
         if (Hibernate.isInitialized(internalNicknames))
             internalNicknames.add(this@Nickname)
@@ -70,6 +73,7 @@ class Nickname(
             CascadeType.REFRESH,
         ],
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     internal var internalInvite: Invite? = invite?.apply {
         if (Hibernate.isInitialized(internalNickname))
             internalNickname = this@Nickname

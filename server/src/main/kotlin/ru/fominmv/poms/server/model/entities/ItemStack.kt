@@ -1,6 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
-import org.hibernate.annotations.ColumnDefault
+import org.hibernate.annotations.*
 import org.hibernate.engine.jdbc.BlobProxy
 import org.hibernate.Hibernate
 
@@ -10,6 +10,8 @@ import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.libs.mc.nbt.io.*
 import ru.fominmv.poms.libs.mc.nbt.tags.Nbt
 
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Table
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
 
@@ -41,7 +43,7 @@ class ItemStack(
     PreRemoveEventListener
 {
     // NBT
-    
+
     var nbt: Nbt
         get() {
             val byteStream = decompressedNbtBytesInputStream
@@ -67,7 +69,7 @@ class ItemStack(
         else
             nbtBytes.binaryStream
 
-    // Avatar state
+    // Inventory
 
     @Hidden
     @NotNull
@@ -80,6 +82,7 @@ class ItemStack(
         ],
         optional = false,
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     internal var internalInventory: Inventory? = inventory?.apply {
         if (Hibernate.isInitialized(internalItemStacks))
             internalItemStacks.add(this@ItemStack)

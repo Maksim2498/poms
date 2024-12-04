@@ -21,8 +21,8 @@ data class UserRights(
     @Column(nullable = false)
     var canManagerRights: Boolean = false,
 
-    @Column(nullable = false)
     @ColumnDefault("'OWNER'")
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var opLevel: OpLevel = OpLevel.ALL,
 ) {

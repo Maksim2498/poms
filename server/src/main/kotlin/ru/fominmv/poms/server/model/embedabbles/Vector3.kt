@@ -1,17 +1,22 @@
 package ru.fominmv.poms.server.model.embedabbles
 
+import org.hibernate.annotations.ColumnDefault
+
 import jakarta.persistence.*
 
 import kotlin.math.sqrt
 
 @Embeddable
 data class Vector3(
+    @ColumnDefault("0")
     @Column(nullable = false)
     var x: Double = 0.0,
 
+    @ColumnDefault("0")
     @Column(nullable = false)
     var y: Double = 0.0,
 
+    @ColumnDefault("0")
     @Column(nullable = false)
     var z: Double = 0.0,
 ) {

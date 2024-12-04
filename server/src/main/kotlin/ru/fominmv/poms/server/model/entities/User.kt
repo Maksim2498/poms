@@ -1,6 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
-import org.hibernate.annotations.ColumnDefault
+import org.hibernate.annotations.*
 import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.embedabbles.UserRights
@@ -12,6 +12,7 @@ import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSync
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.text.strings.*
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
 
@@ -134,6 +135,7 @@ class User(
             CascadeType.REFRESH,
         ],
     )
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     internal var internalCreator: User? = creator?.apply {
         if (Hibernate.isInitialized(internalCreatedUsers))
             internalCreatedUsers.add(this@User)
@@ -156,7 +158,7 @@ class User(
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
-      ],
+        ],
     )
     internal var internalCreatedUsers: MutableSet<User> = mutableSetOf()
 
@@ -168,16 +170,13 @@ class User(
         getEffectiveHolder = { it },
     )
     
-    // Created invite
+    // Created invites
 
     @Hidden
     @OneToMany(
         mappedBy = "internalCreator",
-        cascade = [
-            CascadeType.PERSIST,
-            CascadeType.MERGE,
-            CascadeType.REFRESH,
-        ],
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
     )
     internal var internalCreatedInvites: MutableSet<Invite> = mutableSetOf()
 

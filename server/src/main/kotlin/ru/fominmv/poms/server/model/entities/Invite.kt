@@ -1,5 +1,6 @@
 package ru.fominmv.poms.server.model.entities
 
+import org.hibernate.annotations.*
 import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.embedabbles.UserRights
@@ -8,6 +9,7 @@ import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSync
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 import ru.fominmv.poms.libs.commons.text.strings.Hidden
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.Valid
@@ -75,6 +77,7 @@ class Invite(
             CascadeType.REFRESH,
         ],
     )
+    @OnDelete(action = OnDeleteAction.CASCADE)
     internal var internalCreator: User? = creator?.apply {
         if (Hibernate.isInitialized(internalCreatedInvites))
             internalCreatedInvites.add(this@Invite)
