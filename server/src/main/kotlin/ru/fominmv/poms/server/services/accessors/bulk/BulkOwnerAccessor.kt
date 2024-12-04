@@ -12,7 +12,9 @@ interface BulkOwnerAccessor<T> {
     fun countOwner(owner: User?): Long =
         getAllByOwner(owner).size.toLong()
 
-    fun getAllByOwner(owner: User?, pageable: Pageable = Pageable.unpaged()): Page<T>
+    fun getAllByOwner(owner: User?, pageable: Pageable): Page<T>
+
+    fun getAllByOwner(owner: User?): List<T>
 
     fun deleteAllByOwner(owner: User?): Long
 }
