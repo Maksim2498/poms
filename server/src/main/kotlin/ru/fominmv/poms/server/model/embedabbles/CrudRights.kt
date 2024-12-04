@@ -22,6 +22,16 @@ data class CrudRights(
     @Column(nullable = false)
     var canDelete: Boolean = false,
 ) {
+    companion object {
+        fun full(): CrudRights =
+            CrudRights(
+                canCreate = true,
+                canRead = true,
+                canUpdate = true,
+                canDelete = true,
+            )
+    }
+
     var canNotCreate: Boolean
         get() = !canCreate
 
