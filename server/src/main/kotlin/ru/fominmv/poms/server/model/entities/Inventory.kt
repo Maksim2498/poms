@@ -3,6 +3,7 @@ package ru.fominmv.poms.server.model.entities
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
+import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 
 import jakarta.persistence.*
@@ -18,6 +19,7 @@ class Inventory(id: UUID = UUID.randomUUID()) :
 {
     // Avatar state
 
+    @Hidden
     @NotNull
     @OneToOne(
         mappedBy = "internalInventory",
@@ -38,6 +40,7 @@ class Inventory(id: UUID = UUID.randomUUID()) :
         update = { avatarState, inventory -> avatarState.internalInventory = inventory },
     )
 
+    @Hidden
     @NotNull
     @OneToOne(
         mappedBy = "internalEnderChestInventory",
@@ -60,6 +63,7 @@ class Inventory(id: UUID = UUID.randomUUID()) :
 
     // Item stacks
 
+    @Hidden
     @OneToMany(
         mappedBy = "internalInventory",
         cascade = [CascadeType.ALL],

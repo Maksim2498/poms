@@ -7,7 +7,7 @@ import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.text.strings.ext.*
-import ru.fominmv.poms.libs.commons.text.strings.Secret
+import ru.fominmv.poms.libs.commons.text.strings.*
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
@@ -68,6 +68,7 @@ class Server(
 {
     // Avatar state group
 
+    @Hidden
     @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,

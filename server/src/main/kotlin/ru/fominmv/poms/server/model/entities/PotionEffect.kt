@@ -5,6 +5,7 @@ import org.hibernate.Hibernate
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 import ru.fominmv.poms.libs.mc.commons.enums.PotionEffectType
@@ -51,6 +52,7 @@ class PotionEffect(
 
     // Target
 
+    @Hidden
     @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,

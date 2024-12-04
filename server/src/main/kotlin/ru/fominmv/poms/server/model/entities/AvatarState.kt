@@ -8,6 +8,7 @@ import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
+import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.libs.mc.commons.enums.GameMode
 import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
@@ -86,6 +87,7 @@ class AvatarState(
     
     // User
 
+    @Hidden
     @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
@@ -111,6 +113,7 @@ class AvatarState(
 
     // Group
 
+    @Hidden
     @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
@@ -136,6 +139,7 @@ class AvatarState(
 
     // Inventory
 
+    @Hidden
     @NotNull
     @OneToOne(
         fetch = FetchType.LAZY,
@@ -157,6 +161,7 @@ class AvatarState(
 
     // Ender check inventory
 
+    @Hidden
     @NotNull
     @OneToOne(
         fetch = FetchType.LAZY,
@@ -178,6 +183,7 @@ class AvatarState(
 
     // Effects
 
+    @Hidden
     @OneToMany(
         mappedBy = "internalTarget",
         cascade = [CascadeType.ALL],

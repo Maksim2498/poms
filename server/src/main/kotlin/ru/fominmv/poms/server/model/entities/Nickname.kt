@@ -7,6 +7,7 @@ import ru.fominmv.poms.server.model.interfaces.immutable.Validatable
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.server.validation.constraints.Nickname as NicknameConstraint
 import ru.fominmv.poms.libs.commons.text.strings.ext.removeWhiteSpace
+import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 
@@ -35,6 +36,7 @@ class Nickname(
 {
     // Owner
 
+    @Hidden
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -57,7 +59,8 @@ class Nickname(
     )
     
     // Invite
-    
+
+    @Hidden
     @OneToOne(
         mappedBy = "internalNickname",
         fetch = FetchType.LAZY,

@@ -10,7 +10,7 @@ import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
-import ru.fominmv.poms.libs.commons.text.strings.Secret
+import ru.fominmv.poms.libs.commons.text.strings.*
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
@@ -83,14 +83,13 @@ class User(
 
     // Nicknames
 
+    @Hidden
     @OneToMany(
         mappedBy = "internalOwner",
         cascade = [CascadeType.ALL],
         orphanRemoval = true,
     )
-    internal var internalNicknames: MutableSet<Nickname> = nicknames
-        .map { Nickname(it, this) }
-        .toMutableSet()
+    internal var internalNicknames: MutableSet<Nickname> = mutableSetOf()
 
     @delegate:Transient
     var nicknames: MutableSet<Nickname> by NullablyReferencedSyncCollectionDelegate(
@@ -99,9 +98,16 @@ class User(
         convertCollection = { it.createProxySet() },
         getEffectiveHolder = { it },
     )
+
+    init {
+        @Suppress("LeakingThis")
+        for (nickname in nicknames)
+            internalNicknames.add(Nickname(nickname, this))
+    }
     
     // Avatar states
-    
+
+    @Hidden
     @OneToMany(
         mappedBy = "internalUser",
         cascade = [CascadeType.ALL],
@@ -119,6 +125,7 @@ class User(
     
     // Creator
 
+    @Hidden
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [
@@ -142,6 +149,7 @@ class User(
     
     // Created users
 
+    @Hidden
     @OneToMany(
         mappedBy = "internalCreator",
         cascade = [
@@ -162,6 +170,7 @@ class User(
     
     // Created invite
 
+    @Hidden
     @OneToMany(
         mappedBy = "internalCreator",
         cascade = [

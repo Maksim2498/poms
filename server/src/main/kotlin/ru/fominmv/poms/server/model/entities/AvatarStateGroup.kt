@@ -6,6 +6,7 @@ import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.text.strings.ext.*
+import ru.fominmv.poms.libs.commons.text.strings.Hidden
 
 import jakarta.persistence.*
 
@@ -51,6 +52,7 @@ class AvatarStateGroup(
 {
     // Servers
 
+    @Hidden
     @OneToMany(
         mappedBy = "internalAvatarStateGroup",
         cascade = [
@@ -71,6 +73,7 @@ class AvatarStateGroup(
     
     // Avatar states
 
+    @Hidden
     @OneToMany(
         mappedBy = "internalGroup",
         cascade = [CascadeType.ALL],

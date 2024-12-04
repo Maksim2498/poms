@@ -6,6 +6,7 @@ import ru.fominmv.poms.server.model.embedabbles.UserRights
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
+import ru.fominmv.poms.libs.commons.text.strings.Hidden
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
@@ -43,6 +44,7 @@ class Invite(
     // Nickname
 
     @Valid
+    @Hidden
     @NotNull
     @OneToOne(
         fetch = FetchType.LAZY,
@@ -64,6 +66,7 @@ class Invite(
 
     // Creator
 
+    @Hidden
     @ManyToOne(
         fetch = FetchType.LAZY,
         cascade = [

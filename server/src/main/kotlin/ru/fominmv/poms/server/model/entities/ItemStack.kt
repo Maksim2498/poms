@@ -6,6 +6,7 @@ import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.libs.mc.nbt.io.*
 import ru.fominmv.poms.libs.mc.nbt.tags.Nbt
 
@@ -68,6 +69,7 @@ class ItemStack(
 
     // Avatar state
 
+    @Hidden
     @NotNull
     @ManyToOne(
         fetch = FetchType.LAZY,
