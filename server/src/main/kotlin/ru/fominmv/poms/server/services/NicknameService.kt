@@ -29,9 +29,6 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
 
     // Exists
 
-    override fun exists(): Boolean =
-        count() > 0
-
     override fun exists(value: Nickname): Boolean =
         existsById(value.id)
 
