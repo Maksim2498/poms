@@ -50,9 +50,6 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
 
     // - Many
 
-    override fun getAll(): List<Nickname> =
-        nicknameRepository.findAll()
-
     override fun getAll(pageable: Pageable): Page<Nickname> =
         nicknameRepository.findAll(pageable)
 
