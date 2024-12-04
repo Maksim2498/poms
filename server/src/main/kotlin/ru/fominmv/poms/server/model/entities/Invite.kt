@@ -6,7 +6,6 @@ import ru.fominmv.poms.server.model.embedabbles.UserRights
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
-import ru.fominmv.poms.libs.mc.commons.enums.OpLevel
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
@@ -20,14 +19,8 @@ class Invite(
     nickname: Nickname? = null,
     creator: User? = null,
 
-    // Rights
-
     @Embedded
     var rights: UserRights = UserRights(),
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    var opLevel: OpLevel = OpLevel.ALL,
 
     // Model object
 
