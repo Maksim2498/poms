@@ -20,7 +20,10 @@ import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 
 @Service
-class UserService(private val userRepository: UserRepository) :
+class UserService(
+    private val userRepository: UserRepository,
+    private val nicknameService: NicknameService,
+) :
     BulkAccessor<User>,
     BulkCreatorAccessor<User>,
 
@@ -137,7 +140,7 @@ class UserService(private val userRepository: UserRepository) :
         save: Boolean = true,
     ): User {
         checkIfLoginIsNew(login)
-        checkIfAllNicknamesIsNew(nicknames)
+        nicknameService.checkIfAllNicknamesIsNew(nicknames)
 
         var user = User(
             login = login,
@@ -172,7 +175,7 @@ class UserService(private val userRepository: UserRepository) :
     override fun <S : User> save(value: S): S {
         if (!exists(value)) {
             checkIfLoginIsNew(value.login)
-            checkIfAllNicknamesIsNew(value.nicknames.map { it.nickname })
+            nicknameService.checkIfAllNicknamesIsNew(value.nicknames.map { it.nickname })
 
             if (value.nicknames.size > value.maxNicknames)
                 throw NicknameLimitExceededException(value.maxNicknames)
