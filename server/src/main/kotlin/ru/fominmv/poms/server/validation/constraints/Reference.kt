@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 @Constraint(validatedBy = [])
 @Pattern(regexp = "[a-z_][a-z0-9_]*", flags = [Pattern.Flag.CASE_INSENSITIVE])
 @Target(ANNOTATION_CLASS, CONSTRUCTOR, FIELD, FUNCTION, TYPE_PARAMETER, TYPE, VALUE_PARAMETER)
-annotation class Login(
+annotation class Reference(
     val message: String = "Not a valid login",
     val groups: Array<KClass<out Any>> = [],
     val payload: Array<KClass<out Any>> = [],

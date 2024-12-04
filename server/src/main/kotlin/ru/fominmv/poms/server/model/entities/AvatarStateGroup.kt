@@ -16,9 +16,9 @@ import java.util.*
 class AvatarStateGroup(
     // Login
 
-    @field:Login
-    @Column(unique = true, nullable = false, length = Login.MAX_LENGTH)
-    override var login: String = "group",
+    @field:Reference
+    @Column(unique = true, nullable = false, length = Reference.MAX_LENGTH)
+    var reference: String = "group",
 
     // About
 
@@ -47,7 +47,6 @@ class AvatarStateGroup(
     PrePersistEventListener,
     PreRemoveEventListener,
     MutableDescribed<String?>,
-    MutableWithLogin,
     Normalizable
 {
     // Servers

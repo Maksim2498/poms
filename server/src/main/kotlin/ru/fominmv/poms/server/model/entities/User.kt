@@ -24,8 +24,8 @@ import kotlin.math.max
 class User(
     // Credentials
 
-    @field:Login
-    @Column(unique = true, nullable = false, length = Login.MAX_LENGTH)
+    @field:Reference
+    @Column(unique = true, nullable = false, length = Reference.MAX_LENGTH)
     override var login: String = "user",
 
     @Secret
