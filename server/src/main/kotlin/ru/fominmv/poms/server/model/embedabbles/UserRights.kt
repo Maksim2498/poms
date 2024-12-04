@@ -19,7 +19,7 @@ data class UserRights(
 
     @ColumnDefault("FALSE")
     @Column(nullable = false)
-    var canManagerRights: Boolean = false,
+    var canManageRights: Boolean = false,
 
     @ColumnDefault("'OWNER'")
     @Column(nullable = false)
@@ -32,7 +32,7 @@ data class UserRights(
                 users = CrudRights.full(),
                 invites = CrudRights.full(),
                 servers = CrudRights.full(),
-                canManagerRights = true,
+                canManageRights = true,
                 opLevel = OpLevel.OWNER,
             )
     }
