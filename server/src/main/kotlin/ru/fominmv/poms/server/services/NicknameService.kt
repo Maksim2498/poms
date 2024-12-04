@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
 import ru.fominmv.poms.libs.commons.numbers.ext.toBoolean
-import ru.fominmv.poms.server.errors.limit.NicknameLimitException
+import ru.fominmv.poms.server.errors.limit.NicknameLimitExceededException
 import ru.fominmv.poms.server.model.entities.*
 import ru.fominmv.poms.server.repositories.entities.NicknameRepository
 import ru.fominmv.poms.server.services.accessors.bulk.*
@@ -108,7 +108,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
         save: Boolean = false,
     ): Nickname {
         if (owner.maxNicknames >= owner.nicknames.size)
-            throw NicknameLimitException()
+            throw NicknameLimitExceededException()
 
         return create(
             nickname = nickname,
