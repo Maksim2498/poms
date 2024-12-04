@@ -7,9 +7,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
 import ru.fominmv.poms.libs.commons.numbers.ext.toBoolean
-import ru.fominmv.poms.server.errors.duplicate.NicknameDuplicateException
 import ru.fominmv.poms.server.errors.limit.NicknameLimitException
-import ru.fominmv.poms.server.errors.not_found.NotFoundByNicknameException
 import ru.fominmv.poms.server.model.entities.*
 import ru.fominmv.poms.server.repositories.entities.NicknameRepository
 import ru.fominmv.poms.server.services.accessors.bulk.*
@@ -26,7 +24,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
 
     Accessor<Nickname>,
     IdAccessor<Nickname, UUID>,
-    NicknameAccessor<Nickname, String>,
+    NicknameAccessor<Nickname>,
     SaveAccessor<Nickname>
 {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -173,12 +171,4 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
         nicknameRepository.persist(value).apply {
             logger.debug("Saved {}", this)
         }
-
-    // Errors
-
-    override fun onNicknameDuplicate(nickname: String): Nothing =
-        throw NicknameDuplicateException(nickname)
-
-    override fun onNotFoundByNickname(nickname: String): Nothing =
-        throw NotFoundByNicknameException(nickname)
 }
