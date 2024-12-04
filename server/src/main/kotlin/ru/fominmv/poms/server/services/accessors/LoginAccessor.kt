@@ -6,6 +6,9 @@ import ru.fominmv.poms.server.errors.not_found.NotFoundByLoginException
 interface LoginAccessor<T> {
     // Check
 
+    fun checkIfAllLoginsIsNew(logins: Iterable<String>) =
+        logins.forEach(::checkIfLoginIsNew)
+
     fun checkIfLoginIsNew(login: String) {
         if (existsByLogin(login))
             onLoginDuplicate(login)
