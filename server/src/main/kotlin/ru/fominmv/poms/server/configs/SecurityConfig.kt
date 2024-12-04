@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package ru.fominmv.poms.server.config
+package ru.fominmv.poms.server.configs
 
 import org.springframework.context.annotation.*
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity

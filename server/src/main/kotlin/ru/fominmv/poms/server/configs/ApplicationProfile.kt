@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.config
+package ru.fominmv.poms.server.configs
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

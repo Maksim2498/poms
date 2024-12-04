@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.config
+package ru.fominmv.poms.server.configs
 
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
