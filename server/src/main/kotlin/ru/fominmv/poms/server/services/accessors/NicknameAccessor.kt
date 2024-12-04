@@ -6,6 +6,9 @@ import ru.fominmv.poms.server.errors.not_found.NotFoundByNicknameException
 interface NicknameAccessor<T> {
     // Check
 
+    fun checkIfAllNicknamesIsNew(nicknames: Iterable<String>) =
+        nicknames.forEach(::checkIfNicknameIsNew)
+
     fun checkIfNicknameIsNew(nickname: String) {
         if (existsByNickname(nickname))
             onNicknameDuplicate(nickname)
