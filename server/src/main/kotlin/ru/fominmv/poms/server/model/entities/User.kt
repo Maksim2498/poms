@@ -5,6 +5,7 @@ import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.embedabbles.UserRights
 import ru.fominmv.poms.server.model.interfaces.events.*
+import ru.fominmv.poms.server.model.interfaces.immutable.Validatable
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.server.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
@@ -12,7 +13,7 @@ import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.text.strings.Secret
 
 import jakarta.persistence.*
-import jakarta.validation.constraints.PositiveOrZero
+import jakarta.validation.constraints.*
 
 import java.time.Instant
 import java.util.UUID
@@ -73,7 +74,8 @@ class User(
     PrePersistEventListener,
     PreRemoveEventListener,
     MutableWithCredentials,
-    Normalizable
+    Normalizable,
+    Validatable
 {
     companion object {
         const val DEFAULT_MAX_NICKNAMES = 5
@@ -215,4 +217,10 @@ class User(
             }
         }
     }
+
+    // Validation
+
+    @get:AssertTrue(message = "Nickname limit exceeded")
+    override val isValid: Boolean
+        get() = nicknames.size <= maxNicknames
 }
