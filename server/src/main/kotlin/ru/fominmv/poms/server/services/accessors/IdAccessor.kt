@@ -8,6 +8,9 @@ import java.util.*
 interface IdAccessor<T, Id : Any> {
     // Check
 
+    fun checkIfAllIdsIsNew(ids: Iterable<Id>) =
+        ids.forEach(::checkIfIdIsNew)
+
     fun checkIfIdIsNew(id: Id) {
         if (existsById(id))
             onIdDuplicate(id)
