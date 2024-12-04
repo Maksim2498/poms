@@ -17,4 +17,14 @@ data class UserRights(
     @ColumnDefault("FALSE")
     @Column(nullable = false)
     var canManagerRights: Boolean = false,
-)
+) {
+    companion object {
+        fun full(): UserRights =
+            UserRights(
+                users = CrudRights.full(),
+                invites = CrudRights.full(),
+                servers = CrudRights.full(),
+                canManagerRights = true,
+            )
+    }
+}
