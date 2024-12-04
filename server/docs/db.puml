@@ -75,7 +75,7 @@ entity invite {
 
     * rights_can_manage_rights: bool
 
-    * op_level: enum('ALL', 'MODERATOR', 'GAME_MASTER', 'ADMIN', 'OWNER')
+    * rights_op_level: enum('ALL', 'MODERATOR', 'GAME_MASTER', 'ADMIN', 'OWNER')
 }
 
 entity item_stack {
@@ -160,7 +160,7 @@ entity user {
 
     * rights_can_manage_rights: bool
 
-    * op_level: enum('ALL', 'MODERATOR', 'GAME_MASTER', 'ADMIN', 'OWNER')
+    * rights_op_level: enum('ALL', 'MODERATOR', 'GAME_MASTER', 'ADMIN', 'OWNER')
 
     * is_blocked: bool
 
