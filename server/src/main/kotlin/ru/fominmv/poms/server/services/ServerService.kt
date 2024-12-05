@@ -145,7 +145,7 @@ class ServerService(
     }
 
     private fun <S : Server> persistToRepository(value: S): S =
-        serverRepository.persist(value).apply {
-            logger.debug("Saved {}", this)
+        serverRepository.persist(value).also {
+            logger.debug("Saved {}", it)
         }
 }

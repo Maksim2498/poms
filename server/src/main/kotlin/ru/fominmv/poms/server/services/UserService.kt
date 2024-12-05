@@ -191,7 +191,7 @@ class UserService(
     }
 
     private fun <S : User> persistToRepository(value: S): S =
-        userRepository.persist(value).apply {
-            logger.debug("Saved {}", value)
+        userRepository.persist(value).also {
+            logger.debug("Saved {}", it)
         }
 }

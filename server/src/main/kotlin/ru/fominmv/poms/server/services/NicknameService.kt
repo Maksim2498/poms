@@ -168,7 +168,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
     }
 
     private fun <S : Nickname> persistToRepository(value: S): S =
-        nicknameRepository.persist(value).apply {
-            logger.debug("Saved {}", this)
+        nicknameRepository.persist(value).also {
+            logger.debug("Saved {}", it)
         }
 }
