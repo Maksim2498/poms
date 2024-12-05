@@ -10,3 +10,5 @@ const val UUID_PATTERN =
     "[0-9a-fA-F]{1,4}" +
     "-" +
     "[0-9a-fA-F]{1,12}"
+
+val UUID_REGEX = Regex(UUID_PATTERN)
