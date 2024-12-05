@@ -9,10 +9,10 @@ import kotlin.reflect.KClass
 @ShortText
 @MustBeDocumented
 @Constraint(validatedBy = [])
-@Pattern(regexp = "[a-z_][a-z0-9_]*", flags = [Pattern.Flag.CASE_INSENSITIVE])
+@Pattern(regexp = "\\w([\\w\\-]*\\w)?")
 @Target(ANNOTATION_CLASS, CONSTRUCTOR, FIELD, FUNCTION, TYPE_PARAMETER, TYPE, VALUE_PARAMETER)
 annotation class Reference(
-    val message: String = "Not a valid login",
+    val message: String = "Not a valid reference",
     val groups: Array<KClass<out Any>> = [],
     val payload: Array<KClass<out Any>> = [],
 ) {
