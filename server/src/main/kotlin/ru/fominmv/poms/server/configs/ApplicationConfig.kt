@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 
-import ru.fominmv.poms.server.configs.entities.ConfigUser
+import ru.fominmv.poms.server.configs.entities.*
 
 import jakarta.annotation.PostConstruct
+import jakarta.validation.Valid
 
 @Configuration
 @ConfigurationProperties("poms")
@@ -22,15 +23,30 @@ class ApplicationConfig {
     }
 
     inner class Init {
+        @Valid
+        var avatarStateGroups: List<ConfigAvatarStateGroup> = emptyList()
+
+        @Valid
+        var servers: List<ConfigServer> = emptyList()
+
+        @Valid
         var users: List<ConfigUser> = emptyList()
 
         internal fun log() {
-            if (users.isNotEmpty()) {
-                logger.info("Users to precreate:")
+            logList(avatarStateGroups, "Predefined avatar state groups:")
+            logList(servers, "Predefined servers:")
+            logList(users, "Predefined users:")
+        }
 
-                for (user in users)
-                    logger.info(" - {}", user)
-            }
+        private fun logList(list: List<*>, header: String? = null) {
+            if (list.isEmpty())
+                return
+
+            if (header != null)
+                logger.info(header)
+
+            for (element in list)
+                logger.info(" - {}", element)
         }
     }
 }
