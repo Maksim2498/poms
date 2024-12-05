@@ -22,6 +22,9 @@ repositories {
 }
 
 dependencies {
+    api(libs.jakartaValidation)
+    api(project(":libs:commons"))
+
     implementation(kotlin("reflect"))
 
     testImplementation(kotlin("test"))

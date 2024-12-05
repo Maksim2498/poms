@@ -8,6 +8,7 @@ springDependencyManagement = "1.1.6"
 dnsJava = "3.6.2"
 kyoriAdventure = "4.17.0"
 slf4j = "2.0.16"
+jakartaValidation = "3.1.0"
 
 [libraries]
 jackson = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
@@ -20,3 +21,4 @@ kyoriAdventureTextSerializerLegacy = { module = "net.kyori:adventure-text-serial
 kyoriAdventureTextSerializerPlain = { module = "net.kyori:adventure-text-serializer-plain", version.ref = "kyoriAdventure" }
 slf4jApi = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+jakartaValidation = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakartaValidation" }

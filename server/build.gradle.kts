@@ -46,6 +46,7 @@ dependencies {
 
 	implementation(project(":libs:mc:commons"))
 	implementation(project(":libs:mc:nbt"))
+	implementation(project(":libs:api"))
 	implementation(project(":libs:commons"))
 
 	// Kotlin
@@ -59,6 +60,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
+
+	// Validation
+
+	implementation(libs.jakartaValidation)
 
 	// JSON
 
