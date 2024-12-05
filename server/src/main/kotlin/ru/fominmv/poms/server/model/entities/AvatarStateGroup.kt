@@ -19,7 +19,7 @@ class AvatarStateGroup(
 
     @field:Reference
     @Column(unique = true, nullable = false, length = Reference.MAX_LENGTH)
-    var reference: String = "group",
+    override var reference: String = "group",
 
     // About
 
@@ -48,6 +48,7 @@ class AvatarStateGroup(
     PrePersistEventListener,
     PreRemoveEventListener,
     MutableDescribed<String?>,
+    MutableWithReference,
     Normalizable
 {
     // Servers
