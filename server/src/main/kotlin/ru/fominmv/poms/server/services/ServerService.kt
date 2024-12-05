@@ -100,7 +100,7 @@ class ServerService(
         name: String? = null,
         description: String? = null,
 
-        id: UUID = UUID.randomUUID(),
+        id: UUID? = null,
         now: Instant = Instant.now(),
         createdAt: Instant = now,
         modifiedAt: Instant = now,
