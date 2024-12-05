@@ -33,7 +33,7 @@ class ServerService(
 {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    // Exists
+    // Existence check
 
     override fun exists(value: Server): Boolean =
         existsById(value.id)
@@ -44,12 +44,12 @@ class ServerService(
     override fun existsByLogin(login: String): Boolean =
         serverRepository.existsByLogin(login)
 
-    // Count
+    // Counting
 
     override fun count(): Long =
         serverRepository.count()
 
-    // Get
+    // Getting
 
     // - Many
 
@@ -67,7 +67,7 @@ class ServerService(
     override fun getByLoginOrNull(login: String): Server? =
         serverRepository.findByLogin(login).getOrNull()
 
-    // Delete
+    // Deletion
 
     // - Many
 

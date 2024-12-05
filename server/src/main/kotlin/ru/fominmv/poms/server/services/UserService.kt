@@ -37,7 +37,7 @@ class UserService(
 {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    // Exists
+    // Existence check
 
     override fun existsByCreator(creator: User?): Boolean =
         userRepository.existsByInternalCreator(creator)
@@ -54,7 +54,7 @@ class UserService(
     override fun existsByNickname(nickname: String): Boolean =
         userRepository.existsByNickname(nickname)
 
-    // Count
+    // Counting
 
     override fun count(): Long =
         userRepository.count()
@@ -62,7 +62,7 @@ class UserService(
     override fun countCreator(creator: User?): Long =
         userRepository.countByInternalCreator(creator)
 
-    // Get
+    // Getting
 
     // - Many
 
@@ -89,7 +89,7 @@ class UserService(
     override fun getByNicknameOrNull(nickname: String): User? =
         userRepository.findByNickname(nickname).getOrNull()
 
-    // Delete
+    // Deletion
 
     // - Many
 

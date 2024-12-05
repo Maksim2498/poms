@@ -29,7 +29,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
 {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    // Exists
+    // Existence check
 
     override fun existsByOwner(owner: User?): Boolean =
         nicknameRepository.existsByInternalOwner(owner)
@@ -43,7 +43,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
     override fun existsByNickname(nickname: String): Boolean =
         nicknameRepository.existsByNickname(nickname)
 
-    // Count
+    // Counting
 
     override fun count(): Long =
         nicknameRepository.count()
@@ -51,7 +51,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
     override fun countOwner(owner: User?): Long =
         nicknameRepository.countByInternalOwner(owner)
 
-    // Get
+    // Getting
 
     // - Many
 
@@ -75,7 +75,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
     override fun getByNicknameOrNull(nickname: String): Nickname? =
         nicknameRepository.findByNickname(nickname).getOrNull()
 
-    // Delete
+    // Deletion
 
     // - Many
 
@@ -158,7 +158,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
         return nicknameEntity
     }
 
-    // Save
+    // Saving
 
     override fun <S : Nickname> save(value: S): S {
         if (!exists(value))
