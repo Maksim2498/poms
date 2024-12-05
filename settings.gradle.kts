@@ -11,6 +11,7 @@ include(
     ":libs:mc:protocol",
     ":libs:mc:status",
 
+    ":libs:api",
     ":libs:commons",
 
     ":plugin",

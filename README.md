@@ -66,17 +66,18 @@ Details on the communication protocols used can be found in the
 
 The project consists of the several subprojects which names are mostly self-explanatory:
 
-- [server](./server);
-- [plugin](./plugin);
-- [site](./site);
+- [server](./server) - backend of the application;
+- [plugin](./plugin) - Minecraft front-end;
+- [site](./site) - web font-end;
 - [libs](./libs):
-  - [commons](./libs/commons);
+  - [api](./libs/api) - request/response objects;
+  - [commons](./libs/commons) - miscellaneous utilities;
   - [mc](./libs/mc):
-    - [commands](./libs/mc/commands);
-    - [commons](./libs/mc/commons);
-    - [nbt](./libs/mc/nbt);
-    - [protocol](./libs/mc/protocol);
-    - [status](./libs/mc/status).
+    - [commands](./libs/mc/commands) - mini command creation framework;
+    - [commons](./libs/mc/commons) - miscellaneous Minecraft-related utilities;
+    - [nbt](./libs/mc/nbt) - NBT processing library;
+    - [protocol](./libs/mc/protocol) - Minecraft protocol library;
+    - [status](./libs/mc/status) - Minecraft server status fetching.
 
 Other directories not mentioned above contain either documentation and images, either some
 build-related data.
