@@ -38,7 +38,7 @@ class AvatarStateGroupService(private val avatarStateGroupRepository: AvatarStat
         avatarStateGroupRepository.existsById(id)
 
     override fun existsByReference(reference: String): Boolean =
-        avatarStateGroupRepository.existsByReference(reference)
+        avatarStateGroupRepository.existsByReferenceIgnoreCase(reference)
 
     // Counting
 
@@ -61,7 +61,7 @@ class AvatarStateGroupService(private val avatarStateGroupRepository: AvatarStat
         avatarStateGroupRepository.findById(id).getOrNull()
 
     override fun getByReferenceOrNull(reference: String): AvatarStateGroup? =
-        avatarStateGroupRepository.findByReference(reference).getOrNull()
+        avatarStateGroupRepository.findByReferenceIgnoreCase(reference).getOrNull()
 
     // Deletion
 
@@ -82,7 +82,7 @@ class AvatarStateGroupService(private val avatarStateGroupRepository: AvatarStat
         avatarStateGroupRepository.deleteByIdAndCount(id).toBoolean()
 
     override fun tryDeleteByReference(reference: String): Boolean =
-        avatarStateGroupRepository.deleteByReference(reference).toBoolean()
+        avatarStateGroupRepository.deleteByReferenceIgnoreCase(reference).toBoolean()
 
     // Creation
 

@@ -49,7 +49,7 @@ class UserService(
         userRepository.existsById(id)
 
     override fun existsByLogin(login: String): Boolean =
-        userRepository.existsByLogin(login)
+        userRepository.existsByLoginIgnoreCase(login)
 
     override fun existsByNickname(nickname: String): Boolean =
         userRepository.existsByNickname(nickname)
@@ -84,7 +84,7 @@ class UserService(
         userRepository.findById(id).getOrNull()
 
     override fun getByLoginOrNull(login: String): User? =
-        userRepository.findByLogin(login).getOrNull()
+        userRepository.findByLoginIgnoreCase(login).getOrNull()
 
     override fun getByNicknameOrNull(nickname: String): User? =
         userRepository.findByNickname(nickname).getOrNull()
@@ -114,7 +114,7 @@ class UserService(
         userRepository.deleteByIdAndCount(id).toBoolean()
 
     override fun tryDeleteByLogin(login: String): Boolean =
-        userRepository.deleteByLogin(login).toBoolean()
+        userRepository.deleteByLoginIgnoreCase(login).toBoolean()
 
     override fun tryDeleteByNickname(nickname: String): Boolean =
         userRepository.deleteByNickname(nickname).toBoolean()

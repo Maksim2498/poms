@@ -42,7 +42,7 @@ class ServerService(
         serverRepository.existsById(id)
 
     override fun existsByLogin(login: String): Boolean =
-        serverRepository.existsByLogin(login)
+        serverRepository.existsByLoginIgnoreCase(login)
 
     // Counting
 
@@ -65,7 +65,7 @@ class ServerService(
         serverRepository.findById(id).getOrNull()
 
     override fun getByLoginOrNull(login: String): Server? =
-        serverRepository.findByLogin(login).getOrNull()
+        serverRepository.findByLoginIgnoreCase(login).getOrNull()
 
     // Deletion
 
@@ -86,7 +86,7 @@ class ServerService(
         serverRepository.deleteByIdAndCount(id).toBoolean()
 
     override fun tryDeleteByLogin(login: String): Boolean =
-        serverRepository.deleteByLogin(login).toBoolean()
+        serverRepository.deleteByLoginIgnoreCase(login).toBoolean()
 
     // Creation
 

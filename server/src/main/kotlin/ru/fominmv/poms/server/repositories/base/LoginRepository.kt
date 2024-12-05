@@ -8,9 +8,9 @@ import java.util.*
 
 @NoRepositoryBean
 interface LoginRepository<T : WithLogin> {
-    fun findByLogin(login: String): Optional<T>
+    fun findByLoginIgnoreCase(login: String): Optional<T>
 
-    fun existsByLogin(login: String): Boolean
+    fun existsByLoginIgnoreCase(login: String): Boolean
 
-    fun deleteByLogin(login: String): Long
+    fun deleteByLoginIgnoreCase(login: String): Long
 }
