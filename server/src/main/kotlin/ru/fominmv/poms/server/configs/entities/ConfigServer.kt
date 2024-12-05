@@ -22,7 +22,7 @@ data class ConfigServer(
     @field:ShortText
     override var name: String? = null,
 
-    @field:ShortText
+    @field:MediumText
     override var description: String? = null,
 
     @field:ReferenceOrUuid
