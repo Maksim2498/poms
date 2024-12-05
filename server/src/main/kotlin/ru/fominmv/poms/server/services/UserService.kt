@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 import ru.fominmv.poms.libs.commons.numbers.ext.toBoolean
@@ -23,6 +24,7 @@ import kotlin.jvm.optionals.getOrNull
 class UserService(
     private val userRepository: UserRepository,
     private val nicknameService: NicknameService,
+    private val passwordEncoder: PasswordEncoder,
 ) :
     BulkAccessor<User>,
     BulkCreatorAccessor<User>,
@@ -137,6 +139,7 @@ class UserService(
         createdAt: Instant = now,
         modifiedAt: Instant = now,
 
+        encodePassword: Boolean = true,
         save: Boolean = true,
     ): User {
         checkIfLoginIsNew(login)
@@ -144,7 +147,10 @@ class UserService(
 
         var user = User(
             login = login,
-            password = password,
+            password = if (encodePassword)
+                passwordEncoder.encode(password)
+            else
+                password,
 
             nicknames = nicknames,
             maxNicknames = maxNicknames,
