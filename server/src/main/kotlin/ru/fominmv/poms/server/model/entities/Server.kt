@@ -5,7 +5,7 @@ import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
-import ru.fominmv.poms.server.validation.constraints.*
+import ru.fominmv.poms.libs.api.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.text.strings.ext.*
 import ru.fominmv.poms.libs.commons.text.strings.*

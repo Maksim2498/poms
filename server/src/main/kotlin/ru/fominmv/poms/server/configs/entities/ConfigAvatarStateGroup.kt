@@ -1,7 +1,7 @@
 package ru.fominmv.poms.server.configs.entities
 
+import ru.fominmv.poms.libs.api.validation.constraints.*
 import ru.fominmv.poms.server.model.interfaces.mutable.MutableDescribed
-import ru.fominmv.poms.server.validation.constraints.*
 
 import java.util.UUID
 

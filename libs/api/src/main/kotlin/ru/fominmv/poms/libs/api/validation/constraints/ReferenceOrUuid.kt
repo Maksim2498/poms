@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.validation.constraints
+package ru.fominmv.poms.libs.api.validation.constraints
 
 import jakarta.validation.Constraint
 import jakarta.validation.constraints.Pattern

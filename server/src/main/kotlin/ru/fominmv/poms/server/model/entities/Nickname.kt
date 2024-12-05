@@ -6,7 +6,7 @@ import org.hibernate.Hibernate
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.immutable.Validatable
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
-import ru.fominmv.poms.server.validation.constraints.Nickname as NicknameConstraint
+import ru.fominmv.poms.libs.api.validation.constraints.Nickname as NicknameConstraint
 import ru.fominmv.poms.libs.commons.text.strings.ext.removeWhiteSpace
 import ru.fominmv.poms.libs.commons.text.strings.Hidden
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
