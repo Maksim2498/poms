@@ -82,7 +82,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
     override fun deleteAll(): Long =
         nicknameRepository.deleteAllAndCount().toLong().also { deleted ->
             if (deleted > 0)
-                logger.warn("Deleted all {} nicknames", deleted)
+                logger.warn("Deleted all {} nickname(s)", deleted)
         }
 
     override fun deleteAllByOwner(owner: User?): Long =

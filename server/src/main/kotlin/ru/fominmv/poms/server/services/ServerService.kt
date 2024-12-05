@@ -74,7 +74,7 @@ class ServerService(
     override fun deleteAll(): Long =
         serverRepository.deleteAllAndCount().toLong().also { deleted ->
             if (deleted > 0)
-                logger.warn("Deleted all {} servers", deleted)
+                logger.warn("Deleted all {} server(s)", deleted)
         }
 
     // - One

@@ -96,13 +96,13 @@ class UserService(
     override fun deleteAll(): Long =
         userRepository.deleteAllAndCount().toLong().also { deleted ->
             if (deleted > 0)
-                logger.warn("Deleted all {} users", deleted)
+                logger.warn("Deleted all {} user(s)", deleted)
         }
 
     override fun deleteAllByCreator(creator: User?): Long =
         userRepository.deleteAllByInternalCreator(creator).also { deleted ->
             if (deleted > 0)
-                logger.warn("Deleted all {} users with creator {}", deleted, creator)
+                logger.warn("Deleted all {} user(s) with creator {}", deleted, creator)
         }
 
     // - One
