@@ -27,15 +27,15 @@ class AvatarStateGroupCreationRunner(
 
     override fun run(args: ApplicationArguments) {
         for (group in applicationConfig.init.avatarStateGroups) {
-            logger.debug("Trying to create avatar state group {}...", group)
+            logger.info("Trying to create avatar state group {}...", group)
 
             if (group.id?.let(avatarStateGroupService::existsById) == true) {
-                logger.debug("Avatar state group with id {} already exists. Skipped", group.id)
+                logger.warn("Avatar state group with id {} already exists. Skipped", group.id)
                 continue
             }
 
             if (avatarStateGroupService.existsByReference(group.reference)) {
-                logger.debug("Avatar state group with reference {} already exists. Skipped", group.reference)
+                logger.warn("Avatar state group with reference {} already exists. Skipped", group.reference)
                 continue
             }
 
@@ -47,6 +47,8 @@ class AvatarStateGroupCreationRunner(
                 name = group.reference,
                 description = group.description,
             )
+
+            logger.info("Created")
         }
     }
 }

@@ -24,21 +24,21 @@ class UserCreationRunner(
     override fun run(args: ApplicationArguments) {
         forUsers@
         for (user in applicationConfig.init.users) {
-            logger.debug("Trying to create user {}...", user)
+            logger.info("Trying to create user {}...", user)
 
             if (user.id?.let(userService::existsById) == true) {
-                logger.debug("User with id {} already exists. Skipped", user.id)
+                logger.warn("User with id {} already exists. Skipped", user.id)
                 continue
             }
 
             if (userService.existsByLogin(user.login)) {
-                logger.debug("User with login {} already exists. Skipped", user.login)
+                logger.warn("User with login {} already exists. Skipped", user.login)
                 continue
             }
 
             for (nickname in user.nicknames)
                 if (nicknameService.existsByNickname(nickname)) {
-                    logger.debug("Nickname {} is already occupied. Skipped", nickname)
+                    logger.warn("Nickname {} is already occupied. Skipped", nickname)
                     continue@forUsers
                 }
 
@@ -54,6 +54,8 @@ class UserCreationRunner(
                 rights = user.rights,
                 isBlocked = user.isBlocked,
             )
+
+            logger.info("Created")
         }
     }
 }
