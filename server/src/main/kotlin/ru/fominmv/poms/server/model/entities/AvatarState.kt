@@ -3,7 +3,7 @@ package ru.fominmv.poms.server.model.entities
 import org.hibernate.annotations.*
 import org.hibernate.Hibernate
 
-import ru.fominmv.poms.server.model.embedabbles.Vector3
+import ru.fominmv.poms.server.model.embedabbles.*
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
@@ -66,10 +66,33 @@ class AvatarState(
     var fireDurationInTicks: Int = DEFAULT_FIRE_DURATION_IN_TICKS,
 
     @Embedded
-    var position: Vector3 = Vector3(),
+    var location: Location = Location(),
 
     @Embedded
     var velocity: Vector3 = Vector3(),
+
+    @Embedded
+    @AttributeOverrides(
+        AttributeOverride(name = "coordinates.x", column = Column()),
+        AttributeOverride(name = "coordinates.y", column = Column()),
+        AttributeOverride(name = "coordinates.z", column = Column()),
+
+        AttributeOverride(name = "worldId", column = Column()),
+    )
+    var respawnLocation: Location? = null,
+
+    @Embedded
+    @AttributeOverrides(
+        AttributeOverride(name = "coordinates.x", column = Column()),
+        AttributeOverride(name = "coordinates.y", column = Column()),
+        AttributeOverride(name = "coordinates.z", column = Column()),
+
+        AttributeOverride(name = "worldId", column = Column()),
+    )
+    var lastDeathLocation: Location? = null,
+
+    @Embedded
+    var compassTarget: Location = Location(),
 
     inventory: Inventory? = null,
     enderChestInventory: Inventory? = null,
