@@ -8,6 +8,9 @@ entity avatar_state {
     * user_id: uuid
     * group_id: uuid
 
+    * inventory_id: uuid
+    * ender_chest_inventory_id: uuid
+
     * game_mode: enum('SURVIVAL', 'CREATIVE', 'ADVENTURE', 'SPECTATOR')
     * health: double
     * food_level: int
@@ -16,16 +19,34 @@ entity avatar_state {
     * exp: float
     * fire_duration_in_tics: int
 
-    * position_x: double
-    * position_y: double
-    * position_z: double
-
     * velocity_x: double
     * velocity_y: double
     * velocity_z: double
 
-    * inventory_id: uuid
-    * ender_chest_inventory_id: uuid
+    * location_coordinates_x: double
+    * location_coordinates_y: double
+    * location_coordinates_z: double
+    * location_world_id: uuid
+
+    * location_coordinates_x: double
+    * location_coordinates_y: double
+    * location_coordinates_z: double
+    * location_world_id: uuid
+
+    * respawn_location_coordinates_x: double
+    * respawn_location_coordinates_y: double
+    * respawn_location_coordinates_z: double
+    * respawn_location_world_id: uuid
+
+    last_death_location_coordinates_x: double
+    last_death_location_coordinates_y: double
+    last_death_location_coordinates_z: double
+    last_death_location_world_id: uuid
+
+    compass_target_coordinates_x: double
+    compass_target_coordinates_y: double
+    compass_target_coordinates_z: double
+    compass_target_world_id: uuid
 }
 
 entity avatar_state_group {
