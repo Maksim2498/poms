@@ -1,0 +1,12 @@
+package ru.fominmv.poms.server.security
+
+const val ROLE_PREFIX = "ROLE_"
+
+const val ANONYMOUS_ROLE = "ANONYMOUS"
+const val PREFIXED_ANONYMOUS_ROLE = ROLE_PREFIX + ANONYMOUS_ROLE
+
+const val USER_ROLE = "USER"
+const val PREFIXED_USER_ROLE = ROLE_PREFIX + USER_ROLE
+
+const val SERVER_ROLE = "SERVER"
+const val PREFIXED_SERVER_ROLE = ROLE_PREFIX + SERVER_ROLE
