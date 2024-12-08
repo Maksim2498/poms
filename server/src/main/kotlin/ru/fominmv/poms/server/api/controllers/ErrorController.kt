@@ -6,14 +6,19 @@ import org.springframework.web.bind.annotation.RequestMethod.*
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
+import ru.fominmv.poms.server.api.PathAware
+
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.RequestDispatcher
 
 @RestController
-class ErrorController {
+class ErrorController : PathAware {
     companion object {
         const val PATH = "/error"
     }
+
+    override val path: String
+        get() = PATH
 
     @RequestMapping(
         path = [PATH],
