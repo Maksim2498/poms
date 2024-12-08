@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.controllers
+package ru.fominmv.poms.server.api.controllers
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
