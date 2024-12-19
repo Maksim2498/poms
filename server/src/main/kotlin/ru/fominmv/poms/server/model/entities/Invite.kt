@@ -12,7 +12,6 @@ import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 import jakarta.persistence.CascadeType
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
-import jakarta.validation.Valid
 
 import java.time.Instant
 import java.util.*
