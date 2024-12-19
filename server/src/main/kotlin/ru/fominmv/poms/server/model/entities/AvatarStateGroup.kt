@@ -6,7 +6,7 @@ import ru.fominmv.poms.libs.api.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.text.strings.ext.*
-import ru.fominmv.poms.libs.commons.text.strings.Hidden
+import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 
 import jakarta.persistence.*
 
@@ -19,7 +19,7 @@ class AvatarStateGroup(
 
     @field:Reference
     @Column(unique = true, nullable = false, length = Reference.MAX_LENGTH)
-    override var reference: String = "group",
+    override var reference: String = DEFAULT_REFERENCE,
 
     // About
 
@@ -48,9 +48,15 @@ class AvatarStateGroup(
     PrePersistEventListener,
     PreRemoveEventListener,
     MutableDescribed<String?>,
-    MutableWithReference,
+    MutableReferenced<String>,
     Normalizable
 {
+    companion object {
+        // Constants
+
+        const val DEFAULT_REFERENCE = "group"
+    }
+
     // Servers
 
     @Hidden
@@ -105,6 +111,7 @@ class AvatarStateGroup(
     // Normalization
 
     override fun normalize() {
+        reference = reference.removeWhiteSpace()
         name = name.collapseWhiteSpaceToNull()
         description = description.collapseSpacesToNull()
     }

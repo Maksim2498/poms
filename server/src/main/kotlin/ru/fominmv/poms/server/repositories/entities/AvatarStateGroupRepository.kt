@@ -11,5 +11,5 @@ import java.util.UUID
 interface AvatarStateGroupRepository :
     EntityManagementRepository<AvatarStateGroup>,
     EntityRepository<AvatarStateGroup, UUID>,
-    ReferenceRepository<AvatarStateGroup>
+    ByReferenceAccessRepository<AvatarStateGroup, UUID>
 

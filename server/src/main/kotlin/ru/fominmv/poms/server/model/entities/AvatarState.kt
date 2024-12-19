@@ -8,8 +8,8 @@ import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
-import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
-import ru.fominmv.poms.libs.commons.text.strings.Hidden
+import ru.fominmv.poms.libs.commons.collections.ext.*
+import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 import ru.fominmv.poms.libs.mc.commons.enums.GameMode
 import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
@@ -17,6 +17,7 @@ import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 import jakarta.persistence.CascadeType
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
+import jakarta.validation.Valid
 
 import java.time.Duration
 import java.util.*
@@ -24,6 +25,7 @@ import java.util.*
 import kotlin.math.max
 
 @Entity
+@Suppress("LeakingThis")
 class AvatarState(
     user: User? = null,
     group: AvatarStateGroup? = null,
@@ -66,12 +68,15 @@ class AvatarState(
     var fireDurationInTicks: Int = DEFAULT_FIRE_DURATION_IN_TICKS,
 
     @Embedded
+    @field:Valid
     var location: Location = Location(),
 
     @Embedded
+    @field:Valid
     var velocity: Vector3 = Vector3(),
 
     @Embedded
+    @field:Valid
     @AttributeOverrides(
         AttributeOverride(name = "coordinates.x", column = Column()),
         AttributeOverride(name = "coordinates.y", column = Column()),
@@ -82,6 +87,7 @@ class AvatarState(
     var respawnLocation: Location? = null,
 
     @Embedded
+    @field:Valid
     @AttributeOverrides(
         AttributeOverride(name = "coordinates.x", column = Column()),
         AttributeOverride(name = "coordinates.y", column = Column()),
@@ -96,6 +102,8 @@ class AvatarState(
 
     inventory: Inventory? = null,
     enderChestInventory: Inventory? = null,
+
+    potionEffects: Iterable<PotionEffect> = emptySet(),
 
     // Model object
 
@@ -120,37 +128,31 @@ class AvatarState(
 
     var remainingAir: Duration
         get() = durationFromTicks(remainingAirInTicks)
-
-        set(value) {
-            remainingAirInTicks = value.toTicks().toInt()
-        }
+        set(value) { remainingAirInTicks = value.toTicks().toInt() }
 
     // Fire duration
 
     var fireDuration: Duration
         get() = durationFromTicks(fireDurationInTicks)
-
-        set(value) {
-            fireDurationInTicks = value.toTicks().toInt()
-        }
+        set(value) { fireDurationInTicks = value.toTicks().toInt() }
 
     // User
 
     @Hidden
     @NotNull
     @ManyToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
-        optional = false,
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalUser: User? = user?.apply {
-        if (Hibernate.isInitialized(internalAvatarStates))
-            internalAvatarStates.add(this@AvatarState)
+    internal var internalUser: User? = user?.also {
+        if (Hibernate.isInitialized(it.internalAvatarStates))
+            it.internalAvatarStates.add(this)
     }
 
     @delegate:Transient
@@ -166,18 +168,18 @@ class AvatarState(
     @Hidden
     @NotNull
     @ManyToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
-        optional = false,
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalGroup: AvatarStateGroup? = group?.apply {
-        if (Hibernate.isInitialized(internalAvatarStates))
-            internalAvatarStates.add(this@AvatarState)
+    internal var internalGroup: AvatarStateGroup? = group?.also {
+        if (Hibernate.isInitialized(it.internalAvatarStates))
+            it.internalAvatarStates.add(this)
     }
 
     @delegate:Transient
@@ -193,22 +195,22 @@ class AvatarState(
     @Hidden
     @NotNull
     @OneToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [CascadeType.ALL],
         orphanRemoval = true,
-        optional = false,
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalInventory: Inventory? = inventory?.apply {
-        if (Hibernate.isInitialized(internalInventoryAvatarState))
-            internalInventoryAvatarState = this@AvatarState
+    internal var internalInventory: Inventory? = inventory?.also {
+        if (Hibernate.isInitialized(it.internalAvatarStateWithInventory))
+            it.internalAvatarStateWithInventory = this
     }
 
     @delegate:Transient
     var inventory: Inventory? by NullableSyncFieldDelegate(
         get = { internalInventory },
         set = { internalInventory = it },
-        update = { inventory, avatarState -> inventory.internalInventoryAvatarState = avatarState },
+        update = { inventory, avatarState -> inventory.internalAvatarStateWithInventory = avatarState },
     )
 
     // Ender check inventory
@@ -216,22 +218,22 @@ class AvatarState(
     @Hidden
     @NotNull
     @OneToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [CascadeType.ALL],
         orphanRemoval = true,
-        optional = false,
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalEnderChestInventory: Inventory? = enderChestInventory?.apply {
-        if (Hibernate.isInitialized(internalEnderChestInventoryAvatarState))
-            internalEnderChestInventoryAvatarState = this@AvatarState
+    internal var internalEnderChestInventory: Inventory? = enderChestInventory?.also {
+        if (Hibernate.isInitialized(it.internalAvatarStateWithEnderChestInventory))
+            it.internalAvatarStateWithEnderChestInventory = this
     }
 
     @delegate:Transient
     var enderChestInventory: Inventory? by NullableSyncFieldDelegate(
         get = { internalEnderChestInventory },
         set = { internalEnderChestInventory = it },
-        update = { inventory, avatarState -> inventory.internalEnderChestInventoryAvatarState = avatarState },
+        update = { inventory, avatarState -> inventory.internalAvatarStateWithEnderChestInventory = avatarState },
     )
 
     // Effects
@@ -251,6 +253,8 @@ class AvatarState(
         convertCollection = { it.createProxySet() },
         getEffectiveHolder = { it },
     )
+
+    init { this.potionEffects.addAllOnlyIfNeeded(potionEffects) }
 
     // Events
 

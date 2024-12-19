@@ -141,7 +141,7 @@ entity server {
     * createdAt: timestamp(6) with time zone
     * modifiedAt: timestamp(6) with time zone
 
-    * login: varchar(255)
+    * reference: varchar(255)
     * password: varchar(255)
 
     * avatar_state_group_id: uuid
@@ -159,7 +159,7 @@ entity user {
     * createdAt: timestamp(6) with time zone
     * modifiedAt: timestamp(6) with time zone
 
-    * login: varchar(255)
+    * reference: varchar(255)
     * password: varchar(255)
 
     * max_nicknames: int

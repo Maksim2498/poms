@@ -7,7 +7,7 @@ import ru.fominmv.poms.server.model.embedabbles.UserRights
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
-import ru.fominmv.poms.libs.commons.text.strings.Hidden
+import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 
 import jakarta.persistence.CascadeType
 import jakarta.persistence.*
@@ -45,18 +45,18 @@ class Invite(
 {
     // Nickname
 
-    @Valid
     @Hidden
     @NotNull
     @OneToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [CascadeType.ALL],
         orphanRemoval = true,
-        optional = false,
     )
-    internal var internalNickname: Nickname? = nickname?.apply {
-        if (Hibernate.isInitialized(internalInvite))
-            internalInvite = this@Invite
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    internal var internalNickname: Nickname? = nickname?.also {
+        if (Hibernate.isInitialized(it.internalInvite))
+            it.internalInvite = this
     }
 
     @delegate:Transient
@@ -78,9 +78,9 @@ class Invite(
         ],
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalCreator: User? = creator?.apply {
-        if (Hibernate.isInitialized(internalCreatedInvites))
-            internalCreatedInvites.add(this@Invite)
+    internal var internalCreator: User? = creator?.also {
+        if (Hibernate.isInitialized(it.internalCreatedInvites))
+            it.internalCreatedInvites.add(this)
     }
 
     @delegate:Transient

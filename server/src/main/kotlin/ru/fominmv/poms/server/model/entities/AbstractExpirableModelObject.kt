@@ -11,7 +11,7 @@ import java.time.Duration
 import java.time.Instant
 
 @MappedSuperclass
-abstract class AbstractExpirableModelObject<Id>(
+abstract class AbstractExpirableModelObject<Id : Any>(
     id: Id,
     now: Instant = Instant.now(),
     createdAt: Instant = now,

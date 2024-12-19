@@ -8,10 +8,10 @@ import org.springframework.data.repository.Repository
 @NoRepositoryBean
 interface ResultDeleteRepository<T, Id> : Repository<T, Id> {
     @Modifying
-    @Query("DELETE FROM User")
+    @Query("DELETE FROM #{#entityName}")
     fun deleteAllAndCount(): Int
 
     @Modifying
-    @Query("DELETE FROM User WHERE id = ?1")
+    @Query("DELETE FROM #{#entityName} WHERE id = ?1")
     fun deleteByIdAndCount(id: Id): Int
 }

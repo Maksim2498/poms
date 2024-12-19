@@ -11,5 +11,5 @@ import java.util.UUID
 interface ServerRepository :
     EntityManagementRepository<Server>,
     EntityRepository<Server, UUID>,
-    LoginRepository<Server>
+    ByReferenceAccessRepository<Server, UUID>
 

@@ -12,7 +12,7 @@ import jakarta.validation.constraints.PastOrPresent
 import java.time.Instant
 
 @MappedSuperclass
-abstract class AbstractTrackableModelObject<Id>(
+abstract class AbstractTrackableModelObject<Id : Any>(
     id: Id,
 
     now: Instant = Instant.now(),

@@ -6,7 +6,7 @@ import org.hibernate.Hibernate
 
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
-import ru.fominmv.poms.libs.commons.text.strings.Hidden
+import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 import ru.fominmv.poms.libs.mc.nbt.io.*
 import ru.fominmv.poms.libs.mc.nbt.tags.Nbt
 
@@ -74,18 +74,18 @@ class ItemStack(
     @Hidden
     @NotNull
     @ManyToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
-        optional = false,
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalInventory: Inventory? = inventory?.apply {
-        if (Hibernate.isInitialized(internalItemStacks))
-            internalItemStacks.add(this@ItemStack)
+    internal var internalInventory: Inventory? = inventory?.also {
+        if (Hibernate.isInitialized(it.internalItemStacks))
+            it.internalItemStacks.add(this)
     }
 
     @delegate:Transient

@@ -8,7 +8,7 @@ import ru.fominmv.poms.server.model.interfaces.immutable.Validatable
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.api.validation.constraints.Nickname as NicknameConstraint
 import ru.fominmv.poms.libs.commons.text.strings.ext.removeWhiteSpace
-import ru.fominmv.poms.libs.commons.text.strings.Hidden
+import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
 
@@ -48,9 +48,9 @@ class Nickname(
         ],
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalOwner: User? = owner?.apply {
-        if (Hibernate.isInitialized(internalNicknames))
-            internalNicknames.add(this@Nickname)
+    internal var internalOwner: User? = owner?.also {
+        if (Hibernate.isInitialized(it.internalNicknames))
+            it.internalNicknames.add(this)
     }
 
     @delegate:Transient
@@ -74,9 +74,9 @@ class Nickname(
         ],
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalInvite: Invite? = invite?.apply {
-        if (Hibernate.isInitialized(internalNickname))
-            internalNickname = this@Nickname
+    internal var internalInvite: Invite? = invite?.also {
+        if (Hibernate.isInitialized(it.internalNickname))
+            it.internalNickname = this
     }
 
     @delegate:Transient
@@ -106,7 +106,7 @@ class Nickname(
 
     // Validation
 
-    @get:AssertTrue
+    @get:AssertTrue(message = "Invite must either have an owner or be linked to the invite")
     override val isValid: Boolean
         get() = (owner == null) != (invite == null)
 }

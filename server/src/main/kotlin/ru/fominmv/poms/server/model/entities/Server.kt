@@ -7,8 +7,8 @@ import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.*
 import ru.fominmv.poms.libs.api.validation.constraints.*
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
+import ru.fominmv.poms.libs.commons.text.strings.objs.*
 import ru.fominmv.poms.libs.commons.text.strings.ext.*
-import ru.fominmv.poms.libs.commons.text.strings.*
 
 import jakarta.persistence.CascadeType
 import jakarta.persistence.*
@@ -23,12 +23,12 @@ class Server(
 
     @field:Reference
     @Column(unique = true, nullable = false, length = Reference.MAX_LENGTH)
-    override var login: String = "server",
+    override var reference: String = DEFAULT_REFERENCE,
 
     @Secret
     @field:ShortText
     @Column(nullable = false, length = ShortText.MAX_LENGTH)
-    override var password: String = "",
+    override var password: String = DEFAULT_PASSWORD,
 
     // About
 
@@ -64,27 +64,34 @@ class Server(
 
     PrePersistEventListener,
     PreRemoveEventListener,
-    MutableWithCredentials,
+    MutableCredentialed<String>,
     MutableDescribed<String?>,
     Normalizable
 {
+    companion object {
+        // Constants
+
+        const val DEFAULT_REFERENCE = "server"
+        const val DEFAULT_PASSWORD = ""
+    }
+
     // Avatar state group
 
     @Hidden
     @NotNull
     @ManyToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
-        optional = false,
     )
     @OnDelete(action = OnDeleteAction.SET_NULL)
-    internal var internalAvatarStateGroup: AvatarStateGroup? = avatarStateGroup?.apply {
-        if (Hibernate.isInitialized(internalServers))
-            internalServers.add(this@Server)
+    internal var internalAvatarStateGroup: AvatarStateGroup? = avatarStateGroup?.also {
+        if (Hibernate.isInitialized(it.internalServers))
+            it.internalServers.add(this)
     }
 
     @delegate:Transient
@@ -109,8 +116,7 @@ class Server(
     // Normalization
 
     override fun normalize() {
-        super.normalize()
-
+        reference = reference.removeWhiteSpace()
         publicAddress = publicAddress.collapseWhiteSpaceToNull()
         name = name.collapseWhiteSpaceToNull()
         description = description.collapseSpacesToNull()

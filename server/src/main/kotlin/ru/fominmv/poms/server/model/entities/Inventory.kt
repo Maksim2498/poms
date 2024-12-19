@@ -3,7 +3,7 @@ package ru.fominmv.poms.server.model.entities
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
 import ru.fominmv.poms.libs.commons.collections.ext.createProxySet
 import ru.fominmv.poms.libs.commons.delegates.NullableSyncFieldDelegate
-import ru.fominmv.poms.libs.commons.text.strings.Hidden
+import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 import ru.fominmv.poms.server.model.interfaces.events.PreRemoveEventListener
 
 import jakarta.persistence.*
@@ -23,20 +23,20 @@ class Inventory(id: UUID = UUID.randomUUID()) :
     @NotNull
     @OneToOne(
         mappedBy = "internalInventory",
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
-        optional = false,
     )
-    internal var internalInventoryAvatarState: AvatarState? = null
+    internal var internalAvatarStateWithInventory: AvatarState? = null
 
     @delegate:Transient
     var inventoryAvatarState: AvatarState? by NullableSyncFieldDelegate(
-        get = { internalInventoryAvatarState },
-        set = { internalInventoryAvatarState = it },
+        get = { internalAvatarStateWithInventory },
+        set = { internalAvatarStateWithInventory = it },
         update = { avatarState, inventory -> avatarState.internalInventory = inventory },
     )
 
@@ -44,20 +44,20 @@ class Inventory(id: UUID = UUID.randomUUID()) :
     @NotNull
     @OneToOne(
         mappedBy = "internalEnderChestInventory",
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
-        optional = false,
     )
-    internal var internalEnderChestInventoryAvatarState: AvatarState? = null
+    internal var internalAvatarStateWithEnderChestInventory: AvatarState? = null
 
     @delegate:Transient
     var enderChestInventoryAvatarState: AvatarState? by NullableSyncFieldDelegate(
-        get = { internalEnderChestInventoryAvatarState },
-        set = { internalEnderChestInventoryAvatarState = it },
+        get = { internalAvatarStateWithEnderChestInventory },
+        set = { internalAvatarStateWithEnderChestInventory = it },
         update = { avatarState, inventory -> avatarState.internalEnderChestInventory = inventory },
     )
 
@@ -83,9 +83,9 @@ class Inventory(id: UUID = UUID.randomUUID()) :
 
     @PreRemove
     override fun onPreRemove() {
-        itemStacks.clear()
-
         inventoryAvatarState = null
         enderChestInventoryAvatarState = null
+
+        itemStacks.clear()
     }
 }

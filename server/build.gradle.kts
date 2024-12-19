@@ -61,10 +61,6 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 
-	// Validation
-
-	implementation(libs.jakartaValidation)
-
 	// JSON
 
 	implementation(libs.jsonPatch)

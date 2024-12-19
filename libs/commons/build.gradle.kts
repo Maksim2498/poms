@@ -22,6 +22,8 @@ repositories {
 }
 
 dependencies {
+    api(libs.slf4jApi)
+
     implementation(kotlin("reflect"))
 
     testImplementation(kotlin("test"))

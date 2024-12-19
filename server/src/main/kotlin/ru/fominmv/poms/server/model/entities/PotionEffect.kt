@@ -6,7 +6,7 @@ import org.hibernate.Hibernate
 import ru.fominmv.poms.server.model.interfaces.events.*
 import ru.fominmv.poms.server.model.interfaces.mutable.Normalizable
 import ru.fominmv.poms.libs.commons.collections.delegates.NullablyReferencedSyncCollectionDelegate
-import ru.fominmv.poms.libs.commons.text.strings.Hidden
+import ru.fominmv.poms.libs.commons.text.strings.objs.Hidden
 import ru.fominmv.poms.libs.mc.commons.duration.ext.toTicks
 import ru.fominmv.poms.libs.mc.commons.duration.durationFromTicks
 import ru.fominmv.poms.libs.mc.commons.enums.PotionEffectType
@@ -47,28 +47,25 @@ class PotionEffect(
 
     var duration: Duration
         get() = durationFromTicks(durationInTicks)
-
-        set(value) {
-            durationInTicks = value.toTicks().toInt()
-        }
+        set(value) { durationInTicks = value.toTicks().toInt() }
 
     // Target
 
     @Hidden
     @NotNull
     @ManyToOne(
+        optional = false,
         fetch = FetchType.LAZY,
         cascade = [
             CascadeType.PERSIST,
             CascadeType.MERGE,
             CascadeType.REFRESH,
         ],
-        optional = false,
     )
     @OnDelete(action = OnDeleteAction.CASCADE)
-    internal var internalTarget: AvatarState? = target?.apply {
-        if (Hibernate.isInitialized(internalPotionEffects))
-            internalPotionEffects.add(this@PotionEffect)
+    internal var internalTarget: AvatarState? = target?.also {
+        if (Hibernate.isInitialized(it.internalPotionEffects))
+            it.internalPotionEffects.add(this)
     }
 
     @delegate:Transient
