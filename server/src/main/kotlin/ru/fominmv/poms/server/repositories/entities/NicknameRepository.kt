@@ -11,13 +11,5 @@ import java.util.*
 interface NicknameRepository :
     EntityManagementRepository<Nickname>,
     EntityRepository<Nickname, UUID>,
-    ByOwnerAccessRepository<Nickname, UUID>
-{
-    // Nickname
-
-    fun findByNickname(nickname: String): Optional<Nickname>
-
-    fun existsByNickname(nickname: String): Boolean
-
-    fun deleteByNickname(nickname: String): Long
-}
+    ByOwnerAccessRepository<Nickname, UUID>,
+    ByNicknameAccessRepository<Nickname, UUID>
