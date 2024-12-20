@@ -16,7 +16,8 @@ interface BulkValueAccessor<T : Any> {
 
     // Getting
 
-    fun getAll(): List<T>
+    fun getAll(): List<T> =
+        getAll(Pageable.unpaged()).content
 
     fun getAll(pageable: Pageable): Page<T>
 
