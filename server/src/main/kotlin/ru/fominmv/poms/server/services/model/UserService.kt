@@ -140,10 +140,10 @@ class UserService(
         maxNicknames: Int = User.DEFAULT_MAX_NICKNAMES,
 
         rights: UserRights = UserRights(),
-        isBlocked: Boolean = false,
+        isBlocked: Boolean = User.DEFAULT_IS_BLOCKED,
 
         creator: User? = null,
-        isCreatedViaInvite: Boolean = false,
+        isCreatedViaInvite: Boolean = User.DEFAULT_IS_CREATED_VIA_INVITE,
 
         id: UUID? = null,
         createdAt: Instant = Instant.now(),
