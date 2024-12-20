@@ -25,6 +25,7 @@ class NicknameService(private val nicknameRepository: NicknameRepository) :
     ValueAccessor<Nickname>,
     IdAccessor<Nickname, UUID>,
     NicknameAccessor<Nickname>,
+
     SaveAccessor<Nickname>
 {
     private val logger = LoggerFactory.getLogger(javaClass)

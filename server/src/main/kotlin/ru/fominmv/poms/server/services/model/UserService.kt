@@ -32,6 +32,7 @@ class UserService(
     ValueAccessor<User>,
     ReferenceOrUuidAccessor<User>,
     NicknameAccessor<User>,
+
     SaveAccessor<User>
 {
     private val logger = LoggerFactory.getLogger(javaClass)

@@ -23,6 +23,7 @@ class AvatarStateGroupService(private val avatarStateGroupRepository: AvatarStat
 
     ValueAccessor<AvatarStateGroup>,
     ReferenceOrUuidAccessor<AvatarStateGroup>,
+
     SaveAccessor<AvatarStateGroup>
 {
     private val logger = LoggerFactory.getLogger(javaClass)
