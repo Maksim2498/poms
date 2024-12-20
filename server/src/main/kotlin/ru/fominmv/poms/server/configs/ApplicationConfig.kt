@@ -39,10 +39,14 @@ class ApplicationConfig {
         @Valid
         var users: List<UserConfig> = emptyList()
 
+        @Valid
+        var invites: List<InviteConfig> = emptyList()
+
         internal fun log() {
-            logList(avatarStateGroups, "Predefined avatar state groups:")
-            logList(servers, "Predefined servers:")
-            logList(users, "Predefined users:")
+            logList(avatarStateGroups, "Predefined avatar state groups:", "There is no predefined avatar state groups")
+            logList(servers, "Predefined servers:", "There is no predefined servers")
+            logList(users, "Predefined users:", "There is no predefined users")
+            logList(invites, "Predefined invites:", "There is no predefined invites")
         }
     }
 
