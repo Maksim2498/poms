@@ -18,7 +18,8 @@ interface BulkCreatorAccessor<T : Any> {
 
     // Getting
 
-    fun getAllByCreator(creator: User?): List<T>
+    fun getAllByCreator(creator: User?): List<T> =
+        getAllByCreator(creator, Pageable.unpaged()).content
 
     fun getAllByCreator(creator: User?, pageable: Pageable): Page<T>
 
