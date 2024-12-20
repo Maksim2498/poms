@@ -9,13 +9,13 @@ import ru.fominmv.poms.server.model.entities.User
 
 @NoRepositoryBean
 interface ByOwnerAccessRepository<T, Id> : Repository<T, Id> {
-    fun findAllByInternalOwner(owner: User?): List<T>
-
-    fun findAllByInternalOwner(owner: User?, pageable: Pageable): Page<T>
-
     fun existsByInternalOwner(owner: User?): Boolean
 
     fun countByInternalOwner(owner: User?): Long
+
+    fun findAllByInternalOwner(owner: User?): List<T>
+
+    fun findAllByInternalOwner(owner: User?, pageable: Pageable): Page<T>
 
     fun deleteAllByInternalOwner(owner: User?): Long
 }

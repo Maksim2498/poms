@@ -12,17 +12,17 @@ import java.util.*
 interface ByIdAndExpiresAtAccessRepository<T : Expirable, Id> : Repository<T, Id> {
     // Before
 
-    fun findByIdAndExpiresAtBefore(id: Id, after: Instant): Optional<T>
-
     fun existsByIdAndExpiresAtBefore(id: Id, after: Instant): Boolean
+
+    fun findByIdAndExpiresAtBefore(id: Id, after: Instant): Optional<T>
 
     fun deleteByIdAndExpiresAtBefore(id: Id, after: Instant): Long
 
     // After
-    
-    fun findByIdAndExpiresAtAfter(id: Id, after: Instant): Optional<T>
 
     fun existsByIdAndExpiresAtAfter(id: Id, after: Instant): Boolean
+
+    fun findByIdAndExpiresAtAfter(id: Id, after: Instant): Optional<T>
 
     fun deleteByIdAndExpiresAtAfter(id: Id, after: Instant): Long
 }

@@ -7,9 +7,9 @@ import java.util.*
 
 @NoRepositoryBean
 interface ByNicknameAccessRepository<T, Id> : Repository<T, Id> {
-    fun findByNickname(nickname: String): Optional<T>
-
     fun existsByNickname(nickname: String): Boolean
+
+    fun findByNickname(nickname: String): Optional<T>
 
     fun deleteByNickname(nickname: String): Int
 }

@@ -23,11 +23,11 @@ interface UserRepository:
 
     // Nicknames
 
-    @Query("SELECT u $NICKNAME_QUERY_BODY")
-    override fun findByNickname(nickname: String): Optional<User>
-
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN TRUE ELSE FALSE END $NICKNAME_QUERY_BODY")
     override fun existsByNickname(nickname: String): Boolean
+
+    @Query("SELECT u $NICKNAME_QUERY_BODY")
+    override fun findByNickname(nickname: String): Optional<User>
 
     @Modifying
     @Query("DELETE $NICKNAME_QUERY_BODY")

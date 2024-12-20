@@ -9,9 +9,9 @@ import java.util.*
 
 @NoRepositoryBean
 interface ByReferenceAccessRepository<T : Referenced<*>, Id> : Repository<T, Id> {
-    fun findByReferenceIgnoreCase(reference: String): Optional<T>
-
     fun existsByReferenceIgnoreCase(reference: String): Boolean
+
+    fun findByReferenceIgnoreCase(reference: String): Optional<T>
 
     fun deleteByReferenceIgnoreCase(reference: String): Long
 }
