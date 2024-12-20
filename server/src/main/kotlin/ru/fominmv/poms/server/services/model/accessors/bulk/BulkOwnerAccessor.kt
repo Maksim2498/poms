@@ -18,7 +18,8 @@ interface BulkOwnerAccessor<T : Any> {
 
     // Getting
 
-    fun getAllByOwner(owner: User?): List<T>
+    fun getAllByOwner(owner: User?): List<T> =
+        getAllByOwner(owner, Pageable.unpaged()).content
 
     fun getAllByOwner(owner: User?, pageable: Pageable): Page<T>
 
