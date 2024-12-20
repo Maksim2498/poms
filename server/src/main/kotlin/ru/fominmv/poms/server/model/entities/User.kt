@@ -49,16 +49,17 @@ class User(
     @Embedded
     var rights: UserRights = UserRights(),
 
-    @ColumnDefault("FALSE")
     @Column(nullable = false)
-    var isBlocked: Boolean = false,
+    @ColumnDefault(DEFAULT_IS_BLOCKED.toString())
+    override var isBlocked: Boolean = DEFAULT_IS_BLOCKED,
 
     // Creator
 
     creator: User? = null,
 
     @Column(nullable = false)
-    var isCreatedViaInvite: Boolean = false,
+    @ColumnDefault(DEFAULT_IS_CREATED_VIA_INVITE.toString())
+    var isCreatedViaInvite: Boolean = DEFAULT_IS_CREATED_VIA_INVITE,
 
     // Model object
 
@@ -77,6 +78,7 @@ class User(
     PrePersistEventListener,
     PreRemoveEventListener,
     MutableCredentialed<String>,
+    MutableBlockable,
     Normalizable,
     Validatable
 {
@@ -86,6 +88,8 @@ class User(
         const val DEFAULT_REFERENCE = "user"
         const val DEFAULT_PASSWORD = ""
         const val DEFAULT_MAX_NICKNAMES = 5
+        const val DEFAULT_IS_BLOCKED = false
+        const val DEFAULT_IS_CREATED_VIA_INVITE = false
     }
 
     // Nicknames
