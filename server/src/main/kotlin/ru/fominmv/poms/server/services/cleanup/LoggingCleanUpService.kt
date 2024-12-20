@@ -20,7 +20,7 @@ open class LoggingCleanUpService(
             LoggingCleanUpService(expiredBulkAccessor, targetTypeSingular, targetTypePlural)
     }
 
-    protected val logger = LoggerFactory.getLogger(javaClass)
+    protected val logger = LoggerFactory.getLogger(javaClass)!!
 
     override fun cleanUp(): Long {
         logger.debug("Deleting expired $targetTypePlural...")
