@@ -65,6 +65,8 @@ class PredefinedServersCreationRunner(
     }
 
     private fun update(server: Server, config: ServerConfig) {
+        // Credentials
+
         server.reference = config.reference
 
         server.password = if (config.encodePassword)
@@ -72,29 +74,46 @@ class PredefinedServersCreationRunner(
         else
             config.password
 
+        // Avatar state group
+
         server.avatarStateGroup = logger.tryOrWarn {
             avatarStateGroupService.getByReferenceOrId(config.avatarStateGroup)
         }
 
+        // About
+
         server.publicAddress = config.publicAddress
         server.name = config.name
         server.description = config.description
+
+        // Rights
+
+        server.isBlocked = config.isBlocked
     }
 
     private fun create(config: ServerConfig) {
         logger.tryOrWarn {
             serverService.create(
+                // Credentials
+
+                id = config.id,
                 reference = config.reference,
                 password = config.password,
                 encodePassword = config.encodePassword,
 
+                // Avatar state group
+
                 avatarStateGroup = avatarStateGroupService.getByReferenceOrId(config.avatarStateGroup),
+
+                // About
 
                 publicAddress = config.publicAddress,
                 name = config.name,
                 description = config.description,
 
-                id = config.id,
+                // Rights
+
+                isBlocked = config.isBlocked,
             )
         }
     }
