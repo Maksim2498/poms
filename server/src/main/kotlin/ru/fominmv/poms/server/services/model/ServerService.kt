@@ -107,6 +107,8 @@ class ServerService(
         name: String? = null,
         description: String? = null,
 
+        isBlocked: Boolean = Server.DEFAULT_IS_BLOCKED,
+
         id: UUID? = null,
         createdAt: Instant = Instant.now(),
 
@@ -127,6 +129,8 @@ class ServerService(
             publicAddress = publicAddress,
             name = name,
             description = description,
+
+            isBlocked = isBlocked,
 
             id = getNewIdOrCheckIfNew(id),
             createdAt = createdAt,
