@@ -68,10 +68,10 @@ class PredefinedAvatarStateGroupsCreationRunner(
     private fun create(config: AvatarStateGroupConfig) {
         logger.tryOrWarn {
             avatarStateGroupService.create(
+                id = config.id,
                 reference = config.reference,
                 name = config.name,
                 description = config.description,
-                id = config.id,
             )
         }
     }
