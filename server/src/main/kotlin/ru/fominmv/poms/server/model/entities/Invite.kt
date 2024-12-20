@@ -42,6 +42,12 @@ class Invite(
 
     PreRemoveEventListener
 {
+    companion object {
+        // Constants
+
+        val DEFAULT_DURATION = AbstractExpirableModelObject.DEFAULT_DURATION
+    }
+
     // Nickname
 
     @Hidden
