@@ -9,6 +9,8 @@ import ru.fominmv.poms.server.model.interfaces.mutable.*
 import java.util.*
 
 data class ServerConfig(
+    // Credentials
+
     override var id: UUID? = null,
 
     @field:Reference
@@ -20,6 +22,8 @@ data class ServerConfig(
 
     var encodePassword: Boolean = true,
 
+    // About
+
     @field:ShortText
     var publicAddress: String? = null,
 
@@ -29,14 +33,23 @@ data class ServerConfig(
     @field:MediumText
     override var description: String? = null,
 
+    // Avatar state group
+
     @field:ReferenceOrUuid
     var avatarStateGroup: String = AvatarStateGroup.DEFAULT_REFERENCE,
+
+    // Rights
+
+    override var isBlocked: Boolean = Server.DEFAULT_IS_BLOCKED,
+
+    // Meta
 
     var update: Boolean = false,
 ) :
     MutableIdentified<UUID?>,
     MutableCredentialed<String>,
-    MutableDescribed<String?>
+    MutableDescribed<String?>,
+    MutableBlockable
 {
     override fun toString(): String =
         toObjString()
