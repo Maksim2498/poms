@@ -14,7 +14,8 @@ interface UserRepository:
     EntityManagementRepository<User>,
     EntityRepository<User, UUID>,
     ByReferenceAccessRepository<User, UUID>,
-    ByCreatorAccessRepository<User, UUID>
+    ByCreatorAccessRepository<User, UUID>,
+    ByNicknameAccessRepository<User, UUID>
 {
     companion object {
         private const val NICKNAME_QUERY_BODY = "FROM #{#entityName} u INNER JOIN u.internalNicknames n WHERE n.nickname = ?1"
@@ -23,12 +24,12 @@ interface UserRepository:
     // Nicknames
 
     @Query("SELECT u $NICKNAME_QUERY_BODY")
-    fun findByNickname(nickname: String): Optional<User>
+    override fun findByNickname(nickname: String): Optional<User>
 
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN TRUE ELSE FALSE END $NICKNAME_QUERY_BODY")
-    fun existsByNickname(nickname: String): Boolean
+    override fun existsByNickname(nickname: String): Boolean
 
     @Modifying
     @Query("DELETE $NICKNAME_QUERY_BODY")
-    fun deleteByNickname(nickname: String): Int
+    override fun deleteByNickname(nickname: String): Int
 }
