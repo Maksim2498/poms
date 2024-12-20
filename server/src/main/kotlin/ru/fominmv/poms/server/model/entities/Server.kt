@@ -44,6 +44,12 @@ class Server(
     @Column(length = MediumText.MAX_LENGTH)
     override var description: String? = null,
 
+    // Rights
+
+    @Column(nullable = false)
+    @ColumnDefault(DEFAULT_IS_BLOCKED.toString())
+    override var isBlocked: Boolean = DEFAULT_IS_BLOCKED,
+
     // Avatar state group
 
     avatarStateGroup: AvatarStateGroup? = null,
@@ -66,6 +72,7 @@ class Server(
     PreRemoveEventListener,
     MutableCredentialed<String>,
     MutableDescribed<String?>,
+    MutableBlockable,
     Normalizable
 {
     companion object {
@@ -73,6 +80,7 @@ class Server(
 
         const val DEFAULT_REFERENCE = "server"
         const val DEFAULT_PASSWORD = ""
+        const val DEFAULT_IS_BLOCKED = false
     }
 
     // Avatar state group
