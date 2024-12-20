@@ -58,6 +58,8 @@ class PredefinedUsersCreationRunner(
     }
 
     private fun update(user: User, config: UserConfig) {
+        // Credentials
+
         user.reference = config.reference
 
         user.password = if (config.encodePassword)
@@ -65,12 +67,17 @@ class PredefinedUsersCreationRunner(
         else
             config.password
 
+        // Nicknames
+
         for (nickname in config.nicknames)
             logger.tryOrWarn {
                 nicknameService.create(nickname, user)
             }
 
         user.maxNicknames = config.maxNicknames
+
+        // Rights
+
         user.rights = config.rights.copy()
         user.isBlocked = config.isBlocked
     }
@@ -78,14 +85,22 @@ class PredefinedUsersCreationRunner(
     private fun create(config: UserConfig) {
         logger.tryOrWarn {
             userService.create(
+                // Credentials
+
+                id = config.id,
                 reference = config.reference,
                 password = config.password,
                 encodePassword = config.encodePassword,
 
+                // Nicknames
+
                 nicknames = config.nicknames,
                 maxNicknames = config.maxNicknames,
 
-                id = config.id,
+                // Rights
+
+                rights = config.rights.copy(),
+                isBlocked = config.isBlocked,
             )
         }
     }
