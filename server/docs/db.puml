@@ -146,6 +146,8 @@ entity server {
 
     * avatar_state_group_id: uuid
 
+    * is_blocked: bool
+
     name: varchar(255)
     description: varchar(65535)
     public_address: varchar(255)
