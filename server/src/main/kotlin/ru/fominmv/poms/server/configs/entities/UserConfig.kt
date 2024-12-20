@@ -11,6 +11,8 @@ import jakarta.validation.constraints.PositiveOrZero
 import java.util.UUID
 
 data class UserConfig(
+    // Credentials
+
     override var id: UUID? = null,
 
     @field:Reference
@@ -22,19 +24,26 @@ data class UserConfig(
 
     var encodePassword: Boolean = true,
 
+    // Nicknames
+
     var nicknames: Set<@Nickname String> = emptySet(),
 
     @field:PositiveOrZero
     var maxNicknames: Int = User.DEFAULT_MAX_NICKNAMES,
 
+    // Rights
+
     var rights: UserRights = UserRights(),
 
-    var isBlocked: Boolean = false,
+    override var isBlocked: Boolean = User.DEFAULT_IS_BLOCKED,
+
+    // Meta
 
     var update: Boolean = false,
 ) :
     MutableIdentified<UUID?>,
-    MutableCredentialed<String>
+    MutableCredentialed<String>,
+    MutableBlockable
 {
     override fun toString(): String =
         toObjString()
