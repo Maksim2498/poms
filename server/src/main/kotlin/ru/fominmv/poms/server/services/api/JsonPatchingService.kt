@@ -11,7 +11,7 @@ import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validator
 
 @Service
-class RequestPatchingService(
+class JsonPatchingService(
     private val objectMapper: ObjectMapper,
     private val validator: Validator,
 ) {
