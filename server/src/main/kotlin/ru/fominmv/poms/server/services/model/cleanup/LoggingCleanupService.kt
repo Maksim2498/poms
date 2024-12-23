@@ -8,18 +8,18 @@ import ru.fominmv.poms.server.services.model.accessors.expirable.ExpirableState
 import ru.fominmv.poms.server.services.model.accessors.expirable.bulk.BulkExpirableValueAccessor
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class LoggingCleanUpService(
+open class LoggingCleanupService(
     protected val accessor: BulkExpirableValueAccessor<*>,
     protected val targetTypeSingular: String,
     protected val targetTypePlural: String = targetTypeSingular.plural(),
-) : CleanUpService {
+) : CleanupService {
     companion object {
         inline operator fun <reified T : Expirable> invoke(
             expiredBulkAccessor: BulkExpirableValueAccessor<T>,
             targetTypeSingular: String = T::class.simpleName.orEmpty().ifBlank { DEFAULT_TARGET_TYPE_SINGULAR },
             targetTypePlural: String = targetTypeSingular.plural(),
-        ): LoggingCleanUpService =
-            LoggingCleanUpService(expiredBulkAccessor, targetTypeSingular, targetTypePlural)
+        ): LoggingCleanupService =
+            LoggingCleanupService(expiredBulkAccessor, targetTypeSingular, targetTypePlural)
 
         const val DEFAULT_TARGET_TYPE_SINGULAR = "object"
     }
