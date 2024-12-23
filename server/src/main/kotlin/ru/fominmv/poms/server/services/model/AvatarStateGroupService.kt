@@ -101,7 +101,7 @@ class AvatarStateGroupService(private val avatarStateGroupRepository: AvatarStat
         description: String? = null,
 
         id: UUID? = null,
-        createdAt: Instant = Instant.now(),
+        now: Instant = Instant.now(),
 
         save: Boolean = true,
     ): AvatarStateGroup {
@@ -114,7 +114,7 @@ class AvatarStateGroupService(private val avatarStateGroupRepository: AvatarStat
             description =description,
 
             id = getNewIdOrCheckIfNew(id),
-            createdAt = createdAt,
+            now = now,
         )
 
         if (save)

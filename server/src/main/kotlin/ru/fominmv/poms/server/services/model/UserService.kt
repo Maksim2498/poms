@@ -147,7 +147,7 @@ class UserService(
         isCreatedViaInvite: Boolean = User.DEFAULT_IS_CREATED_VIA_INVITE,
 
         id: UUID? = null,
-        createdAt: Instant = Instant.now(),
+        now: Instant = Instant.now(),
 
         encodePassword: Boolean = true,
         save: Boolean = true,
@@ -172,7 +172,7 @@ class UserService(
             isCreatedViaInvite = isCreatedViaInvite,
 
             id = getNewIdOrCheckIfNew(id),
-            createdAt = createdAt,
+            now = now,
         )
 
         if (user.nicknames.size > user.maxNicknames)

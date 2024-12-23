@@ -111,7 +111,7 @@ class ServerService(
         isBlocked: Boolean = Server.DEFAULT_IS_BLOCKED,
 
         id: UUID? = null,
-        createdAt: Instant = Instant.now(),
+        now: Instant = Instant.now(),
 
         encodePassword: Boolean = true,
         save: Boolean = true,
@@ -134,7 +134,7 @@ class ServerService(
             isBlocked = isBlocked,
 
             id = getNewIdOrCheckIfNew(id),
-            createdAt = createdAt,
+            now = now,
         )
 
         if (save)
