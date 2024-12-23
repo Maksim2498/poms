@@ -1,4 +1,4 @@
-package ru.fominmv.poms.server.services.cleanup
+package ru.fominmv.poms.server.services.model.cleanup
 
 import org.slf4j.LoggerFactory
 
