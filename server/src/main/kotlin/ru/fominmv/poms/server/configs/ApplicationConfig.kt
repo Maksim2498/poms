@@ -12,6 +12,8 @@ import ru.fominmv.poms.server.configs.entities.*
 
 import jakarta.annotation.PostConstruct
 import jakarta.validation.Valid
+import ru.fominmv.poms.libs.commons.text.strings.formatters.DurationFormatter
+import java.time.Duration
 
 @Configuration
 @ConfigurationProperties("poms")
@@ -19,6 +21,7 @@ class ApplicationConfig {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     var init = Init()
+    var cleanup = Cleanup()
     var development = Development()
 
     @PostConstruct
@@ -26,6 +29,7 @@ class ApplicationConfig {
         Secret.isGloballyExposed = development.isSecretExposureEnabled
 
         init.log()
+        cleanup.log()
         development.log()
     }
 
@@ -47,6 +51,22 @@ class ApplicationConfig {
             logList(servers, "Predefined servers:", "There is no predefined servers")
             logList(users, "Predefined users:", "There is no predefined users")
             logList(invites, "Predefined invites:", "There is no predefined invites")
+        }
+    }
+
+    inner class Cleanup {
+        var rate = Rate()
+
+        internal fun log() {
+            rate.log()
+        }
+
+        inner class Rate {
+            var invites = Duration.ofDays(1)!!
+
+            internal fun log() {
+                logger.info("Invites cleanup rate is set to {}", DurationFormatter(invites))
+            }
         }
     }
 
